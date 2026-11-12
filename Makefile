@@ -7,6 +7,7 @@
 TOPDIR          := $(CURDIR)
 SOURCE_DIR      := $(TOPDIR)/trunk
 TEMPLATE_DIR    := $(SOURCE_DIR)/configs/templates
+TW_CONFIG_DIR   := $(SOURCE_DIR)/configs/tw
 CONFIG_FILE     := $(SOURCE_DIR)/.config
 
 # Toolchain Settings
@@ -71,6 +72,10 @@ endif
 $(PRODUCTS):
 	@echo "\033[1;36m===> ⚙️ Setting up configuration for target: $@...\033[0m"
 	@cp -f "$(TEMPLATE_DIR)/$@.config" "$(CONFIG_FILE)"
+	@echo "" >> "$(CONFIG_FILE)"
+	@# padavan-tw：接上台灣版共用設定與機型專屬設定（後面的值覆蓋前面的值）
+	@cat "$(TW_CONFIG_DIR)/common.config" >> "$(CONFIG_FILE)"
+	@if [ -f "$(TW_CONFIG_DIR)/$@.config" ]; then echo "" >> "$(CONFIG_FILE)"; cat "$(TW_CONFIG_DIR)/$@.config" >> "$(CONFIG_FILE)"; fi
 	@echo "" >> "$(CONFIG_FILE)"
 	@echo "CONFIG_CROSS_COMPILE=$(TOOLCHAIN)" >> "$(CONFIG_FILE)"
 	@echo "CONFIG_CROSS_COMPILER_ROOT=$(TOOLCHAIN_PATH)" >> "$(CONFIG_FILE)"
