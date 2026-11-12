@@ -1252,6 +1252,7 @@ function simplyMAC(fullMAC){
                                             <td>
                                                 <input type="text" maxlength="4" size="5" name="wan_pppoe_mtu" class="input" value="<% nvram_get_x("", "wan_pppoe_mtu"); %>" onkeypress="return is_number(this,event);"/>
                                                 &nbsp;<span style="color:#888;">[1000..1492]</span>
+                                                <div class="tw-hint">中華電信光世代預設 1480（PPPoE 理論上限 1492）。部分網站打不開、IPv6 時好時壞時，可以再往下調，例如 1460。</div>
                                             </td>
                                         </tr>
                                         <tr id="row_pppoe_mru">
