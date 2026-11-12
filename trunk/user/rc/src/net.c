@@ -560,6 +560,61 @@ is_hwnat_allow(void)
 	return 1;
 }
 
+/*
+ * padavan-tw：硬體 QoS（QDMA 排程）
+ * hw_qos_mode：0=關閉、1=固定限速、2=自動（限速由 tw-qos 控制器調整）
+ * 開啟時，新綁定的硬體加速連線會經過 QDMA 排程；沒有設定限速時等於全速通過。
+ */
+static int
+hwnat_qos_wired(void)
+{
+	return (nvram_get_int("hw_qos_mode") > 0) ? 1 : 0;
+}
+
+static int
+hwnat_qos_wlan(void)
+{
+	return (hwnat_qos_wired() && nvram_get_int("hw_qos_wlan")) ? 1 : 0;
+}
+
+static int
+hwnat_param_get_int(const char *param)
+{
+	char path[96], buf[16];
+	FILE *fp;
+	int val = -1;
+
+	snprintf(path, sizeof(path), "/sys/module/hw_nat/parameters/%s", param);
+	fp = fopen(path, "r");
+	if (fp) {
+		if (fgets(buf, sizeof(buf), fp))
+			val = atoi(buf);
+		fclose(fp);
+	}
+	return val;
+}
+
+static void
+hwnat_qos_apply(void)
+{
+	int want = hwnat_qos_wired();
+	int want_wlan = hwnat_qos_wlan();
+	int cur = hwnat_param_get_int("hnat_qos");
+	int cur_wlan = hwnat_param_get_int("hnat_qos_wlan");
+
+	if (cur < 0)
+		return;	/* 舊版 hw_nat 沒有這兩個參數 */
+
+	if (cur != want || cur_wlan != want_wlan) {
+		module_param_set_int("hw_nat", "hnat_qos", want);
+		module_param_set_int("hw_nat", "hnat_qos_wlan", want_wlan);
+		/* 清空硬體表，讓既有連線依新設定重新綁定 */
+		doSystem("/bin/hw_nat -y >/dev/null 2>&1");
+		logmessage(LOGNAME, "Hardware QoS: %s (wired), %s (wlan)",
+			want ? "on" : "off", want_wlan ? "on" : "off");
+	}
+}
+
 static void
 hwnat_configure(void)
 {
@@ -571,6 +626,7 @@ hwnat_configure(void)
 	}
 
 	module_param_set_int("hw_nat", "wan_vid", get_vlan_vid_wan());
+	hwnat_qos_apply();
 
 	hwnat_status = "Enabled, IPoE/PPPoE offload [WAN]<->[LAN/WLAN]";
 	logmessage(LOGNAME, "%s: %s", "Hardware NAT/Routing", hwnat_status);
@@ -694,7 +750,8 @@ reload_nat_modules(void)
 #if defined (USE_HW_NAT)
 	if (hwnat_allow)
 	{	if(!hwnat_loaded)
-		{snprintf(hnat_param, sizeof(hnat_param), "wan_vid=%d", get_vlan_vid_wan());
+		{snprintf(hnat_param, sizeof(hnat_param), "wan_vid=%d hnat_qos=%d hnat_qos_wlan=%d",
+			get_vlan_vid_wan(), hwnat_qos_wired(), hwnat_qos_wlan());
 		module_smart_load("hw_nat", hnat_param);}
 		int hw_nat_mode = nvram_get_int("hw_nat_mode");
 #if defined (USE_MT7615_AP) || defined (USE_MT7915_AP) || defined (USE_MT76X2_AP)

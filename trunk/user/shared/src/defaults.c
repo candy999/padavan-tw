@@ -1058,6 +1058,14 @@ struct nvram_pair router_defaults[] = {
 #endif
 	{ "hw_nat_mode", "1" },
 	{ "sw_nat_mode", "0" },
+	/* padavan-tw：硬體 QoS（QDMA） */
+	{ "hw_qos_mode", "0" },		/* 0=關閉 1=固定限速 2=自動 */
+	{ "hw_qos_wlan", "1" },		/* 開啟時 Wi-Fi 方向也經過 QDMA 排程 */
+	{ "hw_qos_down", "0" },		/* 申裝下載頻寬（Mbps），0=未設定 */
+	{ "hw_qos_up", "0" },		/* 申裝上傳頻寬（Mbps），0=未設定 */
+	{ "hw_qos_tech", "ftth" },	/* 最後一里：ftth、vdsl、cable、mobile、other */
+	{ "hw_qos_over", "15" },	/* 上浮 %：上限＝申裝 ×(100+over)% */
+	{ "hw_qos_under", "20" },	/* 下探 %：下限＝申裝 ×(100-under)% */
 #if defined(USE_SFE)
 	{ "sfe_enable", "2" },		/* Software Offload Routing IPv4/IPv6 */
 #endif
