@@ -325,7 +325,7 @@ int qdma_read_64queue(struct seq_file *seq, void *v)
 			   max_en, max_rate);
 		max_en = (temp & 0x08000000) >> 27;
 		max_rate = (temp & 0x07F00000) >> 20;
-		for (i = 0; i < (temp & 0x000F0000); i++)
+		for (i = 0; i < ((temp & 0x000F0000) >> 16); i++)	/* padavan-tw: 指數要右移 16 位 */
 			max_rate *= 10;
 		seq_printf(seq, "SCH2 rate control:%d. Rate is %dKbps.\n\n",
 			   max_en, max_rate);
@@ -462,7 +462,7 @@ int qdma_read(struct seq_file *seq, void *v)
 			   max_en, max_rate);
 		max_en = (temp & 0x08000000) >> 27;
 		max_rate = (temp & 0x07F00000) >> 20;
-		for (i = 0; i < (temp & 0x000F0000); i++)
+		for (i = 0; i < ((temp & 0x000F0000) >> 16); i++)	/* padavan-tw: 指數要右移 16 位 */
 			max_rate *= 10;
 		seq_printf(seq, "SCH2 rate control:%d. Rate is %dKbps.\n\n",
 			   max_en, max_rate);
@@ -1795,6 +1795,12 @@ int debug_proc_init(void)
 				   &tx_ring_fops);
 	if (!proc_tx_ring)
 		pr_debug("!! FAIL to create %s PROC !!\n", PROCREG_TXRING);
+	/* padavan-tw：/proc/mt7621/qdma，唯讀顯示 QDMA 排程器與各佇列的速率設定、目前排隊封包數，
+	 * 給 tw-qos-check 驗證硬體 QoS 是否生效（qdma_read 原本就有，但沒有註冊） */
+	if ((ei_local->features & FE_QDMA) && ei_local->chip_name != MT7622_FE) {
+		if (!proc_create(PROCREG_QDMA, S_IRUGO, proc_reg_dir, &qdma_fops))
+			pr_debug("!! FAIL to create %s PROC !!\n", PROCREG_QDMA);
+	}
 	proc_rx_ring = proc_create(PROCREG_RXRING, 0,
 				   proc_reg_dir, &rx_ring_fops);
 	if (!proc_rx_ring)
@@ -1929,6 +1935,8 @@ void debug_proc_exit(void)
 		if (proc_eth_cnt)
 			remove_proc_entry(PROCREG_ETH_CNT, proc_reg_dir);
 	}
+
+	remove_proc_entry(PROCREG_QDMA, proc_reg_dir);
 
 	/* if (proc_reg_dir) */
 	/* remove_proc_entry(PROCREG_DIR, 0); */
