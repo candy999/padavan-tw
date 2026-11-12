@@ -220,8 +220,10 @@ start() {
 	sync_uci "$mode"
 	echo "$mode" > "$RUN/mode"
 
-	# 放記憶體的模式：開機時把每天的備份匯入
-	if [ "$mode" = ram ] && [ -f "$BACKUP" ] && [ ! -f "$RUN/imported" ]; then
+	# 開機時把每天的備份匯入：放記憶體的模式每次都要；剛啟用 RWFS（學習資料目錄還是空的）時也匯入一次，
+	# 之前放在記憶體學到的東西才不會因為換存放位置而重來
+	if [ -f "$BACKUP" ] && [ ! -f "$RUN/imported" ] && \
+	   { [ "$mode" = ram ] || [ -z "$(ls -A "$sdir" 2>/dev/null)" ]; }; then
 		$BIN import "$BACKUP" --uci >/dev/null 2>&1 && log "已匯入學習資料備份"
 		: > "$RUN/imported"
 	fi
