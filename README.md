@@ -11,7 +11,7 @@ padavan-tw 以目前仍持續維護的 [TurBoTse/padavan](https://github.com/Tur
 | | padavan-tw 的做法 |
 |---|---|
 | **穩定優先** | 沿用 hanwckf 系列長期驗證過的閉源驅動與舊版硬體 NAT；不收實驗性驅動、不超頻 |
-| **只做兩台，做到好** | 只維護 Newifi D3、小米 CR6608 兩台，每次修改都會同時編譯這兩台確認 |
+| **兩台做到好，其他機型也能用** | 正式維護 Newifi D3、小米 CR6608，每次修改都會編譯這兩台確認；其他 50 多個機型可以開 Issue 請求或自己一鍵編譯 |
 | **真正的台灣中文** | 介面 2,037 條全部以英文原文重新翻譯成台灣網通用語，不是簡轉繁；同時修正簡中版本的大量錯譯（例如把「穿透」譯成「通道」、把「數據機」譯成「網卡」、單位與預設值寫錯等） |
 | **台灣預設值** | 時區臺北、NTP 用國家時間與頻率標準實驗室、斷線偵測改用 HiNet 與 TWNIC，不再依賴中國的 DNS 與網站 |
 | **乾淨** | 移除科學上網、廣告外掛、中國雲端服務、校園網認證、KMS 等與台灣網路無關的功能 |
@@ -22,12 +22,92 @@ padavan-tw 以目前仍持續維護的 [TurBoTse/padavan](https://github.com/Tur
 
 ## 支援機型
 
+### 正式維護
+
+每次修改都會自動編譯、有實機使用、發布 Release。
+
 | 機型 | 編譯名稱 | 晶片 | 無線 |
 |---|---|---|---|
 | Newifi D3（新路由 3、OpenWrt 稱 Newifi D2） | `NEWIFI3` | MT7621A | MT7603E 2.4G＋MT7612E 5G |
 | 小米 CR6608（CR660x 系列） | `CR660x` | MT7621A | MT7905DAN＋MT7975DN（Wi-Fi 6 AX1800） |
 
-CR660x 的設定檔理論上也適用 CR6606、CR6609，但本專案只以 CR6608 為目標。
+CR660x 的設定檔理論上也適用 CR6606、CR6609。
+
+### 社群支援
+
+以下機型沿用上游 TurBoTse/padavan 的設定檔，都能用本專案編譯，編譯時同樣套用台灣版設定
+（台灣中文介面、移除無關功能、SQM、SFE 等）。
+**維護者手邊沒有這些機器，沒有實機測試。** 需要的話請看下一節「請求支援」。
+
+「上游說明」是 TurBoTse README 對該設定檔的註記：**已實測**＝上游作者或提供者實機測試可用；**未實測**＝上游也沒有機器測試；空白＝上游沒有特別註記（多半是 hanwckf 時代就有的機型）。
+
+| 編譯名稱 | 機型 | 上游說明 |
+|---|---|---|
+| `360-T6M`、`360-T6M-PB` | 360 T6M（PB＝pb-boot 版） | 未實測 |
+| `B70` | B70 | |
+| `BELL-A040WQ` | Bell A040WQ | |
+| `C-Life-XG1` | C-Life XG1 | 未實測 |
+| `DIR-878` | D-Link DIR-878 | |
+| `DIR-882` | D-Link DIR-882 | |
+| `EA7500` | Linksys EA7500 | 未實測 |
+| `G-AX1800` | 富春江 G-AX1800（白色） | 已實測 |
+| `G-AX1800-B` | 富春江 G-AX1800（黑色，網路孔配置與白色版不同） | 已實測 |
+| `GHL` | GHL | 未實測 |
+| `HAR-20S2U1` | HAR-20S2U1 | 未實測 |
+| `JCG-836PRO` | JCG 836PRO | |
+| `JCG-AC860M` | JCG AC860M | |
+| `JCG-Q10Pro`、`JCG-Q10Pro-PB` | JCG Q10 Pro | 未實測 |
+| `JCG-Q11Pro` | JCG Q11 Pro | 未實測 |
+| `JCG-Q20`、`JCG-Q20-PB` | JCG Q20 | |
+| `JCG-Y2` | JCG Y2 | |
+| `JDCLOUD-RE-CP-02` | 京東雲無線寶 魯班（RE-CP-02） | 未實測 |
+| `JDCLOUD-RE-SP-01B` | 京東雲 RE-SP-01B | 未實測 |
+| `K2P`、`K2P-USB`、`K2P-NANO` | 斐訊 K2P（USB 版、精簡版） | |
+| `KOMI-A8` | 康佳 KOMI A8 | 未實測 |
+| `MI-4` | 小米路由器 4 | |
+| `MI-R3G` | 小米路由器 3G | |
+| `MI-R3P`、`MI-R3P-PB`、`MI-R3P-SPI` | 小米路由器 3 Pro | |
+| `MI-R4A` | 小米路由器 4A 千兆版 | 已實測 |
+| `MR2600` | MR2600 | |
+| `MSG1500` | MSG1500 | |
+| `MSG1500-Z` | MSG1500-Z | 已實測 |
+| `NETGEAR-BZV` | Netgear BZV | |
+| `NETGEAR-R6800` | Netgear R6800 | 未實測 |
+| `NETGEAR-R7450` | Netgear R7450 | 已實測 |
+| `NEWIFI` | Newifi（舊版設定，Newifi D3 請用 `NEWIFI3`） | |
+| `QM-B1` | QM-B1 | 未實測 |
+| `R2100` | 小米 AC2100 | |
+| `RM2100` | Redmi AC2100 | |
+| `RT-AC85P` | ASUS RT-AC85P | |
+| `SIM-AX1800T` | SIM AX1800T | 未實測 |
+| `TX1801` | TX1801 Plus | 未實測 |
+| `WDR8620` | TP-Link WDR8620 | 未實測 |
+| `WE410443-TC` | WE410443-TC | 未實測 |
+| `WIA3300-10` | 西加雲杉 WIA3300-10 | 已實測 |
+| `WR1200JS` | WR1200JS | |
+| `WRL18M4GD` | WRL18M4GD | 未實測 |
+| `XY-C1` | XY-C1 | |
+| `ZTE-E8820S` | 中興 E8820S | |
+| `ZTE-E8820V2` | 中興 E8820 V2 | |
+| `ZTT-RX6000` | 中天科技 RX6000（Wi-Fi 6 電信業者機） | 已實測 |
+
+上游對 `NEWIFI3` 的註記是「部分來自 GH-X/padavan-4.4，不需要拆 C48 電容，上游未實測」；本專案會以實機驗證。
+
+### 請求支援
+
+想在社群支援機型、或清單以外的機型上使用 padavan-tw，有兩種方式：
+
+1. **開 Issue 請維護者協助**：到 [Issues](https://github.com/candy999/padavan-tw/issues/new/choose) 選「機型支援請求」，填寫機型與硬體資訊。
+   維護者會幫你編譯並發布該機型的測試版 Release；你測試後回報結果，確認可用的機型會在表格裡標註。
+   清單以外的新機型，需要有 Padavan 或 OpenWrt 的現成支援可以參考，請在 Issue 裡附上連結。
+2. **自己編譯（不用等）**：
+   1. 按右上角 **Fork** 複製本專案到你的帳號。
+   2. 到你 Fork 的 **Actions** 頁面，第一次需要按「I understand my workflows, go ahead and enable them」。
+   3. 選左邊的 **Build Firmware** → **Run workflow**，在「機型」選你的編譯名稱 → **Run workflow**。
+   4. 大約 30–60 分鐘後，在該次執行的 **Artifacts** 下載 `.trx`（保留 14 天）。
+   5. 想改功能，編輯 `trunk/configs/tw/<編譯名稱>.config`（新增檔案即可，會覆蓋共用設定），再執行一次。
+
+> 社群支援機型的 Flash 空間差異很大，16 MB 的機型如果編譯失敗或韌體超過分割區大小，請在 Issue 裡提出，我們一起調整功能。
 
 ## 功能
 
@@ -68,7 +148,7 @@ CR660x 的設定檔理論上也適用 CR6606、CR6609，但本專案只以 CR660
 
 ## 自行編譯
 
-用 GitHub Actions（建議）：Fork 本專案後，到 Actions → **Build Firmware** → Run workflow，選機型即可。推送 `v*` 標籤會自動發布 Release。
+用 GitHub Actions（建議）：步驟見上方「請求支援 → 自己編譯」。推送 `v*` 標籤會自動發布 Release。
 
 在自己的電腦（Ubuntu 24.04）：
 
@@ -84,8 +164,15 @@ make NEWIFI3
 make CR660x
 ```
 
-第一次會自動下載預編好的 musl 工具鏈。韌體會出現在 `trunk/images/`。
-要調整功能，修改 `trunk/configs/templates/NEWIFI3.config` 或 `CR660x.config` 裡的 `CONFIG_FIRMWARE_INCLUDE_*`。
+第一次會自動下載預編好的 musl 工具鏈。韌體會出現在 `trunk/images/`。任何 `trunk/configs/templates/` 裡的機型都能用同樣方式編譯，例如 `make K2P`。
+
+設定檔的組合方式：
+
+1. `trunk/configs/templates/<機型>.config`：上游的機型設定，**保持不改**，方便之後同步 TurBoTse
+2. `trunk/configs/tw/common.config`：台灣版共用設定（所有機型都套用）
+3. `trunk/configs/tw/<機型>.config`：機型專屬調整（有才套用）
+
+後面的值會覆蓋前面的值。要調整功能，改第 2 或第 3 個檔案裡的 `CONFIG_FIRMWARE_INCLUDE_*`。
 
 ## 路線圖
 

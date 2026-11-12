@@ -70,4 +70,4 @@ TurBoTse 沒有的 571 個 commit 分類：其他機型 184、套件版本 167�
 
 - `rc/src/ralink.c`：802.11k/v 開關無效（驅動只讀第一個 `RRMEnable`／`WNMEnable`），以及 MT7915 DBDC 的 `FtSupport` 少一個參數。預設仍關閉。
 - 台灣化：繁體中文（台灣）介面、時區、NTP、斷線偵測主機。
-- 機型設定：關閉科學上網／校園網等外掛；開啟 SQM（含必要的 QoS、IFB 模組）、SFE、WireGuard、msd_lite；不超頻。
+- 機型設定：放在 `trunk/configs/tw/`，編譯時接在上游的機型設定後面（上游設定檔保持不改）。關閉科學上網／校園網等外掛；開啟 SQM（含必要的 QoS、IFB 模組）、SFE、WireGuard、msd_lite；不超頻。

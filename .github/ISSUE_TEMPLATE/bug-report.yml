@@ -1,0 +1,49 @@
+name: 問題回報
+description: 韌體有錯誤、功能異常或翻譯問題
+title: "[問題] "
+labels: ["bug"]
+body:
+  - type: input
+    id: target
+    attributes:
+      label: 機型與編譯名稱
+      placeholder: 例如：Newifi D3（NEWIFI3）
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: 韌體版本
+      description: Release 名稱，或 Actions 檔名裡的日期與 commit 短碼
+      placeholder: 例如：v2026.11.20，或 padavan-tw-NEWIFI3-20261112-b120c85
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: 問題類型
+      options:
+        - 有線網路／PPPoE／硬體 NAT
+        - 無線（2.4G／5G／漫遊）
+        - SQM QoS
+        - DNS／SmartDNS
+        - VPN（WireGuard／OpenVPN）
+        - IPTV／MOD
+        - 網頁介面／翻譯
+        - 編譯失敗
+        - 其他
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: 發生了什麼事
+      description: 怎麼操作、預期結果、實際結果
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: 系統記錄
+      description: 「系統記錄」頁面的相關內容。請先遮蔽密碼、公開 IP 等個人資訊
+      render: text
