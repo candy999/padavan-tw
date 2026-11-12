@@ -496,8 +496,8 @@ void stop_wireguard(void){
 }
 
 void start_wireguard(void){
-	int wireguard_enable = nvram_get_int("wireguard_enable");
-	if ( wireguard_enable == 1)
+	/* padavan-tw：用戶端與伺服器各自檢查是否啟用 */
+	if (nvram_get_int("wireguard_enable") == 1 || nvram_get_int("wgs_enable") == 1)
 		eval("/usr/bin/wireguard.sh","start");
 }
 

@@ -35,7 +35,7 @@ NVRAM = {
     'lan_ipaddr': '192.168.2.1', 'lan_netmask': '255.255.255.0', 'productid': 'NEWIFI3',
     'firmver_sub': '3.4.3.9-099_2026-11', 'computer_name': 'NEWIFI3', 'time_zone': 'CCT-8',
     'ntp_server0': 'time.stdtime.gov.tw', 'ntp_server1': 'tock.stdtime.gov.tw',
-    'wl_ssid': 'padavan-tw_5G', 'rt_ssid': 'padavan-tw', 'wl_channel': '149', 'rt_channel': '6', 'wl_country_code': 'TW', 'rt_country_code': 'TW', 'wl_TxPower': '100', 'rt_TxPower': '100', 'tw_acs_daily': '1', 'tw_acs_hour': '4', 'rt_HT_BW': '0',
+    'wl_ssid': 'padavan-tw_5G', 'rt_ssid': 'padavan-tw', 'wl_channel': '149', 'rt_channel': '6', 'wl_country_code': 'TW', 'rt_country_code': 'TW', 'wl_TxPower': '100', 'rt_TxPower': '100', 'tw_acs_daily': '1', 'wgs_enable': '1', 'wgs_port': '51820', 'wgs_addr': '10.66.0.1', 'wgs_host': '', 'wgs_lan_nat': '1', 'wgs_pubkey': 'xTIBA5rboUvnH4htodjb6e697QjLERt1NAB4mZqp8Dg=', 'wgs_num_x': '2', 'ddns_enable_x': '0', 'wan0_ipaddr': '1.163.20.30', 'lan_ipaddr': '192.168.2.1', 'lan_netmask': '255.255.255.0', 'tw_acs_hour': '4', 'rt_HT_BW': '0',
     'wan_pppoe_username': '87654321@hinet.net', 'sqm_enable': '0', 'hw_nat_mode': '1',
     'http_username': 'admin', 'dhcp_static_arp': '0', 'dhcp_static_x': '1', 'dhcp_staticnum_x': '3', 'vts_enable_x': '1', 'vts_num_x': '2', 'dhcp_start': '192.168.2.100', 'dhcp_end': '192.168.2.244',
 }
@@ -149,6 +149,8 @@ def call_hook(name, args):
                 '["00:1A:2B:00:00:44","192.168.2.44","掃地機器人","3"]')
     if name == 'get_nvram_list' and args[-1] == 'VSList':
         return '["遊戲主機","27015","192.168.2.52","27015","UDP","","1"],["NAS","443","192.168.2.20","443","TCP","","2"]'
+    if name == 'get_nvram_list' and 'WGSPeerList' in args:
+        return '["我的手機","Hj8kZ3T0aB9cD1eF2gH3iJ4kL5mN6oP7qR8sT9uV0wX=","","2"],["公司筆電","Qw1eR2tY3uI4oP5aS6dF7gH8jK9lZ0xC1vB2nM3qW4=","","3"]'
     if name == 'get_static_ccount':
         return '0'
     if name == 'shown_language_option':

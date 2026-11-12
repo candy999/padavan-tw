@@ -1037,7 +1037,22 @@
 #endif
 
 #if defined(APP_WIREGUARD)
+	struct variable variables_WIREGUARD_WGSPeerList[] = {
+			{"wgs_name_x", "32", NULL, FALSE},
+			{"wgs_pub_x", "44", NULL, FALSE},
+			{"wgs_psk_x", "44", NULL, FALSE},
+			{"wgs_ip_x", "3", NULL, FALSE},
+			{0,0,0,0}
+		};
+
 	struct variable variables_WIREGUARD[] = {
+			/* padavan-tw：WireGuard 伺服器 */
+			{"wgs_enable", "", NULL, EVM_RESTART_WIREGUARD|EVM_RESTART_FIREWALL},
+			{"wgs_port", "", NULL, EVM_RESTART_WIREGUARD|EVM_RESTART_FIREWALL},
+			{"wgs_addr", "", NULL, EVM_RESTART_WIREGUARD|EVM_RESTART_FIREWALL},
+			{"wgs_lan_nat", "", NULL, EVM_RESTART_FIREWALL},
+			{"wgs_host", "", NULL, FALSE},
+			{"WGSPeerList", "Group", ARGV((char*)variables_WIREGUARD_WGSPeerList, "32", "140", "wgs_num_x"), EVM_RESTART_WIREGUARD},
 			{"wireguard_enable", "", NULL, EVM_RESTART_WIREGUARD},
 			{"wireguard_localip", "", NULL, EVM_RESTART_WIREGUARD},
 			{"wireguard_localkey", "", NULL, EVM_RESTART_WIREGUARD},

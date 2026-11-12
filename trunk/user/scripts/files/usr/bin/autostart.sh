@@ -99,7 +99,7 @@ logger -t "自动启动" "正在启动 zerotier..."
 /usr/bin/zerotier.sh start
 fi
 
-if [ $(nvram get wireguard_enable) = 1 ] ; then
+if [ "$(nvram get wireguard_enable)" = 1 ] || [ "$(nvram get wgs_enable)" = 1 ] ; then
 logger -t "自动启动" "正在启动 wireguard..."
 /usr/bin/wireguard.sh start
 fi

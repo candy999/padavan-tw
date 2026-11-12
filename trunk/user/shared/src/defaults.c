@@ -858,6 +858,15 @@ struct nvram_pair router_defaults[] = {
 	{ "wireguard_localkey", "" },
 	{ "wireguard_peerip", "" },
 	{ "wireguard_peerkey", "" },
+	/* padavan-tw：WireGuard 伺服器（外出連回家）。金鑰在第一次啟用時由路由器產生 */
+	{ "wgs_enable", "0" },
+	{ "wgs_port", "51820" },
+	{ "wgs_addr", "10.66.0.1" },		/* 伺服器在 VPN 網段的位址，網段固定 /24 */
+	{ "wgs_host", "" },			/* 給裝置連線用的網域或 IP；空白＝DDNS 名稱或 WAN IP */
+	{ "wgs_lan_nat", "1" },			/* 連到區網裝置時改用路由器位址，NAS／攝影機的「只允許區網」也能用 */
+	{ "wgs_privkey", "" },
+	{ "wgs_pubkey", "" },
+	{ "wgs_num_x", "0" },
 #endif
 
 #if defined(APP_SQM)
