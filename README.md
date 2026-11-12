@@ -1,157 +1,107 @@
-# padavan #
+# padavan-tw
 
-This project is based on original rt-n56u with latest mtk 4.4.198 kernel, which is fetch from D-LINK GPL code.
+**為台灣網路環境打造的 Padavan 路由器韌體**，專門支援 **Newifi D3** 與**小米 CR6608**。
 
-#### Extra functions / changes
-- Adding user/chinadns-ng , and fix shadowsocks + chinadns-ng using local domain whitellist.
-- AP Relay auto-daemon
+Padavan 用的是聯發科原廠的閉源無線與硬體 NAT 驅動，長年以「刷了就不用管」的穩定度著稱。
+padavan-tw 以目前仍持續維護的 [TurBoTse/padavan](https://github.com/TurBoTse/padavan) 為基底，
+逐一檢視各家分支的修補，只留下穩定、安全、台灣用得到的部分，並重新做了完整的台灣中文介面。
 
+## 為什麼選 padavan-tw
 
-#### SS/SSR
-- Transparent proxy (iptables) wasn't cleaned completely, this issue is fixed.
-- Adding DNSProxy , Local DNS integrated with SS/SSR 
-- Dnsmasq optimization specially for SS/SSR 
-- Resolve DNS pollution - Adding DNS i/p in china-route mode
-- Fast-open option is enabled according to linux version
-##### Enhancements in this repo
+| | padavan-tw 的做法 |
+|---|---|
+| **穩定優先** | 沿用 hanwckf 系列長期驗證過的閉源驅動與舊版硬體 NAT；不收實驗性驅動、不超頻 |
+| **只做兩台，做到好** | 只維護 Newifi D3、小米 CR6608 兩台，每次修改都會同時編譯這兩台確認 |
+| **真正的台灣中文** | 介面 2,037 條全部以英文原文重新翻譯成台灣網通用語，不是簡轉繁；同時修正簡中版本的大量錯譯（例如把「穿透」譯成「通道」、把「數據機」譯成「網卡」、單位與預設值寫錯等） |
+| **台灣預設值** | 時區臺北、NTP 用國家時間與頻率標準實驗室、斷線偵測改用 HiNet 與 TWNIC，不再依賴中國的 DNS 與網站 |
+| **乾淨** | 移除科學上網、廣告外掛、中國雲端服務、校園網認證、KMS 等與台灣網路無關的功能 |
+| **補安全漏洞** | OpenSSH 從 9.7p1 升到 9.9p2（修補 regreSSHion 等漏洞）；其餘套件跟著 TurBoTse 的版本（OpenSSL 3.0、curl 8.21、dnsmasq 2.90） |
+| **修好上游的 bug** | 修正 802.11k/v 開關在網頁上切了也沒作用、CR6608 的 802.11r 設定值錯誤 |
+| **自動編譯** | GitHub Actions 每次修改都自動編譯兩台的韌體；發布版附 SHA256 校驗 |
+| **修補有紀錄** | 收了什麼、沒收什麼、為什麼，都寫在 [docs/PATCH-REVIEW.md](docs/PATCH-REVIEW.md) |
 
-- commits has beed rewritten on top of [hanwckf/rt-n56u](https://github.com/hanwckf/rt-n56u) repo for better history tracking
-- Optimized Makefiles and build scripts, added a toplevel Makefile
-- Added ccache support, may save up to 50%+ build time
-- Upgraded the toolchain and libc:
-  - gcc 13.3.0
-  - musl 1.2.5 / uClibc-ng 1.0.52
- - OpenWrt style package Makefile
- - Enabled kernel cgroups support
- - Fixed K2P led label names
- - Replaced udpxy with msd_lite
- - Replaced Web Console with ttyd
- - Upgraded libs and user packages
- - And a lot of package related fixes
- - ...
+## 支援機型
 
-# Features
+| 機型 | 編譯名稱 | 晶片 | 無線 |
+|---|---|---|---|
+| Newifi D3（新路由 3、OpenWrt 稱 Newifi D2） | `NEWIFI3` | MT7621A | MT7603E 2.4G＋MT7612E 5G |
+| 小米 CR6608（CR660x 系列） | `CR660x` | MT7621A | MT7905DAN＋MT7975DN（Wi-Fi 6 AX1800） |
 
-- Based on 4.4.198 Linux kernel
-- Support MT7621 based devices
-- Support MT7615D/MT7615N/MT7915D wireless chips
-- Support raeth and mt7621 hwnat with legency driver
-- Support qca shortcut-fe
-- Support IPv6 NAT based on netfilter
-- Support WireGuard integrated in kernel
-- Support fullcone NAT (by Chion82)
-- Support LED&GPIO control via sysfs
+CR660x 的設定檔理論上也適用 CR6606、CR6609，但本專案只以 CR6608 為目標。
 
-# Supported devices
-- 360-T6M (from https://github.com/BINGHUAice/padavan-4.4, 没有机器测试，自行判断)
-- B70
-- BELL-A040WQ
-- C-Life-XG1 (from https://github.com/vb1980/padavan-4.4, 没有机器测试，自行判断)
-- CR660x
-- DIR-878
-- DIR-882
-- EA7500 (from https://github.com/MNM28/padavan-4.4, 没有机器测试，自行判断)
-- G-AX1800 (from https://github.com/ddyjyj/padavan-4.4, 富春江G-AX1800, 自测可用)
-- G-AX1800-B (from https://github.com/vb1980/padavan-4.4, 富春江G-AX1800黑色版本, 自测可用, 网口配置和白色版不一样, 4根天线都是ipex可拆, ttl排针焊接好了, 做工比白色版好些)
-- GHL (from https://github.com/fangenhui520/padavan-4.4, 没有机器测试，自行判断)
-- HAR-20S2U1 (from https://github.com/vb1980/padavan-4.4, 没有机器测试，自行判断)
-- JDCloud RE-CP-02 (无线宝鲁班, from https://github.com/240038901/padavan-4.4, 没有机器测试，自行判断)
-- JDCloud RE-SP-01B (from https://github.com/MeIsReallyBa/padavan-4.4, 没有机器测试，自行判断)
-- JCG-836PRO
-- JCG-AC860M
-- JCQ-Q10Pro (from https://github.com/vb1980/padavan-4.4, 没有机器测试，自行判断)
-- JCQ-Q11Pro (from https://github.com/qewwqewq22/padavan11, 没有机器测试，自行判断)
-- JCG-Q20
-- JCG-Y2
-- K2P
-- K2P-USB
-- KOMI-A8 (from https://github.com/vb1980/padavan-4.4, 没有机器测试，自行判断)
-- MI-4
-- MI-R3G
-- MI-R3P
-- MI-R4A (from https://github.com/vipshmily/padavan-4.4, 自测可用)
-- MR2600
-- MSG1500
-- MSG1500-Z (from https://github.com/TurBoTse/padavan, 自测可用)
-- NETGEAR-BZV
-- NETGEAR-R6800 (from https://github.com/MNM28/padavan-4.4, 没有机器测试，自行判断)
-- NETGEAR-R7450 (from https://github.com/vipshmily/padavan-4.4, 自测可用)
-- NEWIFI
-- NEWIFI3 (partially from https://github.com/GH-X/padavan-4.4, 无需拆除C48电容, 没有机器测试，自行判断)
-- QM-B1 (from https://github.com/monw/padavan, 没有机器测试，自行判断)
-- R2100
-- RM2100
-- RT-AC85P
-- SIM-AX1800T (from https://github.com/vb1980/padavan-4.4, 没有机器测试，自行判断)
-- TX1801 Plus (from https://github.com/MNM28/padavan-4.4, 没有机器测试，自行判断)
-- WDR8620 (from https://github.com/fzn0268/padavan-4.4, 没有机器测试，自行判断)
-- WRL18M4GD (from https://github.com/vb1980/padavan-4.4, 没有机器测试，自行判断)
-- WE410443-TC (from https://github.com/akw28888/padavan-4.4, 没有机器测试，自行判断)
-- WIA3300-10 (from https://github.com/vb1980/padavan-4.4, 西加云杉WIA3300-10, 自测可用)
-- WR1200JS
-- XY-C1
-- ZTE-E8820S
-- ZTE-E8820V2
-- ZTT-RX6000(from https://github.com/vb1980/padavan-4.4, 中天科技RX6000的Wifi6运营商机器, ttl刷机简单, 使用R3G分区, r3g breed刷入, 自测可用)
-# Compilation steps
+## 功能
 
-- Install dependencies
-  ```sh
-  # Debian/Ubuntu
-  sudo apt install unzip libtool-bin ccache curl cmake gperf gawk flex bison nano xxd \
-      fakeroot kmod cpio bc zip git python3-docutils gettext automake autopoint \
-      texinfo build-essential help2man pkg-config zlib1g-dev libgmp3-dev \
-      libmpc-dev libmpfr-dev libncurses5-dev libltdl-dev wget libc-dev-bin liblzma-dev
-  ```
-  **Optional:**
-  - install [golang](https://go.dev/doc/install) for building go programs
-    ```sh
-    sudo rm -rf /usr/local/go
-    curl -fsSL https://go.dev/dl/go1.20.10.linux-amd64.tar.gz | sudo tar -C /usr/local -xz
-    echo "export PATH=\$PATH:/usr/local/go/bin" | sudo tee /etc/profile.d/go.sh
-    source /etc/profile.d/go.sh
-    go version
-    ```
-  - install [nodejs](https://nodejs.org/en/download) for building [AdGuardHome](trunk/user/adguardhome)
-    ```sh
-    sudo apt update
-    sudo apt install -y ca-certificates curl gnupg
-    sudo mkdir -p /etc/apt/keyrings
-    curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
-    echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_18.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list
-    sudo apt update
-    sudo apt install -y nodejs
-    node -v
-    ```
-- Clone source code
-  ```sh
-  git clone https://github.com/TurBoTse/padavan.git
-  ```
-- Modify template file and start compiling
-  ```sh
-  # (Optional) Modify template file
-  # vi trunk/configs/templates/K2P.config
+**包含**
+- 有線：MT7621 硬體 NAT（HWNAT）、SFE 軟體加速、IPv6、fullcone NAT
+- 頻寬管理：**SQM QoS（cake）**
+- 無線：閉源驅動、Beamforming（TxBF）、802.11k/v/r（預設關閉，見下方說明）、AP 中繼自動重連
+- DNS：dnsmasq 進階選項（DNSSEC、DNS Rebind 防護、強制區網裝置使用路由器 DNS 等）、SmartDNS
+- VPN：WireGuard（核心內建）、OpenVPN、L2TP／PPTP 伺服器
+- IPTV：msd_lite、xUPnPd、IGMP proxy（中華電信 MOD 相關設定）
+- 管理：OpenSSH（含 SFTP）、ttyd 網頁終端機
+- Newifi D3 另有 USB：Samba、FTP、NTFS／exFAT／ext4
 
-  # Start compiling with: make PRODUCT_NAME
-  make K2P
+**刻意不包含**
+- 科學上網（Shadowsocks、Xray、V2Ray、Trojan、sing-box 等）
+- 廣告外掛（adbyby、AdGuardHome）：之後由黑潮 DNS 負責過濾
+- 中國服務（阿里 DDNS、ddnsto、阿里雲盤）、校園網認證、KMS 模擬器
+- 超頻
 
-  # To build firmware for other devices, clean the tree after previous build
-  make clean
-  ```
+## 下載與刷機
 
-# Package Development
+1. 到 [Releases](https://github.com/candy999/padavan-tw/releases) 下載對應機型的 `.trx`，並用 `SHA256SUMS-*.txt` 核對檔案。
+   想試最新修改，可以到 [Actions](https://github.com/candy999/padavan-tw/actions) 下載 Artifacts（保留 14 天）。
+2. 刷機：
+   - **Newifi D3**：先刷 Breed，再從 Breed 網頁刷入 `.trx`。
+   - **小米 CR6608**：要先解鎖 SSH 並刷入支援 Padavan 的 bootloader，步驟依原廠韌體版本而不同，請先查好再動手。
+   - 已經在跑 Padavan 的機器：可以直接在「系統管理 → 韌體更新」更新。
+3. 預設值：管理頁面 `http://192.168.2.1`，帳號密碼 `admin` / `admin`，Wi-Fi 密碼 `1234567890`。**第一次登入請立刻修改。**
 
-- Makefile examples
-  - [Makefile project](trunk/libs/libpcre/Makefile) 
-  - [CMake project](trunk/user/ttyd/Makefile)
-- Compiling a single package (cd to `trunk` first)
-  - build: `make libs/libpcre_only`
-  - clean: `make libs/libpcre_clean`
-  - romfs: `make libs/libpcre_romfs`
+> 刷機有變磚風險，請確認有救援方式（Breed、TTL 或編程器）再操作。
 
-# Manuals
+## 使用建議
 
-- Controlling GPIO and LEDs via sysfs
-- How to use NAND RWFS partition
-- How to use IPv6 NAT and fullcone NAT
-- How to add new device support with device tree
+- **SQM 與硬體 NAT 不能同時發揮作用**：硬體 NAT 會繞過 SQM 的排程。
+  寬頻 300M 以下、在意延遲（遊戲、視訊）就開 SQM；千兆 PPPoE 想跑滿速就用硬體 NAT。
+- **802.11k/v/r** 只在多台 AP 使用同一個 SSID 時才有用，而且各家閉源驅動之間的漫遊相容性沒人保證，預設關閉。要開請先在兩台都開、實際測試漫遊。
+- **Linux 4.4 核心已停止官方維護。** 本韌體選擇閉源驅動的穩定度，代價是核心不再有上游安全更新。不建議把管理頁面或 SSH 開放到 WAN。
+
+## 自行編譯
+
+用 GitHub Actions（建議）：Fork 本專案後，到 Actions → **Build Firmware** → Run workflow，選機型即可。推送 `v*` 標籤會自動發布 Release。
+
+在自己的電腦（Ubuntu 24.04）：
+
+```bash
+sudo apt-get install -y bison flex gperf help2man libtool-bin texinfo python3-docutils autopoint gettext ccache autoconf automake liblzma-dev libltdl-dev liblzo2-dev
+```
+
+```bash
+make NEWIFI3
+```
+
+```bash
+make CR660x
+```
+
+第一次會自動下載預編好的 musl 工具鏈。韌體會出現在 `trunk/images/`。
+要調整功能，修改 `trunk/configs/templates/NEWIFI3.config` 或 `CR660x.config` 裡的 `CONFIG_FIRMWARE_INCLUDE_*`。
+
+## 路線圖
+
+- [x] 以 TurBoTse/padavan 為基底，檢視 hanwckf、MeIsReallyBa、vb1980、simonchen 的修補
+- [x] 台灣中文介面、台灣預設值、移除無關功能
+- [x] OpenSSH 安全更新、修正 KVR bug、自動編譯
+- [ ] 整合[黑潮 DNS](https://github.com/candy999/kuroshio-dns)：台灣 CDN 節點、加密 DNS、廣告與詐騙過濾
+- [ ] miniupnpd 升級（目前 2.0 有已知漏洞）
+- [ ] 預設 Wi-Fi 國家碼改為台灣（需確認 5 GHz 頻道表）
+
+## 致謝與授權
+
+本專案建立在許多人的成果上：Andy Padavan 的 [rt-n56u](https://gitlab.com/padavan/rt-n56u)、
+[hanwckf](https://github.com/hanwckf/padavan-4.4)、[tsl0922](https://github.com/tsl0922/padavan)、
+[TurBoTse](https://github.com/TurBoTse/padavan)、[vb1980](https://github.com/vb1980/padavan-4.4)、
+[MeIsReallyBa](https://github.com/MeIsReallyBa/padavan-4.4)、padavanonly、[simonchen](https://github.com/simonchen/padavan-4.4)，
+以及 [padavan-ng](https://gitlab.com/hadzhioglu/padavan-ng) 社群。
+
+授權依各元件原本的授權（主要為 GPL-2.0），詳見 `trunk/License`。
