@@ -35,7 +35,7 @@ NVRAM = {
     'lan_ipaddr': '192.168.2.1', 'lan_netmask': '255.255.255.0', 'productid': 'NEWIFI3',
     'firmver_sub': '3.4.3.9-099_2026-11', 'computer_name': 'NEWIFI3', 'time_zone': 'CCT-8',
     'ntp_server0': 'time.stdtime.gov.tw', 'ntp_server1': 'tock.stdtime.gov.tw',
-    'wl_ssid': 'padavan-tw_5G', 'rt_ssid': 'padavan-tw', 'wl_channel': '149', 'rt_channel': '6', 'wl_country_code': 'TW', 'rt_country_code': 'TW', 'wl_TxPower': '100', 'rt_TxPower': '100', 'tw_acs_daily': '1', 'tw_roam_enable': '1', 'tw_roam_weak': '-75', 'wgs_enable': '1', 'wgs_port': '51820', 'wgs_addr': '10.66.0.1', 'wgs_host': '', 'wgs_lan_nat': '1', 'wgs_pubkey': 'xTIBA5rboUvnH4htodjb6e697QjLERt1NAB4mZqp8Dg=', 'wgs_num_x': '2', 'ddns_enable_x': '0', 'wan0_ipaddr': '1.163.20.30', 'lan_ipaddr': '192.168.2.1', 'lan_netmask': '255.255.255.0', 'tw_acs_hour': '4', 'rt_HT_BW': '0',
+    'wl_ssid': 'padavan-tw_5G', 'rt_ssid': 'padavan-tw', 'wl_channel': '149', 'rt_channel': '6', 'wl_country_code': 'TW', 'rt_country_code': 'TW', 'wl_TxPower': '100', 'rt_TxPower': '100', 'tw_acs_daily': '1', 'kuroshio_enable': '1', 'kuroshio_domain': 'home.example.net', 'kuroshio_cf_token': 'x', 'kuroshio_ddns': '1', 'kuroshio_dot': '1', 'kuroshio_doq': '0', 'kuroshio_doh': '1', 'kuroshio_doh_port': '8443', 'kuroshio_doh_wan_port': '443', 'kuroshio_wan': '1', 'kuroshio_access': 'taiwan', 'kuroshio_log': 'warn', 'tw_roam_enable': '1', 'tw_roam_weak': '-75', 'wgs_enable': '1', 'wgs_port': '51820', 'wgs_addr': '10.66.0.1', 'wgs_host': '', 'wgs_lan_nat': '1', 'wgs_pubkey': 'xTIBA5rboUvnH4htodjb6e697QjLERt1NAB4mZqp8Dg=', 'wgs_num_x': '2', 'ddns_enable_x': '0', 'wan0_ipaddr': '1.163.20.30', 'lan_ipaddr': '192.168.2.1', 'lan_netmask': '255.255.255.0', 'tw_acs_hour': '4', 'rt_HT_BW': '0',
     'wan_pppoe_username': '87654321@hinet.net', 'sqm_enable': '0', 'hw_nat_mode': '1',
     'http_username': 'admin', 'dhcp_static_arp': '0', 'dhcp_static_x': '1', 'dhcp_staticnum_x': '3', 'vts_enable_x': '1', 'vts_num_x': '2', 'dhcp_start': '192.168.2.100', 'dhcp_end': '192.168.2.244',
 }
@@ -50,7 +50,8 @@ FUNC_VALUES = {
     'support_max_conn': 16384, 'support_min_vlan': 3,
     'found_app_smbd': 1, 'found_app_nmbd': 1, 'found_app_ftpd': 1, 'found_app_sshd': 1,
     'found_app_ttyd': 1, 'found_app_iperf3': 1, 'found_app_sqm': 1, 'found_app_wireguard': 1,
-    'found_app_xupnpd': 1, 'found_app_vpnsvr': 1, 'found_app_vpncli': 1, 'found_app_smartdns': 1,
+    'found_app_xupnpd': 1, 'found_app_vpnsvr': 1, 'found_app_vpncli': 1, 'found_app_smartdns': 0,
+    'found_app_kuroshio': 1, 'found_app_sqm': 0,
     'found_app_ovpn': 1, 'found_app_l2tp': 1,
     # login_state_hook
     'login_safe': 1, 'login_ip_str': "'192.168.2.12'", 'login_mac_str': "'3C:22:FB:00:00:12'",
@@ -151,6 +152,8 @@ def call_hook(name, args):
         return '["遊戲主機","27015","192.168.2.52","27015","UDP","","1"],["NAS","443","192.168.2.20","443","TCP","","2"]'
     if name == 'get_nvram_list' and 'WGSPeerList' in args:
         return '["我的手機","Hj8kZ3T0aB9cD1eF2gH3iJ4kL5mN6oP7qR8sT9uV0wX=","","2"],["公司筆電","Qw1eR2tY3uI4oP5aS6dF7gH8jK9lZ0xC1vB2nM3qW4=","","3"]'
+    if name == 'kuroshio_status':
+        return 'function kuroshio_status() { return 2;}\n'
     if name == 'get_static_ccount':
         return '0'
     if name == 'shown_language_option':

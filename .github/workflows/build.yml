@@ -186,6 +186,18 @@ jobs:
         with:
           path: out
           merge-multiple: true
+      # GPL-3.0：韌體裡的黑潮 DNS 要一併提供對應版本的原始碼
+      - uses: actions/checkout@v4
+        with:
+          path: src
+          sparse-checkout: trunk/user/kuroshio/Makefile
+          sparse-checkout-cone-mode: false
+      - name: Attach kuroshio-dns source (GPL-3.0)
+        run: |
+          ver=$(sed -n 's/^KUROSHIO_VER[[:space:]]*:=[[:space:]]*//p' src/trunk/user/kuroshio/Makefile)
+          curl -fsSL --retry 3 -o "out/kuroshio-dns-${ver}-source.tar.gz" \
+            "https://github.com/candy999/kuroshio-dns/archive/refs/tags/${ver}.tar.gz"
+          ls -l out
       - name: Release tag
         run: |
           if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
@@ -205,3 +217,4 @@ jobs:
             - 原始碼：${{ github.sha }}
             - 檔名有 -oc1000 的是超頻版（CPU 1000 MHz），其餘為標準版（880 MHz）；不確定就用標準版
             - 刷機前請先比對 SHA256SUMS
+            - 韌體內含黑潮 DNS（GPL-3.0），對應版本的原始碼附在 kuroshio-dns-*-source.tar.gz

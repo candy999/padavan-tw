@@ -528,6 +528,24 @@ void update_adb(void){
 }
 #endif
 
+#if defined(APP_KUROSHIO)
+void stop_kuroshio(void){
+	eval("/usr/bin/kuroshio.sh","stop");
+}
+
+void start_kuroshio(void){
+	if (nvram_get_int("kuroshio_enable") == 1)
+		eval("/usr/bin/kuroshio.sh","start");
+}
+
+void restart_kuroshio(void){
+	stop_kuroshio();
+	start_kuroshio();
+	/* no-resolv 是否加上要看開關，所以重寫 dnsmasq 設定 */
+	restart_dhcpd();
+}
+#endif
+
 #if defined(APP_SMARTDNS)
 void stop_smartdns(void){
 	eval("/usr/bin/smartdns.sh","stop");
@@ -865,6 +883,10 @@ stop_services(int stopall)
 #endif
 #if defined(APP_SMARTDNS)
 	stop_smartdns();
+#endif
+#if defined(APP_KUROSHIO)
+	/* 先停黑潮 DNS（會把學習資料寫出），之後才儲存 /etc/storage */
+	stop_kuroshio();
 #endif
 #if defined(APP_ALIDDNS)
 	stop_aliddns();

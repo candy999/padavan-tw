@@ -965,6 +965,20 @@ ipt_filter_rules(char *man_if, char *wan_if, char *lan_if, char *lan_ip,
 			}
 		}
 #endif
+#if defined (APP_KUROSHIO)
+		/* padavan-tw：黑潮 DNS 的加密 DNS 開放外網（只讓台灣 IP 連由黑潮 DNS 在程式內判斷，這裡只開埠） */
+		if (nvram_get_int("kuroshio_enable") == 1 && nvram_get_int("kuroshio_wan") == 1) {
+			int k_doh = nvram_safe_get_int("kuroshio_doh_port", 8443, 1, 65535);
+			if (nvram_get_int("kuroshio_dot") == 1)
+				fprintf(fp, "-A %s -p %s --dport %d -j %s\n", dtype, "tcp", 853, logaccept);
+			if (nvram_get_int("kuroshio_doq") == 1)
+				fprintf(fp, "-A %s -p %s --dport %d -j %s\n", dtype, "udp", 853, logaccept);
+			if (nvram_get_int("kuroshio_doh") == 1) {
+				fprintf(fp, "-A %s -p %s --dport %d -j %s\n", dtype, "tcp", k_doh, logaccept);
+				fprintf(fp, "-A %s -p %s --dport %d -j %s\n", dtype, "udp", k_doh, logaccept);	/* DoH3 */
+			}
+		}
+#endif
 #if defined (APP_WIREGUARD)
 		/* padavan-tw：WireGuard 伺服器——接受連線埠，VPN 裡的裝置可以存取路由器（DNS、管理頁） */
 		if (nvram_get_int("wgs_enable") == 1) {
@@ -1818,6 +1832,19 @@ ipt_nat_rules(char *man_if, char *man_ip,
 	/* pre-routing from VPN client */
 	if (vpnc_if && i_vpnc_sfw == 3)
 		fprintf(fp, "-A PREROUTING -i %s ! -d %s -j %s\n", vpnc_if, lan_net, dtype);
+
+#if defined (APP_KUROSHIO)
+	/* padavan-tw：外面連 DoH 的埠（預設 443）轉到黑潮 DNS 在路由器上的埠（預設 8443） */
+	if (wan_ip && nvram_get_int("kuroshio_enable") == 1 && nvram_get_int("kuroshio_wan") == 1 &&
+	    nvram_get_int("kuroshio_doh") == 1) {
+		int k_doh = nvram_safe_get_int("kuroshio_doh_port", 8443, 1, 65535);
+		int k_wan = nvram_safe_get_int("kuroshio_doh_wan_port", 443, 1, 65535);
+		if (k_wan != k_doh) {
+			fprintf(fp, "-A %s -p tcp --dport %d -j REDIRECT --to-ports %d\n", dtype, k_wan, k_doh);
+			fprintf(fp, "-A %s -p udp --dport %d -j REDIRECT --to-ports %d\n", dtype, k_wan, k_doh);
+		}
+	}
+#endif
 
 	if (is_nat_enabled) {
 		char dmz_ip[16];

@@ -66,7 +66,14 @@ logger -t "自动启动" "正在启动科学上网..."
 /usr/bin/shadowsocks.sh start
 fi
 
-if [ $(nvram get sdns_enable) = 1 ] ; then
+# padavan-tw：黑潮 DNS（腳本自己檢查 kuroshio_enable）
+if [ -x /usr/bin/kuroshio.sh ] ; then
+logger -t "自動啟動" "啟動黑潮 DNS..."
+/usr/bin/kuroshio.sh start
+fi
+
+# padavan-tw 已移除 SmartDNS；舊設定還開著時略過
+if [ -x /usr/bin/smartdns.sh ] && [ "$(nvram get sdns_enable)" = 1 ] ; then
    if [ -f "$smartdns_conf" ] ; then
        sed -i '/去广告/d' $smartdns_conf
        sed -i '/adbyby/d' $smartdns_conf

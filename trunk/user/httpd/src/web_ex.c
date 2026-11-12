@@ -721,6 +721,10 @@ ej_dump(int eid, webs_t wp, int argc, char **argv)
 		snprintf(filename, sizeof(filename), "%s/%s", STORAGE_SCRIPTS_DIR, file+8);
 	else if (strncmp(file, "crontab.", 8)==0)
 		snprintf(filename, sizeof(filename), "%s/%s", STORAGE_CRONTAB_DIR, nvram_safe_get("http_username"));
+#if defined (APP_KUROSHIO)
+	else if (strncmp(file, "kuroshio.", 9)==0)
+		snprintf(filename, sizeof(filename), "%s/%s", "/etc/storage/kuroshio", file+9);
+#endif
 	else
 		snprintf(filename, sizeof(filename), "%s/%s", "/tmp", file);
 
@@ -912,6 +916,14 @@ validate_asp_apply(webs_t wp, int sid)
 #if defined (SUPPORT_HTTPS)
 			else if (!strncmp(v->name, "httpssl.", 8)) {
 				if (write_textarea_to_file(value, STORAGE_HTTPSSL_DIR, file_name))
+					restart_needed_bits |= event_mask;
+			}
+#endif
+#if defined(APP_KUROSHIO)
+			/* padavan-tw：黑潮 DNS 的 UCI 設定檔（/etc/storage/kuroshio/kuroshio.uci） */
+			else if (!strncmp(v->name, "kuroshio.", 9)) {
+				mkdir("/etc/storage/kuroshio", 0700);
+				if (write_textarea_to_file(value, "/etc/storage/kuroshio", v->name+9))
 					restart_needed_bits |= event_mask;
 			}
 #endif
@@ -2323,6 +2335,28 @@ static int aliyundrive_status_hook(int eid, webs_t wp, int argc, char **argv)
 }
 #endif
 
+#if defined (APP_KUROSHIO)
+/* padavan-tw：黑潮 DNS 狀態（0＝沒有執行、1＝執行中但暫時用業者 DNS、2＝接管 DNS） */
+static int kuroshio_status_hook(int eid, webs_t wp, int argc, char **argv)
+{
+	int st = 0;
+	char buf[16] = {0};
+	FILE *fp;
+
+	if (pids("kuroshio")) {
+		st = 1;
+		fp = fopen("/tmp/kuroshio/use", "r");
+		if (fp) {
+			if (fgets(buf, sizeof(buf), fp) && strncmp(buf, "kuroshio", 8) == 0)
+				st = 2;
+			fclose(fp);
+		}
+	}
+	websWrite(wp, "function kuroshio_status() { return %d;}\n", st);
+	return 0;
+}
+#endif
+
 #if defined (APP_SMARTDNS)
 static int smartdns_status_hook(int eid, webs_t wp, int argc, char **argv)
 {
@@ -2576,6 +2610,11 @@ ej_firmware_caps_hook(int eid, webs_t wp, int argc, char **argv)
 #else
 	int found_app_smartdns = 0;
 #endif
+#if defined(APP_KUROSHIO)
+	int found_app_kuroshio = 1;
+#else
+	int found_app_kuroshio = 0;
+#endif
 #if defined(APP_ADBYBY)
 	int found_app_adbyby = 1;
 #else
@@ -2792,6 +2831,7 @@ ej_firmware_caps_hook(int eid, webs_t wp, int argc, char **argv)
 		"function found_app_vpnsvr() { return %d;}\n"
 		"function found_app_vpncli() { return %d;}\n"
 		"function found_app_smartdns() { return %d;}\n"
+		"function found_app_kuroshio() { return %d;}\n"
 		"function found_app_adguardhome() { return %d;}\n",
 		found_utl_hdparm,
 		found_app_ovpn,
@@ -2826,6 +2866,7 @@ ej_firmware_caps_hook(int eid, webs_t wp, int argc, char **argv)
 		found_app_vpnsvr,
 		found_app_vpncli,
 		found_app_smartdns,
+		found_app_kuroshio,
 		found_app_adguardhome
 	);
 
@@ -4576,6 +4617,9 @@ struct ej_handler ej_handlers[] =
 #endif
 #if defined (APP_SMARTDNS)
 	{ "smartdns_status", smartdns_status_hook},
+#endif
+#if defined (APP_KUROSHIO)
+	{ "kuroshio_status", kuroshio_status_hook},
 #endif
 #if defined (APP_FRP)
 	{ "frpc_status", frpc_status_hook},

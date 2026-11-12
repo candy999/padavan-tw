@@ -1223,6 +1223,12 @@ handle_notifications(void)
 			restart_smartdns();
 		}
 #endif
+#if defined(APP_KUROSHIO)
+		else if (strcmp(entry->d_name, RCN_RESTART_KUROSHIO) == 0)
+		{
+			restart_kuroshio();
+		}
+#endif
 #if defined(APP_FRP)
 		else if (strcmp(entry->d_name, RCN_RESTART_FRP) == 0)
 		{

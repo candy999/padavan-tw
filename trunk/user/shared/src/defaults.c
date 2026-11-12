@@ -851,6 +851,23 @@ struct nvram_pair router_defaults[] = {
 	{ "reboot_schedule_enable", "0" },
 	{ "reboot_schedule", "00000000000" },
 
+#if defined(APP_KUROSHIO)
+	/* padavan-tw：黑潮 DNS（設定檔 /etc/storage/kuroshio/kuroshio.uci；這些是後台表單的欄位，啟動時寫進設定檔） */
+	{ "kuroshio_enable", "1" },
+	{ "kuroshio_domain", "" },		/* 綁定網域（DDNS、憑證、加密 DNS、公開頁） */
+	{ "kuroshio_cf_token", "" },		/* Cloudflare API Token（DDNS 與憑證共用） */
+	{ "kuroshio_acme_email", "" },
+	{ "kuroshio_ddns", "0" },
+	{ "kuroshio_dot", "0" },
+	{ "kuroshio_doq", "0" },
+	{ "kuroshio_doh", "0" },
+	{ "kuroshio_doh_port", "8443" },	/* DoH 在路由器上的埠 */
+	{ "kuroshio_doh_wan_port", "443" },	/* 外面連進來的埠（防火牆轉到 kuroshio_doh_port） */
+	{ "kuroshio_wan", "0" },		/* 加密 DNS 開放外網（只有台灣 IP 能連，由黑潮 DNS 判斷） */
+	{ "kuroshio_access", "taiwan" },	/* taiwan／open */
+	{ "kuroshio_log", "warn" },
+#endif
+
 #if defined(APP_WIREGUARD)
 	/*WIREGUARD*/
 	{ "wireguard_enable", "0" },

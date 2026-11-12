@@ -128,7 +128,7 @@
 | J4 | WireGuard：「VPN 伺服器」選單入口、儀表板顯示裝置連線狀態 | 📋 |
 | J5 | 依業者帶入設定：中華電信光世代（PPPoE＋IPv6）、有線電視寬頻（DHCP）、MOD 接法（C6 的一部分） | 📋 |
 | J6 | 黑潮 DNS 串接（G 章一起做，**DDNS 統一由黑潮 DNS 處理**）：① 打包進韌體 ② 防火牆開放 DoH／DoT／DoQ ③ dnsmasq 轉送 ④ 憑證給後台 HTTPS ⑤ WireGuard 連線位址帶入黑潮 DNS 網域（只用網域，WireGuard 不用憑證）⑥ 隱藏 Padavan 原本的 DDNS 頁；另外偵測 CGNAT | 📋 下一步 |
-| J7 | 黑潮 DNS 擴充 Cloudflare 以外的 DDNS 業者（暫定 DuckDNS、No-IP；在 kuroshio-dns 專案實作） | 📋 |
+| J7 | 黑潮 DNS 擴充 Cloudflare 以外的 DDNS 業者（黑潮 DNS 專案目前沒有排定；在 kuroshio-dns 專案實作） | 📋 |
 
 ## F. 效能
 
@@ -141,15 +141,21 @@
 
 ## G. 黑潮 DNS 整合
 
+使用官方 Release 的 MT7621 執行檔（v3.0.1，核對 SHA256）＋同一標籤的 `data/`（核對 commit）；憑證用 acme.sh（Cloudflare DNS 驗證）。
+設定用 OpenWrt 版同一套 UCI 格式，由 padavan-tw 的設定頁管理（黑潮 DNS 的管理網頁只接受本機連線）。**預設開啟**。
+
 | # | 項目 | 狀態 |
 |---|---|---|
-| G1 | 以 Padavan 套件形式加入靜態 mipsel 執行檔 | 📋 |
-| G2 | 啟動腳本、設定存放在 `/etc/storage`、dnsmasq 備援 | 📋 |
-| G3 | 存取控制改用 iptables＋ipset（Padavan 沒有 nftables） | 📋 |
-| G4 | 設定頁：確認黑潮 DNS 內建網頁在 Linux 上可用；不行就做 Padavan 設定頁 | 🔬 |
-| G5 | 儀表板加上 DNS 統計（查詢、攔截、拉回台灣節點） | 📋 |
-| G6 | 移植完成後移除 SmartDNS | 📋 |
-| G7 | 內建 ACME（Cloudflare DNS 驗證）編進 Padavan 版，不需要 acme.sh；只支援 Cloudflare 管理的網域 | 📋 |
+| G1 | 打包：執行檔、`data/`、預設 UCI 設定、acme.sh、CA 憑證清單；Release 附黑潮 DNS 原始碼（GPL-3.0） | ✅ 待實機 |
+| G2 | `kuroshio.sh`：啟停、nvram → UCI、學習資料存放（CR6608 RWFS／D3 `/etc/storage`／其他放記憶體＋每日備份）、每日存檔 | ✅ 待實機 |
+| G3 | dnsmasq 接管：`no-resolv`、`cache-size=0`，上游依保護狀態寫進 servers-file；DDR（網域指向路由器）、DNR（DHCP 選項 162） | ✅ 待實機 |
+| G4 | 保護：每秒檢查程式、每 10 秒查 `_dns.resolver.arpa`，連續 3 次沒回答改用業者 DNS，恢復就切回 | ✅ 待實機 |
+| G5 | 防火牆：開放 DoT／DoQ／DoH 給外網、外部 443 轉到路由器 8443；只讓台灣 IP 由黑潮 DNS 在程式內判斷 | ✅ 待實機 |
+| G6 | 設定頁（DNS 服務）：網域、Token、DDNS、憑證申請、加密 DNS、對外開放、進階 UCI 編輯、狀態、啟用 RWFS | ✅ |
+| G7 | 憑證同步給後台 HTTPS；WireGuard 連線位址帶入黑潮 DNS 網域；隱藏 Padavan 原本的 DDNS 頁 | ✅ 待實機 |
+| G8 | SmartDNS 從韌體移除 | ✅ |
+| G9 | 儀表板加上 DNS 統計（經路由器本機讀黑潮 DNS 的 `/api/status`、`/api/dashboard`） | 📋 |
+| G10 | 實機記錄：MIPS 上的記憶體高點、每天寫入量、啟動時間，回報給黑潮 DNS 專案 | 📋 |
 
 ## H. 測試
 
@@ -170,6 +176,7 @@
 - Rust 版 SQM＋cFosSpeed 類套件整合：未來另外評估
 - 軟體 SQM 作為主線：CPU 負擔太大，改用硬體 QoS（程式碼保留）
 - 雙硬體 NAT 驅動可切換：保持穩定，只用原本的 hw_nat
+- OpenWrt 版（含 4.4 核心的 SDK 版、移植閉源驅動到新核心）：維護者決定放棄，專注 Padavan
 - 小米 MI-MINI：需要另外維護 3.4 核心的專案
 - 新版硬體 NAT 驅動 mtk_hnat（padavanonly 的實驗性移植）：穩定性證據不足
 - 每台裝置流量排行：硬體 NAT 下數字不準

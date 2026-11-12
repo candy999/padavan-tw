@@ -197,6 +197,9 @@ endif
 ifneq ($(CONFIG_FIRMWARE_INCLUDE_SMARTDNS),y)
 	rm -f $(INSTALLDIR)/www/Advanced_smartdns.asp
 endif
+ifneq ($(CONFIG_FIRMWARE_INCLUDE_KUROSHIO),y)
+	rm -f $(INSTALLDIR)/www/Advanced_kuroshio.asp
+endif
 ifneq ($(CONFIG_FIRMWARE_INCLUDE_SOFTETHERVPN_SERVER),y)
 	rm -f $(INSTALLDIR)/www/vpnsrv.asp
 endif

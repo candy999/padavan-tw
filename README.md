@@ -116,7 +116,7 @@ CR660x 的設定檔理論上也適用 CR6606、CR6609。
 - 頻寬管理：**硬體 QoS（MT7621 QDMA）**，跟硬體 NAT 同時運作；後台切換關閉／固定／自動（開發中，見路線圖）
 - Wi-Fi 國家碼預設台灣（NCC）：頻道與功率**只標示、不鎖定**，DFS 頻段、非台灣頻段在選單上標示；自動選頻只選台灣免雷達偵測的頻道
 - 無線：閉源驅動、Beamforming（TxBF）、802.11k/v/r（預設關閉，見下方說明）、AP 中繼自動重連
-- DNS：dnsmasq 進階選項（DNSSEC、DNS Rebind 防護、強制區網裝置使用路由器 DNS 等）、SmartDNS
+- DNS：**[黑潮 DNS](https://github.com/candy999/kuroshio-dns)**（預設開啟：找出台灣 CDN 節點、每天挑最快且沒汙染的上游、過濾廣告與詐騙網站；選用：DoT／DoH／DoQ 加密 DNS、Cloudflare DDNS、Let's Encrypt 憑證）；沒有回應時自動改用業者 DNS
 - VPN：WireGuard（核心內建）、OpenVPN、L2TP／PPTP 伺服器
 - IPTV：msd_lite、xUPnPd、IGMP proxy（中華電信 MOD 相關設定）
 - 管理：OpenSSH（含 SFTP）、ttyd 網頁終端機
@@ -188,7 +188,7 @@ make CR660x
 - [ ] 總覽儀表板、網路診斷、裝置詳情
 - [x] 硬體 QoS 執行中開關與驗證工具（`tw-qos-check`）
 - [ ] 硬體 QoS 固定與自動模式：平常硬體 NAT 全速，延遲變高且頻寬快滿時自動限速，不需要時自動解除
-- [ ] 整合[黑潮 DNS](https://github.com/candy999/kuroshio-dns)
+- [x] 整合[黑潮 DNS](https://github.com/candy999/kuroshio-dns)（取代 SmartDNS，待實機）
 - [x] Wi-Fi 國家碼改為台灣（只標示、不鎖定）
 - [ ] miniupnpd 升級
 

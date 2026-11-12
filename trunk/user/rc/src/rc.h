@@ -607,6 +607,11 @@ void stop_wireguard(void);
 void start_wireguard(void);
 void restart_wireguard(void);
 #endif
+#if defined(APP_KUROSHIO)
+void stop_kuroshio(void);
+void start_kuroshio(void);
+void restart_kuroshio(void);
+#endif
 #if defined(APP_SMARTDNS)
 void stop_smartdns(void);
 void start_smartdns(void);

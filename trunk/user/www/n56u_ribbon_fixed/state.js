@@ -362,7 +362,7 @@ if (found_app_mentohust()){
 if (found_app_adbyby()){
 	tabtitle[14] = new Array("", "<#menu5_20_1#>");
 }
-if (found_app_smartdns()||found_app_adguardhome()){
+if (found_app_kuroshio()||found_app_smartdns()||found_app_adguardhome()){
 	tabtitle[15] = new Array("", "<#menu5_29#>");
 }
 
@@ -385,6 +385,11 @@ tablink[0] = new Array("", "Advanced_Wireless2g_Content.asp", "Advanced_WGuest2g
 tablink[1] = new Array("", "Advanced_Wireless_Content.asp", "Advanced_WGuest_Content.asp", "Advanced_WMode_Content.asp", "Advanced_ACL_Content.asp", "Advanced_WSecurity_Content.asp", "Advanced_WAdvanced_Content.asp");
 tablink[2] = new Array("", "Advanced_LAN_Content.asp", "Advanced_DHCP_Content.asp", "Advanced_GWStaticRoute_Content.asp", "Advanced_IPTV_Content.asp", "Advanced_Switch_Content.asp", "Advanced_WOL_Content.asp");
 tablink[3] = new Array("", "Advanced_WAN_Content.asp", "Advanced_IPv6_Content.asp", "Advanced_VirtualServer_Content.asp", "Advanced_Exposed_Content.asp", "Advanced_DDNS_Content.asp");
+/* padavan-tw：DDNS 統一由黑潮 DNS 處理，隱藏 Padavan 原本的 DDNS 分頁（最後一個） */
+if (typeof found_app_kuroshio == "function" && found_app_kuroshio()){
+	tabtitle[3].pop();
+	tablink[3].pop();
+}
 tablink[4] = new Array("", "Advanced_BasicFirewall_Content.asp", "Advanced_Netfilter_Content.asp", "Advanced_URLFilter_Content.asp", "Advanced_MACFilter_Content.asp", "Advanced_Firewall_Content.asp");
 tablink[5] = new Array("", "Advanced_AiDisk_others.asp", "Advanced_AiDisk_samba.asp", "Advanced_AiDisk_ftp.asp", "Advanced_Modem_others.asp", "Advanced_Printer_others.asp");
 tablink[6] = new Array("", "Advanced_System_Content.asp", "Advanced_Services_Content.asp", "Advanced_OperationMode_Content.asp", "Advanced_FirmwareUpgrade_Content.asp", "Advanced_SettingBackup_Content.asp", "Advanced_Console_Content.asp");
@@ -411,7 +416,10 @@ if (found_app_adbyby()){
 	ad_array = new Array("","Advanced_adbyby.asp");
 	tablink[14] = (ad_array);
 }
-if (found_app_smartdns()){
+if (found_app_kuroshio()){
+	kuroshio_array = new Array("","Advanced_kuroshio.asp");
+	tablink[15] = (kuroshio_array);
+}else if (found_app_smartdns()){
 	smartdns_array = new Array("","Advanced_smartdns.asp");
 	tablink[15] = (smartdns_array);
 }else if (found_app_adguardhome()){
@@ -469,7 +477,7 @@ if (found_app_adbyby()){
 	menuL2_title.push("<#menu5_20#>");
 } else menuL2_title.push("");
 
-if (found_app_smartdns()||found_app_adguardhome()){
+if (found_app_kuroshio()||found_app_smartdns()||found_app_adguardhome()){
 	menuL2_title.push("<#menu5_29#>");
 } else menuL2_title.push("");
 
@@ -510,7 +518,9 @@ if (found_app_adbyby()){
 	menuL2_link.push(ad_array[1]);
 }  else menuL2_link.push("");
 
-if (found_app_smartdns()){
+if (found_app_kuroshio()){
+	menuL2_link.push(kuroshio_array[1]);
+} else if (found_app_smartdns()){
 	menuL2_link.push(smartdns_array[1]);
 } else if (found_app_adguardhome()){
 	menuL2_link.push(adg_array[1]);

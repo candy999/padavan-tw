@@ -1206,6 +1206,26 @@
 		};
 #endif
 
+#if defined(APP_KUROSHIO)
+	struct variable variables_KuroshioConf[] = {
+			{"kuroshio_enable", "", NULL, EVM_RESTART_KUROSHIO|EVM_RESTART_DHCPD|EVM_RESTART_FIREWALL},
+			{"kuroshio_domain", "", NULL, EVM_RESTART_KUROSHIO},
+			{"kuroshio_cf_token", "", NULL, EVM_RESTART_KUROSHIO},
+			{"kuroshio_acme_email", "", NULL, EVM_RESTART_KUROSHIO},
+			{"kuroshio_ddns", "", NULL, EVM_RESTART_KUROSHIO},
+			{"kuroshio_dot", "", NULL, EVM_RESTART_KUROSHIO|EVM_RESTART_FIREWALL},
+			{"kuroshio_doq", "", NULL, EVM_RESTART_KUROSHIO|EVM_RESTART_FIREWALL},
+			{"kuroshio_doh", "", NULL, EVM_RESTART_KUROSHIO|EVM_RESTART_FIREWALL},
+			{"kuroshio_doh_port", "", NULL, EVM_RESTART_KUROSHIO|EVM_RESTART_FIREWALL},
+			{"kuroshio_doh_wan_port", "", NULL, EVM_RESTART_KUROSHIO|EVM_RESTART_FIREWALL},
+			{"kuroshio_wan", "", NULL, EVM_RESTART_KUROSHIO|EVM_RESTART_FIREWALL},
+			{"kuroshio_access", "", NULL, EVM_RESTART_KUROSHIO},
+			{"kuroshio_log", "", NULL, EVM_RESTART_KUROSHIO},
+			{"kuroshio.kuroshio.uci", "File", NULL, EVM_RESTART_KUROSHIO},
+			{0,0,0,0}
+		};
+#endif
+
 #if defined(APP_SMARTDNS)
     struct variable variables_SmartdnsConf[] = {
 			{"sdns_enable", "", NULL, EVM_RESTART_SMARTDNS},
@@ -1417,6 +1437,9 @@
 #if defined(APP_SMARTDNS)
 		{"SmartdnsConf",		variables_SmartdnsConf},
 #endif
+#if defined(APP_KUROSHIO)
+		{"KuroshioConf",		variables_KuroshioConf},
+#endif
 #if defined(APP_SHADOWSOCKS)
 		{"ShadowsocksConf",		variables_ShadowsocksConf},
 #endif
@@ -1530,6 +1553,9 @@
 #endif
 #if defined(APP_SMARTDNS)
 		{EVM_RESTART_SMARTDNS,		EVT_RESTART_SMARTDNS,		RCN_RESTART_SMARTDNS,	0},
+#endif
+#if defined(APP_KUROSHIO)
+		{EVM_RESTART_KUROSHIO,		EVT_RESTART_KUROSHIO,		RCN_RESTART_KUROSHIO,	0},
 #endif
 #if defined(APP_ADBYBY)
 		{EVM_RESTART_ADBYBY,		EVT_RESTART_ADBYBY,		RCN_RESTART_ADBYBY,	0},

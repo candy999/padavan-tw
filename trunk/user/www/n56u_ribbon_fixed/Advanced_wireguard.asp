@@ -40,6 +40,9 @@ var wgs = {
 	port: '<% nvram_get_x("", "wgs_port"); %>',
 	addr: '<% nvram_get_x("", "wgs_addr"); %>',
 	host: '<% nvram_get_x("", "wgs_host"); %>',
+	kuro_on: '<% nvram_get_x("", "kuroshio_enable"); %>',
+	kuro_domain: '<% nvram_get_x("", "kuroshio_domain"); %>',
+	kuro_ddns: '<% nvram_get_x("", "kuroshio_ddns"); %>',
 	ddns_on: '<% nvram_get_x("", "ddns_enable_x"); %>',
 	ddns: '<% nvram_get_x("", "ddns_hostname_x"); %>',
 	wan: '<% nvram_get_x("", "wan0_ipaddr"); %>',
@@ -76,8 +79,13 @@ function change_wgs_enable(){
 	showhide_div('wgs_peers_box', on);
 }
 
+function kuro_domain(){
+	return (typeof found_app_kuroshio == "function" && found_app_kuroshio() && wgs.kuro_on == "1" && wgs.kuro_ddns == "1") ? wgs.kuro_domain : "";
+}
+
 function default_endpoint_host(){
 	if (wgs.host != "") return wgs.host;
+	if (kuro_domain() != "") return kuro_domain();	/* 黑潮 DNS 的 DDNS 網域 */
 	if (wgs.ddns_on == "1" && wgs.ddns != "") return wgs.ddns;
 	if (wgs.wan != "" && wgs.wan != "0.0.0.0") return wgs.wan;
 	return "";
@@ -86,10 +94,12 @@ function default_endpoint_host(){
 function show_endpoint_hint(){
 	var h = default_endpoint_host(), msg;
 	document.form.wgs_host.placeholder = h ? h : "例如 home.example.net";
-	if (wgs.host == "" && wgs.ddns_on == "1" && wgs.ddns != "")
+	if (wgs.host == "" && kuro_domain() != "")
+		msg = "空白時使用黑潮 DNS 的網域 " + kuro_domain() + "（DDNS 會自動更新 IP）。";
+	else if (wgs.host == "" && wgs.ddns_on == "1" && wgs.ddns != "")
 		msg = "空白時使用 DDNS 名稱 " + wgs.ddns + "。";
 	else if (wgs.host == "" && h != "")
-		msg = "空白時使用目前的 WAN IP " + h + "；浮動 IP 會變，建議設定 DDNS（黑潮 DNS 或「DDNS」頁）。";
+		msg = "空白時使用目前的 WAN IP " + h + "；浮動 IP 會變，建議在「黑潮 DNS」設定網域並開啟 DDNS。";
 	else
 		msg = "裝置在外面連線時用的網域或 IP。";
 	var ip = (wgs.host == "" ? h : "");
