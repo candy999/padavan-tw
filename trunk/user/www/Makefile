@@ -24,6 +24,9 @@ romfs:
 	echo "Make www romfs"
 	rm -Rf $(ROMFS_DIR)/www
 	cp -R $(WEBUI_NAME) $(ROMFS_DIR)/www
+	# padavan-tw：在每個頁面的 main.css 之後注入 viewport 與 tw.css（原始 .asp 不修改，方便同步上游）
+	# 與 tools/ui-preview/serve.py 的 INJECT 保持一致
+	find $(ROMFS_DIR)/www -name '*.asp' -exec sed -i 's|<link rel="stylesheet" type="text/css" href="/bootstrap/css/main.css">|&\n<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n<link rel="stylesheet" type="text/css" href="/bootstrap/css/tw.css">|' {} +
 	rm -f $(ROMFS_DIR)/www/httpd_check.htm
 	echo "ASUSTeK" > $(ROMFS_DIR)/www/httpd_check.htm
 	cd $(ROMFS_DIR)/www && ln -sf /opt/share/www/custom custom
