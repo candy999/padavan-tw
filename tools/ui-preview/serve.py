@@ -35,7 +35,7 @@ NVRAM = {
     'lan_ipaddr': '192.168.2.1', 'lan_netmask': '255.255.255.0', 'productid': 'NEWIFI3',
     'firmver_sub': '3.4.3.9-099_2026-11', 'computer_name': 'NEWIFI3', 'time_zone': 'CCT-8',
     'ntp_server0': 'time.stdtime.gov.tw', 'ntp_server1': 'tock.stdtime.gov.tw',
-    'wl_ssid': 'padavan-tw_5G', 'rt_ssid': 'padavan-tw', 'wl_channel': '149', 'rt_channel': '6',
+    'wl_ssid': 'padavan-tw_5G', 'rt_ssid': 'padavan-tw', 'wl_channel': '149', 'rt_channel': '6', 'wl_country_code': 'TW', 'rt_country_code': 'TW', 'wl_TxPower': '100', 'rt_TxPower': '100',
     'wan_pppoe_username': '87654321@hinet.net', 'sqm_enable': '0', 'hw_nat_mode': '1',
     'http_username': 'admin', 'dhcp_static_arp': '0', 'dhcp_static_x': '1', 'dhcp_staticnum_x': '3', 'vts_enable_x': '1', 'vts_num_x': '2', 'dhcp_start': '192.168.2.100', 'dhcp_end': '192.168.2.244',
 }

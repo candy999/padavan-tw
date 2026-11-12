@@ -546,6 +546,7 @@ function validate_wlphrase(s, v, obj){
                                             <td>
                                                 <input type="text" maxlength="3" size="3" name="wl_TxPower" class="input" value="<% nvram_get_x("", "wl_TxPower"); %>" onKeyPress="return is_number(this,event);" onblur="return validate_range(this, 0, 100);" />
                                                 &nbsp;<span style="color:#888;">[0..100]</span>
+                                                <div class="tw-hint">數值是晶片最大功率的百分比，本韌體不限制。台灣規定：36–48、149–165 最大 1 W；DFS 頻段（52–64、100–140）最大 250 mW。100% 時實際功率依機型而定，在 DFS 頻段可能超過規定。</div>
                                             </td>
                                         </tr>
                                         <tr>
@@ -575,7 +576,7 @@ function validate_wlphrase(s, v, obj){
                                                     <option value="KR" <% nvram_match_x("", "wl_country_code", "KR","selected"); %>>Korea (Region 5, channels 149-161)</option>
                                                     <option value="NO" <% nvram_match_x("", "wl_country_code", "NO","selected"); %>>Norway (Region 0, channels 36-64,149-165)</option>
                                                     <option value="RU" <% nvram_match_x("", "wl_country_code", "RU","selected"); %>>Russia (Region 36, channels 36-64,132-144,149-165)</option>
-                                                    <option value="TW" <% nvram_match_x("", "wl_country_code", "TW","selected"); %>>Taiwan (Region 3, channels 52-64,149-161)</option>
+                                                    <option value="TW" <% nvram_match_x("", "wl_country_code", "TW","selected"); %>>Taiwan 台灣（NCC）</option>
                                                     <option value="UA" <% nvram_match_x("", "wl_country_code", "UA","selected"); %>>Ukraine (Region 35, channels 36-64,100-140,149-165)</option>
                                                     <option value="US" <% nvram_match_x("", "wl_country_code", "US","selected"); %>>USA (Region 0, channels 36-64,149-165)</option>
                                                     <option value="DB" <% nvram_match_x("", "wl_country_code", "DB","selected"); %>>Debug (all channels)</option>

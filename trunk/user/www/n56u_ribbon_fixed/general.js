@@ -1319,3 +1319,45 @@ function showhide_div(e, sh) {
     else if (document.layers)
         document.layers[e].display = status;
 }
+
+/* padavan-tw：Wi-Fi 頻道選單下方的台灣法規說明（wireless.js、wireless_2g.js 共用） */
+/* 在頻道選單下方顯示目前選擇的說明；band = 2 或 5 */
+function tw_channel_hint(o, band) {
+    if (!o || !o.parentNode) return;
+    var id = o.name + "_tw_hint";
+    var h = document.getElementById(id);
+    if (!h) {
+        h = document.createElement("div");
+        h.id = id;
+        h.className = "tw-hint";
+        o.parentNode.appendChild(h);
+        var prev = o.onchange;
+        o.onchange = function () {
+            var r = prev ? prev.apply(this, arguments) : true;
+            tw_channel_hint(o, band);
+            return r;
+        };
+    }
+    var c = parseInt(o.value, 10), msg = "";
+    var cc = (band == 5) ? document.form.wl_country_code.value : document.form.rt_country_code.value;
+    if (cc != "TW") { h.style.display = "none"; return; }
+    if (band == 5) {
+        if (c == 0)
+            msg = "自動選頻只會選台灣免雷達偵測的頻道（36–48、149–165）。";
+        else if ((c >= 52 && c <= 64) || (c >= 100 && c <= 140))
+            msg = "DFS 頻段：台灣規定這些頻道要有雷達偵測（DFS）並限制功率 250 mW，本韌體沒有啟用雷達偵測。可以使用，但不符合 NCC 規定，請自行評估。";
+        else if (c >= 169)
+            msg = "169、173 不在台灣開放的頻段內，部分裝置也連不上。";
+        else
+            msg = "台灣可用頻道，免雷達偵測。";
+    } else {
+        if (c == 0)
+            msg = "自動選頻只會選 1–11。";
+        else if (c >= 12)
+            msg = "台灣可用，但部分裝置（美規）掃不到 12、13。";
+        else
+            msg = "台灣可用頻道。";
+    }
+    h.innerHTML = msg;
+    h.style.display = "";
+}

@@ -498,11 +498,16 @@ function insertChannelOption() {
 
     channels = new Array(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14);
 
+    if (country == "TW") {
+        tw_insert_channel_2g(orig);
+        return;
+    }
+
     if (country == "CA" || country == "CO" ||
         country == "DO" || country == "GT" ||
         country == "MX" || country == "NO" ||
         country == "PA" || country == "PR" ||
-        country == "TW" || country == "US" ||
+        country == "US" ||
         country == "UZ")
         channels.splice(12,3);
     else if (country != "DB")
@@ -516,6 +521,19 @@ function insertChannelOption() {
         channels[0] = "<#APChnAuto#>";
 
     add_options_x2(document.form.rt_channel, channels, ch_v, orig);
+    tw_channel_hint(document.form.rt_channel, 2);
+}
+
+/* padavan-tw：台灣 2.4 GHz（NCC 2400–2483.5 MHz）可用 1–13；12、13 部分美規裝置掃不到，只標示不鎖 */
+function tw_insert_channel_2g(orig) {
+    var o = document.form.rt_channel;
+    var t = ["自動（只選 1–11）"], v = [0], ch;
+    for (ch = 1; ch <= 13; ch++) {
+        v.push(ch);
+        t.push(ch >= 12 ? ch + "　⚠ 部分裝置不支援" : ch);
+    }
+    add_options_x2(o, t, v, orig);
+    tw_channel_hint(o, 2);
 }
 
 function insertExtChannelOption() {

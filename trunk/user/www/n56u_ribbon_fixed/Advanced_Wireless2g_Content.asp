@@ -546,6 +546,7 @@ function validate_wlphrase(s, v, obj){
                                             <td>
                                                 <input type="text" maxlength="3" size="3" name="rt_TxPower" class="input" value="<% nvram_get_x("", "rt_TxPower"); %>" onKeyPress="return is_number(this,event);" onblur="return validate_range(this, 0, 100);" />
                                                 &nbsp;<span style="color:#888;">[0..100]</span>
+                                                <div class="tw-hint">數值是晶片最大功率的百分比，本韌體不限制。台灣規定 2.4 GHz 最大 1 W。</div>
                                             </td>
                                         </tr>
                                         <tr>
@@ -572,7 +573,7 @@ function validate_wlphrase(s, v, obj){
                                                     <option value="GB" <% nvram_match_x("", "rt_country_code", "GB","selected"); %>>Europe (channels 1-13)</option>
                                                     <option value="JP" <% nvram_match_x("", "rt_country_code", "JP","selected"); %>>Japan (channels 1-13)</option>
                                                     <option value="RU" <% nvram_match_x("", "rt_country_code", "RU","selected"); %>>Russia (channels 1-13)</option>
-                                                    <option value="TW" <% nvram_match_x("", "rt_country_code", "TW","selected"); %>>Taiwan (channels 1-11)</option>
+                                                    <option value="TW" <% nvram_match_x("", "rt_country_code", "TW","selected"); %>>Taiwan 台灣（NCC）</option>
                                                     <option value="UA" <% nvram_match_x("", "rt_country_code", "UA","selected"); %>>Ukraine (channels 1-13)</option>
                                                     <option value="US" <% nvram_match_x("", "rt_country_code", "US","selected"); %>>USA (channels 1-11)</option>
                                                     <option value="DB" <% nvram_match_x("", "rt_country_code", "DB","selected"); %>>Debug (all channels)</option>

@@ -506,3 +506,6 @@ label, .radio, .checkbox { color: var(--text); }
   .tw-side, .tw-tabbar, .tw-top, #footer { display: none !important; }
   .wrapper { padding: 0 !important; }
 }
+
+/* 欄位下方的說明文字（例如 Wi-Fi 頻道的台灣法規標示） */
+.tw-hint{margin-top:6px;font-size:12.5px;line-height:1.5;color:var(--muted);max-width:46em}
