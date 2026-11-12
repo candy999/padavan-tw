@@ -27,10 +27,15 @@
 #include <syslog.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
-#include <net/if.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#ifdef TWR_TEST
+#include <net/if.h>
 #include <linux/wireless.h>
+#else
+/* 跟 rc 的 ralink.c 一樣用 wireless-tools 的標頭：musl 下 <net/if.h> 與 <linux/wireless.h> 會重複定義 */
+#include <iwlib.h>
+#endif
 
 #include "rc.h"
 
