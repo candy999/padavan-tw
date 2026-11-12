@@ -1480,6 +1480,7 @@ static const applet_rc_t applets_rc[] = {
 	{ "wpacli.script",	wpacli_main		},
 	{ "ip-up",		ipup_main		},
 	{ "tw-mtu-probe",	tw_mtu_probe_main	},
+	{ "tw-roamd",		tw_roamd_main		},
 	{ "ip-down",		ipdown_main		},
 #if defined (USE_IPV6)
 	{ "ipv6-up",		ipv6up_main		},

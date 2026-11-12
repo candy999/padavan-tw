@@ -171,6 +171,9 @@ long uptime(void);
 
 /* tw_mtu.c */
 int tw_mtu_probe_main(int argc, char **argv);
+
+/* tw_roamd.c */
+int tw_roamd_main(int argc, char **argv);
 int rand_seed_by_time(void);
 void set_pagecache_reclaim(void);
 void restart_all_sysctl(void);

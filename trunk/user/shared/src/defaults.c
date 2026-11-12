@@ -1071,6 +1071,9 @@ struct nvram_pair router_defaults[] = {
 	/* padavan-tw：硬體 QoS（QDMA） */
 	/* padavan-tw：每天自動重選頻道（只在頻道設為自動、Wi-Fi 閒置時；預設凌晨 4 點） */
 	{ "tw_acs_daily", "1" },
+	/* padavan-tw：輕量漫遊中控（觀察模式：只記錄、不引導） */
+	{ "tw_roam_enable", "1" },
+	{ "tw_roam_weak", "-75" },	/* 弱訊號門檻（dBm） */
 	{ "tw_acs_hour", "4" },
 	{ "hw_qos_mode", "0" },		/* 0=關閉 1=固定限速 2=自動 */
 	{ "hw_qos_wlan", "1" },		/* 開啟時 Wi-Fi 方向也經過 QDMA 排程 */

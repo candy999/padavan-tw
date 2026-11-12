@@ -248,6 +248,19 @@ tw_acs_daily_check(void)
 	doSystem("/usr/bin/tw-wifi-acs %s %s %s %d >/dev/null 2>&1 &", today, IFNAME_2G_MAIN, TW_ACS_IF5, TW_ACS_DBDC);
 }
 
+/* padavan-tw：依 nvram tw_roam_enable 啟停漫遊中控（程式結束也會自動重新啟動） */
+static void
+tw_roamd_check(void)
+{
+	int on = nvram_get_int("tw_roam_enable");
+	int running = pids("tw-roamd");
+
+	if (on && !running)
+		eval("/sbin/tw-roamd");
+	else if (!on && running)
+		doSystem("killall %s", "tw-roamd");
+}
+
 static void
 ntpc_handler(void)
 {
@@ -614,6 +627,7 @@ watchdog_on_timer(void)
 	inet_handler(is_ap_mode);
 
 	tw_acs_daily_check();
+	tw_roamd_check();
 
 	/* update kernel timezone daylight */
 	setkernel_tz();

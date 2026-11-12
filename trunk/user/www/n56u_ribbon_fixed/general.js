@@ -1361,3 +1361,23 @@ function tw_channel_hint(o, band) {
     h.innerHTML = msg;
     h.style.display = "";
 }
+
+/* padavan-tw：查看漫遊中控的狀態與事件（路由器上執行 tw-roamd status） */
+function tw_roam_show(b){
+	var o = document.getElementById("tw_roam_out");
+	if (typeof login_safe == "function" && !login_safe()) { alert("只能在區網登入時使用。"); return; }
+	b.disabled = true;
+	o.style.display = "";
+	o.textContent = "讀取中…";
+	jQuery.post('/apply.cgi', {
+		'action_mode': ' SystemCmd ',
+		'current_page': 'console_response.asp',
+		'next_page': 'console_response.asp',
+		'SystemCmd': 'tw-roamd status'
+	}, function () {
+		jQuery.ajax({ url: '/console_response.asp', cache: false, timeout: 20000,
+			success: function (data) { b.disabled = false; o.textContent = String(data).replace(/^\s+|\s+$/g, "") || "（沒有資料：漫遊中控可能沒有啟動）"; },
+			error: function () { b.disabled = false; o.textContent = "讀取失敗"; }
+		});
+	}).fail(function () { b.disabled = false; o.textContent = "讀取失敗（登入逾時？）"; });
+}
