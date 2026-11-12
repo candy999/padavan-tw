@@ -125,11 +125,12 @@ CR660x 的設定檔理論上也適用 CR6606、CR6609。
 - 科學上網（Shadowsocks、Xray、V2Ray、Trojan、sing-box 等）
 - 廣告外掛（adbyby、AdGuardHome）：之後由黑潮 DNS 負責過濾
 - 中國服務（阿里 DDNS、ddnsto、阿里雲盤）、校園網認證、KMS 模擬器
-- 超頻
+- 預設超頻（另外提供 `-oc1000` 超頻版，自行選用）
 
 ## 下載與刷機
 
 1. 到 [Releases](https://github.com/candy999/padavan-tw/releases) 下載對應機型的 `.trx`，並用 `SHA256SUMS-*.txt` 核對檔案。
+   每個機型有兩種：標準版（CPU 880 MHz）與檔名有 `-oc1000` 的超頻版（1000 MHz，CPU 快約 13%，開 SQM 時較有餘裕）。不確定就用標準版。
    想試最新修改，可以到 [Actions](https://github.com/candy999/padavan-tw/actions) 下載 Artifacts（保留 14 天）。
 2. 刷機：
    - **Newifi D3**：先刷 Breed，再從 Breed 網頁刷入 `.trx`。
@@ -176,12 +177,16 @@ make CR660x
 
 ## 路線圖
 
+完整計畫見 [docs/ROADMAP.md](docs/ROADMAP.md)。重點：
+
 - [x] 以 TurBoTse/padavan 為基底，檢視 hanwckf、MeIsReallyBa、vb1980、simonchen 的修補
 - [x] 台灣中文介面、台灣預設值、移除無關功能
-- [x] OpenSSH 安全更新、修正 KVR bug、自動編譯
-- [ ] 整合[黑潮 DNS](https://github.com/candy999/kuroshio-dns)：台灣 CDN 節點、加密 DNS、廣告與詐騙過濾
-- [ ] miniupnpd 升級（目前 2.0 有已知漏洞）
-- [ ] 預設 Wi-Fi 國家碼改為台灣（需確認 5 GHz 頻道表）
+- [x] OpenSSH 安全更新、修正 KVR bug、自動編譯（標準版與 OC 1000 版）
+- [x] 新後台框架：全站 RWD、亮暗色、手機表格卡片化
+- [ ] 總覽儀表板、網路診斷、裝置詳情
+- [ ] 智慧 SQM：平常走硬體 NAT，壅塞時自動改走 SQM；SQM 簡易模式；台灣專用自適應演算法
+- [ ] 整合[黑潮 DNS](https://github.com/candy999/kuroshio-dns)
+- [ ] miniupnpd 升級、Wi-Fi 國家碼改為台灣
 
 ## 致謝與授權
 
