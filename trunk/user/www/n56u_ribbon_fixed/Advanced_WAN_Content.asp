@@ -23,6 +23,43 @@
 <script>
 var $j = jQuery.noConflict();
 
+/* padavan-tw：自動偵測 PPPoE 能通過的最大封包，填入 MTU／MRU（路由器上執行 tw-mtu-probe） */
+function tw_mtu_detect(){
+	var b = document.getElementById("tw_mtu_btn"), r = document.getElementById("tw_mtu_result");
+	if (typeof login_safe == "function" && !login_safe()) {
+		alert("只能在區網登入時使用。");
+		return;
+	}
+	if (!confirm("會用 10～20 秒測試 WAN 能通過的最大封包，期間網路可能短暫不穩。\nPPPoE 要已經連線。開始測試？"))
+		return;
+	b.disabled = true;
+	r.innerHTML = "測試中，請稍候…";
+	var esc = function (t) { return String(t).replace(/[&<>]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]; }); };
+	var fail = function (msg) { b.disabled = false; r.innerHTML = msg; };
+	$j.post('/apply.cgi', {
+		'action_mode': ' SystemCmd ',
+		'current_page': 'console_response.asp',
+		'next_page': 'console_response.asp',
+		'SystemCmd': 'tw-mtu-probe'
+	}, function () {
+		$j.ajax({ url: '/console_response.asp', timeout: 90000, cache: false,
+			success: function (data) {
+				var m = /MTU=(\d+)/.exec(data), v = m ? parseInt(m[1], 10) : 0;
+				var detail = '<pre style="margin-top:6px;white-space:pre-wrap;">' + esc(String(data).replace(/MTU=\d+\s*$/, "").replace(/\s+$/, "")) + '</pre>';
+				b.disabled = false;
+				if (v >= 1280 && v <= 1492) {
+					document.form.wan_pppoe_mtu.value = v;
+					document.form.wan_pppoe_mru.value = v;
+					r.innerHTML = "<b>測得 " + v + "</b>，已填入 MTU 與 MRU，按「套用」才會生效。" + detail;
+				} else {
+					r.innerHTML = "<b>測不出結果</b>，維持原本的設定。" + detail;
+				}
+			},
+			error: function () { fail("測試逾時或失敗，維持原本的設定。"); }
+		});
+	}).fail(function () { fail("無法執行測試（登入逾時？），請重新整理頁面再試。"); });
+}
+
 $j(document).ready(function() {
 	init_itoggle('gw_arp_ping');
 	init_itoggle('x_DHCPClient', change_wan_dhcp_auto);
@@ -1253,6 +1290,8 @@ function simplyMAC(fullMAC){
                                                 <input type="text" maxlength="4" size="5" name="wan_pppoe_mtu" class="input" value="<% nvram_get_x("", "wan_pppoe_mtu"); %>" onkeypress="return is_number(this,event);"/>
                                                 &nbsp;<span style="color:#888;">[1000..1492]</span>
                                                 <div class="tw-hint">中華電信光世代預設 1480（PPPoE 理論上限 1492）。部分網站打不開、IPv6 時好時壞時，可以再往下調，例如 1460。</div>
+                                                <div style="margin-top:6px;"><input class="btn" type="button" id="tw_mtu_btn" value="自動偵測" onclick="tw_mtu_detect();" /></div>
+                                                <div class="tw-hint" id="tw_mtu_result"></div>
                                             </td>
                                         </tr>
                                         <tr id="row_pppoe_mru">

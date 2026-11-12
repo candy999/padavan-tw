@@ -193,6 +193,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if path.startswith('/update.cgi') or path.endswith('.cgi'):
             self._send(b'', 'text/plain')
             return
+        if path == '/console_response.asp':
+            self._send('介面 ppp0（目前 MTU 1480），測試範圍 1280～1492：\n  168.95.1.1：1492\n  8.8.8.8：1492\n  1.1.1.1：1492\n建議 MTU：1492\nMTU=1492\n'.encode('utf-8'), 'text/plain; charset=utf-8')
+            return
         local = os.path.join(WEBUI, path.lstrip('/'))
         if os.path.isfile(local) and os.path.splitext(local)[1] in ('.asp', '.js', '.htm', '.html'):
             text = open(local, encoding='utf-8', errors='replace').read()

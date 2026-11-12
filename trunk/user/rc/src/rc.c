@@ -1479,6 +1479,7 @@ static const applet_rc_t applets_rc[] = {
 	{ "zcip_viptv.script",	zcip_viptv_main		},
 	{ "wpacli.script",	wpacli_main		},
 	{ "ip-up",		ipup_main		},
+	{ "tw-mtu-probe",	tw_mtu_probe_main	},
 	{ "ip-down",		ipdown_main		},
 #if defined (USE_IPV6)
 	{ "ipv6-up",		ipv6up_main		},
