@@ -126,7 +126,7 @@ function tw_kuroshio_cmd(cmd, out_id, quiet, done){
 				o.style.display = t ? "" : "none";
 				o.textContent = t;
 				if (out_id == "kuro_info")
-					showhide_div("row_rwfs", t.indexOf("RWFS：可用但未啟用") >= 0);
+					showhide_div("row_rwfs", t.indexOf("RWFS 裡有其他資料") >= 0);
 				if (done) done(t);
 			},
 			error: function () { if (!quiet) o.textContent = "讀取失敗"; }
@@ -152,7 +152,7 @@ function acme_issue(force){
 }
 
 function rwfs_enable(){
-	if (!confirm("這會清空 RWFS 分割區（如果你把原廠韌體留在那裡當備援，會一起被清掉），格式化成 UBIFS 給黑潮 DNS 放學習資料。\n完成後要重新開機。確定？"))
+	if (!confirm("RWFS 分割區裡有其他資料（可能是原廠韌體備援）。\n這會清空它、格式化成 UBIFS 給黑潮 DNS 放學習資料，原本的資料無法復原。\n完成後要重新開機。確定？"))
 		return;
 	tw_kuroshio_cmd("rwfs2ubi.sh", "kuro_rwfs_out", false);
 }
@@ -378,8 +378,8 @@ function done_validating(action){
 										<tr id="row_rwfs" style="display:none;">
 											<th>學習資料存放</th>
 											<td>
-												<input class="btn btn-warning" type="button" value="啟用 RWFS 儲存" onclick="rwfs_enable();" />
-												<div class="tw-hint">現在學習資料放在記憶體，每天備份一次。啟用 RWFS 後直接存在 Flash（有平均寫入保護），停電也不會少一天的學習。</div>
+												<input class="btn btn-warning" type="button" value="清除 RWFS 並啟用" onclick="rwfs_enable();" />
+												<div class="tw-hint">RWFS 裡有其他資料，為了安全沒有自動清除，學習資料暫時放記憶體、每天備份一次。確定不需要那些資料（例如原廠韌體備援）就可以清除，之後跟其他機器一樣直接存在 Flash。</div>
 												<pre id="kuro_rwfs_out" style="display:none;margin-top:6px;white-space:pre-wrap;"></pre>
 											</td>
 										</tr>

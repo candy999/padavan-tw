@@ -115,9 +115,16 @@
                         reg = <0x50000 0x17b0000>; /* 23M */
                 };
 
+                /* padavan-tw：原本 8M 的 Storage 切成 2M 設定＋6M 黑潮 DNS 資料區（JFFS2）。
+                 * Storage 起點不變，舊版存的設定照樣讀得到；資料區第一次使用前由 kuroshio.sh 檢查是否安全 */
                 partition@1800000 {
                         label = "Storage";
-                        reg = <0x1800000 0x800000>; /* 8M */
+                        reg = <0x1800000 0x200000>; /* 2M */
+                };
+
+                partition@1a00000 {
+                        label = "Kuroshio";
+                        reg = <0x1a00000 0x600000>; /* 6M */
                 };
 
                 partition@2000000 {

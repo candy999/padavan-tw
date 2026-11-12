@@ -147,7 +147,7 @@
 | # | 項目 | 狀態 |
 |---|---|---|
 | G1 | 打包：執行檔、`data/`、預設 UCI 設定、acme.sh、CA 憑證清單；Release 附黑潮 DNS 原始碼（GPL-3.0） | ✅ 待實機 |
-| G2 | `kuroshio.sh`：啟停、nvram → UCI、學習資料存放（CR6608 RWFS／D3 `/etc/storage`／其他放記憶體＋每日備份）、每日存檔 | ✅ 待實機 |
+| G2 | `kuroshio.sh`：啟停、nvram → UCI、學習資料存放：兩台都放專用 Flash 資料區、由黑潮 DNS 自己控制寫入（CR6608 RWFS／UBIFS；D3 從 Storage 8 MB 切出 6 MB 的 Kuroshio 分割區／JFFS2，Storage 改 2 MB）；第一次使用前檢查，有其他資料就不碰並退回記憶體＋每日備份 | ✅ 待實機 |
 | G3 | dnsmasq 接管：`no-resolv`、`cache-size=0`，上游依保護狀態寫進 servers-file；DDR（網域指向路由器）、DNR（DHCP 選項 162） | ✅ 待實機 |
 | G4 | 保護：每秒檢查程式、每 10 秒查 `_dns.resolver.arpa`，連續 3 次沒回答改用業者 DNS，恢復就切回 | ✅ 待實機 |
 | G5 | 防火牆：開放 DoT／DoQ／DoH 給外網、外部 443 轉到路由器 8443；只讓台灣 IP 由黑潮 DNS 在程式內判斷 | ✅ 待實機 |

@@ -69,7 +69,7 @@ fi
 # padavan-tw：黑潮 DNS（腳本自己檢查 kuroshio_enable）
 if [ -x /usr/bin/kuroshio.sh ] ; then
 logger -t "自動啟動" "啟動黑潮 DNS..."
-/usr/bin/kuroshio.sh start
+/usr/bin/kuroshio.sh start &	# 第一次使用資料區時要清除 Flash（約 1 分鐘），在背景進行
 fi
 
 # padavan-tw 已移除 SmartDNS；舊設定還開著時略過

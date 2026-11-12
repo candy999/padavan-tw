@@ -11,8 +11,10 @@
 #   （no-resolv、cache-size=0，上游依 $USE 寫進 /tmp/dnsmasq.servers）
 # - 設定檔是 OpenWrt 的 UCI 文字格式：$UCI_SRC 是使用者設定，啟動時複製到記憶體再寫入後台表單的值（nvram）
 # - 保護：黑潮 DNS 不在或連續 3 次沒回答 → 改用業者 DNS（這段期間沒有過濾）；恢復回答就切回
-# - 學習資料：CR6608 已掛載 RWFS → 放 RWFS；儲存分割區 ≥ 6 MB（D3）→ /etc/storage；
-#   其他 → 放記憶體，每天匯出備份到 /etc/storage、開機時匯入
+# - 學習資料放專用的 Flash 資料區，由黑潮 DNS 自己控制寫入（每 6～24 小時、內容沒變不寫、停止時寫出）：
+#   CR6608 → RWFS（UBIFS，97 MB）；D3 → Kuroshio 分割區（JFFS2，6 MB，從原本 8 MB 的 Storage 切出來）
+#   第一次使用前檢查：裡面是別人的資料（例如原廠韌體備援、舊設定溢出）就不碰，
+#   改放記憶體＋每天匯出備份到 /etc/storage、開機時匯入
 
 BIN=/usr/bin/kuroshio
 SHARE=/usr/share/kuroshio
@@ -23,7 +25,8 @@ UCI=$RUN/kuroshio.uci		# 實際給黑潮 DNS 讀的：使用者設定＋後台�
 USE=$RUN/use		# kuroshio＝dnsmasq 轉給黑潮 DNS；fallback＝業者 DNS（rc 依這個檔產生 /tmp/dnsmasq.servers）
 DNSMASQ_EXTRA=$RUN/dnsmasq.conf
 BACKUP=$ETC/backup.kuroshio
-RWFS=/media/mtd_rwfs
+RWFS=/media/mtd_rwfs		# CR6608：rc 開機時掛載（nvram mtd_rwfs_mount=1）
+JFFS2=/media/kuroshio		# D3：Kuroshio 分割區
 PORT=5335
 ACME=/usr/lib/acme/acme.sh
 CA=/usr/lib/acme/cacert.pem
@@ -49,17 +52,85 @@ lan_ip() { nv lan_ipaddr; }
 
 # ---------- 學習資料放哪裡 ----------
 
-storage_mtd_size() {
+mtd_idx() { awk -v n="\"$1\"" '$4 == n { sub("mtd", "", $1); sub(":", "", $1); print $1; exit }' /proc/mtd 2>/dev/null; }
+
+mtd_size() {
 	local hex
-	hex=$(awk '$4 == "\"Storage\"" { print $2 }' /proc/mtd 2>/dev/null)
+	hex=$(awk -v n="\"$1\"" '$4 == n { print $2; exit }' /proc/mtd 2>/dev/null)
 	[ -n "$hex" ] && printf '%d' "0x$hex" || echo 0
 }
 
+# blk_erased <裝置> [從第幾個 64 KB 開始] [幾個]：全部是 0xFF（Flash 抹除後的狀態）
+blk_erased() {
+	[ "$(dd if="$1" bs=65536 skip="${2:-0}" count="${3:-1}" 2>/dev/null | tr -d '\377' | wc -c)" -eq 0 ]
+}
+
+note() { echo "$*" > "$RUN/area_note"; log "$*"; }
+
+# CR6608：RWFS。rc 已掛載就直接用；沒有的話：空的 → 格式化成 UBIFS；已經是我們的 → 掛載；有別的資料 → 不碰
+prepare_rwfs() {
+	local n vols name
+	n=$(mtd_idx RWFS)
+	[ -n "$n" ] || return 1
+	grep -q " $RWFS " /proc/mounts && return 0
+	if [ ! -d "/sys/class/ubi/ubi$n" ]; then
+		if ! ubiattach -p "/dev/mtd$n" -d "$n" >/dev/null 2>&1; then
+			if blk_erased "/dev/mtd$n" 0 8; then
+				log "第一次使用 RWFS：格式化成 UBIFS"
+				rwfs2ubi.sh >/dev/null 2>&1
+				ubiattach -p "/dev/mtd$n" -d "$n" >/dev/null 2>&1 || return 1
+			else
+				note "RWFS 裡有其他資料（不是 UBI），為了安全沒有動，學習資料暫時放記憶體"
+				return 1
+			fi
+		fi
+	fi
+	vols=$(cat "/sys/class/ubi/ubi$n/volumes_count" 2>/dev/null)
+	name=$(cat "/sys/class/ubi/ubi$n/ubi${n}_0/name" 2>/dev/null)
+	if [ "${vols:-0}" -eq 0 ]; then
+		ubimkvol "/dev/ubi$n" -m -N rwfs >/dev/null 2>&1 || return 1
+	elif [ "$name" != rwfs ]; then
+		ubidetach -p "/dev/mtd$n" >/dev/null 2>&1
+		note "RWFS 裡有其他資料（可能是原廠韌體備援），為了安全沒有動，學習資料暫時放記憶體"
+		return 1
+	fi
+	mkdir -p "$RWFS"
+	mount -t ubifs "/dev/ubi${n}_0" "$RWFS" 2>/dev/null || return 1
+	if [ "$(nv mtd_rwfs_mount)" != "1" ]; then
+		nvram set mtd_rwfs_mount=1
+		nvram commit
+	fi
+	return 0
+}
+
+# D3：Kuroshio 分割區（JFFS2）。開頭是 JFFS2 或全空 → 直接掛載；
+# 有其他資料時，只有在確定不是舊設定溢出（Storage 2 MB 的最後一塊是空的）才清除
+prepare_jffs2() {
+	local n s ss
+	n=$(mtd_idx Kuroshio)
+	[ -n "$n" ] || return 1
+	grep -q " $JFFS2 " /proc/mounts && return 0
+	if [ "$(head -c 2 "/dev/mtd$n" 2>/dev/null | tr '\205\031' 'ab')" != "ab" ] && ! blk_erased "/dev/mtd$n"; then
+		s=$(mtd_idx Storage)
+		ss=$(mtd_size Storage)
+		if [ -n "$s" ] && [ "$ss" -ge 65536 ] && blk_erased "/dev/mtd$s" $((ss / 65536 - 1)); then
+			log "第一次使用黑潮 DNS 資料區：清除舊資料（約 1 分鐘）"
+			mtd_write erase Kuroshio >/dev/null 2>&1 || return 1
+		else
+			note "黑潮 DNS 資料區開頭有資料，可能是舊版設定超過 2 MB 的部分，為了安全沒有清除，學習資料暫時放記憶體"
+			return 1
+		fi
+	fi
+	mkdir -p "$JFFS2"
+	mount -t jffs2 "/dev/mtdblock$n" "$JFFS2" 2>/dev/null
+}
+
 state_mode() {
-	if grep -q " $RWFS " /proc/mounts 2>/dev/null; then
+	rm -f "$RUN/area_note"
+	if prepare_rwfs; then
 		echo rwfs
-	elif [ "$(storage_mtd_size)" -ge 6291456 ]; then
-		echo storage
+	elif prepare_jffs2; then
+		echo jffs2
 	else
 		echo ram
 	fi
@@ -68,7 +139,7 @@ state_mode() {
 state_dir() {
 	case "$1" in
 	rwfs) echo "$RWFS/kuroshio/state" ;;
-	storage) echo "$ETC/state" ;;
+	jffs2) echo "$JFFS2/kuroshio/state" ;;
 	*) echo "$RUN/state" ;;
 	esac
 }
@@ -217,6 +288,7 @@ start() {
 	mode=$(state_mode)
 	sdir=$(state_dir "$mode")
 	mkdir -p "$sdir"
+	rm -rf /etc/storage/kuroshio/state	# 早期測試版放在 /etc/storage 的學習資料，佔儲存空間
 	sync_uci "$mode"
 	echo "$mode" > "$RUN/mode"
 
@@ -252,6 +324,7 @@ stop() {
 		i=$((i + 1))
 	done
 	killall -q -KILL kuroshio
+	sync
 	[ "$(cat "$RUN/mode" 2>/dev/null)" = ram ] && save_backup
 	log "已停止"
 }
@@ -309,14 +382,10 @@ save_backup() {
 }
 
 save() {
-	case "$(cat "$RUN/mode" 2>/dev/null)" in
-	ram)
+	# rwfs、jffs2：黑潮 DNS 自己會依 Flash 模式定期寫入，這裡不用做
+	if [ "$(cat "$RUN/mode" 2>/dev/null)" = ram ]; then
 		save_backup && /sbin/mtd_storage.sh save >/dev/null 2>&1 && log "學習資料備份已存檔"
-		;;
-	storage)
-		/sbin/mtd_storage.sh save >/dev/null 2>&1 && log "學習資料已存檔"
-		;;
-	esac	# rwfs：黑潮 DNS 自己會依 Flash 模式定期寫入
+	fi
 }
 
 # ---------- 憑證 ----------
@@ -380,10 +449,12 @@ acme_bg() {
 status() {
 	echo "狀態：$(pidof kuroshio >/dev/null 2>&1 && echo 執行中 || echo 沒有執行)"
 	echo "DNS：$([ "$(cat "$USE" 2>/dev/null)" = kuroshio ] && echo 由黑潮 DNS 處理 || echo 暫時使用業者 DNS)"
-	echo "學習資料：$(state_dir "$(cat "$RUN/mode" 2>/dev/null)")"
-	if grep -q '"RWFS"' /proc/mtd 2>/dev/null && ! grep -q " $RWFS " /proc/mounts 2>/dev/null; then
-		echo "RWFS：可用但未啟用（啟用後學習資料不用放記憶體）"
-	fi
+	case "$(cat "$RUN/mode" 2>/dev/null)" in
+	rwfs) echo "學習資料：Flash（RWFS，$RWFS）" ;;
+	jffs2) echo "學習資料：Flash（黑潮 DNS 資料區，$JFFS2）" ;;
+	ram) echo "學習資料：記憶體（每天 04:41 備份到 /etc/storage）" ;;
+	esac
+	[ -f "$RUN/area_note" ] && cat "$RUN/area_note"
 	echo "網域：$(nv kuroshio_domain)"
 	[ -f "$ETC/cert.pem" ] && echo "憑證：$($BIN cert-info --uci 2>/dev/null | head -n 3 | tr '\n' ' ')"
 }
