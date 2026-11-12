@@ -244,7 +244,7 @@ struct nvram_pair router_defaults[] = {
 	{ "wl_HT_AMSDU", "0" },
 	{ "wl_HT_BAWinSize", "64" },
 #endif
-	{ "wl_HT_80211KV", "0" },
+	{ "wl_HT_80211KV", "1" },	/* padavan-tw：802.11k/v 預設開啟；802.11r 相容性較差，維持關閉 */
 	{ "wl_HT_80211R", "0" },
 	{ "wl_HT_MpduDensity", "5" },
 	{ "wl_HT_AutoBA", "1" },
@@ -344,7 +344,7 @@ struct nvram_pair router_defaults[] = {
 	{ "rt_pmfsha256", "0" },
 	{ "rt_HT_RDG", "0" },
 	{ "rt_HT_AMSDU", "1" },
-	{ "rt_HT_80211KV", "0" },
+	{ "rt_HT_80211KV", "1" },
 	{ "rt_HT_80211R", "0" },
 	{ "rt_HT_MpduDensity", "5" },
 	{ "rt_band_steering", "0" },	/* band steering AP 2.4Ghz */

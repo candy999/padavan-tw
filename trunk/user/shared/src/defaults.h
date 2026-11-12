@@ -38,9 +38,9 @@
 #define DEF_WLAN_2G_CC		"TW"
 #define DEF_WLAN_5G_CC		"TW"
 #define DEF_WLAN_2G_SSID	BOARD_PID "_%s"
-#define DEF_WLAN_5G_SSID	BOARD_PID "_5G_%s"
+#define DEF_WLAN_5G_SSID	BOARD_PID "_%s"	/* padavan-tw：兩個頻段同一個 SSID，手機自己選頻段 */
 #define DEF_WLAN_2G_GSSID	BOARD_PID "_GUEST_%s"
-#define DEF_WLAN_5G_GSSID	BOARD_PID "_GUEST_5G_%s"
+#define DEF_WLAN_5G_GSSID	BOARD_PID "_GUEST_%s"
 #define DEF_WLAN_2G_PSK		"1234567890"
 #define DEF_WLAN_5G_PSK		"1234567890"
 
