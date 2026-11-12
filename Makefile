@@ -77,6 +77,14 @@ $(PRODUCTS):
 	@cat "$(TW_CONFIG_DIR)/common.config" >> "$(CONFIG_FILE)"
 	@if [ -f "$(TW_CONFIG_DIR)/$@.config" ]; then echo "" >> "$(CONFIG_FILE)"; cat "$(TW_CONFIG_DIR)/$@.config" >> "$(CONFIG_FILE)"; fi
 	@echo "" >> "$(CONFIG_FILE)"
+	@# padavan-tw：make <機型> OC=1000 產出超頻版（MT7621 CPU 1000 MHz；PLL 值 0x312，開機時寫入，無法執行中切換）
+	@if [ "$(OC)" = "1000" ]; then \
+		echo "CONFIG_FIRMWARE_INCLUDE_OC=y" >> "$(CONFIG_FILE)"; \
+		echo 'CONFIG_FIRMWARE_MT7621_OC="0x312"' >> "$(CONFIG_FILE)"; \
+		echo "\033[1;33m===> ⚡ CPU overclock: 1000 MHz\033[0m"; \
+	elif [ -n "$(OC)" ]; then \
+		echo "\033[1;31m===> ❌ Unsupported OC=$(OC) (only 1000)\033[0m"; exit 1; \
+	fi
 	@echo "CONFIG_CROSS_COMPILE=$(TOOLCHAIN)" >> "$(CONFIG_FILE)"
 	@echo "CONFIG_CROSS_COMPILER_ROOT=$(TOOLCHAIN_PATH)" >> "$(CONFIG_FILE)"
 	@echo "TOOLCHAIN_URL=$(TOOLCHAIN_URL)" >> "$(CONFIG_FILE)"

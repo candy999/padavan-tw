@@ -80,6 +80,11 @@ on:
           - ZTE-E8820S
           - ZTE-E8820V2
           - ZTT-RX6000
+      variant:
+        description: "版本（標準 880 MHz／超頻 1000 MHz）"
+        type: choice
+        options: [both, std, oc1000]
+        default: both
       release:
         description: "發布到 GitHub Releases"
         type: boolean
@@ -99,6 +104,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       targets: ${{ steps.set.outputs.targets }}
+      variants: ${{ steps.set.outputs.variants }}
     steps:
       - id: set
         run: |
@@ -108,15 +114,22 @@ jobs:
           else
             echo "targets=[\"$t\"]" >> "$GITHUB_OUTPUT"
           fi
+          v="${{ github.event.inputs.variant }}"
+          if [ -z "$v" ] || [ "$v" = "both" ]; then
+            echo 'variants=["std","oc1000"]' >> "$GITHUB_OUTPUT"
+          else
+            echo "variants=[\"$v\"]" >> "$GITHUB_OUTPUT"
+          fi
 
   build:
-    name: Build ${{ matrix.target }}
+    name: Build ${{ matrix.target }} (${{ matrix.variant }})
     needs: matrix
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
         target: ${{ fromJSON(needs.matrix.outputs.targets) }}
+        variant: ${{ fromJSON(needs.matrix.outputs.variants) }}
 
     steps:
       - uses: actions/checkout@v4
@@ -125,7 +138,7 @@ jobs:
 
       - uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ${{ matrix.target }}-${{ env.TOOLCHAIN }}
+          key: ${{ matrix.target }}-${{ matrix.variant }}-${{ env.TOOLCHAIN }}
 
       - name: Install build dependencies
         run: |
@@ -135,9 +148,14 @@ jobs:
             autoconf automake liblzma-dev libltdl-dev liblzo2-dev
           echo "BUILD_DATE=$(TZ='Asia/Taipei' date +%Y%m%d)" >> "$GITHUB_ENV"
           echo "SHORT_SHA=${GITHUB_SHA::7}" >> "$GITHUB_ENV"
+          if [ "${{ matrix.variant }}" = "oc1000" ]; then
+            echo "OC_ARG=OC=1000" >> "$GITHUB_ENV"; echo "SUFFIX=-oc1000" >> "$GITHUB_ENV"
+          else
+            echo "OC_ARG=" >> "$GITHUB_ENV"; echo "SUFFIX=" >> "$GITHUB_ENV"
+          fi
 
       - name: Build firmware
-        run: make ${{ matrix.target }} TOOLCHAIN=${{ env.TOOLCHAIN }} TOOLCHAIN_URL=${{ env.TOOLCHAIN_URL }}
+        run: make ${{ matrix.target }} TOOLCHAIN=${{ env.TOOLCHAIN }} TOOLCHAIN_URL=${{ env.TOOLCHAIN_URL }} $OC_ARG
 
       - name: Rename images
         run: |
@@ -145,15 +163,15 @@ jobs:
           i=1
           for f in trunk/images/*.trx; do
             suffix=""; [ $i -gt 1 ] && suffix="-$i"
-            cp "$f" "out/padavan-tw-${{ matrix.target }}-${BUILD_DATE}-${SHORT_SHA}${suffix}.trx"
+            cp "$f" "out/padavan-tw-${{ matrix.target }}${SUFFIX}-${BUILD_DATE}-${SHORT_SHA}${suffix}.trx"
             i=$((i+1))
           done
-          (cd out && sha256sum *.trx > SHA256SUMS-${{ matrix.target }}.txt)
+          (cd out && sha256sum *.trx > SHA256SUMS-${{ matrix.target }}${SUFFIX}.txt)
           ls -l out
 
       - uses: actions/upload-artifact@v4
         with:
-          name: padavan-tw-${{ matrix.target }}-${{ env.BUILD_DATE }}-${{ env.SHORT_SHA }}
+          name: padavan-tw-${{ matrix.target }}${{ env.SUFFIX }}-${{ env.BUILD_DATE }}-${{ env.SHORT_SHA }}
           path: out/*
           retention-days: 14
 
@@ -185,4 +203,5 @@ jobs:
             padavan-tw 韌體（${{ env.TAG }}）
             - 機型：${{ github.event.inputs.target == '' && 'all' || github.event.inputs.target }}（all = Newifi D3（NEWIFI3）、小米 CR6608（CR660x））
             - 原始碼：${{ github.sha }}
+            - 檔名有 -oc1000 的是超頻版（CPU 1000 MHz），其餘為標準版（880 MHz）；不確定就用標準版
             - 刷機前請先比對 SHA256SUMS
