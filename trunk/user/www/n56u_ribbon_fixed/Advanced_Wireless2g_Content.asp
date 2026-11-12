@@ -417,8 +417,8 @@ function validate_wlphrase(s, v, obj){
                                             <th><a class="help_tooltip" href="javascript:void(0);" onmouseover="openTooltip(this, 0, 14);"><#WLANConfig11b_ChannelBW_itemname#></a></th>
                                             <td>
                                                 <select name="rt_HT_BW" class="input" onChange="return change_common_rt(this, 'WLANConfig11b', 'rt_HT_BW')">
-                                                    <option value="0" <% nvram_match_x("","rt_HT_BW", "0","selected"); %>>20 MHz</option>
-                                                    <option value="1" <% nvram_match_x("","rt_HT_BW", "1","selected"); %>>20/40 MHz (*)</option>
+                                                    <option value="0" <% nvram_match_x("","rt_HT_BW", "0","selected"); %>>20 MHz (*)</option>
+                                                    <option value="1" <% nvram_match_x("","rt_HT_BW", "1","selected"); %>>20/40 MHz</option>
                                                 </select>
                                             </td>
                                         </tr>
@@ -427,6 +427,17 @@ function validate_wlphrase(s, v, obj){
                                             <td>
                                                 <select name="rt_channel" class="input" onChange="return change_common_rt(this, 'WLANConfig11b', 'rt_channel')">
                                                 </select>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>每天自動重選頻道</th>
+                                            <td>
+                                                <select name="tw_acs_daily" class="input" style="width:auto;">
+                                                    <option value="1" <% nvram_match_x("", "tw_acs_daily", "1", "selected"); %>>開啟 (*)</option>
+                                                    <option value="0" <% nvram_match_x("", "tw_acs_daily", "0", "selected"); %>>關閉</option>
+                                                </select>
+                                                <select name="tw_acs_hour" class="input" style="width:auto;"><option value="0" <% nvram_match_x("", "tw_acs_hour", "0", "selected"); %>>00:00</option><option value="1" <% nvram_match_x("", "tw_acs_hour", "1", "selected"); %>>01:00</option><option value="2" <% nvram_match_x("", "tw_acs_hour", "2", "selected"); %>>02:00</option><option value="3" <% nvram_match_x("", "tw_acs_hour", "3", "selected"); %>>03:00</option><option value="4" <% nvram_match_x("", "tw_acs_hour", "4", "selected"); %>>04:00</option><option value="5" <% nvram_match_x("", "tw_acs_hour", "5", "selected"); %>>05:00</option><option value="6" <% nvram_match_x("", "tw_acs_hour", "6", "selected"); %>>06:00</option><option value="7" <% nvram_match_x("", "tw_acs_hour", "7", "selected"); %>>07:00</option><option value="8" <% nvram_match_x("", "tw_acs_hour", "8", "selected"); %>>08:00</option><option value="9" <% nvram_match_x("", "tw_acs_hour", "9", "selected"); %>>09:00</option><option value="10" <% nvram_match_x("", "tw_acs_hour", "10", "selected"); %>>10:00</option><option value="11" <% nvram_match_x("", "tw_acs_hour", "11", "selected"); %>>11:00</option><option value="12" <% nvram_match_x("", "tw_acs_hour", "12", "selected"); %>>12:00</option><option value="13" <% nvram_match_x("", "tw_acs_hour", "13", "selected"); %>>13:00</option><option value="14" <% nvram_match_x("", "tw_acs_hour", "14", "selected"); %>>14:00</option><option value="15" <% nvram_match_x("", "tw_acs_hour", "15", "selected"); %>>15:00</option><option value="16" <% nvram_match_x("", "tw_acs_hour", "16", "selected"); %>>16:00</option><option value="17" <% nvram_match_x("", "tw_acs_hour", "17", "selected"); %>>17:00</option><option value="18" <% nvram_match_x("", "tw_acs_hour", "18", "selected"); %>>18:00</option><option value="19" <% nvram_match_x("", "tw_acs_hour", "19", "selected"); %>>19:00</option><option value="20" <% nvram_match_x("", "tw_acs_hour", "20", "selected"); %>>20:00</option><option value="21" <% nvram_match_x("", "tw_acs_hour", "21", "selected"); %>>21:00</option><option value="22" <% nvram_match_x("", "tw_acs_hour", "22", "selected"); %>>22:00</option><option value="23" <% nvram_match_x("", "tw_acs_hour", "23", "selected"); %>>23:00</option></select>
+                                                <div class="tw-hint">頻道設為「自動」時，每天在這個時間起的 3 小時內，趁 Wi-Fi 閒置（1 分鐘內流量低於 2 MB）重新掃描並換到最乾淨的頻道；裝置會斷線幾秒後自動重連。2.4 GHz 與 5 GHz 共用這個設定。</div>
                                             </td>
                                         </tr>
                                         <tr id="row_HT_EXTCHA">

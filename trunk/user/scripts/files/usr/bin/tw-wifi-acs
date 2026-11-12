@@ -1,0 +1,126 @@
+#!/bin/sh
+# padavan-tw 每日自動重選 Wi-Fi 頻道
+#
+# 由 rc 的 watchdog 每天在 tw_acs_hour（預設 4 點）起的 3 小時內每 10 分鐘呼叫一次：
+#   tw-wifi-acs 日期 2.4G介面 5G介面 是否DBDC
+# 手動執行（不檢查是否閒置，立刻重選）：
+#   tw-wifi-acs now
+#
+# 做法：只處理「頻道設為自動、單純 AP 模式、Wi-Fi 有開」的頻段；
+# Wi-Fi 60 秒內流量低於 2 MB 才動作，否則等下一次。
+# 重選的方式跟在後台按「套用」一樣（radio2_restart／radio5_restart 重新啟動 Wi-Fi），
+# 驅動啟動時會掃描並選擇最乾淨的頻道；裝置會斷線幾秒後自動重連。
+# 完成後寫入 tw_acs_day（暫存，不寫 Flash），當天不再執行。
+
+TAG="Wi-Fi 頻道"
+LOCK=${TW_LOCK:-/var/run/tw-wifi-acs.pid}
+IDLE_SEC=60
+IDLE_BYTES=2000000
+SYS=${TW_SYS:-/sys/class/net}
+
+log() {
+	logger -t "$TAG" "$*"
+	[ -t 1 ] && echo "$*"
+}
+
+force=0
+if [ "$1" = "now" ]; then
+	force=1
+	day=$(date +%Y%m%d)
+	if [ -d $SYS/rax0 ]; then
+		if2=rax0; if5=ra0; dbdc=1
+	elif [ -d $SYS/rai0 ]; then
+		if2=ra0; if5=rai0; dbdc=0
+	else
+		if2=ra0; if5=-; dbdc=0
+	fi
+else
+	day=$1; if2=$2; if5=$3; dbdc=$4
+	[ -n "$day" ] && [ -n "$if2" ] || { echo "用法：tw-wifi-acs now" >&2; exit 1; }
+fi
+
+if [ -f "$LOCK" ] && kill -0 "$(cat "$LOCK")" 2>/dev/null; then
+	exit 0
+fi
+echo $$ > "$LOCK"
+trap 'rm -f "$LOCK"' EXIT INT TERM
+
+# $1 = rt（2.4G）或 wl（5G）
+band_auto() {
+	[ "$(nvram get ${1}_channel)" = "0" ] || return 1
+	[ "$(nvram get ${1}_mode_x)" = "0" ] || return 1	# 中繼、WDS 的頻道跟著上游，不處理
+	[ "$(nvram get ${1}_radio_x)" = "1" ] || return 1
+	return 0
+}
+
+if_up() {
+	[ -n "$1" ] && [ "$1" != "-" ] && [ -d "$SYS/$1" ] || return 1
+	ip link show "$1" 2>/dev/null | grep -q '[<,]UP[,>]'
+}
+
+guest_of() { echo "${1%0}1"; }
+
+# 介面的收發位元組總數（用 awk 計算，避免 32 位元溢位）
+bytes() {
+	for i in "$@"; do
+		cat "$SYS/$i/statistics/rx_bytes" "$SYS/$i/statistics/tx_bytes" 2>/dev/null
+	done | awk '{ s += $1 } END { printf "%.0f\n", s }'
+}
+
+channel_of() {
+	if_up "$1" || { echo "關閉"; return; }
+	c=$(iwconfig "$1" 2>/dev/null | sed -n 's/.*Channel[=: ]*\([0-9][0-9]*\).*/\1/p' | head -n1)
+	echo "${c:-?}"
+}
+
+todo2=0
+todo5=0
+band_auto rt && if_up "$if2" && todo2=1
+[ "$if5" != "-" ] && band_auto wl && if_up "$if5" && todo5=1
+
+if [ $todo2 = 0 ] && [ $todo5 = 0 ]; then
+	[ $force = 1 ] && log "沒有設為「自動」的頻道（或 Wi-Fi 沒開／中繼模式），不需要重選"
+	nvram set tw_acs_day="$day"
+	exit 0
+fi
+
+# 要檢查閒置的介面：DBDC 機型重啟會影響兩個頻段，兩個都要檢查
+ifs=""
+if [ "$dbdc" = "1" ]; then
+	for i in "$if2" "$if5"; do if_up "$i" && ifs="$ifs $i $(guest_of "$i")"; done
+else
+	[ $todo2 = 1 ] && ifs="$ifs $if2 $(guest_of "$if2")"
+	[ $todo5 = 1 ] && ifs="$ifs $if5 $(guest_of "$if5")"
+fi
+
+if [ $force = 0 ]; then
+	b1=$(bytes $ifs)
+	sleep $IDLE_SEC
+	b2=$(bytes $ifs)
+	used=$(awk -v a="$b1" -v b="$b2" 'BEGIN { printf "%.0f", b - a }')
+	if [ "$used" -ge "$IDLE_BYTES" ] 2>/dev/null; then
+		log "Wi-Fi 使用中（$(awk -v u="$used" 'BEGIN { printf "%.1f", u / 1000000 }') MB／分鐘），10 分鐘後再試"
+		exit 0
+	fi
+fi
+
+old2=$(channel_of "$if2")
+[ "$if5" != "-" ] && old5=$(channel_of "$if5")
+
+if [ "$dbdc" = "1" ]; then
+	radio5_restart	# DBDC：5G 重新載入設定時兩個頻段一起重啟
+else
+	[ $todo2 = 1 ] && radio2_restart
+	[ $todo5 = 1 ] && radio5_restart
+fi
+
+# 等驅動掃描、選好頻道（5G 掃描較久）
+sleep 20
+
+msg=""
+[ $todo2 = 1 ] && msg="2.4 GHz $old2 → $(channel_of "$if2")"
+[ $todo5 = 1 ] && msg="${msg:+$msg；}5 GHz $old5 → $(channel_of "$if5")"
+log "每日重選頻道：$msg"
+
+nvram set tw_acs_day="$day"
+exit 0

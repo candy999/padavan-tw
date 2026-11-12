@@ -197,6 +197,57 @@ is_ntpc_updated(void)
 	return (nvram_get_int("ntpc_counter") > 0) ? 1 : 0;
 }
 
+/* padavan-tw：每天自動重選 Wi-Fi 頻道
+ * 驅動內建的 ACSCheckTime 只在「沒有任何裝置連線」時才重選，家裡有手機、IoT 一直連著就永遠不會執行。
+ * 這裡改成每天在設定的時間（預設 4 點）起的 3 小時內，每 10 分鐘試一次；
+ * 實際檢查（頻道是否為自動、Wi-Fi 是否閒置）與重啟 Wi-Fi 由 /usr/bin/tw-wifi-acs 處理，
+ * 完成後它會寫入 tw_acs_day（暫存，不寫 Flash），當天就不再執行。 */
+static void
+tw_acs_daily_check(void)
+{
+	static long last_try = 0;
+	time_t now;
+	struct tm *tm;
+	int hour;
+	char today[16];
+	long up;
+
+	if (!nvram_get_int("tw_acs_daily") || !is_ntpc_updated())
+		return;
+
+	up = uptime();
+	if (up < 3600)		/* 剛開機時已經選過頻道 */
+		return;
+	if (last_try && (up - last_try) < 600)
+		return;
+
+	hour = nvram_get_int("tw_acs_hour");
+	if (hour < 0 || hour > 23)
+		hour = 4;
+
+	time(&now);
+	tm = localtime(&now);
+	if (((tm->tm_hour - hour + 24) % 24) >= 3)
+		return;
+
+	strftime(today, sizeof(today), "%Y%m%d", tm);
+	if (nvram_match("tw_acs_day", today))
+		return;
+
+	last_try = up;
+#if defined (BOARD_MT7615_DBDC) || defined (BOARD_MT7915_DBDC)
+#define TW_ACS_DBDC	1
+#else
+#define TW_ACS_DBDC	0
+#endif
+#if BOARD_HAS_5G_RADIO
+#define TW_ACS_IF5	IFNAME_5G_MAIN
+#else
+#define TW_ACS_IF5	"-"
+#endif
+	doSystem("/usr/bin/tw-wifi-acs %s %s %s %d >/dev/null 2>&1 &", today, IFNAME_2G_MAIN, TW_ACS_IF5, TW_ACS_DBDC);
+}
+
 static void
 ntpc_handler(void)
 {
@@ -561,6 +612,8 @@ watchdog_on_timer(void)
 		dnsmasq_process_check();
 
 	inet_handler(is_ap_mode);
+
+	tw_acs_daily_check();
 
 	/* update kernel timezone daylight */
 	setkernel_tz();

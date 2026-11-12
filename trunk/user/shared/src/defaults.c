@@ -299,7 +299,7 @@ struct nvram_pair router_defaults[] = {
 	{ "rt_macmode", "disabled" },
 	{ "rt_mrate", "2" },
 	{ "rt_mode", "ap" },
-	{ "rt_HT_BW", "1" },
+	{ "rt_HT_BW", "0" },		/* padavan-tw：2.4G 預設 20 MHz（台灣住宅密集，40 MHz 會互相干擾、反而變慢） */
 	{ "rt_HT_EXTCHA", "1" },
 	{ "rt_HT_OpMode", "1" },
 	{ "rt_wme", "1" },
@@ -1059,6 +1059,9 @@ struct nvram_pair router_defaults[] = {
 	{ "hw_nat_mode", "1" },
 	{ "sw_nat_mode", "0" },
 	/* padavan-tw：硬體 QoS（QDMA） */
+	/* padavan-tw：每天自動重選頻道（只在頻道設為自動、Wi-Fi 閒置時；預設凌晨 4 點） */
+	{ "tw_acs_daily", "1" },
+	{ "tw_acs_hour", "4" },
 	{ "hw_qos_mode", "0" },		/* 0=關閉 1=固定限速 2=自動 */
 	{ "hw_qos_wlan", "1" },		/* 開啟時 Wi-Fi 方向也經過 QDMA 排程 */
 	{ "hw_qos_down", "0" },		/* 申裝下載頻寬（Mbps），0=未設定 */

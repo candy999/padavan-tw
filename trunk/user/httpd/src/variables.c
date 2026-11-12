@@ -830,6 +830,8 @@
 			{"wl_ssid2", "", NULL, EVM_RESTART_WIFI5},
 			{"wl_mode_x", "", NULL, EVM_RESTART_WIFI5},
 			{"wl_channel", "", NULL, EVM_RESTART_WIFI5},
+			{"tw_acs_daily", "", NULL, 0},	/* padavan-tw：每天自動重選頻道（watchdog 每次讀取，不用重啟） */
+			{"tw_acs_hour", "", NULL, 0},
 			{"wl_wdsapply_x", "", NULL, EVM_RESTART_WIFI5},
 			{"wl_wdsnum_x", "", NULL, EVM_RESTART_WIFI5},
 			{"wl_maxassoc", "", NULL, EVM_RESTART_WIFI5},
@@ -1249,6 +1251,8 @@
 			{"rt_ssid2", "", NULL, EVM_RESTART_WIFI2},
 			{"rt_mode_x", "", NULL, EVM_RESTART_WIFI2},
 			{"rt_channel", "", NULL, EVM_RESTART_WIFI2},
+			{"tw_acs_daily", "", NULL, 0},	/* padavan-tw：每天自動重選頻道（watchdog 每次讀取，不用重啟） */
+			{"tw_acs_hour", "", NULL, 0},
 			{"rt_bcn", "", NULL, EVM_RESTART_WIFI2},
 			{"rt_dtim", "", NULL, EVM_RESTART_WIFI2},
 			{"rt_gmode", "", NULL, EVM_RESTART_WIFI2},
