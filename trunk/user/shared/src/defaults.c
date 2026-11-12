@@ -34,7 +34,7 @@ struct nvram_pair router_defaults[] = {
 
 	/* Miscellaneous parameters */
 	{ "time_zone", DEF_TIMEZONE },
-	{ "preferred_lang", "CN" },
+	{ "preferred_lang", "TW" },
 	{ "log_float_ui", "0" },		/* WebUI syslog float panel mode */
 	{ "log_ipaddr", "" },			/* syslog recipient IP */
 	{ "log_port", "514" },			/* syslog recipient Port */
@@ -701,7 +701,7 @@ struct nvram_pair router_defaults[] = {
 #if defined(Pdnsd)
 	/* Pdnsd */
 	{ "dns_enable", "0" },
-	{ "dns_server", "223.5.5.5,114.114.114.114" },
+	{ "dns_server", "168.95.1.1,101.101.101.101" },
 	{ "dns_server_port", "5333" },
 	{ "dns_server_bind", "0.0.0.0" },
 #endif
@@ -970,15 +970,15 @@ struct nvram_pair router_defaults[] = {
 	{ "di_lost_delay", "1" },
 	{ "di_lost_action", "0" },
 	{ "di_recon_pause", "0" },
-	{ "di_addr0", "114.114.114.114" },
+	{ "di_addr0", "168.95.1.1" },
 	{ "di_addr1", "208.67.222.222" },
-	{ "di_addr2", "14.17.42.40" },
+	{ "di_addr2", "101.101.101.101" },
 	{ "di_addr3", "8.8.8.8" },
 	{ "di_addr4", "8.8.4.4" },
 	{ "di_addr5", "208.67.220.220" },
 	{ "di_port0", "53" },
 	{ "di_port1", "53" },
-	{ "di_port2", "80" },
+	{ "di_port2", "53" },
 	{ "di_port3", "53" },
 	{ "di_port4", "53" },
 	{ "di_port5", "53" },

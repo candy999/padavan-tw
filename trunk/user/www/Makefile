@@ -76,6 +76,10 @@ ifeq ($(CONFIG_FIRMWARE_INCLUDE_LANG_UK),y)
 	echo "LANG_UK=Українська" >> $(ROMFS_DIR)/www/EN.header
 	cp dict/UK.dict $(ROMFS_DIR)/www
 endif
+ifeq ($(CONFIG_FIRMWARE_INCLUDE_LANG_TW),y)
+	echo "LANG_TW=繁體中文（台灣）" >> $(ROMFS_DIR)/www/EN.header
+	cp dict/TW.dict $(ROMFS_DIR)/www
+endif
 ifeq ($(CONFIG_FIRMWARE_INCLUDE_LANG_CN),y)
 	echo "LANG_CN=简体中文" >> $(ROMFS_DIR)/www/EN.header
 	cp dict/CN.dict $(ROMFS_DIR)/www

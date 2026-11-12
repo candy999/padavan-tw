@@ -46,9 +46,9 @@
 
 #define DEF_ROOT_PASSWORD	"admin"
 #define DEF_SMB_WORKGROUP	"WORKGROUP"
-#define DEF_TIMEZONE		"CST-8"
-#define DEF_NTP_SERVER0		"ntp1.aliyun.com"
-#define DEF_NTP_SERVER1		"time1.cloud.tencent.com"
+#define DEF_TIMEZONE		"CCT-8"
+#define DEF_NTP_SERVER0		"time.stdtime.gov.tw"
+#define DEF_NTP_SERVER1		"tock.stdtime.gov.tw"
 #ifdef SUPPORT_OPENSSL_EC
 #define DEF_HTTPS_CIPH_LIST	"ECDH+CHACHA20:ECDH+AESGCM:DH+AESGCM:DH+AES256:DH+AES:DH+3DES:RSA+AES:RSA+3DES:!ADH:!MD5:!DSS"
 #else
