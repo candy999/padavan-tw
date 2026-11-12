@@ -563,8 +563,13 @@ function insertChannelOption() {
         country == "TR")
         channels = new Array(0, 36, 40, 44, 48, 52, 56, 60, 64); //Region 2
 
-    else if (country == "AR" || country == "TW")
+    else if (country == "AR")
         channels = new Array(0, 52, 56, 60, 64, 149, 153, 157); //Region 3
+
+    else if (country == "TW") {
+        tw_insert_channel_5g(orig);
+        return;
+    }
 
     else if (country == "BZ" ||
         country == "BO" ||
@@ -604,10 +609,36 @@ function insertChannelOption() {
         channels[0] = "<#APChnAuto#>";
 
     add_options_x2(document.form.wl_channel, channels, ch_v, orig);
+    tw_channel_hint(document.form.wl_channel, 5);
 }
 
 function insertExtChannelOption() {
 }
+
+/* padavan-tw：台灣 5 GHz 頻道（NCC LP0002）。不鎖頻道，只標示：
+ *   36-48、149-165：免雷達偵測，可直接使用
+ *   52-64、100-140：DFS 頻段，台灣規定要有雷達偵測，本韌體（Padavan）沒有啟用雷達偵測
+ *   169、173：不在台灣開放的頻段內
+ * 自動選頻只會選 36-48、149-165（由 rc 的 AutoChannelSkipList 控制） */
+function tw_insert_channel_5g(orig) {
+    var o = document.form.wl_channel;
+    var t = [], v = [], i, ch;
+    var all = [36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 149, 153, 157, 161, 165, 169, 173];
+    t.push("自動（只選 36–48、149–165）"); v.push(0);
+    for (i = 0; i < all.length; i++) {
+        ch = all[i];
+        v.push(ch);
+        if ((ch >= 52 && ch <= 64) || (ch >= 100 && ch <= 140))
+            t.push(ch + "　⚠ DFS 頻段");
+        else if (ch >= 169)
+            t.push(ch + "　⚠ 非台灣頻段");
+        else
+            t.push(ch);
+    }
+    add_options_x2(o, t, v, orig);
+    tw_channel_hint(o, 5);
+}
+
 
 function insert_vht_bw(ins){
     var o = document.form.wl_HT_BW;

@@ -144,7 +144,9 @@ static const struct cc_t {
 	{ "TN",  1,  2,  0 },
 	{ "TR",  1,  2,  0 },
 	{ "TT",  1,  2,  0 },
-	{ "TW",  0,  3,  6 }, // NCC
+	/* padavan-tw：台灣不在驅動層鎖頻道。2.4G 用 1-13、5G 用 36-64,100-140,149-173 的超集合，
+	 * 是否符合 NCC 規定由網頁標示；自動選頻的範圍見下方 CountryRegionABand 與 AutoChannelSkipList */
+	{ "TW",  1,  7,  6 }, // NCC
 	{ "UA",  1,  0,  0 },
 	{ "US",  0,  0,  5 }, // FCC
 	{ "UY",  1,  5,  0 },
@@ -640,6 +642,10 @@ gen_ralink_config(int is_soc_ap, int is_aband, int disable_autoscan)
 	//CountryRegion for A band
 	p_str = nvram_wlan_get(1, "country_code");
 	i_val = get_country_region(p_str, 1);
+	/* padavan-tw：台灣 5G 自動選頻時改用 Region 0（36-64,149-165），再由 AutoChannelSkipList 跳過 52-64，
+	 * 自動只會選到台灣免雷達偵測的 36-48、149-165；手動指定頻道時才用完整頻道表 */
+	if (strcasecmp(p_str, "TW") == 0 && nvram_wlan_get_int(1, "channel") == 0)
+		i_val = 0;
 	fprintf(fp, "CountryRegionABand=%d\n", i_val);
 
 	if (is_aband)
@@ -692,7 +698,7 @@ gen_ralink_config(int is_soc_ap, int is_aband, int disable_autoscan)
 	fprintf(fp, "CalCacheApply=%d\n", 0);
 	fprintf(fp, "LoadCodeMethod=%d\n", 0);
 	fprintf(fp, "VHT_Sec80_Channel=%d\n", 0);
-	fprintf(fp, "WNMEnable=%d\n", 0);
+	/* WNMEnable 由下方 802.11k/v 設定寫入；驅動只讀第一個同名鍵，這裡不可先寫 0 */
 	fprintf(fp, "SKUenable=%d\n", 0);
 	fprintf(fp, "PowerUpenable=%d\n", 0);
 	fprintf(fp, "VOW_Airtime_Fairness_En=%d\n", 0);
@@ -714,7 +720,7 @@ gen_ralink_config(int is_soc_ap, int is_aband, int disable_autoscan)
 	fprintf(fp, "DfsDedicatedZeroWait=%d\n", 0);
 	fprintf(fp, "DfsZeroWaitDefault=%d\n", 0);
 //	fprintf(fp, "KernelRps=%d\n", 0);
-	fprintf(fp, "RRMEnable=%d\n", 0);
+	/* RRMEnable 由下方 802.11k/v 設定寫入；驅動只讀第一個同名鍵，這裡不可先寫 0 */
 	fprintf(fp, "MboSupport=%d\n", 0);
 
 #if defined (USE_MT7615_AP) || defined (USE_MT7915_AP)
@@ -819,9 +825,13 @@ gen_ralink_config(int is_soc_ap, int is_aband, int disable_autoscan)
 	fprintf(fp, "AutoChannelSelect=%d\n", i_val);
 
 	//AutoChannelSkipList
-	if (!is_aband)
-		sprintf(list, "%d", 14);
-	else
+	if (!is_aband) {
+		/* padavan-tw：台灣 2.4G 開放 1-13，但 12、13 有些裝置（美規）掃不到，自動選頻不選 */
+		if (strcasecmp(nvram_wlan_get(0, "country_code"), "TW") == 0)
+			sprintf(list, "%d;%d;%d", 12, 13, 14);
+		else
+			sprintf(list, "%d", 14);
+	} else
 		sprintf(list, "%d;%d;%d;%d", 52, 56, 60, 64);
 	fprintf(fp, "AutoChannelSkipList=%s\n", list);
 
@@ -1317,9 +1327,9 @@ gen_ralink_config(int is_soc_ap, int is_aband, int disable_autoscan)
 	i_val = nvram_wlan_get_int(is_aband, "HT_80211R");
 	#if defined (BOARD_MT7915_DBDC)
 	if (is_aband)
-	{fprintf(fp, "FtSupport=%d;%d\n",i_val);}
+	{fprintf(fp, "FtSupport=%d;%d\n", i_val, i_val);}
 	else
-	{fprintf(fp, "FtSupport=%d;%d\n",i_val);}
+	{fprintf(fp, "FtSupport=%d;%d\n", i_val, i_val);}
 	fprintf(fp, "FtOtd=0;0\n");
 	fprintf(fp, "FtRic=1;1\n");
 	#else

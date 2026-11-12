@@ -54,6 +54,21 @@ unsigned short wan_vid __read_mostly = CONFIG_RA_HW_NAT_WAN_VLANID;
 module_param(wan_vid, ushort, S_IRUGO|S_IWUSR);
 MODULE_PARM_DESC(wan_vid, "VLAN ID for WAN traffic");
 
+/*
+ * padavan-tw：硬體 QoS（QDMA 排程）執行中開關
+ * 原本由編譯選項 CONFIG_QDMA_SUPPORT_QOS／CONFIG_WAN_TO_WLAN_SUPPORT_QOS 決定新綁定的連線
+ * 是否經過 QDMA 排程（foe_entry iblk2.fqos）。改成模組參數後，同一個韌體可以由後台開關。
+ * 預設值等於編譯選項，未設定時行為與原本完全相同。
+ * 修改後只影響之後新綁定的連線；要立即套用到既有連線，請清空硬體表（hw_nat 重新載入）。
+ */
+static int hnat_qos = IS_ENABLED(CONFIG_QDMA_SUPPORT_QOS);
+module_param(hnat_qos, int, S_IRUGO|S_IWUSR);
+MODULE_PARM_DESC(hnat_qos, "QDMA QoS scheduling for wired LAN<->WAN flows (0=off, 1=on)");
+
+static int hnat_qos_wlan = IS_ENABLED(CONFIG_WAN_TO_WLAN_SUPPORT_QOS);
+module_param(hnat_qos_wlan, int, S_IRUGO|S_IWUSR);
+MODULE_PARM_DESC(hnat_qos_wlan, "QDMA QoS scheduling for WAN<->WLAN flows (0=off, 1=on)");
+
 struct timer_list hwnat_clear_entry_timer;
 static void hwnat_clear_entry(unsigned long data)
 {
@@ -2190,11 +2205,7 @@ defined(CONFIG_ARCH_MT7622) || defined(CONFIG_ARCH_MT7623)
 				ppe_set_infoblk2(&entry->ipv4_hnapt.iblk2, 3, 0x3F, 0x3F);	/* 3=WDMA */
 			} else {
 				ppe_set_infoblk2(&entry->ipv4_hnapt.iblk2, 0, 0x3F, 0x3F);	/* 0=PDMA */
-#if defined(CONFIG_WAN_TO_WLAN_SUPPORT_QOS)
-				entry->ipv4_hnapt.iblk2.fqos = 1;
-#else
-				entry->ipv4_hnapt.iblk2.fqos = 0;
-#endif
+				entry->ipv4_hnapt.iblk2.fqos = hnat_qos_wlan ? 1 : 0;	/* padavan-tw: runtime switch */
 			}
 
 #else
@@ -2206,11 +2217,7 @@ defined(CONFIG_ARCH_MT7622) || defined(CONFIG_ARCH_MT7623)
 			if (FOE_SP(skb) == 5) {	/* wifi to wifi not go to pse port6 */
 				entry->ipv4_hnapt.iblk2.fqos = 0;
 			} else {
-#if defined(CONFIG_WAN_TO_WLAN_SUPPORT_QOS)
-				entry->ipv4_hnapt.iblk2.fqos = 1;
-#else
-				entry->ipv4_hnapt.iblk2.fqos = 0;
-#endif
+				entry->ipv4_hnapt.iblk2.fqos = hnat_qos_wlan ? 1 : 0;	/* padavan-tw: runtime switch */
 			}
 #endif
 #if defined(CONFIG_ARCH_MT7622_WIFI_HW_NAT)
@@ -2289,11 +2296,7 @@ defined(CONFIG_ARCH_MT7622) || defined(CONFIG_ARCH_MT7623)
 			if (FOE_SP(skb) == 5) {
 				entry->ipv6_3t_route.iblk2.fqos = 0;	/* wifi to wifi not go to pse port6 */
 			} else {
-#if defined(CONFIG_WAN_TO_WLAN_SUPPORT_QOS)
-				entry->ipv6_3t_route.iblk2.fqos = 1;
-#else
-				entry->ipv6_3t_route.iblk2.fqos = 0;
-#endif
+				entry->ipv6_3t_route.iblk2.fqos = hnat_qos_wlan ? 1 : 0;	/* padavan-tw: runtime switch */
 			}
 #endif
 #else
@@ -2304,22 +2307,14 @@ defined(CONFIG_ARCH_MT7622) || defined(CONFIG_ARCH_MT7623)
 			} else {
 				ppe_set_infoblk2(&entry->ipv6_3t_route.iblk2, 0, 0x3F, 0x3F);
 				/* 0=cpu mt7622 fastpath */
-#if defined(CONFIG_WAN_TO_WLAN_SUPPORT_QOS)
-				entry->ipv6_3t_route.iblk2.fqos = 1;
-#else
-				entry->ipv6_3t_route.iblk2.fqos = 0;
-#endif
+				entry->ipv6_3t_route.iblk2.fqos = hnat_qos_wlan ? 1 : 0;	/* padavan-tw: runtime switch */
 			}
 #else
 			ppe_set_infoblk2(&entry->ipv6_3t_route.iblk2, 0, 0x3F, 0x3F);	/* 0=PDMA */
 			if (FOE_SP(skb) == 5) {
 				entry->ipv6_3t_route.iblk2.fqos = 0;	/* wifi to wifi not go to pse port6 */
 			} else {
-#if defined(CONFIG_WAN_TO_WLAN_SUPPORT_QOS)
-				entry->ipv6_3t_route.iblk2.fqos = 1;
-#else
-				entry->ipv6_3t_route.iblk2.fqos = 0;
-#endif
+				entry->ipv6_3t_route.iblk2.fqos = hnat_qos_wlan ? 1 : 0;	/* padavan-tw: runtime switch */
 			}
 #endif
 #endif
@@ -2396,20 +2391,12 @@ defined(CONFIG_ARCH_MT7622) || defined(CONFIG_ARCH_MT7623)
 		if (IS_IPV4_GRP(entry)) {
 			if (((FOE_MAGIC_TAG(skb) == FOE_MAGIC_PCI) || 
 		   	    (FOE_MAGIC_TAG(skb) == FOE_MAGIC_WLAN))) {
-#if defined(CONFIG_WAN_TO_WLAN_SUPPORT_QOS)
-				entry->ipv4_hnapt.iblk2.fqos = 1;
-#else
-				entry->ipv4_hnapt.iblk2.fqos = 0;
-#endif
+				entry->ipv4_hnapt.iblk2.fqos = hnat_qos_wlan ? 1 : 0;	/* padavan-tw: runtime switch */
 			} else {
 				if (FOE_SP(skb) == 5) {
 					entry->ipv4_hnapt.iblk2.fqos = 0;
 				} else {
-#if defined(CONFIG_QDMA_SUPPORT_QOS)
-					entry->ipv4_hnapt.iblk2.fqos = 1;
-#else
-					entry->ipv4_hnapt.iblk2.fqos = 0;
-#endif
+					entry->ipv4_hnapt.iblk2.fqos = hnat_qos ? 1 : 0;	/* padavan-tw: runtime switch */
 				}
 			}
 		}
@@ -2417,20 +2404,12 @@ defined(CONFIG_ARCH_MT7622) || defined(CONFIG_ARCH_MT7623)
 		else if (IS_IPV6_GRP(entry)) {
 			if (((FOE_MAGIC_TAG(skb) == FOE_MAGIC_PCI) || 
 		   	    (FOE_MAGIC_TAG(skb) == FOE_MAGIC_WLAN))) {
-#if defined(CONFIG_WAN_TO_WLAN_SUPPORT_QOS)
-				entry->ipv6_5t_route.iblk2.fqos = 1;
-#else
-				entry->ipv6_5t_route.iblk2.fqos = 0;
-#endif
+				entry->ipv6_5t_route.iblk2.fqos = hnat_qos_wlan ? 1 : 0;	/* padavan-tw: runtime switch */
 			} else {
 				if (FOE_SP(skb) == 5) {
 					entry->ipv6_5t_route.iblk2.fqos = 0;
 				} else {
-#if defined(CONFIG_QDMA_SUPPORT_QOS)
-					entry->ipv6_5t_route.iblk2.fqos = 1;
-#else
-					entry->ipv6_5t_route.iblk2.fqos = 0;
-#endif
+					entry->ipv6_5t_route.iblk2.fqos = hnat_qos ? 1 : 0;	/* padavan-tw: runtime switch */
 				}
 			}
 		}

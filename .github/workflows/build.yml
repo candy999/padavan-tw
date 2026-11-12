@@ -1,64 +1,207 @@
+# padavan-tw 韌體編譯
+# - 推送到 main / claude/** 分支：編譯 NEWIFI3 與 CR660x，韌體放在 Actions 的 Artifacts（保留 14 天）
+# - 推送 v* 標籤（例如 v2026.11.12）：編譯並發布到 GitHub Releases
+# - 手動執行（Actions → Build Firmware → Run workflow）：可以選任何一個 configs/templates 機型、可以選擇是否發布
+# 所有機型編譯時都會套用 trunk/configs/tw/common.config（台灣版共用設定）
+
 name: Build Firmware
 
 on:
   push:
     branches:
-      - "*"
+      - main
+      - "claude/**"
+    tags:
+      - "v*"
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
   workflow_dispatch:
+    inputs:
+      target:
+        description: "機型（all = 正式維護的 NEWIFI3 與 CR660x；其他機型為社群支援）"
+        type: choice
+        default: all
+        options:
+          - all
+          - NEWIFI3
+          - CR660x
+          - 360-T6M
+          - 360-T6M-PB
+          - B70
+          - BELL-A040WQ
+          - C-Life-XG1
+          - DIR-878
+          - DIR-882
+          - EA7500
+          - G-AX1800
+          - G-AX1800-B
+          - GHL
+          - HAR-20S2U1
+          - JCG-836PRO
+          - JCG-AC860M
+          - JCG-Q10Pro
+          - JCG-Q10Pro-PB
+          - JCG-Q11Pro
+          - JCG-Q20
+          - JCG-Q20-PB
+          - JCG-Y2
+          - JDCLOUD-RE-CP-02
+          - JDCLOUD-RE-SP-01B
+          - K2P
+          - K2P-NANO
+          - K2P-USB
+          - KOMI-A8
+          - MI-4
+          - MI-R3G
+          - MI-R3P
+          - MI-R3P-PB
+          - MI-R3P-SPI
+          - MI-R4A
+          - MR2600
+          - MSG1500
+          - MSG1500-Z
+          - NETGEAR-BZV
+          - NETGEAR-R6800
+          - NETGEAR-R7450
+          - NEWIFI
+          - QM-B1
+          - R2100
+          - RM2100
+          - RT-AC85P
+          - SIM-AX1800T
+          - TX1801
+          - WDR8620
+          - WE410443-TC
+          - WIA3300-10
+          - WR1200JS
+          - WRL18M4GD
+          - XY-C1
+          - ZTE-E8820S
+          - ZTE-E8820V2
+          - ZTT-RX6000
+      variant:
+        description: "版本（標準 880 MHz／超頻 1000 MHz）"
+        type: choice
+        options: [both, std, oc1000]
+        default: both
+      release:
+        description: "發布到 GitHub Releases"
+        type: boolean
+        default: false
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TOOLCHAIN: mipsel-linux-musl
+  # 預編工具鏈：目前沿用上游 TurBoTse 的 Release；之後可用 toolchain.yml 編一份放在本專案的 toolchain Release
+  TOOLCHAIN_URL: https://github.com/TurBoTse/padavan/releases/download/toolchain/mipsel-linux-musl.tar.xz
 
 jobs:
-  build:
-    name: Build
+  matrix:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      actions: write
+    outputs:
+      targets: ${{ steps.set.outputs.targets }}
+      variants: ${{ steps.set.outputs.variants }}
+    steps:
+      - id: set
+        run: |
+          t="${{ github.event.inputs.target }}"
+          if [ -z "$t" ] || [ "$t" = "all" ]; then
+            echo 'targets=["NEWIFI3","CR660x"]' >> "$GITHUB_OUTPUT"
+          else
+            echo "targets=[\"$t\"]" >> "$GITHUB_OUTPUT"
+          fi
+          v="${{ github.event.inputs.variant }}"
+          if [ -z "$v" ] || [ "$v" = "both" ]; then
+            echo 'variants=["std","oc1000"]' >> "$GITHUB_OUTPUT"
+          else
+            echo "variants=[\"$v\"]" >> "$GITHUB_OUTPUT"
+          fi
+
+  build:
+    name: Build ${{ matrix.target }} (${{ matrix.variant }})
+    needs: matrix
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
-        target: [K2P, K2P-USB]
-        toolchain: [mipsel-linux-musl]
+        target: ${{ fromJSON(needs.matrix.outputs.targets) }}
+        variant: ${{ fromJSON(needs.matrix.outputs.variants) }}
 
     steps:
-      - uses: actions/checkout@main
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 1
-      - uses: hendrikmuhs/ccache-action@main
-        with:
-          key: ${{ matrix.target }}-${{ matrix.toolchain }}
 
-      - uses: actions/setup-go@main
+      - uses: hendrikmuhs/ccache-action@v1.2
         with:
-          go-version: '1.24.x'
-          check-latest: true
-          cache: false
+          key: ${{ matrix.target }}-${{ matrix.variant }}-${{ env.TOOLCHAIN }}
 
-      - name: Install Build Dependencies
+      - name: Install build dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y \
             bison flex gperf help2man libtool-bin texinfo python3-docutils autopoint gettext ccache \
             autoconf automake liblzma-dev libltdl-dev liblzo2-dev
-          echo "BUILD_DATE=$(TZ='Asia/Shanghai' date +%Y%m%d)" >> $GITHUB_ENV
+          echo "BUILD_DATE=$(TZ='Asia/Taipei' date +%Y%m%d)" >> "$GITHUB_ENV"
+          echo "SHORT_SHA=${GITHUB_SHA::7}" >> "$GITHUB_ENV"
+          if [ "${{ matrix.variant }}" = "oc1000" ]; then
+            echo "OC_ARG=OC=1000" >> "$GITHUB_ENV"; echo "SUFFIX=-oc1000" >> "$GITHUB_ENV"
+          else
+            echo "OC_ARG=" >> "$GITHUB_ENV"; echo "SUFFIX=" >> "$GITHUB_ENV"
+          fi
 
-      - name: Build Firmware
+      - name: Build firmware
+        run: make ${{ matrix.target }} TOOLCHAIN=${{ env.TOOLCHAIN }} TOOLCHAIN_URL=${{ env.TOOLCHAIN_URL }} $OC_ARG
+
+      - name: Rename images
         run: |
-          make ${{ matrix.target }} TOOLCHAIN=${{ matrix.toolchain }}
+          mkdir -p out
+          i=1
+          for f in trunk/images/*.trx; do
+            suffix=""; [ $i -gt 1 ] && suffix="-$i"
+            cp "$f" "out/padavan-tw-${{ matrix.target }}${SUFFIX}-${BUILD_DATE}-${SHORT_SHA}${suffix}.trx"
+            i=$((i+1))
+          done
+          (cd out && sha256sum *.trx > SHA256SUMS-${{ matrix.target }}${SUFFIX}.txt)
+          ls -l out
 
-      - uses: actions/upload-artifact@main
+      - uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.target }}-${{ matrix.toolchain }}-${{ env.BUILD_DATE }}
-          path: trunk/images/*.trx
+          name: padavan-tw-${{ matrix.target }}${{ env.SUFFIX }}-${{ env.BUILD_DATE }}-${{ env.SHORT_SHA }}
+          path: out/*
+          retention-days: 14
 
-      - uses: ncipollo/release-action@main
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v') || github.event.inputs.release == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
         with:
-          commit: ${{ github.sha }}
-          tag: ${{ env.BUILD_DATE }}
-          artifacts: trunk/images/*.trx
-          allowUpdates: true
-          omitBodyDuringUpdate: true
-
-      - uses: Mattraks/delete-workflow-runs@main
+          path: out
+          merge-multiple: true
+      - name: Release tag
+        run: |
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            echo "TAG=${GITHUB_REF_NAME}" >> "$GITHUB_ENV"
+          else
+            echo "TAG=build-$(TZ='Asia/Taipei' date +%Y%m%d-%H%M)" >> "$GITHUB_ENV"
+          fi
+      - uses: softprops/action-gh-release@v2
         with:
-          retain_days: 0
-          keep_minimum_runs: 1
+          tag_name: ${{ env.TAG }}
+          name: ${{ env.TAG }}
+          prerelease: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+          files: out/*
+          body: |
+            padavan-tw 韌體（${{ env.TAG }}）
+            - 機型：${{ github.event.inputs.target == '' && 'all' || github.event.inputs.target }}（all = Newifi D3（NEWIFI3）、小米 CR6608（CR660x））
+            - 原始碼：${{ github.sha }}
+            - 檔名有 -oc1000 的是超頻版（CPU 1000 MHz），其餘為標準版（880 MHz）；不確定就用標準版
+            - 刷機前請先比對 SHA256SUMS

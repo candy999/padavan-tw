@@ -25,12 +25,12 @@ logger -t "自动启动" "正在检查路由是否已连接互联网..."
 count=0
 while :
 do
-	ping -c 1 -W 1 -q 223.5.5.5 1>/dev/null 2>&1
+	ping -c 1 -W 1 -q 168.95.1.1 1>/dev/null 2>&1
 	if [ "$?" == "0" ]; then
 		break
 	fi
 	sleep 5
-	ping -c 1 -W 1 -q baidu.com 1>/dev/null 2>&1
+	ping -c 1 -W 1 -q 101.101.101.101 1>/dev/null 2>&1
 	if [ "$?" == "0" ]; then
 		break
 	fi
@@ -99,7 +99,7 @@ logger -t "自动启动" "正在启动 zerotier..."
 /usr/bin/zerotier.sh start
 fi
 
-if [ $(nvram get wireguard_enable) = 1 ] ; then
+if [ "$(nvram get wireguard_enable)" = 1 ] || [ "$(nvram get wgs_enable)" = 1 ] ; then
 logger -t "自动启动" "正在启动 wireguard..."
 /usr/bin/wireguard.sh start
 fi

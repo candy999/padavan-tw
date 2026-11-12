@@ -452,7 +452,15 @@ start_dns_dhcpd(int is_ap_mode)
 		fprintf(fp, "enable-ra\n");
 		if (i_verbose == 0 || i_verbose == 1)
 			fprintf(fp, "quiet-ra\n");
-		fprintf(fp, "ra-param=%s,%d,%d\n", IFNAME_BR, 30, 1800);
+		/* padavan-tw：WAN 是 PPPoE 時在 RA 裡通告 MTU（跟 PPPoE MTU 一樣），
+		 * 裝置一開始就用正確的大小，不用依賴常被擋掉的 ICMPv6「封包太大」訊息 */
+		if (get_wan_proto(0) == IPV4_WAN_PROTO_PPPOE) {
+			int ra_mtu = get_wan_unit_value_int(0, "pppoe_mtu");
+			if (ra_mtu < 1280 || ra_mtu > 1492)
+				ra_mtu = 1492;
+			fprintf(fp, "ra-param=%s,mtu:%d,%d,%d\n", IFNAME_BR, ra_mtu, 30, 1800);
+		} else
+			fprintf(fp, "ra-param=%s,%d,%d\n", IFNAME_BR, 30, 1800);
 		
 		is_dhcp_used |= 0x2;
 		

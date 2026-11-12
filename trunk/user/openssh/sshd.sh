@@ -4,7 +4,6 @@ dir_storage="/etc/storage/openssh"
 sshd_config="$dir_storage/sshd_config"
 
 rsa_key="$dir_storage/ssh_host_rsa_key"
-dsa_key="$dir_storage/ssh_host_dsa_key"
 ed25519_key="$dir_storage/ssh_host_ed25519_key"
 
 func_create_config()
@@ -27,7 +26,6 @@ Protocol 2
 
 # HostKeys for protocol version 2
 HostKey ${rsa_key}
-HostKey ${dsa_key}
 #HostKey ${dir_storage}/ssh_host_ecdsa_key
 HostKey ${ed25519_key}
 
@@ -118,17 +116,20 @@ func_start()
 
 	old_path="/etc/storage"
 	rm -f "${old_path}/sshd_config"
-	for i in ssh_host_rsa_key ssh_host_dsa_key ; do
+	for i in ssh_host_rsa_key ; do
 		[ -f "${old_path}/${i}" ] && mv -n "${old_path}/${i}" "$dir_storage"
 		[ -f "${old_path}/${i}.pub" ] && mv -n "${old_path}/${i}.pub" "$dir_storage"
 	done
 
-	if [ ! -f "$rsa_key" ] || [ ! -f "$dsa_key" ] || [ ! -f "$ed25519_key" ] ; then
+	if [ ! -f "$rsa_key" ] || [ ! -f "$ed25519_key" ] ; then
 		/usr/bin/ssh-keygen -A
 	fi
 
 	if [ ! -f "$sshd_config" ] ; then
 		func_create_config
+	else
+		# OpenSSH 9.8 起預設不支援 DSA：移除舊版韌體留下的 DSA 主機金鑰設定
+		sed -i '/ssh_host_dsa_key/d' "$sshd_config"
 	fi
 
 	touch /var/run/utmp

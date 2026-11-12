@@ -34,7 +34,7 @@ struct nvram_pair router_defaults[] = {
 
 	/* Miscellaneous parameters */
 	{ "time_zone", DEF_TIMEZONE },
-	{ "preferred_lang", "CN" },
+	{ "preferred_lang", "TW" },
 	{ "log_float_ui", "0" },		/* WebUI syslog float panel mode */
 	{ "log_ipaddr", "" },			/* syslog recipient IP */
 	{ "log_port", "514" },			/* syslog recipient Port */
@@ -127,8 +127,9 @@ struct nvram_pair router_defaults[] = {
 	{ "wan_pppoe_man", "1" },		/* PPPoE & MAN */
 	{ "pppoemwan_staticnum_x", "0" },
 	{ "pppoemwan_443", "0" },
-	{ "wan_pppoe_mtu", "1492" },	/* Negotiate MTU to the smaller of this value or the peer MRU */
-	{ "wan_pppoe_mru", "1492" },	/* Negotiate MRU to this value */
+	/* padavan-tw：中華電信 PPPoE 實務上用 1480 較穩（PPPoE 理論值 1492），只少 0.8% 的封包容量 */
+	{ "wan_pppoe_mtu", "1480" },	/* Negotiate MTU to the smaller of this value or the peer MRU */
+	{ "wan_pppoe_mru", "1480" },	/* Negotiate MRU to this value */
 	{ "wan_pptp_mtu", "1400" },		/* Negotiate MTU to the smaller of this value or the peer MRU */
 	{ "wan_pptp_mru", "1400" },		/* Negotiate MRU to this value */
 	{ "wan_l2tp_mtu", "1460" },		/* Negotiate MTU to the smaller of this value or the peer MRU */
@@ -244,7 +245,7 @@ struct nvram_pair router_defaults[] = {
 	{ "wl_HT_AMSDU", "0" },
 	{ "wl_HT_BAWinSize", "64" },
 #endif
-	{ "wl_HT_80211KV", "0" },
+	{ "wl_HT_80211KV", "1" },	/* padavan-tw：802.11k/v 預設開啟；802.11r 相容性較差，維持關閉 */
 	{ "wl_HT_80211R", "0" },
 	{ "wl_HT_MpduDensity", "5" },
 	{ "wl_HT_AutoBA", "1" },
@@ -299,7 +300,7 @@ struct nvram_pair router_defaults[] = {
 	{ "rt_macmode", "disabled" },
 	{ "rt_mrate", "2" },
 	{ "rt_mode", "ap" },
-	{ "rt_HT_BW", "1" },
+	{ "rt_HT_BW", "0" },		/* padavan-tw：2.4G 預設 20 MHz（台灣住宅密集，40 MHz 會互相干擾、反而變慢） */
 	{ "rt_HT_EXTCHA", "1" },
 	{ "rt_HT_OpMode", "1" },
 	{ "rt_wme", "1" },
@@ -344,7 +345,7 @@ struct nvram_pair router_defaults[] = {
 	{ "rt_pmfsha256", "0" },
 	{ "rt_HT_RDG", "0" },
 	{ "rt_HT_AMSDU", "1" },
-	{ "rt_HT_80211KV", "0" },
+	{ "rt_HT_80211KV", "1" },
 	{ "rt_HT_80211R", "0" },
 	{ "rt_HT_MpduDensity", "5" },
 	{ "rt_band_steering", "0" },	/* band steering AP 2.4Ghz */
@@ -701,7 +702,7 @@ struct nvram_pair router_defaults[] = {
 #if defined(Pdnsd)
 	/* Pdnsd */
 	{ "dns_enable", "0" },
-	{ "dns_server", "223.5.5.5,114.114.114.114" },
+	{ "dns_server", "168.95.1.1,101.101.101.101" },
 	{ "dns_server_port", "5333" },
 	{ "dns_server_bind", "0.0.0.0" },
 #endif
@@ -857,6 +858,15 @@ struct nvram_pair router_defaults[] = {
 	{ "wireguard_localkey", "" },
 	{ "wireguard_peerip", "" },
 	{ "wireguard_peerkey", "" },
+	/* padavan-tw：WireGuard 伺服器（外出連回家）。金鑰在第一次啟用時由路由器產生 */
+	{ "wgs_enable", "0" },
+	{ "wgs_port", "51820" },
+	{ "wgs_addr", "10.66.0.1" },		/* 伺服器在 VPN 網段的位址，網段固定 /24 */
+	{ "wgs_host", "" },			/* 給裝置連線用的網域或 IP；空白＝DDNS 名稱或 WAN IP */
+	{ "wgs_lan_nat", "1" },			/* 連到區網裝置時改用路由器位址，NAS／攝影機的「只允許區網」也能用 */
+	{ "wgs_privkey", "" },
+	{ "wgs_pubkey", "" },
+	{ "wgs_num_x", "0" },
 #endif
 
 #if defined(APP_SQM)
@@ -970,15 +980,15 @@ struct nvram_pair router_defaults[] = {
 	{ "di_lost_delay", "1" },
 	{ "di_lost_action", "0" },
 	{ "di_recon_pause", "0" },
-	{ "di_addr0", "114.114.114.114" },
+	{ "di_addr0", "168.95.1.1" },
 	{ "di_addr1", "208.67.222.222" },
-	{ "di_addr2", "14.17.42.40" },
+	{ "di_addr2", "101.101.101.101" },
 	{ "di_addr3", "8.8.8.8" },
 	{ "di_addr4", "8.8.4.4" },
 	{ "di_addr5", "208.67.220.220" },
 	{ "di_port0", "53" },
 	{ "di_port1", "53" },
-	{ "di_port2", "80" },
+	{ "di_port2", "53" },
 	{ "di_port3", "53" },
 	{ "di_port4", "53" },
 	{ "di_port5", "53" },
@@ -1058,6 +1068,17 @@ struct nvram_pair router_defaults[] = {
 #endif
 	{ "hw_nat_mode", "1" },
 	{ "sw_nat_mode", "0" },
+	/* padavan-tw：硬體 QoS（QDMA） */
+	/* padavan-tw：每天自動重選頻道（只在頻道設為自動、Wi-Fi 閒置時；預設凌晨 4 點） */
+	{ "tw_acs_daily", "1" },
+	{ "tw_acs_hour", "4" },
+	{ "hw_qos_mode", "0" },		/* 0=關閉 1=固定限速 2=自動 */
+	{ "hw_qos_wlan", "1" },		/* 開啟時 Wi-Fi 方向也經過 QDMA 排程 */
+	{ "hw_qos_down", "0" },		/* 申裝下載頻寬（Mbps），0=未設定 */
+	{ "hw_qos_up", "0" },		/* 申裝上傳頻寬（Mbps），0=未設定 */
+	{ "hw_qos_tech", "ftth" },	/* 最後一里：ftth、vdsl、cable、mobile、other */
+	{ "hw_qos_over", "15" },	/* 上浮 %：上限＝申裝 ×(100+over)% */
+	{ "hw_qos_under", "20" },	/* 下探 %：下限＝申裝 ×(100-under)% */
 #if defined(USE_SFE)
 	{ "sfe_enable", "2" },		/* Software Offload Routing IPv4/IPv6 */
 #endif

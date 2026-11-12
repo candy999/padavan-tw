@@ -965,6 +965,14 @@ ipt_filter_rules(char *man_if, char *wan_if, char *lan_if, char *lan_ip,
 			}
 		}
 #endif
+#if defined (APP_WIREGUARD)
+		/* padavan-tw：WireGuard 伺服器——接受連線埠，VPN 裡的裝置可以存取路由器（DNS、管理頁） */
+		if (nvram_get_int("wgs_enable") == 1) {
+			int i_wgs_port = nvram_safe_get_int("wgs_port", 51820, 1, 65535);
+			fprintf(fp, "-A %s -p %s --dport %d -j %s\n", dtype, "udp", i_wgs_port, logaccept);
+			fprintf(fp, "-A %s -i %s -j %s\n", dtype, IFNAME_TW_WGS, "ACCEPT");
+		}
+#endif
 		if (i_vpns_enable) {
 			int i_need_vpnlist = 1;
 #if defined (APP_OPENVPN)
@@ -1114,6 +1122,12 @@ ipt_filter_rules(char *man_if, char *wan_if, char *lan_if, char *lan_ip,
 				fprintf(fp, "-A %s -p icmp ! --icmp-type %s -j %s\n", dtype, "echo-request", logaccept);
 		}
 		
+#if defined (APP_WIREGUARD)
+		/* padavan-tw：WireGuard 伺服器的裝置可以連到區網與網際網路 */
+		if (nvram_get_int("wgs_enable") == 1)
+			fprintf(fp, "-A %s -i %s -j %s\n", dtype, IFNAME_TW_WGS, "ACCEPT");
+#endif
+
 		/* Accept VPN server client's outbound traffic */
 		if (i_vpns_enable) {
 			int i_need_vpnlist = 1;
@@ -1849,6 +1863,19 @@ ipt_nat_rules(char *man_if, char *man_ip,
 		if (vpnc_if && i_vpnc_sfw != 2)
 			include_masquerade(fp, vpnc_if, NULL, lan_net, 0);
 		
+#if defined (APP_WIREGUARD)
+		/* padavan-tw：WireGuard 伺服器的裝置用家裡的網路上網；連區網裝置時可選擇改用路由器位址 */
+		if (nvram_get_int("wgs_enable") == 1) {
+			char wgs_net[24] = {0};
+			ip2class(nvram_safe_get("wgs_addr"), "255.255.255.0", wgs_net, sizeof(wgs_net));
+			if (*wgs_net && strcmp(wgs_net, lan_net) != 0) {
+				include_masquerade(fp, wan_if, wan_ip, wgs_net, 0);
+				if (nvram_get_int("wgs_lan_nat") == 1)
+					include_masquerade(fp, lan_if, lan_ip, wgs_net, 0);
+			}
+		}
+#endif
+
 		/* masquerade WAN connection for VPN server clients */
 		if (i_vpns_enable) {
 			char vpn_net[24] = {0};

@@ -1,0 +1,196 @@
+#!/bin/sh
+# padavan-tw 硬體 QoS（QDMA）驗證工具
+#
+# 用途：在實機上確認硬體 QoS 是否生效、哪些方向（下載／上傳、有線／Wi-Fi）真的經過 QDMA 排程。
+# 這裡的設定都是「暫時的」：不寫 nvram、重開機就恢復。正式設定請用後台。
+#
+#   tw-qos-check status              目前狀態（nvram、hw_nat 參數、QDMA 排程器與佇列）
+#   tw-qos-check on | off            暫時開啟／關閉 QDMA 排程（有線＋Wi-Fi），並清空硬體表
+#   tw-qos-check limit 下載 上傳     暫時限速（Mbps），例如：tw-qos-check limit 100 50
+#   tw-qos-check clear               移除暫時限速
+#   tw-qos-check watch [秒]          每秒顯示各佇列排隊封包數（預設 30 秒）
+#   tw-qos-check guide               測試步驟說明
+#
+# 佇列配置（單一 GMAC 的機型上傳與下載走同一張網卡，所以用封包標記分方向）：
+#   下載（從 WAN 進來）：標記 1 → 佇列 1 → 排程器 SCH1
+#   上傳（往 WAN 出去）：標記 8 → 佇列 8 → 排程器 SCH2
+
+PARAM_DIR=${TW_PARAM_DIR:-/sys/module/hw_nat/parameters}
+QDMA_PROC=${TW_QDMA_PROC:-/proc/mt7621/qdma}
+CHAIN=TW_QOS
+MARK_DOWN=1
+MARK_UP=8
+Q_DOWN=1
+Q_UP=8
+
+die() { echo "錯誤：$*" >&2; exit 1; }
+
+need_hwnat() {
+	[ -d "$PARAM_DIR" ] || die "hw_nat 沒有載入（後台「硬體加速」要開啟）"
+	[ -f "$PARAM_DIR/hnat_qos" ] || die "這個韌體的 hw_nat 沒有 hnat_qos 參數（不是 padavan-tw 版本？）"
+}
+
+wan_if() {
+	ip route 2>/dev/null | awk '/^default/ {for (i=1;i<=NF;i++) if ($i=="dev") {print $(i+1); exit}}'
+}
+
+param() { cat "$PARAM_DIR/$1" 2>/dev/null || echo "-"; }
+
+show_qdma() {
+	if [ ! -r "$QDMA_PROC" ]; then
+		echo "（找不到 $QDMA_PROC，這個韌體沒有 QDMA 狀態頁）"
+		return
+	fi
+	awk '
+		/rate control/ { print "  " $0; next }
+		/^Queue#/ { q=$0; sub("Queue#","",q); sub(" Information:","",q); next }
+		/packets in the queue/ { pk=$1; next }
+		/HW_RESV/ { split($0,a,"SCH: "); sch=a[2]; sub(";.*","",sch); next }
+		/Min_Rate_En/ {
+			split($0,b,"Max_Rate_En is "); me=substr(b[2],1,1)
+			split($0,c,"Max_Rate is "); mr=c[2]; sub("Kbps.*","",mr)
+			if (pk > 0 || me == 1 || q == 1 || q == 8)
+				printf "  佇列 %-2s  排程器 SCH%s  排隊 %-4s  佇列限速 %s\n", q, sch, pk, (me == 1 ? mr " Kbps" : "無")
+		}
+	' "$QDMA_PROC"
+}
+
+cmd_status() {
+	echo "== 後台設定（nvram） =="
+	for k in hw_nat_mode hw_qos_mode hw_qos_wlan hw_qos_down hw_qos_up hw_qos_tech hw_qos_over hw_qos_under; do
+		printf "  %-14s %s\n" "$k" "$(nvram get $k)"
+	done
+	echo "== hw_nat 模組 =="
+	if [ -d "$PARAM_DIR" ]; then
+		printf "  %-14s %s\n" hnat_qos "$(param hnat_qos)" hnat_qos_wlan "$(param hnat_qos_wlan)" wan_vid "$(param wan_vid)"
+	else
+		echo "  沒有載入"
+	fi
+	echo "== WAN 介面 =="
+	echo "  $(wan_if)"
+	echo "== 暫時限速規則（iptables mangle $CHAIN） =="
+	if iptables -t mangle -S "$CHAIN" >/dev/null 2>&1; then
+		iptables -t mangle -S "$CHAIN" | sed 's/^/  /'
+	else
+		echo "  無"
+	fi
+	echo "== QDMA 排程器與佇列 =="
+	show_qdma
+}
+
+cmd_onoff() {
+	need_hwnat
+	v=0; [ "$1" = "on" ] && v=1
+	echo $v > "$PARAM_DIR/hnat_qos"
+	echo $v > "$PARAM_DIR/hnat_qos_wlan"
+	hw_nat -y >/dev/null 2>&1
+	echo "QDMA 排程：$1（暫時設定，已清空硬體表；後台設定與重開機會覆蓋）"
+}
+
+mbps_to_kbps() {
+	case "$1" in
+		''|*[!0-9]*) die "頻寬要填整數 Mbps：$1" ;;
+	esac
+	[ "$1" -ge 1 ] && [ "$1" -le 1000 ] || die "頻寬範圍 1～1000 Mbps：$1"
+	echo $(($1 * 1000))
+}
+
+rules() {
+	# $1 = -A 或 -D 以外的動作由呼叫端決定；這裡只建立鏈並加規則
+	wan="$1"
+	for t in iptables ip6tables; do
+		command -v $t >/dev/null 2>&1 || continue
+		$t -t mangle -N $CHAIN 2>/dev/null
+		$t -t mangle -F $CHAIN
+		$t -t mangle -A $CHAIN -i "$wan" -j MARK --set-mark $MARK_DOWN
+		$t -t mangle -A $CHAIN -o "$wan" -j MARK --set-mark $MARK_UP
+		$t -t mangle -C FORWARD -j $CHAIN 2>/dev/null || $t -t mangle -I FORWARD -j $CHAIN
+	done
+}
+
+cmd_limit() {
+	need_hwnat
+	command -v qdma >/dev/null 2>&1 || die "找不到 qdma 工具"
+	[ $# -eq 2 ] || die "用法：tw-qos-check limit 下載Mbps 上傳Mbps"
+	down=$(mbps_to_kbps "$1") || exit 1
+	up=$(mbps_to_kbps "$2") || exit 1
+	wan=$(wan_if); [ -n "$wan" ] || die "找不到預設路由的 WAN 介面"
+
+	[ "$(param hnat_qos)" = "1" ] || cmd_onoff on
+
+	qdma m2q $MARK_DOWN $Q_DOWN >/dev/null
+	qdma m2q $MARK_UP $Q_UP >/dev/null
+	qdma sch $Q_DOWN 0 >/dev/null
+	qdma sch $Q_UP 1 >/dev/null
+	qdma sch_rate 0 1 $down >/dev/null
+	qdma sch_rate 1 1 $up >/dev/null
+
+	rules "$wan"
+	hw_nat -y >/dev/null 2>&1
+	echo "暫時限速：下載 $1 Mbps（SCH1、佇列 $Q_DOWN）、上傳 $2 Mbps（SCH2、佇列 $Q_UP），WAN=$wan"
+	echo "QDMA 的速率在 127 Mbps 以上以 10 Mbps 為一階，實際值會無條件進位。"
+}
+
+cmd_clear() {
+	command -v qdma >/dev/null 2>&1 && {
+		qdma sch_rate 0 0 0 >/dev/null
+		qdma sch_rate 1 0 0 >/dev/null
+	}
+	for t in iptables ip6tables; do
+		command -v $t >/dev/null 2>&1 || continue
+		$t -t mangle -D FORWARD -j $CHAIN 2>/dev/null
+		$t -t mangle -F $CHAIN 2>/dev/null
+		$t -t mangle -X $CHAIN 2>/dev/null
+	done
+	hw_nat -y >/dev/null 2>&1
+	echo "已移除暫時限速（QDMA 排程開關維持現狀，用 tw-qos-check off 關閉）"
+}
+
+cmd_watch() {
+	[ -r "$QDMA_PROC" ] || die "找不到 $QDMA_PROC"
+	n=${1:-30}
+	echo "每秒顯示一次，共 $n 秒。測速時佇列 $Q_DOWN（下載）或 $Q_UP（上傳）有排隊，代表該方向有經過 QDMA。"
+	i=0
+	while [ $i -lt $n ]; do
+		line=$(awk -v qd=$Q_DOWN -v qu=$Q_UP '
+			/^Queue#/ { q=$0; sub("Queue#","",q); sub(" Information:","",q) }
+			/packets in the queue/ { if (q == qd) d=$1; if (q == qu) u=$1; if ($1 > 0) any = any " #" q "=" $1 }
+			END { printf "下載佇列 %-4s 上傳佇列 %-4s 有排隊的佇列:%s", d, u, (any == "" ? " 無" : any) }
+		' "$QDMA_PROC")
+		echo "$(date +%T)  $line"
+		i=$((i + 1))
+		sleep 1
+	done
+}
+
+cmd_guide() {
+	cat <<'EOF'
+硬體 QoS 驗證步驟（Newifi D3／CR6608）
+
+1. 基準：tw-qos-check off，用電腦（有線）跑 speed.hinet.net，記下下載／上傳與「載入中延遲」
+2. 開排程不限速：tw-qos-check on，再測一次。
+   速度應該跟步驟 1 差不多；差很多代表「開啟排程本身」就有效能損失
+3. 限速：tw-qos-check limit 100 50，再測一次。
+   - 下載約 100、上傳約 50 → 兩個方向都有經過 QDMA
+   - 只有一個方向變成限速值 → 另一個方向沒有經過排程
+   - 都沒變 → 硬體加速的連線沒有經過 QDMA（要回報）
+4. 同時開另一個視窗：tw-qos-check watch 60，測速時看佇列 1／8 有沒有排隊
+5. 改用 Wi-Fi 裝置重複步驟 3、4，確認 Wi-Fi 方向
+6. 延遲：限速在實測速度的 90%（例如實測 480 就 limit 430 220），
+   用 waveform.com/tools/bufferbloat 比較限速前後的「載入中延遲」
+7. 小封包：限速關閉、排程開啟，用遊戲或 ping -s 64 長時間觀察有沒有跳 ping
+8. 結束：tw-qos-check clear；tw-qos-check off
+
+把每一步的結果、以及 tw-qos-check status 的輸出貼到 Issue 即可。
+EOF
+}
+
+case "$1" in
+	status|"") cmd_status ;;
+	on|off) cmd_onoff "$1" ;;
+	limit) shift; cmd_limit "$@" ;;
+	clear) cmd_clear ;;
+	watch) shift; cmd_watch "$@" ;;
+	guide|help|-h|--help) cmd_guide ;;
+	*) die "未知的指令：$1（可用：status on off limit clear watch guide）" ;;
+esac

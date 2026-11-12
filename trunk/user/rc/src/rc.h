@@ -168,6 +168,9 @@ void stop_auth_kabinet(void);
 
 /* common_ex.c */
 long uptime(void);
+
+/* tw_mtu.c */
+int tw_mtu_probe_main(int argc, char **argv);
 int rand_seed_by_time(void);
 void set_pagecache_reclaim(void);
 void restart_all_sysctl(void);

@@ -175,8 +175,9 @@ function showSystemInfo(cpu_now,force){
 
 	$j("#la_info").html('<span class="label label-'+getLALabelStatus(arrLA[0])+'">'+arrLA[0]+'</span>&nbsp;<span class="label label-'+getLALabelStatus(arrLA[1])+'">'+arrLA[1]+'</span>&nbsp;<span class="label label-'+getLALabelStatus(arrLA[2])+'">'+arrLA[2]+'</span>');
 	$j("#cpu_info").html(cpu_now.busy + '%');
-	$j("#mem_info").html(bytesToSize(sysinfo.ram.free*1024, 2) + " / " + bytesToSize(sysinfo.ram.total*1024, 2));
-	$j("#uptime_info").html(sysinfo.uptime.days + "<#Day#>".substring(0,1) + " " + h+"<#Hour#>".substring(0,1) + " " + m+"<#Minute#>".substring(0,1));
+	$j("#mem_info").html(bytesToSize(sysinfo.ram.free*1024, 0) + " / " + bytesToSize(sysinfo.ram.total*1024, 0));
+	// padavan-tw：「23 天 04:12」，不再截字（中文會變成「小」「分」）
+	$j("#uptime_info").html(sysinfo.uptime.days + " <#Day#> " + h + ":" + m);
 
 	$j("#cpu_usage tr:nth-child(1) td:first").html('busy: '+cpu_now.busy+'%');
 	$j("#cpu_usage tr:nth-child(2) td:first").html('user: '+cpu_now.user+'%');
@@ -228,22 +229,36 @@ var enabledGuest5Gclass = '<% nvram_match_x("","wl_guest_enable", "1", "btn-info
 var enabledBtnCommit = '<% nvram_match_x("","nvram_manual", "0", "display:none;"); %>';
 
 // L3 = The third Level of Menu
+function tw_icon(name, size){
+	// 線條圖示（設計語彙：stroke 2、圓角端點），顏色跟隨文字
+	var sz = size || 18;
+	var p = {
+		menu: '<path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/>',
+		home: '<path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/>',
+		vpn: '<path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6z"/>',
+		globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18"/><path d="M12 3a14 14 0 0 0 0 18"/>',
+		chart: '<path d="M3 12h4l3 7 4-14 3 7h4"/>',
+		info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/>',
+		gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+		storage: '<rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01"/><path d="M7 16.5h.01"/>',
+		power: '<path d="M12 3v9"/><path d="M6.3 7.5a8 8 0 1 0 11.4 0"/>',
+		restart: '<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/>',
+		logout: '<path d="M15 4h4v16h-4"/><path d="M10 8l-4 4 4 4"/><path d="M6 12h10"/>',
+		trash: '<path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/>',
+		save: '<path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7"/><path d="M8 20v-6h8v6"/>',
+		wifi: '<path d="M4 14a8 8 0 0 1 16 0"/><path d="M8 14a4 4 0 0 1 8 0"/><circle cx="12" cy="14" r="1"/><path d="M5 19h14"/>'
+	};
+	return '<svg class="tw-ico" width="'+sz+'" height="'+sz+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(p[name]||'')+'</svg>';
+}
+
+function tw_label(str){
+	// 字典字串常帶冒號，頂部列只要名稱
+	return str.replace(/[:：]\s*$/, '');
+}
+
 function show_banner(L3){
 	var bc = '';
-	var style_2g = 'width:55px;';
-	var style_5g = 'width:55px;';
-	if (!support_5g_radio()) {
-		style_2g = 'width:114px;';
-		style_5g = 'width:21px;display:none;';
-	}
-	var title_2g = '"2.4GHz"'
-	if (!support_2g_radio()) {
-		title_2g = '"N/A" disabled';
-	}
-	var title_5g = '"5GHz"'
-	if (!support_5g_radio()) {
-		title_5g = '"N/A" disabled';
-	}
+	var has2g = support_2g_radio(), has5g = support_5g_radio();
 
 	// log panel
 	if (!is_mobile && log_float != '0'){
@@ -269,117 +284,55 @@ function show_banner(L3){
 	bc +='<input type="hidden" name="flag" value="">\n';
 	bc +='</form>\n';
 
-	// --->
-	bc += '<div class="container-fluid" style="padding-left: 0px; margin-left: -6px;">\n';
-	bc += '<div class="row-fluid">\n';
+	// padavan-tw 頂部列：狀態（CPU、記憶體、運作時間、負載）＋ Wi-Fi ＋ 動作
+	bc += '<header class="tw-top" role="banner">\n';
+	bc += '<button type="button" class="tw-icon-btn tw-menu-btn" aria-label="開啟選單" aria-controls="tw-side" aria-expanded="false" onclick="tw_nav(true);">'+tw_icon('menu')+'</button>\n';
+	bc += '<span class="tw-mobile-brand">padavan-tw</span>\n';
 
-	// block system info
-	bc += '<div class="span6">\n';
-	bc += '<div class="well" style="margin-bottom: 0px; height: 109px; padding: 7px 6px 6px 6px;">\n';
-	bc += '<div class="row-fluid">\n';
-
-	bc += '<div id="main_info">\n';
-	bc += '<table class="table table-condensed" width="100%" style="margin-bottom: 0px;">\n';
-	bc += '  <tr>\n';
-	bc += '    <td width="43%" style="border: 0 none;"><#SI_LoadAvg#></td>\n';
-	bc += '    <td style="border: 0 none; min-width: 115px;"><div id="la_info"> -- -- -- </div></td>\n';
-	bc += '  </tr>\n';
-	bc += '  <tr>\n';
-	bc += '    <td style="height: 20px;"><a class="adv_info" href="javascript:void(0)" onclick="click_info_cpu();"><#SI_LoadCPU#></a></td>\n';
-	bc += '    <td><span id="cpu_info"> -- % </span></td>\n';
-	bc += '  </tr>\n';
-	bc += '  <tr>\n';
-	bc += '    <td><a class="adv_info" href="javascript:void(0)" onclick="click_info_mem();"><#SI_FreeMem#></a></td>\n';
-	bc += '    <td><span id="mem_info"> -- MB / -- MB </span></td>\n';
-	bc += '  </tr>\n';
-	bc += '  <tr>\n';
-	bc += '    <td><#SI_Uptime#></td>\n';
-	bc += '    <td><span id="uptime_info">&nbsp;</span></td>\n';
-	bc += '  </tr>\n';
-	bc += '</table>\n';
+	bc += '<div class="tw-stats" id="main_info">\n';
+	bc += '<button type="button" class="tw-stat" onclick="click_info_cpu();">'+tw_label('<#SI_LoadCPU#>')+' <b id="cpu_info">-- %</b></button>\n';
+	bc += '<button type="button" class="tw-stat" onclick="click_info_mem();">'+tw_label('<#SI_FreeMem#>')+' <b id="mem_info">--</b></button>\n';
+	bc += '<span class="tw-stat">'+tw_label('<#SI_Uptime#>')+' <b id="uptime_info">--</b></span>\n';
+	bc += '<span class="tw-stat tw-stat-la">'+tw_label('<#SI_LoadAvg#>')+' <span id="la_info">-- -- --</span></span>\n';
 	bc += '</div>\n';
 
-	bc += '<div id="cpu_usage" style="display: none;">\n';
-	bc += '<table class="table table-condensed" width="100%" style="margin-bottom: 0px;">\n';
-	bc += '  <tr>\n';
-	bc += '    <td width="43%" style="text-align:left; border: 0 none;"></td>\n';
-	bc += '    <td style="border: 0 none; text-align:right;"><a class="label" href="javascript:void(0)" onclick="hide_adv_info();">hide</a></td>\n';
-	bc += '  </tr>\n';
-	bc += '  <tr>\n';
-	bc += '    <td style="height: 20px;"></td>\n';
-	bc += '    <td></td>\n';
-	bc += '  </tr>\n';
-	bc += '  <tr>\n';
-	bc += '    <td></td>\n';
-	bc += '    <td></td>\n';
-	bc += '  </tr>\n';
-	bc += '  <tr>\n';
-	bc += '    <td></td>\n';
-	bc += '    <td></td>\n';
-	bc += '  </tr>\n';
-	bc += '</table>\n';
-	bc += '</div>\n';
+	// 舊程式碼會更新這兩個表格（CPU／記憶體細項），保留但不顯示
+	bc += '<div id="cpu_usage" style="display: none;"><table class="table table-condensed"><tr><td></td><td></td></tr><tr><td></td><td></td></tr><tr><td></td><td></td></tr><tr><td></td><td></td></tr></table></div>\n';
+	bc += '<div id="mem_usage" style="display: none;"><table class="table table-condensed"><tr><td></td><td></td></tr><tr><td></td><td></td></tr><tr><td></td><td></td></tr><tr><td></td><td></td></tr></table></div>\n';
 
-	bc += '<div id="mem_usage" style="display: none;">\n';
-	bc += '<table class="table table-condensed" width="100%" style="margin-bottom: 0px;">\n';
-	bc += '  <tr>\n';
-	bc += '    <td width="43%" style="text-align:left; border: 0 none;"></td>\n';
-	bc += '    <td style="border: 0 none; text-align:right;"><a class="label" href="javascript:void(0)" onclick="hide_adv_info();">hide</a></td>\n';
-	bc += '  </tr>\n';
-	bc += '  <tr>\n';
-	bc += '    <td style="height: 20px;"></td>\n';
-	bc += '    <td></td>\n';
-	bc += '  </tr>\n';
-	bc += '  <tr>\n';
-	bc += '    <td></td>\n';
-	bc += '    <td></td>\n';
-	bc += '  </tr>\n';
-	bc += '  <tr>\n';
-	bc += '    <td></td>\n';
-	bc += '    <td></td>\n';
-	bc += '  </tr>\n';
-	bc += '</table>\n';
+	bc += '<div class="tw-top-actions">\n';
+	if (has2g || has5g){
+		bc += '<span class="tw-wifi tw-hide-sm">'+tw_icon('wifi', 16);
+		if (has2g)
+			bc += '<input type="button" id="wifi2_b" class="btn btn-mini '+enabled2Gclass+'" value="2.4G" title="<#menu5_1#> 2.4GHz" onclick="go_setting(2);">';
+		if (has5g)
+			bc += '<input type="button" id="wifi5_b" class="btn btn-mini '+enabled5Gclass+'" value="5G" title="<#menu5_1#> 5GHz" onclick="go_setting(5);">';
+		bc += '</span>\n';
+		bc += '<span class="tw-wifi tw-wifi-guest tw-hide-sm">'+tw_tiny_label('<#menu5_1_2#>');
+		if (has2g)
+			bc += '<input type="button" id="wifi2_b_g" class="btn btn-mini '+enabledGuest2Gclass+'" value="2.4G" title="<#menu5_1_2#> 2.4GHz" onclick="go_wguest(2);">';
+		if (has5g)
+			bc += '<input type="button" id="wifi5_b_g" class="btn btn-mini '+enabledGuest5Gclass+'" value="5G" title="<#menu5_1_2#> 5GHz" onclick="go_wguest(5);">';
+		bc += '</span>\n';
+		bc += '<span class="tw-top-sep tw-hide-sm"></span>\n';
+	}
+	bc += '<a class="tw-stat tw-firm tw-hide-sm" href="/Advanced_FirmwareUpgrade_Content.asp" title="'+tw_label('<#General_x_FirmwareVersion_itemname#>')+'"><span id="firmver" class="time"></span></a>\n';
+	bc += '<button type="button" id="commit_btn" class="btn btn-mini" style="'+enabledBtnCommit+'" onclick="commit();" title="<#CTL_Commit#>">'+tw_icon('save', 16)+'<#CTL_Commit#></button>\n';
+	bc += '<button type="button" id="freememory_btn" class="tw-icon-btn tw-hide-sm" title="<#BTN_FREEMEMORY#>" aria-label="<#BTN_FREEMEMORY#>" onclick="freememory();">'+tw_icon('trash')+'</button>\n';
+	bc += '<button type="button" id="logout_btn" class="tw-icon-btn" title="<#t1Logout#>" aria-label="<#t1Logout#>" onclick="logout();">'+tw_icon('logout')+'</button>\n';
+	bc += '<button type="button" id="reboto_btn" class="tw-icon-btn" title="<#BTN_REBOOT#>" aria-label="<#BTN_REBOOT#>" onclick="reboot();">'+tw_icon('restart')+'</button>\n';
+	bc += '<button type="button" id="shutdown_btn" class="tw-icon-btn tw-danger tw-hide-sm" title="<#BTN_SHUTDOWN#>" aria-label="<#BTN_SHUTDOWN#>" onclick="shutdown();">'+tw_icon('power')+'</button>\n';
 	bc += '</div>\n';
-
-	bc += '</div>\n';
-	bc += '</div>\n';
-	bc += '</div>\n';
-
-	// block firmware version
-	bc += '<div class="span6">\n';
-	bc += '<div class="well" style="margin-bottom: 0px; height: 109px; padding: 5px 6px 8px 6px;">\n';
-	bc += '<div class="row-fluid">\n';
-	bc += '<table class="table table-condensed" style="margin-bottom: 0px">\n';
-	bc += '  <tr>\n';
-	bc += '    <td width="50%" style="border: 0 none;"><#menu5_1#>:</td>\n';
-	bc += '    <td style="border: 0 none; min-width: 115px;"><div class="form-inline"><input type="button" id="wifi2_b" class="btn btn-mini '+enabled2Gclass+'" style="'+style_2g+'" value='+title_2g+' onclick="go_setting(2);">&nbsp;<input type="button" id="wifi5_b" style="'+style_5g+'" class="btn btn-mini '+enabled5Gclass+'" value='+title_5g+' onclick="go_setting(5);"></div></td>\n';
-	bc += '  </tr>\n';
-	bc += '  <tr>\n';
-	bc += '    <td><#menu5_1_2#>:</td>\n';
-	bc += '    <td><div class="form-inline"><input type="button" id="wifi2_b_g" class="btn btn-mini '+enabledGuest2Gclass+'" style="'+style_2g+'" value='+title_2g+' onclick="go_wguest(2);">&nbsp;<input type="button" id="wifi5_b_g" style="'+style_5g+'" class="btn btn-mini '+enabledGuest5Gclass+'" value='+title_5g+' onclick="go_wguest(5);"></div></td>\n';
-	bc += '  </tr>\n';
-	bc += '  <tr>\n';
-	bc += '    <td><#General_x_FirmwareVersion_itemname#></td>\n';
-	bc += '    <td><a href="/Advanced_FirmwareUpgrade_Content.asp"><span id="firmver" class="time"></span></a></td>\n';
-	bc += '  </tr>\n';
-	bc += '  <tr>\n';
-	bc += '    <td><input type="button" class="btn btn-info" value="<#CTL_refresh#>" onclick="parent.location.reload();"> <input type="button" class="btn btn-primary" value="<#CTL_apply#>" onclick="applyRule();"> <button type="button" id="commit_btn" class="btn btn-mini" style="width: 66px; height: 26px; outline:0; '+enabledBtnCommit+'" onclick="commit();"><i class="icon icon-fire"></i>&nbsp;<#CTL_Commit#></button></td>\n';
-	bc += '    <td><button type="button" id="freememory_btn" class="btn btn-mini" style="height: 21px; outline:0;" title="<#BTN_FREEMEMORY#>" onclick="freememory();"><i class="icon icon-trash"></i></button> <button type="button" id="logout_btn" class="btn btn-mini" style="height: 21px; outline:0;" title="<#t1Logout#>" onclick="logout();"><i class="icon icon-user"></i></button> <button type="button" id="reboto_btn" class="btn btn-mini" style="height: 21px; outline:0;" title="<#BTN_REBOOT#>" onclick="reboot();"><i class="icon icon-repeat"></i></button> <button type="button" id="shutdown_btn" class="btn btn-mini" style="margin-left: 15px; height: 21px; outline:0;" title="<#BTN_SHUTDOWN#>" onclick="shutdown();"><i class="icon icon-off"></i></button></td>\n';
-	bc += '  </tr>\n';
-	bc += '</table>\n';
-	bc += '</div>\n';
-	bc += '</div>\n';
-	bc += '</div>\n';
-
-	bc += '</div>\n';
-	bc += '</div>\n';
-
-	bc +='</td></tr></table>\n';
+	bc += '</header>\n';
 
 	$("TopBanner").innerHTML = bc;
 
 	show_loading_obj();
 	show_top_status();
+}
+
+function tw_tiny_label(str){
+	return '<span>'+tw_label(str)+'</span>';
 }
 
 var tabtitle = new Array(20);
@@ -699,22 +652,24 @@ function show_menu(L1, L2, L3){
 		if(menuL1_title[i] == "")
 			continue;
 		else if(L1 == i && L2 <= 0)
-			menu1_code += '<li class="active" id="option'+i+'"><a href="javascript:;"><i class="'+menuL1_icon[i]+'"></i>&nbsp;&nbsp;'+menuL1_title[i]+'</a></li>\n';
+			menu1_code += '<li class="active" id="option'+i+'"><a href="javascript:;" aria-current="page">'+tw_menu_icon(menuL1_icon[i])+menuL1_title[i]+'</a></li>\n';
 		else
-			menu1_code += '<li id="option'+i+'"><a href="'+menuL1_link[i]+'" title="'+menuL1_link[i]+'"><i class="'+menuL1_icon[i]+'"></i>&nbsp;&nbsp;'+menuL1_title[i]+'</a></li>\n';
+			menu1_code += '<li id="option'+i+'"><a href="'+menuL1_link[i]+'">'+tw_menu_icon(menuL1_icon[i])+menuL1_title[i]+'</a></li>\n';
 	}
 
 	$("mainMenu").innerHTML = menu1_code;
+	tw_side_brand();
 
 	for(var i = 1; i <= menuL2_title.length-1; ++i){
 		if(menuL2_title[i] == "")
 			continue;
 		else if(L2 == i)
-			menu2_code += '<a href="javascript: void(0)" style="color: #005580; font-weight: bold"><i class="icon-minus"></i>&nbsp;&nbsp;'+menuL2_title[i]+'</a>\n';
+			menu2_code += '<a href="javascript: void(0)" style="font-weight: bold" aria-current="page">'+menuL2_title[i]+'</a>\n';
 		else
-			menu2_code += '<a href="'+menuL2_link[i]+'"><i class="icon-minus"></i>&nbsp;&nbsp;'+menuL2_title[i]+'</a>\n';
+			menu2_code += '<a href="'+menuL2_link[i]+'">'+menuL2_title[i]+'</a>\n';
 	}
 	$("subMenu").innerHTML = menu2_code;
+	$("subMenu").setAttribute('data-title', '<#menu5#>');
 
 	if(L3){
 		tab_code = '<ul class="nav nav-tabs" style="margin-bottom: 0px;">\n';
@@ -736,6 +691,22 @@ function show_menu(L1, L2, L3){
 		$("tabMenu").innerHTML = "";
 }
 
+function tw_menu_icon(cls){
+	var map = {'icon-home':'home', 'icon-hdd':'storage', 'icon-retweet':'vpn', 'icon-globe':'globe', 'icon-tasks':'chart', 'icon-random':'info', 'icon-wrench':'gear'};
+	return tw_icon(map[cls] || 'info', 18);
+}
+
+function tw_side_brand(){
+	var nav = document.querySelector('.side_nav');
+	if (!nav || document.getElementById('tw-brand'))
+		return;
+	var b = document.createElement('div');
+	b.id = 'tw-brand';
+	b.className = 'tw-brand';
+	b.innerHTML = '<span class="tw-brand-mark">'+tw_icon('wifi', 18)+'</span><span>padavan-tw<small><% nvram_get_x("", "productid"); %></small></span>';
+	nav.insertBefore(b, nav.firstChild);
+}
+
 function show_footer(){
 	footer_code = '<div align="center" class="bottom-image"></div>\n';
 	footer_code +='<div align="center" class="copyright"><#footer_copyright_desc#></div>\n';
@@ -752,14 +723,7 @@ function show_footer(){
 function show_top_status(){
 	var $j = jQuery.noConflict();
 
-	$j("#cpu_info").click(function(){
-		$j("#main_info").hide();
-		$j("#cpu_usage").show();
-	});
-	$j("#mem_info").click(function(){
-		$j("#main_info").hide();
-		$j("#mem_usage").show();
-	});
+	// padavan-tw：CPU／記憶體改成直接連到系統資訊頁（見 click_info_cpu），不再切換頂部列內容
 
 	id_system_info = setTimeout('get_system_info()', 2000);
 	showSystemInfo({busy: 0, user: 0, nice: 0, system: 0, idle: 0, iowait: 0, irq: 0, sirq: 0}, 0);
@@ -1641,3 +1605,182 @@ function removeFromLocalStorage(name){
         }
     };
 })(jQuery);
+
+/* ======================================================================
+ * padavan-tw 介面框架
+ * - 標記側欄／內容欄 class（tw.css 用）
+ * - 手機：選單抽屜、底部分頁列
+ * - 手機：有表頭的資料表加上欄位名稱，改成卡片
+ * ====================================================================== */
+function tw_nav(open){
+	var b = document.body;
+	if (!b) return;
+	if (open) b.classList.add('tw-nav-open'); else b.classList.remove('tw-nav-open');
+	var btn = document.querySelector('.tw-menu-btn');
+	if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+	if (open) {
+		var first = document.querySelector('.tw-side a');
+		if (first) first.focus();
+	}
+}
+
+function tw_tag_layout(){
+	var nav = document.querySelector('.side_nav');
+	if (!nav) return false;
+	var side = nav.parentNode;
+	while (side && !(side.className && /\bspan3\b/.test(side.className)))
+		side = side.parentNode;
+	if (!side) return false;
+	side.classList.add('tw-side');
+	side.id = side.id || 'tw-side';
+	side.setAttribute('aria-label', '主選單');
+	var main = side.nextElementSibling;
+	while (main && !/\bspan9\b/.test(main.className))
+		main = main.nextElementSibling;
+	if (main) {
+		main.classList.add('tw-main');
+		main.setAttribute('role', 'main');
+	}
+	return true;
+}
+
+function tw_tabbar(){
+	if (document.querySelector('.tw-tabbar') || !document.querySelector('.tw-side'))
+		return;
+	var here = location.pathname.replace(/^\//, '') || 'index.asp';
+	var tabs = [
+		['index.asp', 'home', tw_label('<#menu1#>')],
+		['Main_TrafficMonitor_realtime.asp', 'chart', tw_label('<#menu4#>')],
+		['Advanced_System_Info.asp', 'info', tw_label('<#menu5_8#>')]
+	];
+	var h = '';
+	for (var i = 0; i < tabs.length; i++) {
+		var cur = (here == tabs[i][0]) ? ' aria-current="page"' : '';
+		h += '<a href="/'+tabs[i][0]+'"'+cur+'>'+tw_icon(tabs[i][1], 22)+'<span>'+tabs[i][2]+'</span></a>';
+	}
+	h += '<button type="button" onclick="tw_nav(true);" aria-controls="tw-side">'+tw_icon('gear', 22)+'<span>'+tw_label('<#menu5#>')+'</span></button>';
+	var bar = document.createElement('nav');
+	bar.className = 'tw-tabbar';
+	bar.setAttribute('aria-label', '主要分頁');
+	bar.innerHTML = h;
+	document.body.appendChild(bar);
+
+	var scrim = document.createElement('div');
+	scrim.className = 'tw-scrim';
+	scrim.onclick = function(){ tw_nav(false); };
+	document.body.appendChild(scrim);
+}
+
+function tw_header_labels(row, n){
+	// 一列全是 th、且欄數符合時，回傳欄位名稱
+	if (!row || !row.cells || row.cells.length < 3 || (n && row.cells.length != n)) return null;
+	var labels = [];
+	for (var c = 0; c < row.cells.length; c++) {
+		var cell = row.cells[c];
+		if (cell.tagName != 'TH' || cell.colSpan > 1) return null;
+		labels.push((cell.textContent || '').replace(/\s+/g, ' ').trim());
+	}
+	return labels;
+}
+
+function tw_apply_labels(rows, start, labels){
+	var n = 0;
+	for (var r = start; r < rows.length; r++) {
+		var cs = rows[r].cells;
+		if (cs.length < 3) { rows[r].classList.add('tw-plain'); continue; }
+		n++;
+		for (var k = 0; k < cs.length && k < labels.length; k++) {
+			if (cs[k].hasAttribute('data-label')) continue;
+			var lab = labels[k];
+			if (!lab && cs[k].querySelector('input[type="checkbox"]')) lab = '選取';
+			if (lab) cs[k].setAttribute('data-label', lab);
+		}
+	}
+	return n;
+}
+
+function tw_table_cards(root){
+	// 手機版：資料表的每一列變成卡片，欄位名稱放在每格左側
+	// 1) 表頭在同一個表格（第一列全是 th）
+	// 2) Padavan 常見寫法：表頭在上一個表格的最後幾列（例如 row_static_caption），清單是另一個 table-list
+	var tables = (root || document).querySelectorAll('.tw-main table');
+	var lastHead = null;
+	for (var t = 0; t < tables.length; t++) {
+		var tb = tables[t];
+		var rows = tb.rows;
+		if (!rows || !rows.length) continue;
+		var own = null, start = 0;
+		for (var r = 0; r < rows.length && r < 3; r++) {
+			own = tw_header_labels(rows[r]);
+			if (own) { start = r + 1; break; }
+		}
+		if (own && rows.length > start) {
+			// 表頭後面若是輸入列（新增項目用），只加標籤，不做成卡片
+			var next = rows[start];
+			if (next && next.querySelector('input, select') && /table-list/.test(tb.className) === false && rows.length == start + 1) {
+				rows[start - 1].classList.add('tw-head-row');
+				next.classList.add('tw-labeled');
+				tw_apply_labels(rows, start, own);
+				lastHead = { labels: own, row: rows[start - 1] };
+				continue;
+			}
+			if (tw_apply_labels(rows, start, own)) {
+				tb.classList.add('tw-cards');
+				rows[start - 1].classList.add('tw-head-row');
+			}
+			lastHead = { labels: own, row: rows[start - 1] };
+			continue;
+		}
+		// 在設定表格裡找最後一個表頭列（欄位說明列），給後面的輸入列與清單表格用
+		var found = null;
+		for (var r2 = rows.length - 1; r2 >= 0; r2--) {
+			var lab = tw_header_labels(rows[r2]);
+			if (lab) { found = { labels: lab, row: rows[r2], index: r2 }; break; }
+		}
+		if (found) {
+			found.row.classList.add('tw-head-row');
+			for (var r3 = found.index + 1; r3 < rows.length; r3++)
+				if (rows[r3].cells.length == found.labels.length && rows[r3].querySelector('input, select')) {
+					rows[r3].classList.add('tw-labeled');
+					tw_apply_labels([rows[r3]], 0, found.labels);
+				}
+			lastHead = found;
+			continue;
+		}
+		if (/table-list/.test(tb.className) && lastHead) {
+			var cnt = 0;
+			for (var r4 = 0; r4 < rows.length; r4++)
+				if (rows[r4].cells.length == lastHead.labels.length) cnt++;
+			if (cnt && tw_apply_labels(rows, 0, lastHead.labels))
+				tb.classList.add('tw-cards');
+		}
+	}
+}
+
+function tw_ui_init(){
+	if (!tw_tag_layout()) return;
+	tw_tabbar();
+	tw_table_cards();
+	document.addEventListener('keydown', function(e){
+		if (e.key == 'Escape' && document.body.classList.contains('tw-nav-open')) tw_nav(false);
+	});
+	var side = document.querySelector('.tw-side');
+	if (side) side.addEventListener('click', function(e){
+		var a = e.target.closest ? e.target.closest('a') : null;
+		if (a && a.getAttribute('href') && a.getAttribute('href').indexOf('javascript') != 0) tw_nav(false);
+	});
+	// 很多頁面在載入後才用 JS 填入表格（裝置清單、轉送規則…），內容變動時重新標記
+	var main = document.querySelector('.tw-main');
+	if (main && window.MutationObserver) {
+		var timer = 0;
+		new MutationObserver(function(){
+			clearTimeout(timer);
+			timer = setTimeout(function(){ tw_table_cards(main); }, 150);
+		}).observe(main, { childList: true, subtree: true });
+	}
+}
+
+if (document.readyState == 'loading')
+	document.addEventListener('DOMContentLoaded', tw_ui_init);
+else
+	tw_ui_init();

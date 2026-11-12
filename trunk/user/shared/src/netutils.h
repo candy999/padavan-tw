@@ -118,6 +118,7 @@
 #define IFNAME_CLIENT_TAP		"tap0"
 
 #define IFNAME_SERVER_TUN		"tun1"
+#define IFNAME_TW_WGS			"wg1"	/* padavan-tw：WireGuard 伺服器（wg0 是用戶端） */
 #define IFNAME_CLIENT_TUN		"tun0"
 
 #define IFNAME_USBNET1			"wwan0"
