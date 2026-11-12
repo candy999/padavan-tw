@@ -692,7 +692,7 @@ gen_ralink_config(int is_soc_ap, int is_aband, int disable_autoscan)
 	fprintf(fp, "CalCacheApply=%d\n", 0);
 	fprintf(fp, "LoadCodeMethod=%d\n", 0);
 	fprintf(fp, "VHT_Sec80_Channel=%d\n", 0);
-	fprintf(fp, "WNMEnable=%d\n", 0);
+	/* WNMEnable 由下方 802.11k/v 設定寫入；驅動只讀第一個同名鍵，這裡不可先寫 0 */
 	fprintf(fp, "SKUenable=%d\n", 0);
 	fprintf(fp, "PowerUpenable=%d\n", 0);
 	fprintf(fp, "VOW_Airtime_Fairness_En=%d\n", 0);
@@ -714,7 +714,7 @@ gen_ralink_config(int is_soc_ap, int is_aband, int disable_autoscan)
 	fprintf(fp, "DfsDedicatedZeroWait=%d\n", 0);
 	fprintf(fp, "DfsZeroWaitDefault=%d\n", 0);
 //	fprintf(fp, "KernelRps=%d\n", 0);
-	fprintf(fp, "RRMEnable=%d\n", 0);
+	/* RRMEnable 由下方 802.11k/v 設定寫入；驅動只讀第一個同名鍵，這裡不可先寫 0 */
 	fprintf(fp, "MboSupport=%d\n", 0);
 
 #if defined (USE_MT7615_AP) || defined (USE_MT7915_AP)
@@ -1317,9 +1317,9 @@ gen_ralink_config(int is_soc_ap, int is_aband, int disable_autoscan)
 	i_val = nvram_wlan_get_int(is_aband, "HT_80211R");
 	#if defined (BOARD_MT7915_DBDC)
 	if (is_aband)
-	{fprintf(fp, "FtSupport=%d;%d\n",i_val);}
+	{fprintf(fp, "FtSupport=%d;%d\n", i_val, i_val);}
 	else
-	{fprintf(fp, "FtSupport=%d;%d\n",i_val);}
+	{fprintf(fp, "FtSupport=%d;%d\n", i_val, i_val);}
 	fprintf(fp, "FtOtd=0;0\n");
 	fprintf(fp, "FtRic=1;1\n");
 	#else
