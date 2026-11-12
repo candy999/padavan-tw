@@ -416,6 +416,7 @@
 			{"hw_qos_tech", "", NULL, EVM_RESTART_FIREWALL},
 			{"hw_qos_over", "", NULL, EVM_RESTART_FIREWALL},
 			{"hw_qos_under", "", NULL, EVM_RESTART_FIREWALL},
+			{"hw_qos_method", "", NULL, EVM_RESTART_FIREWALL},
 			{"sfe_enable", "", NULL, EVM_RESTART_FIREWALL},
 			{"wan_ipaddr", "", NULL, EVM_RESTART_WAN},
 			{"wan_netmask", "", NULL, EVM_RESTART_WAN},

@@ -106,6 +106,26 @@ mkdir -p $ROOTDIR/images
 ######################### FOR-ALL-DEVICES #############################
 ln -sf vendors/Ralink/config.arch config.arch
 cp -fL "$kernel_cf" "$kernel_tf"
+
+# padavan-tw：台灣版的核心設定差異放在 configs/tw/kernel-<機型>.config（上游機型設定檔保持不改）
+# 格式：CONFIG_X=y／CONFIG_X=m 開啟；# CONFIG_X is not set 關閉（只改原本就有的項目）
+tw_kernel_cf="$ROOTDIR/configs/tw/kernel-${CONFIG_FIRMWARE_PRODUCT_ID}.config"
+if [ -f "$tw_kernel_cf" ] ; then
+	while read -r tw_line ; do
+		case "$tw_line" in
+		"# CONFIG_"*" is not set")
+			tw_p="${tw_line#\# }"
+			func_disable_kernel_param "${tw_p% is not set}"
+			;;
+		CONFIG_*=y)
+			func_enable_kernel_param "${tw_line%%=*}"
+			;;
+		CONFIG_*=m)
+			func_enable_kernel_param "${tw_line%%=*}" "m"
+			;;
+		esac
+	done < "$tw_kernel_cf"
+fi
 cp -fL "$busybox_cf" "$busybox_tf"
 cp -fL "$board_mk" "$ROOTDIR/user/board.mk"
 cp -fL "$board_h" "$ROOTDIR/user/shared/src/include/ralink_board.h"

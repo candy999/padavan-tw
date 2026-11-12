@@ -1078,7 +1078,8 @@ struct nvram_pair router_defaults[] = {
 	{ "hw_qos_up", "0" },		/* 申裝上傳頻寬（Mbps），0=未設定 */
 	{ "hw_qos_tech", "ftth" },	/* 最後一里：ftth、vdsl、cable、mobile、other */
 	{ "hw_qos_over", "15" },	/* 上浮 %：上限＝申裝 ×(100+over)% */
-	{ "hw_qos_under", "20" },	/* 下探 %：下限＝申裝 ×(100-under)% */
+	{ "hw_qos_under", "15" },	/* 下探 %：下限＝申裝 ×(100-under)%（預設上下對稱 ±15%） */
+	{ "hw_qos_method", "0" },	/* 0=排程常開只調速率（切換不掉封包）、1=需要時才開排程（切換時清硬體表） */
 #if defined(USE_SFE)
 	{ "sfe_enable", "2" },		/* Software Offload Routing IPv4/IPv6 */
 #endif
