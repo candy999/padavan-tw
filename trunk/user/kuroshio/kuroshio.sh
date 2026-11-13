@@ -230,12 +230,38 @@ is_public_ip() {
 	return 0
 }
 
+# 升級時的預設設定搬移（OpenWrt 由 uci-defaults 腳本做；Padavan 的設定檔在 /etc/storage，要自己做）：
+# 使用者的設定檔跟某一個「舊版預設檔」一模一樣（從沒改過）→ 換成這一版的預設（新的過濾清單等）；
+# 改過的不動，留提示（後台黑潮 DNS 的過濾頁有「恢復預設清單」）
+# 舊版預設檔的 sha256：3.0.1～3.1.0（這幾版內容相同）
+UCI_OLD_DEFAULTS="f0cbe30c3856635eb6a28621ee3d84b88fa9a9b5fe38d07ddaa1ef310b6df66e"
+migrate_uci() {
+	local cur new h
+	[ -f "$UCI_SRC" ] && [ -f "$SHARE/kuroshio.uci.default" ] || return 0
+	cur=$(sha256sum "$UCI_SRC" 2>/dev/null | cut -d' ' -f1)
+	new=$(sha256sum "$SHARE/kuroshio.uci.default" 2>/dev/null | cut -d' ' -f1)
+	[ -n "$cur" ] && [ "$cur" != "$new" ] || return 0
+	for h in $UCI_OLD_DEFAULTS; do
+		if [ "$cur" = "$h" ]; then
+			cp -f "$SHARE/kuroshio.uci.default" "$UCI_SRC"
+			log "設定檔是舊版預設值，已換成這一版的預設（過濾清單等）"
+			return 0
+		fi
+	done
+	# 改過的設定檔：只提示一次（同一版不重複）
+	if [ "$(cat "$ETC/.migrate_note" 2>/dev/null)" != "$new" ]; then
+		log "設定檔改過，沒有自動換成這一版的預設；需要新的過濾清單請到後台黑潮 DNS 的過濾頁按「恢復預設清單」"
+		echo "$new" > "$ETC/.migrate_note"
+	fi
+}
+
 sync_uci() {
 	local mode="$1" sdir wif wip yes
 	mkdir -p "$ETC" "$RUN"
 	chmod 700 "$ETC" "$RUN"
 	# 沒有設定檔、或在後台清空了 → 用預設值（跟 OpenWrt 版同一份）
 	grep -q "^config " "$UCI_SRC" 2>/dev/null || cp "$SHARE/kuroshio.uci.default" "$UCI_SRC"
+	migrate_uci
 	chmod 600 "$UCI_SRC"
 	cp -f "$UCI_SRC" "$UCI"
 	chmod 600 "$UCI"
@@ -511,7 +537,11 @@ notify() {
 	$BIN notify "$1" --uci >/dev/null 2>&1 && log "WAN 變動：已通知更新 DDNS 與對外 IP"
 }
 
-flush() { running && killall -q -USR1 kuroshio; }
+# 立即把學習資料寫出：3.2.0 起有 kuroshio notify save；舊版或失敗時送 SIGUSR1（效果相同）
+flush() {
+	running || return 0
+	$BIN notify save --uci >/dev/null 2>&1 || killall -q -USR1 kuroshio
+}
 
 # 管理 API 的埠號（只接受數字，才不會被設定值帶到別台主機）
 api_port() {
@@ -556,6 +586,7 @@ api_view() {
 api_action() {
 	case "$1" in
 	/api/cache/flush|/api/filter/update|/api/jobs/run|/api/cdn/verify|/api/cdn/policy|/api/cdn/ecs|/api/ddns/update) ;;
+	/api/filter/reset-rules|/api/persist/flush) ;;
 	/api/community/check|/api/community/add|/api/community/accept|/api/community/reject|/api/community/block|/api/community/unblock|/api/community/delete|/api/community/sync) ;;
 	/api/community/invite/refresh|/api/community/invite/use) ;;
 	/api/community/rotate|/api/community/accept-key|/api/community/channel) ;;
