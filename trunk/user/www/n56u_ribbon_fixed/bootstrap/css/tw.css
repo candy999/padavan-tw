@@ -860,3 +860,36 @@ body.body_iframe input[type="text"], body.body_iframe input[type="password"], bo
 .tw-main .highcharts-container { max-width: 100%; }
 /* 手機、平板：狀態列固定在第二行（上面的「狀態區先縮」規則只給桌機） */
 @media (max-width: 900px) { .tw-top .tw-stats { flex: 1 0 100%; } }
+
+/* ======================================================================
+ * 套用中／韌體更新／設定還原的進度框：固定蓋住整個畫面、框置中
+ * （原本靠 .container-fluid 的 margin-top: 150px 往下推，但框架把它歸零，框就跑到最上面壓住頂部列）
+ * popup.js 會用 inline style 設寬高與 margin-top，這裡用 !important 蓋掉
+ * ====================================================================== */
+.popup_bg, .popup_bar_bg {
+  position: fixed !important; inset: 0 !important; width: auto !important; height: auto !important;
+  z-index: 1900 !important; opacity: 1 !important; overflow: auto !important;
+  background: var(--overlay) !important; background-image: none !important;
+}
+.popup_bg > center, .popup_bar_bg > center {
+  display: flex; align-items: center; justify-content: center; min-height: 100%; padding: 16px; box-sizing: border-box;
+}
+.popup_bg #loadingBlock, .popup_bg .loadingBlock { margin: 0 !important; width: min(520px, 100%); font-size: 15px !important; }
+.popup_bg .container-fluid { margin: 0 !important; padding: 0 !important; width: min(520px, 100%); }
+.popup_bg .well {
+  width: auto !important; margin: 0 !important; padding: 22px 24px !important; text-align: left;
+  background: var(--surface) !important; color: var(--text) !important; border-radius: var(--r-lg) !important;
+}
+.popup_bg .progress {
+  max-width: none !important; height: 22px; margin: 0 0 14px !important; border-radius: 11px; overflow: hidden;
+  background: var(--surface-2) !important; background-image: none !important; box-shadow: none !important;
+}
+.popup_bg .progress .bar {
+  height: 100%; background: var(--accent) !important; background-image: none !important; box-shadow: none !important;
+  color: var(--on-accent) !important; font-size: 12px; font-weight: 600; line-height: 22px; text-align: center; text-shadow: none !important;
+  min-width: 36px; transition: width 0.4s ease;
+}
+.popup_bg .alert { max-width: none !important; margin: 0 !important; text-align: left; }
+.popup_bg #proceeding_main_txt { display: block; font-size: 15px; color: var(--text); }
+/* 隱藏用的舊表格（移到畫面外）不要出現 */
+.popup_bg #loadingBarBlock { display: none !important; }

@@ -854,10 +854,27 @@ var TW = (function () {
 		return dialog({ title: '重新開機？', ok: '重新開機', danger: true,
 			impacts: ['路由器重新開機約 1～2 分鐘', 'Wi-Fi 與網際網路在這段時間都不能用', '開機完成後這個頁面會自動重新載入'] }).then(function (yes) {
 			if (!yes) return false;
-			if (typeof showLoading === 'function') showLoading(typeof board_boot_time == 'function' ? board_boot_time() : 60);
+			if (typeof showLoading === 'function') showLoading(typeof board_boot_time == 'function' ? board_boot_time() : 60, 'waiting');
 			fetch('/apply.cgi', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'action_mode=+Reboot+' });
+			waitRouterBack();
 			return true;
 		});
+	}
+	/* 等路由器真的關掉又回來才重新載入（Padavan 的進度條只會在時間到時把遮罩收起來，不會重新載入） */
+	function waitRouterBack() {
+		var sawDown = false, t0 = Date.now();
+		function ping() {
+			var ctl = window.AbortController ? new AbortController() : null;
+			var to = setTimeout(function () { if (ctl) ctl.abort(); }, 2500);
+			fetch('/httpd_check.htm?t=' + Date.now(), { cache: 'no-store', credentials: 'same-origin', signal: ctl ? ctl.signal : undefined }).then(function (r) {
+				clearTimeout(to);
+				/* 回應正常：之前看過斷線，或已經超過 2 分鐘（斷線太短沒看到）就重新載入 */
+				if (r.ok && (sawDown || Date.now() - t0 > 120000)) location.reload();
+				else setTimeout(ping, 3000);
+			}, function () { clearTimeout(to); sawDown = true; setTimeout(ping, 3000); });
+		}
+		setTimeout(ping, 5000);
+		setTimeout(function () { location.reload(); }, 240000);
 	}
 
 	/* ---------- 頁面骨架 ---------- */
