@@ -5,6 +5,12 @@
 #   kuroshio.sh acme [force]     申請／續期憑證（acme.sh＋Cloudflare DNS 驗證）
 #   kuroshio.sh save             學習資料存檔（每天自動執行一次）
 #   kuroshio.sh guard            保護程式（由 start 在背景啟動）
+#   kuroshio.sh notify wan-changed   WAN 換了 IP：通知黑潮 DNS 立即更新 DDNS、重新偵測對外 IP（rc 在 WAN 上線時呼叫）
+#   kuroshio.sh flush            立即把學習資料寫出（SIGUSR1）
+#   後台轉接（httpd 的 kuroshio_api.cgi 呼叫，輸出 JSON）：
+#   kuroshio.sh api <路徑> [參數]      查看類管理 API（白名單）
+#   kuroshio.sh action <路徑> [參數]   會改變狀態的管理 API（白名單，httpd 只在 POST 時呼叫）
+#   kuroshio.sh status-json | defaults | about | dnr | log [行數] | backup-export [share]
 #
 # 架構（跟 OpenWrt 版的 dnsmasq-upstream 模式相同）：
 # - dnsmasq 照常佔 53 埠與 DHCP，查詢轉給黑潮 DNS（127.0.0.1:5335）；dnsmasq 設定由 rc 產生
@@ -301,9 +307,11 @@ run_loop() {
 	done
 }
 
+# 健康檢查：kuroshio health（3.1.0 起的穩定介面；問黑潮自己回答的 _dns.resolver.arpa，不經過上游，
+# WAN 斷線不會誤判）。結束碼 0＝有回答
 alive() {
 	pidof kuroshio >/dev/null 2>&1 || return 1
-	$BIN query -s "127.0.0.1:$PORT" --timeout 800 -t SVCB _dns.resolver.arpa 2>/dev/null | grep -qi rcode
+	$BIN health --uci --timeout 800 >/dev/null 2>&1
 }
 
 start() {
@@ -476,6 +484,119 @@ acme_bg() {
 	echo "已開始申請，約 1～3 分鐘"
 }
 
+# ---------- 整合指令與後台轉接 ----------
+
+running() { pidof kuroshio >/dev/null 2>&1; }
+
+notify() {
+	case "$1" in
+	wan-changed) ;;
+	*) echo "用法：$0 notify wan-changed"; return 2 ;;
+	esac
+	running || return 0
+	$BIN notify "$1" --uci >/dev/null 2>&1 && log "WAN 變動：已通知更新 DDNS 與對外 IP"
+}
+
+flush() { running && killall -q -USR1 kuroshio; }
+
+# 管理 API 的埠號（只接受數字，才不會被設定值帶到別台主機）
+api_port() {
+	local p
+	p=$(awk '$1 == "option" && $2 == "admin_port" { gsub(/\047|"/, "", $3); print $3; exit }' "$UCI" 2>/dev/null)
+	case "$p" in ''|*[!0-9]*) p=8054 ;; esac
+	echo "$p"
+}
+
+# 參數只能用網址查詢字串會用到的字元（不能有引號、空白、分號…）
+valid_query() { case "$1" in *[!A-Za-z0-9._=\&%:,~-]*) return 1 ;; esac; return 0; }
+
+# api_fetch <路徑> [參數] [post]：輸出 {"ok":true,"result":…} 或 {"ok":false,"error":…}
+# 會改變狀態的動作用 POST（管理 API 不接受用 GET 做這些事）
+api_fetch() {
+	local url body
+	url="http://127.0.0.1:$(api_port)$1"
+	[ -n "$2" ] && url="$url?$2"
+	if [ "$3" = post ]; then
+		body=$(curl -fsS -m 60 -X POST -H 'Content-Type: application/x-www-form-urlencoded' --data "${2:-_}" "$url" 2>/dev/null)
+	else
+		body=$(curl -fsS -m 60 "$url" 2>/dev/null)
+	fi
+	case "$body" in
+	'{'*|'['*) printf '{"ok":true,"result":%s}' "$body" ;;
+	*) if running; then echo '{"ok":false,"error":"黑潮 DNS 沒有回應"}'; else echo '{"ok":false,"error":"黑潮 DNS 沒有執行"}'; fi ;;
+	esac
+}
+
+# 白名單跟 OpenWrt 版（openwrt/kuroshio/files/rpcd.sh）相同
+api_view() {
+	case "$1" in
+	/api/status|/api/access|/api/sysinfo|/api/upstreams|/api/benchmark|/api/cdn/pools|/api/cdn/v6nodes|/api/cdn/summary|/api/cdn/domains|/api/jobs|/api/trace|/api/filter/check|/api/routing|/api/ddns|/api/paths|/api/interfaces) ;;
+	/api/dashboard) ;;
+	/api/community/status|/api/community/peers|/api/community/events|/api/community/invite) ;;
+	*) echo '{"ok":false,"error":"不允許的路徑"}'; return 0 ;;
+	esac
+	valid_query "$2" || { echo '{"ok":false,"error":"參數格式錯誤"}'; return 0; }
+	api_fetch "$1" "$2"
+}
+
+api_action() {
+	case "$1" in
+	/api/cache/flush|/api/filter/update|/api/jobs/run|/api/cdn/verify|/api/cdn/policy|/api/cdn/ecs|/api/ddns/update) ;;
+	/api/community/check|/api/community/add|/api/community/accept|/api/community/reject|/api/community/block|/api/community/unblock|/api/community/delete|/api/community/sync) ;;
+	/api/community/invite/refresh|/api/community/invite/use) ;;
+	/api/community/rotate|/api/community/accept-key|/api/community/channel) ;;
+	*) echo '{"ok":false,"error":"不允許的路徑"}'; return 0 ;;
+	esac
+	valid_query "$2" || { echo '{"ok":false,"error":"參數格式錯誤"}'; return 0; }
+	api_fetch "$1" "$2" post
+}
+
+# 是 JSON 物件就原樣輸出，否則輸出錯誤
+json_or() { case "$1" in '{'*) printf '%s' "$1" ;; *) printf '{"ok":false,"error":"%s"}' "$2" ;; esac; }
+
+# 字串轉成 JSON 字串（含引號；換行、Tab 換成空白）
+json_str() { printf '"%s"' "$(printf '%s' "$1" | tr '\t\n\r' '   ' | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g')"; }
+
+# 給後台：Padavan 這邊的狀態＋黑潮 DNS 的 status --json
+status_json() {
+	local core en
+	en=false; [ "$(nv kuroshio_enable)" = "1" ] && en=true
+	core=$($BIN status --uci --json 2>/dev/null)
+	case "$core" in '{'*) ;; *) core='{"running":false}' ;; esac
+	printf '{"enabled":%s,"running":%s,"use":%s,"mode":%s,"area_note":%s,"version":%s,"core":%s}' \
+		"$en" "$(running && echo true || echo false)" \
+		"$(json_str "$(cat "$USE" 2>/dev/null)")" "$(json_str "$(cat "$RUN/mode" 2>/dev/null)")" \
+		"$(json_str "$(cat "$RUN/area_note" 2>/dev/null)")" \
+		"$(json_str "$($BIN --version 2>/dev/null | head -n 1)")" "$core"
+}
+
+# 最近的執行紀錄（syslog 裡黑潮 DNS 的部分）
+log_json() {
+	local n="${1:-200}"
+	case "$n" in ''|*[!0-9]*) n=200 ;; esac
+	grep "$TAG" /tmp/syslog.log 2>/dev/null | tail -n "$n" | awk '
+		BEGIN { printf "{\"ok\":true,\"lines\":[" }
+		{ gsub(/\\/, "\\\\"); gsub(/"/, "\\\""); gsub(/\t/, " "); gsub(/\r/, "")
+		  printf "%s\"%s\"", (NR > 1 ? "," : ""), $0 }
+		END { printf "]}" }'
+}
+
+# 匯出學習資料到 $RUN/export.kuroshio（後台再下載）；share＝分享檔（不含私鑰與自己的網域）
+backup_export() {
+	local out="$RUN/export.kuroshio" tmp msg
+	mkdir -p "$RUN"
+	rm -f "$out"
+	tmp="$out.tmp"
+	if [ "$1" = share ]; then set -- --share; else set --; fi
+	if msg=$(umask 077; $BIN export --uci "$@" -o "$tmp" 2>&1) && [ -s "$tmp" ]; then
+		mv -f "$tmp" "$out"
+		printf '{"ok":true,"size":%s}' "$(wc -c < "$out" | tr -d ' ')"
+	else
+		rm -f "$tmp"
+		printf '{"ok":false,"error":%s}' "$(json_str "${msg:-匯出失敗}")"
+	fi
+}
+
 status() {
 	echo "狀態：$(pidof kuroshio >/dev/null 2>&1 && echo 執行中 || echo 沒有執行)"
 	echo "DNS：$([ "$(cat "$USE" 2>/dev/null)" = kuroshio ] && echo 由黑潮 DNS 處理 || echo 暫時使用業者 DNS)"
@@ -500,5 +621,15 @@ acme-bg) shift; acme_bg "$@" ;;
 acme-log) cat "$RUN/acme.log" 2>/dev/null; [ -f "$RUN/acme.pid" ] && echo "（申請中…）" ;;
 certsync) certsync ;;
 status) status ;;
-*) echo "用法：$0 start | stop | restart | status | acme [force] | save" ;;
+notify) shift; notify "$@" ;;
+flush) flush ;;
+api) api_view "$2" "$3" ;;
+action) api_action "$2" "$3" ;;
+status-json) status_json ;;
+defaults) json_or "$($BIN defaults --json 2>/dev/null)" "讀不到預設值" ;;
+about) json_or "$($BIN about --uci --qr 2>/dev/null)" "讀不到版本資訊" ;;
+dnr) json_or "$($BIN dnr --uci --lan "$(lan_ip)" 2>/dev/null)" "黑潮 DNS 沒有回應" ;;
+log) log_json "$2" ;;
+backup-export) backup_export "$2" ;;
+*) echo "用法：$0 start | stop | restart | status | acme [force] | save | notify wan-changed | flush" ;;
 esac

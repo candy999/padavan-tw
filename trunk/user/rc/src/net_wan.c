@@ -1350,6 +1350,12 @@ wan_up(char *wan_ifname, int unit, int is_static)
 	/* notify DDNS client */
 	notify_ddns_update();
 
+#if defined(APP_KUROSHIO)
+	/* padavan-tw：通知黑潮 DNS WAN 變了（立即更新 DDNS、重新偵測對外 IP）；背景執行，不擋 WAN 上線流程 */
+	if (pids("kuroshio"))
+		doSystem("/usr/bin/kuroshio.sh notify wan-changed &");
+#endif
+
 	/* notify watchdog for NTP update */
 	notify_watchdog_time();
 

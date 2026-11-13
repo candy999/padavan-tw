@@ -4246,6 +4246,121 @@ static char mentohust_log_txt[] =
 
 #endif
 
+#if defined(APP_KUROSHIO)
+/*
+ * padavan-tw：黑潮 DNS 管理 API 轉接（給後台頁面用，等同 OpenWrt 版的 rpcd.sh）
+ *
+ *   GET/POST /kuroshio_api.cgi?op=<操作>&path=<API 路徑>&q=<查詢字串>&n=<行數>
+ *
+ * 黑潮 DNS 的管理 API 只聽 127.0.0.1:8054，瀏覽器連不到；這裡驗證參數後交給
+ * /usr/bin/kuroshio.sh（路徑白名單在那裡，跟 OpenWrt 版相同），原樣回傳 JSON。
+ * - 查看類（GET 即可）：status、api、defaults、about、dnr、log
+ * - 會改變狀態的（只接受 POST，而且要 login_safe）：action、backup-export、notify、flush、acme
+ * - 參數只允許固定字元集，並用單引號傳給 shell（字元集不含引號與空白）
+ */
+static int kuroshio_api_is_post = 0;
+
+static void
+kuroshio_api_post(const char *url, FILE *stream, int clen, char *boundary)
+{
+	do_html_apply_post(url, stream, clen, boundary);
+	kuroshio_api_is_post = 1;
+}
+
+static int
+kuroshio_arg_ok(const char *s, const char *extra, size_t maxlen)
+{
+	if (strlen(s) > maxlen)
+		return 0;
+	for (; *s; s++) {
+		if (isalnum((unsigned char)*s) || (*s && strchr(extra, *s)))
+			continue;
+		return 0;
+	}
+	return 1;
+}
+
+static void
+kuroshio_api_out(const char *url, FILE *stream)
+{
+	char cmd[1024], buf[1024];
+	const char *op, *path, *q, *n;
+	int is_post = kuroshio_api_is_post;
+	FILE *fp;
+	size_t len;
+
+	kuroshio_api_is_post = 0;
+	cmd[0] = '\0';
+
+	op = get_cgi("op");
+	path = get_cgi("path");
+	q = get_cgi("q");
+	n = get_cgi("n");
+	if (!op) op = "";
+	if (!path) path = "";
+	if (!q) q = "";
+	if (!n) n = "";
+
+	if (!kuroshio_arg_ok(op, "-", 32) || !kuroshio_arg_ok(path, "/_-", 64) ||
+	    !kuroshio_arg_ok(q, "._=&%:,~-", 1024) || !kuroshio_arg_ok(n, "", 5)) {
+		fputs("{\"ok\":false,\"error\":\"參數格式錯誤\"}", stream);
+		goto out;
+	}
+
+	if (!strcmp(op, "status"))
+		snprintf(cmd, sizeof(cmd), "/usr/bin/kuroshio.sh status-json");
+	else if (!strcmp(op, "api"))
+		snprintf(cmd, sizeof(cmd), "/usr/bin/kuroshio.sh api '%s' '%s'", path, q);
+	else if (!strcmp(op, "defaults") || !strcmp(op, "about") || !strcmp(op, "dnr"))
+		snprintf(cmd, sizeof(cmd), "/usr/bin/kuroshio.sh %s", op);
+	else if (!strcmp(op, "log"))
+		snprintf(cmd, sizeof(cmd), "/usr/bin/kuroshio.sh log '%s'", n);
+	else if (is_post && get_login_safe()) {
+		if (!strcmp(op, "action"))
+			snprintf(cmd, sizeof(cmd), "/usr/bin/kuroshio.sh action '%s' '%s'", path, q);
+		else if (!strcmp(op, "backup-export"))
+			snprintf(cmd, sizeof(cmd), "/usr/bin/kuroshio.sh backup-export%s",
+				strcmp(q, "share") == 0 ? " share" : "");
+		else if (!strcmp(op, "notify"))
+			snprintf(cmd, sizeof(cmd), "/usr/bin/kuroshio.sh notify wan-changed >/dev/null 2>&1; echo '{\"ok\":true}'");
+		else if (!strcmp(op, "flush"))
+			snprintf(cmd, sizeof(cmd), "/usr/bin/kuroshio.sh flush >/dev/null 2>&1; echo '{\"ok\":true}'");
+		else if (!strcmp(op, "acme"))
+			snprintf(cmd, sizeof(cmd), "/usr/bin/kuroshio.sh acme-bg%s >/dev/null 2>&1; echo '{\"ok\":true}'",
+				strcmp(q, "force") == 0 ? " force" : "");
+	}
+
+	if (!cmd[0]) {
+		fputs("{\"ok\":false,\"error\":\"不支援的操作，或這個操作需要用 POST\"}", stream);
+		goto out;
+	}
+
+	fp = popen(cmd, "r");
+	if (!fp) {
+		fputs("{\"ok\":false,\"error\":\"無法執行\"}", stream);
+		goto out;
+	}
+	while ((len = fread(buf, 1, sizeof(buf), fp)) > 0)
+		fwrite(buf, 1, len, stream);
+	pclose(fp);
+
+out:
+	/* 清掉這次的參數，下一個沒有查詢字串的請求才不會讀到舊值 */
+	init_cgi(NULL);
+}
+
+/* 匯出的學習資料（kuroshio_api.cgi 的 backup-export 產生），下載後刪除 */
+static void
+do_kuroshio_backup_file(const char *url, FILE *stream)
+{
+	const char *f = "/tmp/kuroshio/export.kuroshio";
+
+	if (get_login_safe())
+		do_file(f, stream);
+	unlink(f);
+}
+#endif
+
 struct mime_handler mime_handlers[] = {
 	/* cached javascript files w/o translations */
 	{ "jquery.js", "text/javascript", NULL, NULL, do_file, 0 }, // 2012.06 Eagle23
@@ -4275,6 +4390,12 @@ struct mime_handler mime_handlers[] = {
 	{ "**.jpg", "image/jpeg", NULL, NULL, do_file, 0 }, // 2012.06 Eagle23
 	{ "**.ico", "image/x-icon", NULL, NULL, do_file, 0 }, // 2013.04 Eagle23
 	{ "**.svg", "image/svg+xml", NULL, NULL, do_file, 0 }, // 2016.04 Volt1
+
+#if defined(APP_KUROSHIO)
+	/* padavan-tw：黑潮 DNS 管理 API 轉接與學習資料下載 */
+	{ "kuroshio_api.cgi*", "application/json", no_cache_IE, kuroshio_api_post, kuroshio_api_out, 1 },
+	{ "kuroshio_backup.kuroshio", "application/force-download", NULL, NULL, do_kuroshio_backup_file, 1 },
+#endif
 
 	/* no-cached html/asp files with translations */
 	{ "**.htm*", "text/html", no_cache_IE, do_html_apply_post, do_ej, 1 },
