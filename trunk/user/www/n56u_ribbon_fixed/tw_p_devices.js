@@ -91,7 +91,7 @@ function dv_render() {
 			dev: '<div class="tw-dev"><span class="tw-dev-ico" title="' + U.esc(t[1]) + '">' + U.icon(t[0], 18) + '</span><span class="tw-dev-text">' +
 				'<a class="tw-dev-name" href="tw_devices.asp?mac=' + encodeURIComponent(d.mac) + '">' + U.esc(dv_name(d)) + '</a>' +
 				'<span class="tw-dev-sub">' + U.esc(U.maskMac(d.mac)) + (d.disconnects_today ? ' · 今天斷線 ' + d.disconnects_today + ' 次' : '') + '</span></span></div>',
-			conn: U.esc(dv_conn_text(d)),
+			conn: (d.paused && d.online ? '<span class="tw-inline">' + U.chip('warn', '已暫停上網') + '<span>' + U.esc(dv_conn_text(d)) + '</span></span>' : U.esc(dv_conn_text(d))),
 			signal: signal,
 			ip: d.ip ? '<span class="tw-inline"><span class="tw-num">' + U.esc(d.ip) + '</span>' + (d.static_ip ? U.chip('info', '固定') : '') + '</span>' : '<span class="tw-muted">--</span>',
 			since: d.online && d.since_s != null ? U.fmtDur(d.since_s) : '<span class="tw-muted">--</span>',

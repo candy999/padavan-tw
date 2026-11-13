@@ -123,7 +123,8 @@ hr { border-color: var(--line); }
 .wrapper form > .container-fluid > .row-fluid > .span9 {
   width: auto !important;
   float: none !important;
-  margin: 0 !important;
+  /* 寬螢幕時內容欄置中在側欄右邊的空間（原本靠左，右邊留一大塊空白） */
+  margin: 0 auto !important;
   padding: 20px 28px 40px;
   box-sizing: border-box;
   max-width: 1240px;
@@ -209,6 +210,8 @@ button.tw-stat:hover { background: var(--surface-2); }
 .tw-stats { flex: 1 1 auto; overflow: hidden; flex-wrap: nowrap; }
 @media (max-width: 1560px) { .tw-stat-la, .tw-wifi-guest { display: none !important; } }
 @media (max-width: 1240px) { .tw-firm { display: none !important; } }
+/* 中等寬度時頂部列放不下：釋放記憶體、關機收起來（「系統」頁仍有關機） */
+@media (max-width: 1240px) { #freememory_btn, #shutdown_btn { display: none !important; } .tw-top-actions { flex-wrap: nowrap; } }
 .tw-wifi { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
 .tw-wifi .btn { min-width: 0 !important; }
 .tw-top-actions { margin-left: auto; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }

@@ -132,6 +132,10 @@ function in_isp_apply() {
 	} else {
 		f.wan_dnsenable_x = '1';
 	}
+	/* 沒有任何變更就不要嚇人說「會中斷」（httpd 也不會重啟 WAN） */
+	var nvOf = { wan_proto: NV.wan_proto, wan_pppoe_username: NV.pppoe_user, wan_pppoe_mtu: NV.pppoe_mtu, wan_pppoe_mru: NV.pppoe_mru, wan_dnsenable_x: NV.dns_auto,
+		wan_ipaddr: NV.wan_ip, wan_netmask: NV.wan_mask, wan_gateway: NV.wan_gw, wan_dns1_x: NV.dns1, wan_dns2_x: NV.dns2 };
+	if (Object.keys(f).every(function (k) { return k != 'wan_pppoe_passwd' && String(f[k]) == String(nvOf[k] == null ? '' : nvOf[k]); })) { U.toast('沒有變更'); return; }
 	if (NV.wan_proto != o.proto) imp.push('連線方式從 ' + ({ pppoe: 'PPPoE', dhcp: '自動取得 IP', static: '固定 IP' }[NV.wan_proto] || NV.wan_proto) + ' 改成 ' + ({ pppoe: 'PPPoE', dhcp: '自動取得 IP', static: '固定 IP' }[o.proto]));
 	imp.push('設定錯了不會影響登入後台（區域網路不變），可以再改回來');
 	U.apply({ sid: 'Layer3Forwarding;IPConnection;PPPConnection;', fields: f, title: '套用連線方式？', impacts: imp });

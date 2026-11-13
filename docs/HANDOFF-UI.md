@@ -376,7 +376,7 @@ scp -r trunk/user/www/n56u_ribbon_fixed/state.js admin@192.168.2.1:/www/
 | U2 | ✅ | `state.js`：9 個新主選單、手機底部 5 格；上游頁面一律標成「進階設定」，側欄列出原始選單；`tw_advanced.asp` 依上游選單表列出全部原始頁面（可搜尋）。爬蟲檢查：所有導覽頁都到得了，到不了的只有資料／動作端點，以及原本就隱藏的頁面（有黑潮 DNS 時的 SmartDNS／AdGuard／DDNS、非 AP 模式的 AP LAN） |
 | U3 | ✅ 預覽＋實機讀取 | 總覽、裝置（清單、詳情、取名並固定 IP、暫停／恢復、WOL）、Wi-Fi（名稱密碼、分享 QR、訪客、頻道與每日選頻、多台 AP） |
 | U4 | ✅ 預覽＋實機讀取 | 網際網路（業者精靈、MTU 偵測、CGNAT／雙層 NAT、黑潮 DNS 開關）、遠端與分享（WireGuard 新增裝置、依用途的連接埠轉送、UPnP、網域）、頻寬管理、診斷（一鍵檢查、延遲、事件、測速、匯出報告）、系統 |
-| U5 | ⏳ 部分完成 | 實機已用 push.py 測過所有頁面的讀取（沒有 JS 錯誤、真實資料正確顯示）。**寫入已驗證**（使用者同意，2026-11-13）：系統頁「路由器燈號」關閉 → 確認框列出影響 → 套用後頁面自動重新載入、SSH 確認 `front_led_all=0`；再打開 → `front_led_all=1`（恢復原值）。**還沒做**：清單類寫入（固定 IP、暫停上網，`" Add "`＋`" Restart "` 兩段送出）、重開機、登出、語言切換、手機實際操作——要使用者在場確認 |
+| U5 | ✅（除下列例外） | 使用者授權在測試機（D3）上全部自己測（2026-11-13）。每項都用 SSH 確認 nvram 與實際生效（iptables、iwconfig、wg、syslog），測完全部還原成測試前的 nvram 備份（逐鍵比對一致）。**通過**：燈號；固定 IP（中文名稱、MAC 無冒號、dnsmasq 重載）；暫停／恢復上網（MFList＋iptables mac-source 規則）；WOL；Wi-Fi 名稱（中文 SSID 廣播正確、密碼未被動到）；訪客網路開關（ra1／rai1、與家用網路隔離）；頻道 6 ↔ 自動；重新連線（syslog：manual reconnect → WAN down/up）；連線方式 DHCP ↔ 固定 IP（沒有變更時只提示「沒有變更」）；黑潮 DNS 關／開；MTU 偵測（實測 1492）；WireGuard 開啟＋新增裝置（wg1 載入 peer）；連接埠轉送（vserver DNAT 規則）；UPnP 關／開；定時重開機排程；語言 EN ↔ TW；GitHub 檢查更新；診斷報告與遮蔽。**例外**：①重開機——UI 送出正確，但**韌體本身無法重開機**（第 12 節），原始按鈕也一樣；②管理密碼、輸入新的 Wi-Fi／PPPoE 密碼、登出後再登入——要在欄位輸入密碼，AI 不代打，請使用者自己測；③手機實際操作（只有 390 寬截圖） |
 
 截圖：`node tools/ui-preview/shoot.js` 桌機 1440／手機 390、亮／暗色，全部頁面沒有橫向溢出、沒有 JS 錯誤。
 
@@ -416,3 +416,18 @@ scp -r trunk/user/www/n56u_ribbon_fixed/state.js admin@192.168.2.1:/www/
 - 實機的 D3 前面還有一台路由器（WAN 拿到 10.0.0.x）：網際網路頁正確顯示「雙層 NAT」
 - `get_nvram_list` 的欄位順序就是 `variables.c` 的順序、不附索引；指定隱藏欄位會輸出 `"*"`；MAC 不含冒號
 - 新介面目前只有繁體中文（字串寫在 `tw_p_*.js`，跟現有的台灣版頁面一樣），切換語言只影響原始頁面
+- **【高優先，B 階段】D3 無法重開機**：後台（新舊介面都一樣）按重開機 → httpd `sys_reboot()` 走 `MTD_FLASH_32M_REBOOT_BUG` 路徑：`mtd_storage.sh save` 後執行 `/bin/mtd_write -r unlock mtd1`，回 `Could not open mtd device: mtd1`，所以不會重開。SSH 下 `reboot` 更糟：服務與區網全部關掉後停住（網路線有連線但不回 ARP），**要拔電源**。`/dev/mtd1` 存在；MTD 表有重複的項目（mtd7「ALL」、mtd8 第二個「Bootloader」、mtd9「Kuroshio」、mtd10 整顆晶片），黑潮 DNS 自己也記錄「資料區跟其他分割區重疊」。推測跟台灣版加的分割區有關，要查 `mtd_write` 怎麼找裝置名稱與 D3 的分割表
+- **黑潮 DNS 開機後長時間吃滿 CPU**（2026-11-13 實測，見下面「黑潮 DNS 用量」）：學習資料因為分割區重疊只放記憶體，每次開機都重跑 cdn-pool、cdn-scan、dns-benchmark，開機後 40 分鐘仍佔全機約 80～97% CPU
+- 中等寬度（900～1240 px）頂部列放不下：已收起「釋放記憶體」「關機」圖示
+
+### 12.1 黑潮 DNS 用量（2026-11-13，D3，韌體 4.4.198.9-100_ff54088，開機約 40 分鐘）
+| 項目 | 數值 |
+|---|---|
+| 程序 | `/usr/bin/kuroshio run --uci`（另有 2 個 `kuroshio.sh` start／guard 殼程序，各約 1.6 MB） |
+| 記憶體 | RSS 約 78～80 MB（VmHWM 78.7 MB、VmSize 109 MB、VmData 99.5 MB），全機 438 MB，可用約 281 MB；6 個執行緒、317 個 fd |
+| CPU | 開機後 40 分鐘內持續佔全機（4 執行緒）約 80～97%，top 顯示全機 0% idle；同一天另一次開機 5 小時後量到全機 CPU 約 1% |
+| 背景工作（jobs.json） | 開機 17:46；cdn-pool 17:47～17:55（原因「azure 節點不足」）；cdn-ranges 17:55（9 秒，首次執行）；cdn-scan 17:55～18:05（補跑）；dns-benchmark 18:05 開始，18:27 仍在跑（補跑） |
+| 執行檔 | `/usr/bin/kuroshio` 9.5 MB（squashfs，根目錄 13 MB 已 100%） |
+| 執行時資料 | `/tmp/kuroshio` 2.8 MB（state/cdn 1.5 MB、state/filter-lists 1.2 MB），`/tmp` 24 MB 用了 3.5 MB |
+| 資料區 | mtd9「Kuroshio」7.5 MB，模式 `ram`；area_note：「資料區跟其他分割區重疊，為了保護設定不使用，學習資料暫時放記憶體」→ 重開機就消失 |
+| 開機到量測時的統計 | 查詢 548、命中快取 324、未命中 184、擋下 43（廣告）、CDN 改寫 13、servfail 0 |
