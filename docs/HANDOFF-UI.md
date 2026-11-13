@@ -307,7 +307,7 @@ scp -r trunk/user/www/n56u_ribbon_fixed/state.js admin@192.168.2.1:/www/
 | `wifi` | `bands[{id, ssid, enabled, channel, auto_channel, width_mhz, txpower_pct, clients, busy_pct, neighbors{count, by_channel{頻道: 數量}, strongest[{ssid, channel, rssi_dbm}]}, acs_last{ts, from, to, reason}}]`；`guest{enabled, ssid, expires_ts, clients}` | 30 秒 | 部分現有；**鄰近 AP 要 B 階段**（見第 12 節：現有的 `wl_scan_*` 在 D3 輸出壞掉） |
 | `roam` | `mode: off/observe/steer`、`weak_dbm`；`aps[{name, model, ip, online, self, clients_24, clients_5, steer_capable}]`；`events[{ts, mac, name, from, to, rssi_from, rssi_to, type: roam/sticky}]`；`advice[{level, title, detail}]` | 30 秒 | 資料已有（/tmp/tw-roamd.*），轉 JSON 是 B 階段；現在頁面提供「查看漫遊紀錄」文字 |
 | `events` | `events[{ts, type: wan/channel/device/qos/dns/system/roam/vpn, level, text, device}]`，新的在前 | 30 秒 | B 階段（D5） |
-| `qos` | `mode: off/fixed/auto`、`plan_down_kbps`、`plan_up_kbps`、`state: idle/probing/limiting/deciding/ending`、`limit_down_kbps`、`limit_up_kbps`、`interventions[{ts, reason, action, latency_before_ms, latency_after_ms, duration_s}]` | 5 秒 | B 階段（E4～E8）。**設定寫入**：`tw_qos_mode`（0 關閉／1 固定／2 自動）、`tw_qos_down`、`tw_qos_up`（Mbps），頁面用 `sid_list=General;` 送出 → B 階段在 variables.c 的 General 登記、defaults.c 給預設值 |
+| `qos` | `mode: off/fixed/auto`、`plan_down_kbps`、`plan_up_kbps`、`state: idle/probing/limiting/deciding/ending`、`limit_down_kbps`、`limit_up_kbps`、`interventions[{ts, reason, action, latency_before_ms, latency_after_ms, duration_s}]` | 5 秒 | B 階段（E4～E8）。**設定寫入**（後端 E1 已登記，2026-11-13 更正）：`hw_qos_mode`（0 關閉／1 固定／2 自動）、`hw_qos_wlan`（Wi-Fi 也套用，預設 1）、`hw_qos_down`、`hw_qos_up`（Mbps）、`hw_qos_tech`、`hw_qos_over`、`hw_qos_under`、`hw_qos_method`，頁面用 `sid_list=IPConnection;` 送出。見 `docs/LOCAL-NEXT.md` 第二件 |
 | `dns` | `enabled`、`running`、`healthy`、`zone_mode`、`filter_ads`、`encrypted`、`cdn_tw`、`queries`、`blocked`、`cdn_rewrites`、`cache_hit_pct`、`avg_ms`、`upstreams[{name, addr, ok, ms}]`、`domain`、`cert_expiry_ts`、`queries_series` | 30 秒 | 現在由 kuroshio_status 組出啟用與健康；統計 B 階段（G9） |
 | `vpn` | `enabled`、`listen_port`、`peers[{name, ip, last_handshake_ts, rx_bytes, tx_bytes, endpoint}]`（`name` 對應 WGSPeerList 的名稱） | 10 秒 | B 階段（J4）；現在裝置清單來自 nvram |
 | `cgnat` | `cgnat`（true/false/null）、`kind: public/cgnat/double_nat`、`wan_ip`、`public_ip`、`reason`、`method: stun/wan_ip` | 開頁時 | 現在前端依 WAN 位址判斷（`method: "wan_ip"`，分得出公網／私人／100.64），比對對外位址是 B 階段 |
@@ -344,7 +344,7 @@ scp -r trunk/user/www/n56u_ribbon_fixed/state.js admin@192.168.2.1:/www/
 
 1. 實作 `/tw_api.asp`（web_ex.c）或等效機制，依第 6 節逐一提供資料（格式照 `tools/ui-preview/mock/*.json`；還沒做的名稱維持回空白，前端會自動用後備資料）
 2. `twstats` 取樣器（ROADMAP D1～D5），資料只存記憶體
-3. 硬體 QoS 固定／自動模式（E4～E8），並在 variables.c 的 General 登記 `tw_qos_mode`、`tw_qos_down`、`tw_qos_up`
+3. 硬體 QoS 固定／自動模式（E4～E8）。設定名稱用後端既有的 `hw_qos_*`（`IPConnection` 群組），不另外登記 `tw_qos_*`
 4. `tw-roamd` 資料轉 JSON、WireGuard 狀態、CGNAT 偵測（比對對外位址）
 5. 黑潮 DNS 統計轉接（G9）
 6. 本機在第 6 節新增的約定：`speedtest`、6.1 的排程功能（暫停上網時間、訪客時效、漫遊引導）
@@ -410,7 +410,7 @@ scp -r trunk/user/www/n56u_ribbon_fixed/state.js admin@192.168.2.1:/www/
 | 連接埠轉送 | `IPConnection;` 清單 `VSList` | `vts_port_x_0` 等 7 欄，未開啟時 `vts_enable_x=1` |
 | UPnP | `IPConnection;` | `upnp_enable_x` |
 | 管理密碼、定時重開機、燈號 | `General;` | `http_passwd`；`reboot_schedule_enable`、`reboot_schedule`（7 碼星期＋HHMM）；`front_led_all` |
-| 頻寬管理 | `General;` | `tw_qos_mode`、`tw_qos_down`、`tw_qos_up`（**B 階段登記後才會生效**，現在頁面停用） |
+| 頻寬管理 | `IPConnection;` | `hw_qos_mode`、`hw_qos_wlan`、`hw_qos_down`、`hw_qos_up`、`hw_qos_tech`、`hw_qos_over`、`hw_qos_under`、`hw_qos_method`（後端已登記；限速控制器 E4～E8 還沒做，見 `docs/LOCAL-NEXT.md`） |
 
 清單類先送 `action_mode=" Add "`（或 `" Del "`），等 `start_apply.htm` 呼叫 `parent.done_validating()` 後再送 `" Restart "`，與舊頁面相同（`TW.listAdd()`）。
 
@@ -540,6 +540,9 @@ scp -r trunk/user/www/n56u_ribbon_fixed/state.js admin@192.168.2.1:/www/
 - 改一個 UCI 設定（例如過濾清單開關）→ 套用 → 重開機後設定還在、`op=status` 反映新狀態
 - 匯出學習資料能下載
 - 不認得的 UCI 選項存檔後仍然保留
+
+### 13.6.1 黑潮 DNS 3.2.0 新增的功能
+立即儲存學習資料、恢復預設清單、恢復預設自訂規則，做法見 `docs/LOCAL-NEXT.md` 第三件。雲端升級 3.2.0 時會把 `/api/persist/flush`、`/api/filter/reset-rules` 加進 `/kuroshio_api.cgi` 的動作白名單。
 
 ### 13.7 雲端之後可以補的（需要時告訴雲端）
 - 學習資料匯入（上傳檔案）
