@@ -61,9 +61,9 @@
 
 ## E. 硬體 QoS（QDMA）：主線（延後開發，先做漫遊中控）
 
-> ⚠️ 2026-11-13 實機（調查中）：D3 用上游設定（單一 GMAC＋VLAN，eth2.1／eth2.2）有線 LAN／WAN 完全收不到封包，改 PDMA 也一樣。
-> hanwckf 3.4 同樣是單一 GMAC＋VLAN，實測正常；MeIsReallyBa 4.4 雙 GMAC：LAN 正常、WAN 不通（vb1980：4.4 要拆 C48 電容）。
-> 上游只有 NEWIFI3 走 4.4 的單一 GMAC 路徑，判斷是 4.4 驅動這條路徑的問題，修好前 D3 不能發布。
+> ⚠️ 2026-11-13 實機：D3 有線 LAN／WAN 全不通。原因（交換器暫存器與 VLAN 表確認）：上游 `mtk_esw/esw_common.h` 把雙 GMAC 寫死
+> （WAN→P5、P6 不帶標籤），但 D3 是單一 GMAC（USE_SINGLE_MAC、eth2.1／eth2.2），WAN 封包被送往沒接的 P5，LAN 封包不帶標籤進不了 eth2.1。
+> 修正：核心選項 `CONFIG_RAETH_ESW_SINGLE_GMAC`（D3 開啟），待實機確認。雙 GMAC 不可行（MeIsReallyBa 4.4 實測 WAN 不通，vb1980：要拆 C48）。
 
 軟體 SQM（cake）對 MT7621 負擔太大（PPPoE 下大約 400 Mbps 就到頂），改以晶片內建的 QDMA 硬體排程為主線。
 **同一個韌體**內建，後台切換「關閉／固定／自動」，不另外出版本；每個機型只有標準版與 OC 1000 版。

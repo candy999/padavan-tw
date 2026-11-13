@@ -11,6 +11,15 @@ config RAETH
 
 if RAETH
 
+config RAETH_ESW_SINGLE_GMAC
+	bool "MT7530: WAN and LAN both via GMAC1 / P6 with VLAN tags (padavan-tw)"
+	default n
+	---help---
+	  mtk_esw normally assumes two GMACs (WAN on MT7530 P5 -> GMAC2,
+	  untagged P6). Set this for boards built with USE_SINGLE_MAC
+	  (eth2.1 = LAN, eth2.2 = WAN), e.g. Newifi D3: P6 then carries
+	  VID 1 and VID 2 tagged and WAN stays on GMAC1.
+
 config RAETH_PDMA_TX
 	bool "Send with PDMA instead of QDMA (padavan-tw)"
 	default n

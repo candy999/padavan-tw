@@ -133,6 +133,25 @@ u32 esw_get_port_mib_tgoc(u32 port_id, u32 *HighPart)
 	return mib_val;
 }
 
+#if !defined (CONFIG_RAETH_BOTH_GMAC)
+/* 單一 GMAC 時 WAN 流量統計從交換器的 WAN 埠讀：好的封包＝單播＋多播＋廣播 */
+static
+u32 esw_get_port_mib_rgpc(u32 port_id)
+{
+	return esw_reg_get(0x4068 + 0x100*port_id) +
+	       esw_reg_get(0x406C + 0x100*port_id) +
+	       esw_reg_get(0x4070 + 0x100*port_id);
+}
+
+static
+u32 esw_get_port_mib_tgpc(u32 port_id)
+{
+	return esw_reg_get(0x4008 + 0x100*port_id) +
+	       esw_reg_get(0x400C + 0x100*port_id) +
+	       esw_reg_get(0x4010 + 0x100*port_id);
+}
+#endif
+
 u32 get_ports_mask_lan(u32 include_cpu, int is_phy_id)
 {
 	u32 i, wan_bridge_mode, portmask_lan;
