@@ -1,0 +1,55 @@
+{
+ "mode": "observe",
+ "weak_dbm": -75,
+ "aps": [
+  {
+   "name": "NEWIFI3",
+   "model": "Newifi D3",
+   "ip": "192.168.2.1",
+   "online": true,
+   "self": true,
+   "clients_24": 3,
+   "clients_5": 2,
+   "steer_capable": false
+  },
+  {
+   "name": "客廳 CR6608",
+   "model": "Xiaomi CR6608",
+   "ip": "192.168.2.2",
+   "online": true,
+   "self": false,
+   "clients_24": 0,
+   "clients_5": 1,
+   "steer_capable": true
+  }
+ ],
+ "events": [
+  {
+   "ts": -1200,
+   "mac": "A4:83:E7:00:00:21",
+   "name": "小明的 iPhone",
+   "from": "NEWIFI3",
+   "to": "客廳 CR6608",
+   "rssi_from": -79,
+   "rssi_to": -51,
+   "type": "roam"
+  },
+  {
+   "ts": -50400,
+   "mac": "7C:1E:52:00:00:A4",
+   "name": "客廳電視",
+   "from": "客廳 CR6608",
+   "to": "NEWIFI3",
+   "rssi_from": -58,
+   "rssi_to": -77,
+   "type": "sticky"
+  }
+ ],
+ "advice": [
+  {
+   "level": "warn",
+   "title": "客廳電視常停在比較遠的 NEWIFI3",
+   "detail": "在客廳 CR6608 的訊號是 -58 dBm，比現在好很多。開啟引導（11k＋11v）後，路由器會建議它換過去，不會強制踢除。"
+  }
+ ]
+}

@@ -75,7 +75,7 @@ function update_internet_status(){
 
 function notify_status_internet(wan_internet){
 	this.new_wan_internet = wan_internet;
-	if((location.pathname == "/" || location.pathname == "/index.asp") && (typeof(update_internet_status) === 'function'))
+	if((location.pathname == "/" || location.pathname == "/index.asp" || location.pathname == "/Main_NetMap.asp") && (typeof(update_internet_status) === 'function'))
 		update_internet_status();
 }
 
@@ -246,7 +246,12 @@ function tw_icon(name, size){
 		logout: '<path d="M15 4h4v16h-4"/><path d="M10 8l-4 4 4 4"/><path d="M6 12h10"/>',
 		trash: '<path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/>',
 		save: '<path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7"/><path d="M8 20v-6h8v6"/>',
-		wifi: '<path d="M4 14a8 8 0 0 1 16 0"/><path d="M8 14a4 4 0 0 1 8 0"/><circle cx="12" cy="14" r="1"/><path d="M5 19h14"/>'
+		wifi: '<path d="M4 14a8 8 0 0 1 16 0"/><path d="M8 14a4 4 0 0 1 8 0"/><circle cx="12" cy="14" r="1"/><path d="M5 19h14"/>',
+		devices: '<rect x="3" y="4" width="13" height="10" rx="2"/><rect x="15" y="9" width="6" height="11" rx="1"/><path d="M7 18h5"/>',
+		gauge: '<path d="M4 18a8 8 0 1 1 16 0"/><path d="M12 18l4-6"/>',
+		search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>',
+		sliders: '<path d="M4 6h10"/><path d="M18 6h2"/><circle cx="16" cy="6" r="2"/><path d="M4 12h4"/><path d="M12 12h8"/><circle cx="10" cy="12" r="2"/><path d="M4 18h12"/><circle cx="18" cy="18" r="2"/>',
+		more: '<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>'
 	};
 	return '<svg class="tw-ico" width="'+sz+'" height="'+sz+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(p[name]||'')+'</svg>';
 }
@@ -658,18 +663,19 @@ function show_menu(L1, L2, L3){
 		}
 	}
 
-	for(i = 1; i <= menuL1_title.length-1; i++){
-		if(menuL1_title[i] == "")
-			continue;
-		else if(L1 == i && L2 <= 0)
-			menu1_code += '<li class="active" id="option'+i+'"><a href="javascript:;" aria-current="page">'+tw_menu_icon(menuL1_icon[i])+menuL1_title[i]+'</a></li>\n';
-		else
-			menu1_code += '<li id="option'+i+'"><a href="'+menuL1_link[i]+'">'+tw_menu_icon(menuL1_icon[i])+menuL1_title[i]+'</a></li>\n';
-	}
-
-	$("mainMenu").innerHTML = menu1_code;
+	/* padavan-tw：主選單改成依使用者目的分類（docs/HANDOFF-UI.md 5.4）；
+	 * 上游頁面全部收在「進階設定」，原本的第一層（網路地圖除外）與第二層選單列在它底下 */
+	$("mainMenu").innerHTML = tw_nav_code(L1 == 1 ? 'home' : 'adv');
 	tw_side_brand();
 
+	for(i = 1; i <= menuL1_title.length-1; i++){
+		if(menuL1_title[i] == "" || i == 1)
+			continue;
+		if(L1 == i && L2 <= 0)
+			menu2_code += '<a href="javascript: void(0)" style="font-weight: bold" aria-current="page">'+menuL1_title[i]+'</a>\n';
+		else
+			menu2_code += '<a href="'+menuL1_link[i]+'">'+menuL1_title[i]+'</a>\n';
+	}
 	for(var i = 1; i <= menuL2_title.length-1; ++i){
 		if(menuL2_title[i] == "")
 			continue;
@@ -678,8 +684,10 @@ function show_menu(L1, L2, L3){
 		else
 			menu2_code += '<a href="'+menuL2_link[i]+'">'+menuL2_title[i]+'</a>\n';
 	}
+	if (L1 == 1)
+		menu2_code = '';
 	$("subMenu").innerHTML = menu2_code;
-	$("subMenu").setAttribute('data-title', '<#menu5#>');
+	$("subMenu").setAttribute('data-title', '進階設定（原始頁面）');
 
 	if(L3){
 		tab_code = '<ul class="nav nav-tabs" style="margin-bottom: 0px;">\n';
@@ -704,6 +712,38 @@ function show_menu(L1, L2, L3){
 function tw_menu_icon(cls){
 	var map = {'icon-home':'home', 'icon-hdd':'storage', 'icon-retweet':'vpn', 'icon-globe':'globe', 'icon-tasks':'chart', 'icon-random':'info', 'icon-wrench':'gear'};
 	return tw_icon(map[cls] || 'info', 18);
+}
+
+/* padavan-tw：新的主選單（9 項）。新頁面呼叫 tw_show_menu(id)，上游頁面由 show_menu() 標成「進階設定」 */
+var tw_nav_items = [
+	['home', 'index.asp', '總覽', 'home'],
+	['devices', 'tw_devices.asp', '裝置', 'devices'],
+	['wifi', 'tw_wifi.asp', 'Wi-Fi', 'wifi'],
+	['internet', 'tw_internet.asp', '網際網路', 'globe'],
+	['remote', 'tw_remote.asp', '遠端與分享', 'vpn'],
+	['qos', 'tw_qos.asp', '頻寬管理', 'gauge'],
+	['diag', 'tw_diag.asp', '診斷', 'search'],
+	['system', 'tw_system.asp', '系統', 'gear'],
+	['adv', 'tw_advanced.asp', '進階設定', 'sliders']
+];
+
+function tw_nav_code(active){
+	var h = '';
+	for (var i = 0; i < tw_nav_items.length; i++) {
+		var it = tw_nav_items[i];
+		if (it[0] == active)
+			h += '<li class="active" id="tw_nav_'+it[0]+'"><a href="/'+it[1]+'" aria-current="page">'+tw_icon(it[3], 18)+it[2]+'</a></li>\n';
+		else
+			h += '<li id="tw_nav_'+it[0]+'"><a href="/'+it[1]+'">'+tw_icon(it[3], 18)+it[2]+'</a></li>\n';
+	}
+	return h;
+}
+
+function tw_show_menu(active){
+	$("mainMenu").innerHTML = tw_nav_code(active);
+	tw_side_brand();
+	$("subMenu").innerHTML = '';
+	$("tabMenu") && ($("tabMenu").innerHTML = '');
 }
 
 function tw_side_brand(){
@@ -746,18 +786,13 @@ function show_top_status(){
 		$("sw_mode_span").innerHTML = "Router";*/
 }
 
+/* padavan-tw：頂部列的 Wi-Fi／訪客按鈕改到新的 Wi-Fi 頁（原始頁面在「進階設定」） */
 function go_setting(band){
-	if(band == "2")
-		location.href = "Advanced_Wireless2g_Content.asp";
-	else
-		location.href = "Advanced_Wireless_Content.asp";
+	location.href = "tw_wifi.asp";
 }
 
 function go_wguest(band){
-	if(band == "2")
-		location.href = "Advanced_WGuest2g_Content.asp";
-	else
-		location.href = "Advanced_WGuest_Content.asp";
+	location.href = "tw_wifi.asp#guest";
 }
 
 function show_time(){
@@ -1658,17 +1693,20 @@ function tw_tabbar(){
 	if (document.querySelector('.tw-tabbar') || !document.querySelector('.tw-side'))
 		return;
 	var here = location.pathname.replace(/^\//, '') || 'index.asp';
+	/* 手機底部分頁：總覽、裝置、Wi-Fi、診斷、更多（HANDOFF 5.4） */
 	var tabs = [
-		['index.asp', 'home', tw_label('<#menu1#>')],
-		['Main_TrafficMonitor_realtime.asp', 'chart', tw_label('<#menu4#>')],
-		['Advanced_System_Info.asp', 'info', tw_label('<#menu5_8#>')]
+		['index.asp', 'home', '總覽'],
+		['tw_devices.asp', 'devices', '裝置'],
+		['tw_wifi.asp', 'wifi', 'Wi-Fi'],
+		['tw_diag.asp', 'search', '診斷']
 	];
-	var h = '';
+	var h = '', inTabs = false;
 	for (var i = 0; i < tabs.length; i++) {
-		var cur = (here == tabs[i][0]) ? ' aria-current="page"' : '';
-		h += '<a href="/'+tabs[i][0]+'"'+cur+'>'+tw_icon(tabs[i][1], 22)+'<span>'+tabs[i][2]+'</span></a>';
+		var on = (here == tabs[i][0]);
+		if (on) inTabs = true;
+		h += '<a href="/'+tabs[i][0]+'"'+(on ? ' aria-current="page"' : '')+'>'+tw_icon(tabs[i][1], 22)+'<span>'+tabs[i][2]+'</span></a>';
 	}
-	h += '<button type="button" onclick="tw_nav(true);" aria-controls="tw-side">'+tw_icon('gear', 22)+'<span>'+tw_label('<#menu5#>')+'</span></button>';
+	h += '<button type="button" onclick="tw_nav(true);" aria-controls="tw-side"'+(inTabs ? '' : ' aria-current="page"')+'>'+tw_icon('more', 22)+'<span>更多</span></button>';
 	var bar = document.createElement('nav');
 	bar.className = 'tw-tabbar';
 	bar.setAttribute('aria-label', '主要分頁');
@@ -1717,6 +1755,7 @@ function tw_table_cards(root){
 	var lastHead = null;
 	for (var t = 0; t < tables.length; t++) {
 		var tb = tables[t];
+		if (tb.classList.contains('tw-table')) continue;	/* 新介面的清單自己處理手機版 */
 		var rows = tb.rows;
 		if (!rows || !rows.length) continue;
 		var own = null, start = 0;

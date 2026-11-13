@@ -1,0 +1,29 @@
+{
+ "cpu_pct": 18,
+ "mem_used_pct": 36,
+ "mem_total_kb": 262144,
+ "uptime_s": 2002320,
+ "load": [
+  0.21,
+  0.18,
+  0.15
+ ],
+ "conntrack_count": 3412,
+ "conntrack_max": 16384,
+ "temp_c": null,
+ "cpu_series": {
+  "step": 900,
+  "start": -85500,
+  "values": {
+   "$gen": "wave",
+   "n": 96,
+   "step": 900,
+   "base": 8,
+   "amp": 20,
+   "peak_hour": 21,
+   "width": 2,
+   "noise": 10,
+   "seed": 5
+  }
+ }
+}

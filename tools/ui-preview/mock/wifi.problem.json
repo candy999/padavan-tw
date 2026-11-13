@@ -1,0 +1,100 @@
+{
+ "bands": [
+  {
+   "id": "2.4",
+   "ssid": "padavan-tw",
+   "enabled": true,
+   "channel": 6,
+   "auto_channel": false,
+   "width_mhz": 20,
+   "txpower_pct": 100,
+   "clients": 3,
+   "busy_pct": 82,
+   "neighbors": {
+    "count": 30,
+    "by_channel": {
+     "1": 4,
+     "2": 1,
+     "3": 2,
+     "4": 0,
+     "5": 1,
+     "6": 14,
+     "7": 2,
+     "8": 0,
+     "9": 1,
+     "10": 2,
+     "11": 3,
+     "12": 0,
+     "13": 0
+    },
+    "strongest": [
+     {
+      "ssid": "CHT-Wi-Fi-8F21",
+      "channel": 6,
+      "rssi_dbm": -48
+     },
+     {
+      "ssid": "TP-Link_5A10",
+      "channel": 6,
+      "rssi_dbm": -55
+     },
+     {
+      "ssid": "ASUS_2G",
+      "channel": 1,
+      "rssi_dbm": -63
+     }
+    ]
+   },
+   "acs_last": {
+    "ts": -79200,
+    "from": 6,
+    "to": 6,
+    "reason": "每日自動選頻：頻道 6 仍是最空的（當時 4 個 AP）"
+   }
+  },
+  {
+   "id": "5",
+   "ssid": "padavan-tw_5G",
+   "enabled": true,
+   "channel": 149,
+   "auto_channel": false,
+   "width_mhz": 80,
+   "txpower_pct": 100,
+   "clients": 3,
+   "busy_pct": 9,
+   "neighbors": {
+    "count": 6,
+    "by_channel": {
+     "36": 2,
+     "40": 0,
+     "44": 1,
+     "48": 0,
+     "149": 1,
+     "153": 0,
+     "157": 2,
+     "161": 0,
+     "165": 0
+    },
+    "strongest": [
+     {
+      "ssid": "CHT-Wi-Fi-8F21_5G",
+      "channel": 36,
+      "rssi_dbm": -67
+     }
+    ]
+   },
+   "acs_last": {
+    "ts": -79200,
+    "from": 149,
+    "to": 149,
+    "reason": "每日自動選頻：維持 149"
+   }
+  }
+ ],
+ "guest": {
+  "enabled": false,
+  "ssid": "padavan-tw_Guest",
+  "expires_ts": null,
+  "clients": 0
+ }
+}

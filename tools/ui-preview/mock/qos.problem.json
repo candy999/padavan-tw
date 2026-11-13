@@ -1,0 +1,26 @@
+{
+ "mode": "auto",
+ "plan_down_kbps": 500000,
+ "plan_up_kbps": 250000,
+ "state": "limiting",
+ "limit_down_kbps": 440000,
+ "limit_up_kbps": null,
+ "interventions": [
+  {
+   "ts": -7200,
+   "reason": "延遲 +45 ms、下行流量 92 %",
+   "action": "下行限速 440 Mbps",
+   "latency_before_ms": 52,
+   "latency_after_ms": 14,
+   "duration_s": 1500
+  },
+  {
+   "ts": -93600,
+   "reason": "延遲 +38 ms、上行流量 95 %",
+   "action": "上行限速 220 Mbps",
+   "latency_before_ms": 45,
+   "latency_after_ms": 12,
+   "duration_s": 600
+  }
+ ]
+}

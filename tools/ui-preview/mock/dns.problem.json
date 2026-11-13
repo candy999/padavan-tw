@@ -1,0 +1,51 @@
+{
+ "enabled": true,
+ "running": true,
+ "healthy": false,
+ "zone_mode": "公開＋家用",
+ "filter_ads": true,
+ "encrypted": true,
+ "cdn_tw": true,
+ "queries": 18230,
+ "blocked": 2210,
+ "cdn_rewrites": 640,
+ "cache_hit_pct": 71,
+ "avg_ms": 9,
+ "upstreams": [
+  {
+   "name": "HiNet",
+   "addr": "168.95.1.1",
+   "ok": true,
+   "ms": 6
+  },
+  {
+   "name": "TWNIC（DoT）",
+   "addr": "101.101.101.101",
+   "ok": false,
+   "ms": null
+  },
+  {
+   "name": "Cloudflare（DoH）",
+   "addr": "1.1.1.1",
+   "ok": false,
+   "ms": null
+  }
+ ],
+ "domain": "home.example.net",
+ "cert_expiry_ts": 518400,
+ "queries_series": {
+  "step": 900,
+  "start": -85500,
+  "values": {
+   "$gen": "wave",
+   "n": 96,
+   "step": 900,
+   "base": 60,
+   "amp": 300,
+   "peak_hour": 21,
+   "width": 2,
+   "noise": 80,
+   "seed": 11
+  }
+ }
+}

@@ -1,0 +1,55 @@
+{
+ "connected": false,
+ "internet": "bad",
+ "proto": "pppoe",
+ "proto_label": "PPPoE",
+ "isp": "中華電信",
+ "ip4": "",
+ "gw4": "168.95.98.254",
+ "ip6": "2001:b011:4006:12::1",
+ "dns": [
+  "168.95.1.1",
+  "168.95.192.1"
+ ],
+ "uptime_s": 0,
+ "ether": "1000 Full",
+ "rx_kbps": 0,
+ "tx_kbps": 0,
+ "plan_down_kbps": 500000,
+ "plan_up_kbps": 250000,
+ "mtu": 1492,
+ "series": {
+  "step": 900,
+  "start": -85500,
+  "down_kbps": {
+   "$gen": "wave",
+   "n": 96,
+   "step": 900,
+   "base": 18000,
+   "amp": 230000,
+   "peak_hour": 21,
+   "width": 2,
+   "noise": 60000,
+   "seed": 7,
+   "spikes": [
+    [
+     84,
+     89,
+     455000
+    ]
+   ]
+  },
+  "up_kbps": {
+   "$gen": "wave",
+   "n": 96,
+   "step": 900,
+   "base": 2000,
+   "amp": 16000,
+   "peak_hour": 21,
+   "width": 2,
+   "noise": 8000,
+   "seed": 8
+  }
+ },
+ "last_error": "PPPoE 認證失敗（帳號或密碼錯誤）"
+}

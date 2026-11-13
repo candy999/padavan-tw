@@ -72,7 +72,9 @@ SCHEME=dark node tools/ui-preview/shoot.js ui-shots index.asp
 ssh admin@192.168.2.1 'cp -a /www /tmp/www-dev && mount -o bind /tmp/www-dev /www'
 scp -r trunk/user/www/n56u_ribbon_fixed/state.js admin@192.168.2.1:/www/
 ```
-- 改完的檔案直接放進 `/www`（其實是 `/tmp/www-dev`），瀏覽器強制重新整理即可
+- **建議直接用 `python3 tools/ui-preview/push.py`**：自動掛上記憶體副本、重啟 httpd、照 Makefile 注入後推送 git 有變更的 www 檔案（要先設定 SSH 金鑰登入）
+- 改完的檔案直接放進 `/www`（其實是 `/tmp/www-dev`），瀏覽器強制重新整理即可（`tw.css` 會被快取，要 Ctrl＋Shift＋R）
+- **注意 0**：httpd 啟動時已經 chdir 到原本的 `/www`，掛上副本後要 `killall httpd; httpd` 才會讀到新檔案
 - **注意 1**：韌體編譯時會在每個 `.asp` 注入 viewport 與 `tw.css`（`trunk/user/www/Makefile`）。從專案直接複製 `.asp` 上去，要自己做同樣的注入（或寫一個小腳本：照 Makefile 的 sed 處理後再上傳）
 - **注意 2**：語言檔（`TW.dict`）由 httpd 載入後快取在記憶體。改了字典要到「系統管理」切換一次語言再切回來，或在 SSH 執行 `killall httpd; httpd`（重啟 httpd）
 - **注意 3**：路由器重開機後 `/www` 會恢復成韌體內建的版本，`/tmp` 的副本也會消失
@@ -285,31 +287,41 @@ scp -r trunk/user/www/n56u_ribbon_fixed/state.js admin@192.168.2.1:/www/
 
 所有新資料都用 **JSON**，前端統一透過一個函式取得（例如 `twApi('health')`），網址集中在一處，方便之後調整。
 
-- 網址：`/tw_api.asp?q=<名稱>`（實作方式由 B 階段決定；前端只依賴 `twApi()`）
-- 預覽工具：回傳 `tools/ui-preview/mock/<名稱>[.<情境>].json`
+- 網址：`/tw_api.asp?q=<名稱>[&<參數>]`（實作方式由 B 階段決定；前端只依賴 `TW.api()`，在 `tw_ui.js`）
+- **還沒有 API 時**：httpd 對不存在的檔案回 **200 空白**（實機確認）。前端把空白視為「API 不存在」，改用 `tw_status.asp`／`tw_rstats.asp`（把現有 ej 函式包成一次請求的純前端檔案）組出能給的部分，並帶 `partial: true`、`_source: "base"`；組不出來的回 `available: false`，畫面顯示「需要更新韌體後才有」。B 階段做好 `tw_api.asp` 後，前端自動改用 API，不用改頁面
+- 預覽工具：回傳 `tools/ui-preview/mock/<名稱>[.<情境>].json`；頁面網址加 `?scenario=` 切換：`normal`（預設）、`problem`（有問題）、`empty`（資料收集中）、`none`（現在的韌體＝沒有 API，走上面的後備資料）
 - 共同欄位：每個回應都有 `ok`（布林）、`ts`（Unix 秒）、`available`（這個功能目前韌體是否提供）、`warming_up`（資料收集中）
 - 時間序列：`{"step": 秒, "start": Unix 秒, "values": [...]}`，缺資料用 `null`
-- 單位寫在欄位名稱：`_ms`、`_kbps`、`_dbm`、`_pct`、`_bytes`
+- 單位寫在欄位名稱：`_ms`、`_kbps`、`_dbm`、`_pct`、`_bytes`、`_s`（秒）、`_ts`（Unix 秒）
+- 狀態值：`ok`／`warn`／`bad`／`unknown`／`off`
+- 完整範例：`tools/ui-preview/mock/*.json`（B 階段照著輸出即可；欄位以範例為準）
 
-| 名稱 | 內容 | 更新頻率 | 狀態 |
+| 名稱 | 內容（欄位） | 更新頻率 | 狀態 |
 |---|---|---|---|
-| `health` | 健康路徑各段：`segments[{id, state: ok/warn/bad/unknown, summary, evidence, actions[{label, cost, href}]}]`、整體結論 `headline` | 10 秒 | B 階段（依 twstats） |
-| `latency` | 各目標的延遲與丟包序列、閒置基準 `baseline_ms`、目前值 | 10 秒 | B 階段（twstats D1） |
-| `wan` | 連線狀態、類型、公網 IP、連線時間、即時速率、24 小時速率序列、方案頻寬 | 2 秒（即時）／60 秒（序列） | 部分現有（wanlink、netdev、rstats），序列 B 階段（D2） |
-| `router` | CPU、記憶體、運作時間、連線追蹤表 `conntrack_count/max`、溫度（可能為 null） | 5 秒 | 大部分現有，conntrack 小改 |
-| `devices` | 裝置清單：mac、名稱、類型、連線方式、AP、頻段、訊號、速率、IP、是否固定 IP、上線時間、是否暫停 | 10 秒 | 部分現有，整合 B 階段 |
-| `device?mac=` | 單台 24 小時訊號／速率序列、斷線紀錄、漫遊紀錄、建議 | 60 秒 | B 階段（D4） |
-| `wifi` | 各頻段：頻道、頻寬、功率、裝置數、忙碌率（可能 null）、鄰近 AP、每日自動選頻上次結果 | 30 秒 | 部分現有 |
-| `roam` | AP 清單、漫遊事件、建議（`tw-roamd` 觀察模式） | 30 秒 | 資料已有（/tmp/tw-roamd.*），轉 JSON 是 B 階段 |
-| `events` | 事件時間軸：時間、類型、說明、相關裝置 | 30 秒 | B 階段（D5） |
-| `qos` | 模式、方案、自動模式目前狀態、限速值、介入紀錄 | 5 秒 | B 階段（E4～E8） |
-| `dns` | 黑潮 DNS：啟用、健康、資料區模式、查詢數、過濾數、CDN 置換數、上游、憑證到期 | 30 秒 | 部分現有（kuroshio_status），統計 B 階段（G9） |
-| `vpn` | WireGuard 裝置：名稱、最後握手時間、流量、端點 | 10 秒 | B 階段（J4） |
-| `cgnat` | 是否 CGNAT、判斷依據 | 開頁時 | B 階段 |
-| `diag` | 一鍵檢查：逐段結果（同 health 格式）＋可匯出的文字報告 | 按下時 | B 階段 |
-| `firmware` | 目前版本、最新 Release 版本與說明 | 開頁時 | B 階段 |
+| `health` | `headline`、`level`；`segments[{id: device/wifi/router/isp/internet/dns, label, state, summary, evidence, actions[{label, cost, href}]}]`（`href: "#reconnect"` 代表「重新連線網際網路」）；`notices[{level, title, evidence, href, action}]` 最多 3 則（總覽的「值得注意」） | 10 秒 | B 階段（依 twstats）；現在前端用現有資料組出簡化版 |
+| `latency` | `baseline_ms`、`current_ms`、`loss_pct`；`targets[{id: gw/hinet/twnic/cf, label, host, current_ms, baseline_ms, loss_pct, series, loss}]`（`series`、`loss` 是時間序列，loss 單位 %） | 10 秒 | B 階段（twstats D1） |
+| `wan` | `connected`、`internet`（狀態值）、`proto`（pppoe/dhcp/static）、`proto_label`、`isp`、`ip4`、`gw4`、`ip6`、`dns[]`、`uptime_s`、`ether`、`rx_kbps`、`tx_kbps`、`plan_down_kbps`、`plan_up_kbps`、`mtu`、`last_error`；`series{step, start, down_kbps[], up_kbps[]}` | 2 秒（即時）／60 秒（序列） | 現在由 wanlink、netdev、rstats 組出（序列 120 秒一筆）；`isp`、方案頻寬 B 階段 |
+| `router` | `cpu_pct`、`mem_used_pct`、`mem_total_kb`、`uptime_s`、`load[]`、`conntrack_count`、`conntrack_max`、`temp_c`（可能 null）、`cpu_series`（選用） | 5 秒 | 現在由 json_system_status、nf_values 組出 |
+| `devices` | `devices[{mac（有冒號）, name, hostname, type: phone/computer/tv/game/iot/nas/camera/router/other, conn: wifi/wired/guest, band: "2.4"/"5", ap, signal_dbm, tx_rate_mbps, rx_rate_mbps, ip, static_ip, online, since_s, last_seen_ts, paused, disconnects_today, usage_today_bytes}]` | 10 秒 | 現在由 get_static_client、wl_auth_list 組出：分不出有線或剛離開 Wi-Fi（`conn: "wired_guess"`），沒有頻段、AP、上線時間；整合 B 階段 |
+| `device?mac=` | `signal`、`rate`（時間序列）、`disconnects[{ts, reason}]`、`roams[{ts, from, to, rssi_from, rssi_to}]`、`advice[{title, detail, action, href}]`、`usage_today_bytes` | 60 秒 | B 階段（D4） |
+| `wifi` | `bands[{id, ssid, enabled, channel, auto_channel, width_mhz, txpower_pct, clients, busy_pct, neighbors{count, by_channel{頻道: 數量}, strongest[{ssid, channel, rssi_dbm}]}, acs_last{ts, from, to, reason}}]`；`guest{enabled, ssid, expires_ts, clients}` | 30 秒 | 部分現有；**鄰近 AP 要 B 階段**（見第 12 節：現有的 `wl_scan_*` 在 D3 輸出壞掉） |
+| `roam` | `mode: off/observe/steer`、`weak_dbm`；`aps[{name, model, ip, online, self, clients_24, clients_5, steer_capable}]`；`events[{ts, mac, name, from, to, rssi_from, rssi_to, type: roam/sticky}]`；`advice[{level, title, detail}]` | 30 秒 | 資料已有（/tmp/tw-roamd.*），轉 JSON 是 B 階段；現在頁面提供「查看漫遊紀錄」文字 |
+| `events` | `events[{ts, type: wan/channel/device/qos/dns/system/roam/vpn, level, text, device}]`，新的在前 | 30 秒 | B 階段（D5） |
+| `qos` | `mode: off/fixed/auto`、`plan_down_kbps`、`plan_up_kbps`、`state: idle/probing/limiting/deciding/ending`、`limit_down_kbps`、`limit_up_kbps`、`interventions[{ts, reason, action, latency_before_ms, latency_after_ms, duration_s}]` | 5 秒 | B 階段（E4～E8）。**設定寫入**：`tw_qos_mode`（0 關閉／1 固定／2 自動）、`tw_qos_down`、`tw_qos_up`（Mbps），頁面用 `sid_list=General;` 送出 → B 階段在 variables.c 的 General 登記、defaults.c 給預設值 |
+| `dns` | `enabled`、`running`、`healthy`、`zone_mode`、`filter_ads`、`encrypted`、`cdn_tw`、`queries`、`blocked`、`cdn_rewrites`、`cache_hit_pct`、`avg_ms`、`upstreams[{name, addr, ok, ms}]`、`domain`、`cert_expiry_ts`、`queries_series` | 30 秒 | 現在由 kuroshio_status 組出啟用與健康；統計 B 階段（G9） |
+| `vpn` | `enabled`、`listen_port`、`peers[{name, ip, last_handshake_ts, rx_bytes, tx_bytes, endpoint}]`（`name` 對應 WGSPeerList 的名稱） | 10 秒 | B 階段（J4）；現在裝置清單來自 nvram |
+| `cgnat` | `cgnat`（true/false/null）、`kind: public/cgnat/double_nat`、`wan_ip`、`public_ip`、`reason`、`method: stun/wan_ip` | 開頁時 | 現在前端依 WAN 位址判斷（`method: "wan_ip"`，分得出公網／私人／100.64），比對對外位址是 B 階段 |
+| `diag` | 同 `health` 的 `headline`、`level`、`segments`（每段多 `metric`，段落 id：wifi/router/isp/load/dns/web）＋`duration_s`、`report`（文字） | 按下時（約 30～40 秒） | B 階段；現在用 `health` 的後備資料 |
+| `speedtest` | `running`、`plan_down_kbps`、`last{ts, down_kbps, up_kbps, latency_ms, server}`；`speedtest&run=1` 開始測速 | 按下時 | **新增**，B 階段 |
+| ~~`firmware`~~ | — | — | **取消**（使用者 2026-11-13 決定）：韌體更新由瀏覽器直接查 GitHub Release（`api.github.com/repos/candy999/padavan-tw/releases/latest`），路由器不用連外 |
 
 本機在設計時如果需要新欄位或新名稱：**直接修改這張表**（並在 commit 訊息說明），B 階段會依表實作。
+
+### 6.1 需要新的後端功能（B 階段）
+- **暫停上網可設時間**（「1 小時」「到今晚 10 點」）：現在只做「直到我恢復」（MAC 過濾封鎖清單 MFList），時間選項顯示「需要更新韌體」。需要一次性排程規則（到時自動從 MFList 移除）
+- **訪客網路時效**（2 小時／到今天結束）：現在只有「一直開著」；Padavan 原有的每日時段（`rt_guest_time_x`）在原始頁面
+- **漫遊引導模式**（11k＋11v）：頁面的「引導」按鈕先停用
+- **Wi-Fi 鄰近 AP 掃描**：見第 12 節
 
 ---
 
@@ -330,12 +342,14 @@ scp -r trunk/user/www/n56u_ribbon_fixed/state.js admin@192.168.2.1:/www/
 
 ## 8. 回到雲端（B 階段）時的待辦（給雲端工作階段）
 
-1. 實作 `/tw_api.asp`（web_ex.c）或等效機制，依第 6 節逐一提供資料
+1. 實作 `/tw_api.asp`（web_ex.c）或等效機制，依第 6 節逐一提供資料（格式照 `tools/ui-preview/mock/*.json`；還沒做的名稱維持回空白，前端會自動用後備資料）
 2. `twstats` 取樣器（ROADMAP D1～D5），資料只存記憶體
-3. 硬體 QoS 固定／自動模式（E4～E8）
-4. `tw-roamd` 資料轉 JSON、WireGuard 狀態、CGNAT 偵測、韌體版本檢查
+3. 硬體 QoS 固定／自動模式（E4～E8），並在 variables.c 的 General 登記 `tw_qos_mode`、`tw_qos_down`、`tw_qos_up`
+4. `tw-roamd` 資料轉 JSON、WireGuard 狀態、CGNAT 偵測（比對對外位址）
 5. 黑潮 DNS 統計轉接（G9）
-6. 本機在第 6 節新增的任何約定
+6. 本機在第 6 節新增的約定：`speedtest`、6.1 的排程功能（暫停上網時間、訪客時效、漫遊引導）
+7. 修 `ralink.c` 的 Wi-Fi 掃描解析（第 12 節），或在 `wifi` API 提供 `neighbors`
+8. ~~韌體版本檢查~~：已改由瀏覽器查 GitHub，不用做
 
 ## 9. 目前硬體與韌體狀態（2026-11-13）
 
@@ -345,10 +359,60 @@ scp -r trunk/user/www/n56u_ribbon_fixed/state.js admin@192.168.2.1:/www/
 - 黑潮 DNS：整合完成待實機；Lite／核心版與黑潮專案討論中，**本機不用處理**
 - 路線圖總表：`docs/ROADMAP.md`；舊的 UI 計畫：`docs/UI-PLAN.md`（本文件取代它的階段規劃）
 
-## 10. 待使用者確認的問題（U0 時用問題卡問）
+## 10. 使用者確認的結果（2026-11-13，U0）
 
-1. 第 5.4 節的 9 個主選單與手機底部分頁，是否同意？
-2. 首頁直接換成新的「總覽」，還是先並存（新總覽放第一個、舊網路地圖保留）？
-3. 「暫停裝置上網」「訪客網路時效」需要新的後端功能（排程規則），要不要列入 B 階段？
-4. 韌體更新頁要不要「檢查 GitHub 最新版」？（需要路由器連 GitHub）
-5. 進階設定區的舊頁面，要不要也套用 5.7 的用語（只改字典，不改頁面結構）？
+1. 9 個主選單與手機底部分頁（總覽、裝置、Wi-Fi、診斷、更多）：**照交接單**
+2. 首頁：**直接換成新的總覽**；原本的網路地圖移到 `Main_NetMap.asp`（進階設定 › 狀態與工具、裝置頁的「網路地圖」按鈕）。舊網路地圖的 iframe 送出後會回 `/?flag=…`，新首頁會轉回網路地圖
+3. 暫停上網的時間、訪客網路時效：**列入 B 階段**（見 6.1），介面先做好、時間選項停用並標示「需要更新韌體」
+4. 韌體更新檢查：**由瀏覽器查 GitHub**（路由器不用連外）；第 6 節的 `firmware` 約定取消
+5. 舊頁面套用 5.7 用語：**還沒問**（問題卡一次只能 4 題），目前沒有改字典
+
+## 11. U 階段進度（2026-11-13，本機工作階段）
+
+| 步驟 | 狀態 | 說明 |
+|---|---|---|
+| U0 | ✅ | 第 10 節 |
+| U1 | ✅ | `tw_ui.js`（`TW.api()`、後備資料、元件）、`tw.css` 新元件、`serve.py` 模擬資料與 4 種情境；預覽三種情境＋`none` 都正常 |
+| U2 | ✅ | `state.js`：9 個新主選單、手機底部 5 格；上游頁面一律標成「進階設定」，側欄列出原始選單；`tw_advanced.asp` 依上游選單表列出全部原始頁面（可搜尋）。爬蟲檢查：所有導覽頁都到得了，到不了的只有資料／動作端點，以及原本就隱藏的頁面（有黑潮 DNS 時的 SmartDNS／AdGuard／DDNS、非 AP 模式的 AP LAN） |
+| U3 | ✅ 預覽＋實機讀取 | 總覽、裝置（清單、詳情、取名並固定 IP、暫停／恢復、WOL）、Wi-Fi（名稱密碼、分享 QR、訪客、頻道與每日選頻、多台 AP） |
+| U4 | ✅ 預覽＋實機讀取 | 網際網路（業者精靈、MTU 偵測、CGNAT／雙層 NAT、黑潮 DNS 開關）、遠端與分享（WireGuard 新增裝置、依用途的連接埠轉送、UPnP、網域）、頻寬管理、診斷（一鍵檢查、延遲、事件、測速、匯出報告）、系統 |
+| U5 | ⏳ 等使用者 | 實機已用 push.py 測過所有頁面的讀取（沒有 JS 錯誤、真實資料正確顯示）。**還沒做**：在實機按「套用」寫入設定、重開機、登出、語言切換、手機實際操作——寫入與重開機會改到使用者的路由器，要使用者在場確認 |
+
+截圖：`node tools/ui-preview/shoot.js` 桌機 1440／手機 390、亮／暗色，全部頁面沒有橫向溢出、沒有 JS 錯誤。
+
+### 11.1 新增與修改的檔案
+- 新頁面：`index.asp`（總覽，取代原首頁）、`tw_devices.asp`、`tw_wifi.asp`、`tw_internet.asp`、`tw_remote.asp`、`tw_qos.asp`、`tw_diag.asp`、`tw_system.asp`、`tw_advanced.asp`；頁面邏輯在 `tw_p_<頁>.js`
+- 保留舊首頁：`Main_NetMap.asp`（原 `index.asp`，只改 `current_page`）
+- 共用：`tw_ui.js`、`bootstrap/css/tw.css`（後半段「新介面元件」）
+- 後備資料（純前端，把現有 ej 函式包成一次請求）：`tw_status.asp`（wanlink、nf_values、kuroshio_status、netdev、json_system_status、get_static_client、wl_auth_list、ManualDHCPList、MFList、幾個 nvram）、`tw_rstats.asp`（`bandwidth("speed")`）
+- `state.js`：新主選單（`tw_nav_items`、`tw_show_menu()`）、手機底部分頁、頂部列 Wi-Fi 按鈕改到新 Wi-Fi 頁、`tw_table_cards` 略過新清單
+- 工具：`tools/ui-preview/serve.py`（mock、`?scenario=`、`--all-apps`、更多 ej 模擬）、`tools/ui-preview/mock/*.json`、`tools/ui-preview/push.py`（推到實機）
+- 新頁面沒有 C 程式改動；`variables.c`、`defaults.c` 都沒動
+
+### 11.2 寫入設定（全部走 3.3 的表單機制）
+| 頁面動作 | sid_list | 變數 |
+|---|---|---|
+| Wi-Fi 名稱密碼 | `WLANConfig11b;WLANConfig11a;` | `rt_ssid`、`wl_ssid`、`rt_wpa_psk`、`wl_wpa_psk`（原本沒密碼時加 `*_auth_mode=psk`、`*_wpa_mode=2`、`*_crypto=aes`） |
+| 訪客網路 | 同上 | `rt_guest_enable`、`rt_guest_ssid`、`rt_guest_wpa_psk`、`rt_guest_auth_mode`、`rt_guest_lan_isolate`（5G 同名 `wl_guest_*`） |
+| 頻道、每日選頻 | 同上 | `rt_channel`、`wl_channel`、`tw_acs_daily`、`tw_acs_hour` |
+| 取名並固定 IP | `LANHostConfig;` 清單 `ManualDHCPList` | `dhcp_staticmac_x_0`（無冒號）、`dhcp_staticip_x_0`、`dhcp_staticname_x_0`；未開啟時一起送 `dhcp_static_x=1` |
+| 暫停／恢復上網 | `FirewallConfig;` 清單 `MFList` | 新增 `macfilter_list_x_0`、`macfilter_time_x_0=00002359`、`macfilter_date_x_0=1111111`（未開啟時 `macfilter_enable_x=2`）；恢復用 `MFList_s=<索引>` 刪除。白名單模式時不提供 |
+| 連線方式 | `Layer3Forwarding;IPConnection;PPPConnection;` | `wan_proto`、`wan_pppoe_username`、`wan_pppoe_passwd`（留空不送）、`wan_pppoe_mtu`／`mru`、靜態 IP 的 `wan_ipaddr` 等、`wan_dnsenable_x` |
+| 黑潮 DNS 開關 | `KuroshioConf;` | `kuroshio_enable` |
+| WireGuard 開啟／新增裝置 | `WIREGUARD;` 清單 `WGSPeerList` | `wgs_enable`；`wgs_name_x_0`、`wgs_pub_x_0`、`wgs_psk_x_0`、`wgs_ip_x_0`（私鑰只在瀏覽器） |
+| 連接埠轉送 | `IPConnection;` 清單 `VSList` | `vts_port_x_0` 等 7 欄，未開啟時 `vts_enable_x=1` |
+| UPnP | `IPConnection;` | `upnp_enable_x` |
+| 管理密碼、定時重開機、燈號 | `General;` | `http_passwd`；`reboot_schedule_enable`、`reboot_schedule`（7 碼星期＋HHMM）；`front_led_all` |
+| 頻寬管理 | `General;` | `tw_qos_mode`、`tw_qos_down`、`tw_qos_up`（**B 階段登記後才會生效**，現在頁面停用） |
+
+清單類先送 `action_mode=" Add "`（或 `" Del "`），等 `start_apply.htm` 呼叫 `parent.done_validating()` 後再送 `" Restart "`，與舊頁面相同（`TW.listAdd()`）。
+
+## 12. 實機發現（2026-11-13，給之後的工作階段）
+
+- **`wanlink_status()` 是 0 才代表已連線**，其他數字是原因代碼（1 沒接網路線、5 正在取得 IP、6 等待 PPP、9 網段衝突…，對照 `InetState*` 字典）。預覽工具原本寫成 1，已更正
+- `link_internet` nvram：1＝連得到外面、2＝偵測中或不穩定、0＝連不到
+- **httpd 啟動時就 chdir 到 `/www`**：bind mount 記憶體副本後要 `killall httpd; httpd` 才會讀到新檔案（`push.py` 會自動做）
+- **Wi-Fi 鄰近 AP 掃描壞掉**：`wds_aplist_2g.asp`（`ej_wl_scan_2g`）在 D3 回傳的 JS 字串裡有換行、欄位錯位（`ralink.c` 用固定欄寬解析驅動的掃描表，跟這版驅動的輸出不合）。原始的 WDS 頁應該也受影響。新 Wi-Fi 頁偵測到就顯示「需要更新韌體」。**B 階段**：修 `ralink.c` 的解析，或直接在 `wifi` API 提供 `neighbors`
+- 實機的 D3 前面還有一台路由器（WAN 拿到 10.0.0.x）：網際網路頁正確顯示「雙層 NAT」
+- `get_nvram_list` 的欄位順序就是 `variables.c` 的順序、不附索引；指定隱藏欄位會輸出 `"*"`；MAC 不含冒號
+- 新介面目前只有繁體中文（字串寫在 `tw_p_*.js`，跟現有的台灣版頁面一樣），切換語言只影響原始頁面

@@ -1,0 +1,8 @@
+{
+ "cgnat": false,
+ "kind": "public",
+ "wan_ip": "114.32.10.20",
+ "public_ip": "114.32.10.20",
+ "reason": "路由器拿到的位址就是對外的公網位址",
+ "method": "stun"
+}

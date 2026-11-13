@@ -1,0 +1,87 @@
+{
+ "headline": "網路變慢：業者那段延遲偏高",
+ "level": "bad",
+ "segments": [
+  {
+   "id": "device",
+   "label": "裝置",
+   "state": "ok",
+   "summary": "9 台在線，訊號都正常",
+   "evidence": "",
+   "actions": []
+  },
+  {
+   "id": "wifi",
+   "label": "Wi-Fi",
+   "state": "ok",
+   "summary": "2.4G 頻道 11、5G 頻道 149",
+   "evidence": "忙碌 22 %／9 %",
+   "actions": []
+  },
+  {
+   "id": "router",
+   "label": "路由器",
+   "state": "ok",
+   "summary": "CPU 24 %、記憶體 38 %",
+   "evidence": "",
+   "actions": []
+  },
+  {
+   "id": "isp",
+   "label": "業者",
+   "state": "bad",
+   "summary": "到業者閘道 86 ms（平常 3 ms）",
+   "evidence": "最近 30 分鐘掉包 4 %；家裡沒有人在大量下載",
+   "actions": [
+    {
+     "label": "重新連線網際網路",
+     "cost": "網路會中斷約 15 秒",
+     "href": "#reconnect"
+    },
+    {
+     "label": "打給業者（中華電信 0800-080-123）",
+     "cost": "",
+     "href": "tel:0800080123"
+    }
+   ]
+  },
+  {
+   "id": "internet",
+   "label": "網際網路",
+   "state": "warn",
+   "summary": "延遲 92 ms（平常 7 ms）",
+   "evidence": "受業者那段影響",
+   "actions": []
+  },
+  {
+   "id": "dns",
+   "label": "DNS",
+   "state": "warn",
+   "summary": "黑潮 DNS 改用業者 DNS",
+   "evidence": "加密 DNS 上游逾時，5 分鐘後自動再試",
+   "actions": [
+    {
+     "label": "DNS 設定",
+     "cost": "",
+     "href": "tw_internet.asp#dns"
+    }
+   ]
+  }
+ ],
+ "notices": [
+  {
+   "level": "bad",
+   "title": "業者那段延遲偏高、有掉包",
+   "evidence": "到業者閘道 86 ms、掉包 4 %，持續 25 分鐘",
+   "href": "tw_diag.asp",
+   "action": "診斷"
+  },
+  {
+   "level": "warn",
+   "title": "黑潮 DNS 暫時改用業者 DNS",
+   "evidence": "加密 DNS 上游逾時",
+   "href": "tw_internet.asp#dns",
+   "action": "查看"
+  }
+ ]
+}

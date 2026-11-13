@@ -1,0 +1,6 @@
+{
+ "running": false,
+ "plan_down_kbps": 500000,
+ "plan_up_kbps": 250000,
+ "last": {"ts": -5400, "down_kbps": 482000, "up_kbps": 238000, "latency_ms": 7, "server": "中華電信 台北"}
+}

@@ -1,0 +1,53 @@
+{
+ "events": [
+  {
+   "ts": -1200,
+   "type": "roam",
+   "level": "ok",
+   "text": "小明的 iPhone 從 NEWIFI3 換到客廳 CR6608（-79 → -51 dBm）",
+   "device": "小明的 iPhone"
+  },
+  {
+   "ts": -7200,
+   "type": "qos",
+   "level": "warn",
+   "text": "頻寬管理介入：延遲 +45 ms，下行限速 440 Mbps，25 分鐘後解除",
+   "device": ""
+  },
+  {
+   "ts": -33300,
+   "type": "device",
+   "level": "warn",
+   "text": "客廳電視斷線（訊號 -81 dBm）",
+   "device": "客廳電視"
+  },
+  {
+   "ts": -36000,
+   "type": "device",
+   "level": "warn",
+   "text": "客廳電視斷線（訊號 -83 dBm）",
+   "device": "客廳電視"
+  },
+  {
+   "ts": -79200,
+   "type": "channel",
+   "level": "ok",
+   "text": "每日自動選頻：2.4G 維持頻道 6、5G 維持 149",
+   "device": ""
+  },
+  {
+   "ts": -172800,
+   "type": "wan",
+   "level": "warn",
+   "text": "網際網路重新連線（PPPoE 斷線 12 秒）",
+   "device": ""
+  },
+  {
+   "ts": -180000,
+   "type": "dns",
+   "level": "warn",
+   "text": "黑潮 DNS 上游逾時，暫時改用業者 DNS 4 分鐘",
+   "device": ""
+  }
+ ]
+}

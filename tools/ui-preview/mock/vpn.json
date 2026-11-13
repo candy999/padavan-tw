@@ -1,0 +1,22 @@
+{
+ "enabled": true,
+ "listen_port": 51820,
+ "peers": [
+  {
+   "name": "我的手機",
+   "ip": "10.66.0.2",
+   "last_handshake_ts": -95,
+   "rx_bytes": 482344960,
+   "tx_bytes": 1932735283,
+   "endpoint": "49.216.x.x"
+  },
+  {
+   "name": "公司筆電",
+   "ip": "10.66.0.3",
+   "last_handshake_ts": -259200,
+   "rx_bytes": 104857600,
+   "tx_bytes": 524288000,
+   "endpoint": ""
+  }
+ ]
+}
