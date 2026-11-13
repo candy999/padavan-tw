@@ -48,6 +48,11 @@ dmesg | grep -i jffs2 | tail -5
 - `/proc/mounts` 有 `/dev/mtdblock9 /media/kuroshio jffs2`
 - 等背景工作跑完（或執行 `/usr/bin/kuroshio.sh flush` 立即寫出），`state` 目錄有檔案
 - **重開機後**：不再出現「清除後重新建立」、`state` 目錄的檔案還在、cdn-scan／dns-benchmark 不重跑
+- 背景工作的**即時**狀態要看管理 API，不要看 `state/jobs.json`：學習資料（含排程狀態）在 jffs2 上每 6～24 小時才寫一次，磁碟上的檔案會落後（黑潮 DNS 專案說明）。重開機前先 `/usr/bin/kuroshio.sh flush`，磁碟上的才會是最新的
+  ```bash
+  /usr/bin/kuroshio.sh api /api/jobs
+  ```
+  cdn-scan（每週日 03:20）、dns-benchmark（每天 04:10）只有結果檔不存在時才會在開機補跑
 
 如果失敗，`area_note` 與 syslog 會寫出原因（mount／mtd_write 的錯誤訊息），請整段貼上。
 
@@ -94,7 +99,7 @@ fetch('/kuroshio_api.cgi', {method:'POST', headers:{'Content-Type':'application/
 ---
 
 ## 4. 已知、不用回報的
-- **cdn-pool 每隔約 6 分鐘重排**（「Azure Front Door / CDN IPv6 可用台灣節點只剩 2 個，排入節點池重建」）：黑潮 DNS 本身的行為，已整理給黑潮專案。這版應該還會看到，記下頻率即可
+- **cdn-pool 每隔約 6 分鐘重排**（「Azure Front Door / CDN IPv6 可用台灣節點只剩 2 個，排入節點池重建」）：黑潮 DNS 確認是 3.1.0 的問題（Azure 在台灣只有 2 個 IPv6 節點，少於門檻 `minPool`＝3），**3.1.1 修正**（只有節點壞掉才提早重建，連續不足時間隔 1→6→24 小時）。這版還會看到，記下頻率即可；不要為了它改設定
 
 ---
 
