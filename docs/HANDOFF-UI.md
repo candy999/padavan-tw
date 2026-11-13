@@ -420,11 +420,14 @@ scp -r trunk/user/www/n56u_ribbon_fixed/state.js admin@192.168.2.1:/www/
 - `link_internet` nvram：1＝連得到外面、2＝偵測中或不穩定、0＝連不到
 - **httpd 啟動時就 chdir 到 `/www`**：bind mount 記憶體副本後要 `killall httpd; httpd` 才會讀到新檔案（`push.py` 會自動做）
 - **Wi-Fi 鄰近 AP 掃描壞掉**：`wds_aplist_2g.asp`（`ej_wl_scan_2g`）在 D3 回傳的 JS 字串裡有換行、欄位錯位（`ralink.c` 用固定欄寬解析驅動的掃描表，跟這版驅動的輸出不合）。原始的 WDS 頁應該也受影響。新 Wi-Fi 頁偵測到就顯示「需要更新韌體」。**B 階段**：修 `ralink.c` 的解析，或直接在 `wifi` API 提供 `neighbors`
+  - **2026-11-13 雲端已修（待新韌體實機確認）**：原因是台灣版替 MT7603 開了 802.11k，驅動掃描表多一欄「BcnRept」，而且表頭與資料列欄寬不同；`ralink.c` 改成逐行解析、欄位位置從表頭找，BSSID 不是 MAC 的行直接跳過。輸出格式不變（`[["SSID","BSSID","頻道","訊號"],…]`，SSID 一樣經過 `char_to_ascii`）。新 Wi-Fi 頁可以拿掉「需要更新韌體」的判斷，或保留給舊韌體
 - 實機的 D3 前面還有一台路由器（WAN 拿到 10.0.0.x）：網際網路頁正確顯示「雙層 NAT」
 - `get_nvram_list` 的欄位順序就是 `variables.c` 的順序、不附索引；指定隱藏欄位會輸出 `"*"`；MAC 不含冒號
 - 新介面目前只有繁體中文（字串寫在 `tw_p_*.js`，跟現有的台灣版頁面一樣），切換語言只影響原始頁面
 - **【高優先，B 階段】D3 無法重開機**：後台（新舊介面都一樣）按重開機 → httpd `sys_reboot()` 走 `MTD_FLASH_32M_REBOOT_BUG` 路徑：`mtd_storage.sh save` 後執行 `/bin/mtd_write -r unlock mtd1`，回 `Could not open mtd device: mtd1`，所以不會重開。SSH 下 `reboot` 更糟：服務與區網全部關掉後停住（網路線有連線但不回 ARP），**要拔電源**。`/dev/mtd1` 存在；MTD 表有重複的項目（mtd7「ALL」、mtd8 第二個「Bootloader」、mtd9「Kuroshio」、mtd10 整顆晶片），黑潮 DNS 自己也記錄「資料區跟其他分割區重疊」。推測跟台灣版加的分割區有關，要查 `mtd_write` 怎麼找裝置名稱與 D3 的分割表
+  - **2026-11-13 雲端已修（待新韌體實機確認）**：跟分割區無關，是上游 4.4 在 D3 上本來就壞的。4.4 的 `mtd_write` 依「分割區名稱」找裝置，沒有叫 mtd1 的分割區 → 開啟失敗就結束、不重開（3.4 的 mtd_write 會忽略失敗照樣重開）。D3 改關掉 `CONFIG_32M_REBOOT_FIXUP`（`configs/tw/NEWIFI3.config`），走一般流程：後台 `kill(1, SIGTERM)` → init 停服務、存設定 → `reboot()`；4.4 的 SPI Flash 驅動關機時會把 Flash 切回 3-byte 模式並重置。MTD 的重複項目（ALL、第二個 Bootloader、整顆晶片）是上游 dtsi 與 dts 重複定義，本來就有，無害
 - **黑潮 DNS 開機後長時間吃滿 CPU**（2026-11-13 實測，見下面「黑潮 DNS 用量」）：學習資料因為分割區重疊只放記憶體，每次開機都重跑 cdn-pool、cdn-scan、dns-benchmark，開機後 40 分鐘仍佔全機約 80～97% CPU
+  - **2026-11-13 雲端已修（待新韌體實機確認）**：「重疊」是誤判——分割區沒有重疊，是 `kuroshio.sh` 用 `find /proc/device-tree` 讀分割表，但那是捷徑，busybox find 預設不跟進，一個分割區都沒讀到。改成 `/proc/device-tree/`，並把「讀不到分割表」與「真的重疊」分開顯示。另外黑潮 DNS 改用 `nice -n 10` 執行。修好後學習資料存在 mtd9，只有第一次開機會跑重工作
 - 中等寬度（900～1240 px）頂部列放不下：已收起「釋放記憶體」「關機」圖示
 
 ### 12.1 黑潮 DNS 用量（2026-11-13，D3，韌體 4.4.198.9-100_ff54088，開機約 40 分鐘）

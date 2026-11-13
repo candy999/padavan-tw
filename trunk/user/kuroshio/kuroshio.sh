@@ -98,9 +98,13 @@ prepare_rwfs() {
 }
 
 # 裝置樹裡每個分割區：「名稱 起點 大小」（十進位，位元組）
+# 注意：/proc/device-tree 是捷徑（symlink），busybox find 預設不跟進，路徑後面一定要加「/」
 dt_parts() {
-	local f d l r
-	for f in $(find /proc/device-tree -name label 2>/dev/null); do
+	local f d l r dt
+	for dt in /proc/device-tree/ /sys/firmware/devicetree/base/; do
+		[ -d "$dt" ] && break
+	done
+	for f in $(find "$dt" -name label 2>/dev/null); do
 		case "$f" in */partition@*/label) ;; *) continue ;; esac
 		d=${f%/label}
 		l=$(tr -d '\000' < "$f")
@@ -111,12 +115,13 @@ dt_parts() {
 }
 
 # Kuroshio 分割區跟其他分割區（整顆 Flash 的除外）完全不重疊，才可以寫
+# 回傳：0＝不重疊、1＝重疊、2＝讀不到分割區表（不能確認，一樣不使用）
 kuro_layout_ok() {
 	dt_parts | awk '
 		{ n[NR] = $1; s[NR] = $2; e[NR] = $2 + $3 }
 		$1 == "Kuroshio" { k = NR }
 		END {
-			if (!k) exit 1
+			if (!k) exit 2
 			for (i = 1; i <= NR; i++) {
 				if (i == k) continue
 				if (s[i] == 0 && e[i] >= e[k]) continue
@@ -133,10 +138,14 @@ prepare_jffs2() {
 	n=$(mtd_idx Kuroshio)
 	[ -n "$n" ] || return 1
 	grep -q " $JFFS2 " /proc/mounts && return 0
-	if ! kuro_layout_ok; then
-		note "黑潮 DNS 資料區跟其他分割區重疊，為了保護設定不使用，學習資料暫時放記憶體"
-		return 1
-	fi
+	kuro_layout_ok
+	case $? in
+	0) ;;
+	1)	note "黑潮 DNS 資料區跟其他分割區重疊，為了保護設定不使用，學習資料暫時放記憶體"
+		return 1 ;;
+	*)	note "讀不到分割區表，無法確認黑潮 DNS 資料區是否安全，學習資料暫時放記憶體"
+		return 1 ;;
+	esac
 	if [ "$(head -c 2 "/dev/mtd$n" 2>/dev/null | tr '\205\031' 'ab')" != "ab" ] && ! blk_erased "/dev/mtd$n"; then
 		log "第一次使用黑潮 DNS 資料區：清除舊資料（約 1 分鐘）"
 		mtd_write erase Kuroshio >/dev/null 2>&1 || return 1
@@ -285,7 +294,8 @@ dnsmasq_extra() {
 run_loop() {
 	ulimit -n 65535 2>/dev/null
 	while [ -f "$RUN/enabled" ]; do
-		$BIN run --uci 2>&1 | logger -t "$TAG"
+		# 開機後的背景工作（CDN 節點池、網段掃描、上游評測）很吃 CPU，降低優先權讓 Wi-Fi、後台、dnsmasq 先跑
+		nice -n 10 $BIN run --uci 2>&1 | logger -t "$TAG"
 		[ -f "$RUN/enabled" ] || break
 		sleep 2
 	done
