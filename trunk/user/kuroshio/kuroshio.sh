@@ -12,9 +12,9 @@
 # - 設定檔是 OpenWrt 的 UCI 文字格式：$UCI_SRC 是使用者設定，啟動時複製到記憶體再寫入後台表單的值（nvram）
 # - 保護：黑潮 DNS 不在或連續 3 次沒回答 → 改用業者 DNS（這段期間沒有過濾）；恢復回答就切回
 # - 學習資料放專用的 Flash 資料區，由黑潮 DNS 自己控制寫入（每 6～24 小時、內容沒變不寫、停止時寫出）：
-#   CR6608 → RWFS（UBIFS，97 MB）；D3 → Kuroshio 分割區（JFFS2，6 MB，從原本 8 MB 的 Storage 切出來）
-#   第一次使用前檢查：裡面是別人的資料（例如原廠韌體備援、舊設定溢出）就不碰，
-#   改放記憶體＋每天匯出備份到 /etc/storage、開機時匯入
+#   CR6608 → RWFS（UBIFS，97 MB）；D3 → Kuroshio 分割區（JFFS2，7.5 MB，原本沒人用的重複 Storage 區，跟真正的 Storage 不重疊）
+#   第一次使用前檢查：CR6608 的 RWFS 裡是別人的資料就不碰；D3 的分割區表跟其他分割區重疊就不碰；
+#   不能用時改放記憶體＋每天匯出備份到 /etc/storage、開機時匯入
 
 BIN=/usr/bin/kuroshio
 SHARE=/usr/share/kuroshio
@@ -53,12 +53,6 @@ lan_ip() { nv lan_ipaddr; }
 # ---------- 學習資料放哪裡 ----------
 
 mtd_idx() { awk -v n="\"$1\"" '$4 == n { sub("mtd", "", $1); sub(":", "", $1); print $1; exit }' /proc/mtd 2>/dev/null; }
-
-mtd_size() {
-	local hex
-	hex=$(awk -v n="\"$1\"" '$4 == n { print $2; exit }' /proc/mtd 2>/dev/null)
-	[ -n "$hex" ] && printf '%d' "0x$hex" || echo 0
-}
 
 # blk_erased <裝置> [從第幾個 64 KB 開始] [幾個]：全部是 0xFF（Flash 抹除後的狀態）
 blk_erased() {
@@ -103,23 +97,49 @@ prepare_rwfs() {
 	return 0
 }
 
-# D3：Kuroshio 分割區（JFFS2）。開頭是 JFFS2 或全空 → 直接掛載；
-# 有其他資料時，只有在確定不是舊設定溢出（Storage 2 MB 的最後一塊是空的）才清除
+# 裝置樹裡每個分割區：「名稱 起點 大小」（十進位，位元組）
+dt_parts() {
+	local f d l r
+	for f in $(find /proc/device-tree -name label 2>/dev/null); do
+		case "$f" in */partition@*/label) ;; *) continue ;; esac
+		d=${f%/label}
+		l=$(tr -d '\000' < "$f")
+		r=$(hexdump -v -e '1/1 "%02x"' "$d/reg" 2>/dev/null)
+		[ ${#r} -eq 16 ] || continue
+		echo "$l $((0x$(echo "$r" | cut -c1-8))) $((0x$(echo "$r" | cut -c9-16)))"
+	done
+}
+
+# Kuroshio 分割區跟其他分割區（整顆 Flash 的除外）完全不重疊，才可以寫
+kuro_layout_ok() {
+	dt_parts | awk '
+		{ n[NR] = $1; s[NR] = $2; e[NR] = $2 + $3 }
+		$1 == "Kuroshio" { k = NR }
+		END {
+			if (!k) exit 1
+			for (i = 1; i <= NR; i++) {
+				if (i == k) continue
+				if (s[i] == 0 && e[i] >= e[k]) continue
+				if (s[i] < e[k] && s[k] < e[i]) exit 1
+			}
+			exit 0
+		}'
+}
+
+# D3：Kuroshio 分割區（JFFS2，0x1800000～0x1f80000）。設定存放的 Storage 在它後面（0x1f80000，512K），不重疊。
+# 先確認分割區表真的不重疊；開頭不是 JFFS2 也不是全空 → 這塊是專用的，清除後使用
 prepare_jffs2() {
-	local n s ss
+	local n
 	n=$(mtd_idx Kuroshio)
 	[ -n "$n" ] || return 1
 	grep -q " $JFFS2 " /proc/mounts && return 0
+	if ! kuro_layout_ok; then
+		note "黑潮 DNS 資料區跟其他分割區重疊，為了保護設定不使用，學習資料暫時放記憶體"
+		return 1
+	fi
 	if [ "$(head -c 2 "/dev/mtd$n" 2>/dev/null | tr '\205\031' 'ab')" != "ab" ] && ! blk_erased "/dev/mtd$n"; then
-		s=$(mtd_idx Storage)
-		ss=$(mtd_size Storage)
-		if [ -n "$s" ] && [ "$ss" -ge 65536 ] && blk_erased "/dev/mtd$s" $((ss / 65536 - 1)); then
-			log "第一次使用黑潮 DNS 資料區：清除舊資料（約 1 分鐘）"
-			mtd_write erase Kuroshio >/dev/null 2>&1 || return 1
-		else
-			note "黑潮 DNS 資料區開頭有資料，可能是舊版設定超過 2 MB 的部分，為了安全沒有清除，學習資料暫時放記憶體"
-			return 1
-		fi
+		log "第一次使用黑潮 DNS 資料區：清除舊資料（約 1 分鐘）"
+		mtd_write erase Kuroshio >/dev/null 2>&1 || return 1
 	fi
 	mkdir -p "$JFFS2"
 	mount -t jffs2 "/dev/mtdblock$n" "$JFFS2" 2>/dev/null
