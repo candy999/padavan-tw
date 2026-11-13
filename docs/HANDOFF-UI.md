@@ -441,3 +441,107 @@ scp -r trunk/user/www/n56u_ribbon_fixed/state.js admin@192.168.2.1:/www/
 | 執行時資料 | `/tmp/kuroshio` 2.8 MB（state/cdn 1.5 MB、state/filter-lists 1.2 MB），`/tmp` 24 MB 用了 3.5 MB |
 | 資料區 | mtd9「Kuroshio」7.5 MB，模式 `ram`；area_note：「資料區跟其他分割區重疊，為了保護設定不使用，學習資料暫時放記憶體」→ 重開機就消失 |
 | 開機到量測時的統計 | 查詢 548、命中快取 324、未命中 184、擋下 43（廣告）、CDN 改寫 13、servfail 0 |
+
+---
+
+## 13. 黑潮 DNS 3.1.0：把 LuCI 版的介面全部移植過來（交給本機，2026-11-13）
+
+黑潮 DNS 3.1.0 提供了給其他平台用的穩定整合介面（`PORTING.md`、`docs/integration.md`）。雲端已經完成後端：
+- `595300527d`：韌體改用 3.1.0 官方 Linux 通用包（執行檔＋同版 `data/`）
+- `b07cbb0ac8`：`kuroshio health` 保護、WAN 上線 `notify wan-changed`、**管理 API 轉接 `/kuroshio_api.cgi`**
+
+**要在實機測，請刷 `b07cbb0` 或之後的韌體**（GitHub Actions 的 `padavan-tw-NEWIFI3-<日期>-<commit>`）。之前的韌體沒有 `/kuroshio_api.cgi`。
+
+### 13.1 參考來源
+- 黑潮 DNS 原始碼（標籤 v3.1.0）：`git clone --depth 1 --branch v3.1.0 https://github.com/candy999/kuroshio-dns.git`
+- LuCI 介面：`openwrt/luci-app-kuroshio/htdocs/luci-static/resources/view/kuroshio/*.js`（9 頁，約 2,900 行）與 `resources/kuroshio/common.js`
+- LuCI 的後端轉接：`openwrt/kuroshio/files/rpcd.sh`（我們的 `/kuroshio_api.cgi` 對應它）
+- 設定欄位：`openwrt/kuroshio/files/kuroshio.config`（UCI 預設檔，跟韌體裡的 `/usr/share/kuroshio/kuroshio.uci.default` 相同）
+
+### 13.2 要移植的頁面（LuCI「服務 → 黑潮 DNS」）
+| LuCI 頁 | 內容 | 資料來源 |
+|---|---|---|
+| 狀態 | 執行狀態、上游、快取、過濾、儲存、時間對時、data 版本、憑證；按鈕：清快取、更新過濾清單、執行排程工作、立即更新 DDNS | `op=status`、`op=action` |
+| 儀表板 | 查詢量、命中率、擋下、CDN 改寫等統計與圖表 | `op=api&path=/api/dashboard` |
+| 基本設定 | 服務、記憶體與儲存、區網網域、允許來源、日誌；DoH／DoT／DoQ；憑證（ACME）；DDNS；DDR／DNR | UCI 檔＋nvram（見 13.4）、`op=api&path=/api/ddns`、`op=dnr`、`op=acme` |
+| 連線來源 | 「只開放台灣」等模式、允許／封鎖名單、測試 IP、台灣 IP 資料 | UCI、`op=api&path=/api/access` |
+| 廣告過濾 | 開關、訂閱清單、自訂規則、規則檢查、立即更新 | UCI、`op=api&path=/api/filter/check`、`op=action&path=/api/filter/update` |
+| CDN 台灣節點 | 節點置換、各家 CDN、ECS、台灣節點池、網域工具（追蹤、驗證、策略） | UCI、`/api/cdn/pools`、`/api/trace`、`/api/cdn/verify`… |
+| 社群 | 身分、好友邀請、好友與請求、自動規則、事件 | `/api/community/*` |
+| 進階 | 上游（固定、備援、Bootstrap）、解析行為、IP 測速、排程工作、評測、掃描、節點池；**學習資料匯出** | UCI、`op=backup-export` |
+| 日誌 | 最近的執行紀錄 | `op=log&n=200` |
+
+放在新後台的哪裡：建議「網際網路 → DNS」維持白話的開關與狀態，另外做「黑潮 DNS」子頁組（上面 9 個分頁）。設計原則照第 5 節：先給結論、說明代價、手機可用。
+
+**Padavan 不適用、要隱藏或固定的 LuCI 設定**：
+- `main.redirect`（DNS 接管方式）：固定 `dnsmasq-upstream`
+- `main.dns_port`、`main.admin_port`、`main.data_dir`：由 `kuroshio.sh` 決定（5335、8054、依資料區自動）
+- OpenWrt 防火牆（nftables）相關的說明：Padavan 的對外埠由韌體的 iptables 規則處理（`kuroshio_wan` 等 nvram）
+- 學習資料**匯入**（要上傳檔案）：後端還沒做，先不放；需要時告訴雲端
+
+### 13.3 `/kuroshio_api.cgi`
+需要登入（跟其他後台頁一樣）。回應一律是 JSON。
+
+| `op` | 方法 | 參數 | 回應 |
+|---|---|---|---|
+| `status` | GET | — | `{"enabled","running","use"（kuroshio／fallback）,"mode"（jffs2／rwfs／ram）,"area_note","version","core":<kuroshio status --json>}` |
+| `api` | GET | `path`、`q` | `{"ok":true,"result":<管理 API 的 JSON>}` 或 `{"ok":false,"error":"…"}` |
+| `defaults` | GET | — | `kuroshio defaults --json` 的內容 |
+| `about` | GET | — | 版本、授權、原始碼（含 QR 碼） |
+| `dnr` | GET | — | DNR 會發布什麼、沒發的原因 |
+| `log` | GET | `n`（行數，預設 200） | `{"ok":true,"lines":[…]}` |
+| `action` | **POST** | `path`、`q` | 同 `api` |
+| `backup-export` | **POST** | `q=share`（分享檔）或空（完整備份） | `{"ok":true,"size":…}`，接著用瀏覽器下載 `/kuroshio_backup.kuroshio`（下載後路由器端刪除） |
+| `notify` | **POST** | — | 立即更新 DDNS、重新偵測對外 IP |
+| `flush` | **POST** | — | 立即把學習資料寫進 Flash |
+| `acme` | **POST** | `q=force`（強制重新申請）或空 | 背景申請憑證；進度看狀態或日誌 |
+
+- `path` 白名單跟 OpenWrt 的 `rpcd.sh` 相同（查看類與動作類分開），不在名單內回 `{"ok":false,"error":"不允許的路徑"}`
+- **`q` 的編碼**：`q` 本身是要轉給管理 API 的查詢字串。先把每個值 `encodeURIComponent`、用 `&` 串起來，**整串再 `encodeURIComponent` 一次**放進 `q`。httpd 解開一層後只接受 `A-Z a-z 0-9 . _ = & % : , ~ -`
+  ```js
+  function kuroApi(op, path, params, post) {
+    var inner = Object.keys(params || {}).map(function (k) { return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]); }).join('&');
+    var body = 'op=' + op + (path ? '&path=' + encodeURIComponent(path) : '') + (inner ? '&q=' + encodeURIComponent(inner) : '');
+    return post ? fetch('/kuroshio_api.cgi', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: body }).then(function (r) { return r.json(); })
+                : fetch('/kuroshio_api.cgi?' + body).then(function (r) { return r.json(); });
+  }
+  ```
+- 動作類只接受 POST，而且要從區網登入（`login_safe`）；GET 呼叫會回「這個操作需要用 POST」
+- 管理 API 每個路徑的參數與回應格式：看黑潮原始碼的 LuCI 頁怎麼呼叫（`callApi` / `callAction`），我們的回應包裝跟 rpcd.sh 一樣（`{"ok":true,"result":…}`）
+
+### 13.4 設定的讀寫
+黑潮 DNS 的設定是 UCI 文字檔 `/etc/storage/kuroshio/kuroshio.uci`。每次啟動時，`kuroshio.sh` 會把它複製到記憶體，**再用下面這些 nvram 覆蓋對應的 UCI 選項**：
+
+| nvram | UCI | 說明 |
+|---|---|---|
+| `kuroshio_enable` | （啟停） | 1＝啟用 |
+| `kuroshio_domain` | `tls.domain` | 網域 |
+| `kuroshio_cf_token` | `cf_account.api_token` | Cloudflare Token（**不寫進 UCI 檔**，只在記憶體） |
+| `kuroshio_acme_email` | `tls.acme_email` | |
+| `kuroshio_ddns` | `ddns.enabled` | DDNS 的 IP 來源由腳本依 WAN 自動決定 |
+| `kuroshio_dot`、`kuroshio_doq`、`kuroshio_doh` | `dot.enabled`、`doq.enabled`、`doh.enabled`（`doh.http3` 跟著 DoH） | |
+| `kuroshio_doh_port`、`kuroshio_doh_wan_port` | `doh.port`、`doh.wan_port` | |
+| `kuroshio_wan` | `dot.open_wan`、`doh.open_wan` | 開放外網（同時決定韌體防火牆規則） |
+| `kuroshio_access` | `access.mode` | |
+| `kuroshio_log` | （環境變數 `KUROSHIO_LOG`） | |
+
+規則：
+- **上表的設定用 nvram 改**（表單群組 `KuroshioConf;`），改 UCI 檔裡的同名選項沒有用（會被 nvram 蓋掉）
+- **其他所有 LuCI 設定都寫在 UCI 檔**：頁面讀取 UCI 檔內容（`<% nvram_dump("kuroshio.kuroshio.uci",""); %>`），在 JS 裡解析成區段／選項，畫成 LuCI 同樣的表單；送出時把整份 UCI 文字放進表單欄位 `kuroshio.kuroshio.uci`（群組 `KuroshioConf;`）一起送出。httpd 會寫回檔案並重新啟動黑潮 DNS。現有的 `Advanced_kuroshio.asp` 就是這樣寫 UCI 檔的（文字框版本）
+- UCI 檔不要超過 60 KB（表單上限）；保留檔案裡不認得的區段與選項，不要因為介面沒有那一項就把它刪掉
+- 欄位名稱、合法值、預設值以 LuCI 的 `*.js` 與 `kuroshio.config` 為準；`op=defaults` 可以拿來顯示「預設值：…」
+
+### 13.5 預覽工具
+`/kuroshio_api.cgi` 在預覽工具裡要用模擬資料（`tools/ui-preview/mock/`）。建議刷好 `b07cbb0` 之後的韌體，從實機抓各 `op`／`path` 的真實回應存成模擬檔（記得遮掉 Token、網域、IP 等個人資料）。
+
+### 13.6 驗收
+- 9 個分頁在桌機與手機（390 寬）都能用，亮／暗色正確
+- 狀態頁的按鈕（清快取、更新清單、執行工作、更新 DDNS）在實機上會真的執行，結果顯示在頁面上
+- 改一個 UCI 設定（例如過濾清單開關）→ 套用 → 重開機後設定還在、`op=status` 反映新狀態
+- 匯出學習資料能下載
+- 不認得的 UCI 選項存檔後仍然保留
+
+### 13.7 雲端之後可以補的（需要時告訴雲端）
+- 學習資料匯入（上傳檔案）
+- UCI 改動不重新啟動、改用 SIGHUP 重新載入（較快、不中斷 DNS）
+- 憑證申請進度（`acme-log`）的 API
