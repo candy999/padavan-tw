@@ -61,9 +61,9 @@
 
 ## E. 硬體 QoS（QDMA）：主線（延後開發，先做漫遊中控）
 
-> ⚠️ 2026-11-13 實機：D3 在 QDMA 模式下有線 LAN／WAN 完全不通（eth2 有送出計數、收不到任何回應，Wi-Fi 正常；Breed 與舊 fork 正常）。
-> 測試版 D3 改用 PDMA 送出（核心設定 `CONFIG_RAETH_PDMA_TX`，見 `configs/tw/kernel-NEWIFI3.config`），**確認後 D3 就不能用 QDMA 硬體 QoS**，
-> E 章要重新評估 D3 的做法；CR6608 仍是 QDMA（待實機確認有線正常）。
+> ⚠️ 2026-11-13 實機：D3（上游設定：單一 GMAC＋VLAN，eth2.1／eth2.2）有線 LAN／WAN 完全收不到封包，改 PDMA 也一樣；
+> 同一台刷 hanwckf 3.4 正常。上游所有機型只有 NEWIFI3 用 USE_SINGLE_MAC、刪掉 gmac2，MeIsReallyBa 4.4 的 D3 也是雙 GMAC。
+> 測試版改回雙 GMAC（LAN eth2、WAN eth3），QDMA 維持開啟。確認後 E 章 D3 的方向分流改用 GMAC1／GMAC2，不需要 iptables 標記
 
 軟體 SQM（cake）對 MT7621 負擔太大（PPPoE 下大約 400 Mbps 就到頂），改以晶片內建的 QDMA 硬體排程為主線。
 **同一個韌體**內建，後台切換「關閉／固定／自動」，不另外出版本；每個機型只有標準版與 OC 1000 版。

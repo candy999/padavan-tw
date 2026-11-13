@@ -131,10 +131,8 @@
         };
 };
 
-&raeth {
-	/delete-property/ gmac2-support;
-	/delete-property/ rgmii-mode-2;
-};
+/* padavan-tw：保留 GMAC2（WAN 直接走 eth3），跟其他 MT7621 機型與 MeIsReallyBa 版 D3 相同。
+ * 上游原本刪掉 gmac2-support、改成單一 GMAC＋VLAN，實機上有線 LAN／WAN 完全收不到封包 */
 
 &pcie {
 	status = "okay";
