@@ -8,10 +8,8 @@
 
 ## 用哪一版韌體
 
-| 情況 | 韌體 |
-|---|---|
-| 雲端還沒做好黑潮 DNS 3.2.0 版 | `padavan-tw-NEWIFI3-20261113-764938b`（<https://github.com/candy999/padavan-tw/actions/runs/43430120430>） |
-| 雲端已經推出 3.2.0 版（使用者會告訴你，或 `docs/LOCAL-NEXT.md` 這一節會更新） | 用那一版，第一件的驗證照樣做，另外加做「3.2.0 追加驗證」 |
+**黑潮 DNS 3.2.0 版已推出（2026-11-14）**：`padavan-tw-NEWIFI3-20261114-6f3e3df`（<https://github.com/candy999/padavan-tw/actions/runs/43504411038>）。
+第一件直接用這版（包含 764938b 的所有修正），並加做「3.2.0 追加驗證」；第二、三件的實機測試也用這版。
 
 都不要用 `-oc1000`。刷機由使用者操作，不要清除 Config。這幾版重開機已經正常，可以用後台「韌體更新」。
 
@@ -28,12 +26,13 @@
 ```bash
 /usr/bin/kuroshio.sh flush
 ```
-（3.1.0 送 SIGUSR1；3.2.0 起黑潮 DNS 另有 `kuroshio notify save` 與管理 API `POST /api/persist/flush`，雲端升級時會讓 `flush` 改用它們。）驗證「重開機後學習資料還在」之前先執行一次。
+（6f3e3df 起 `flush` 先用 3.2.0 的 `kuroshio notify save`，失敗才送 SIGUSR1。）驗證「重開機後學習資料還在」之前先執行一次。
 
 ### 3.2.0 追加驗證（用 3.2.0 版韌體時才做）
 - `/usr/bin/kuroshio --version` 是 3.2.0
 - **cdn-pool 不再每 6 分鐘重排**：開機 1 小時內 `grep '節點池重建' /tmp/syslog.log` 不應該每 6 分鐘出現一次（節點真的壞掉才會提早重建；連續不足時間隔 1→6→24 小時）
-- 過濾清單換成 3.2.0 的預設（見第三件的「升級時的預設清單」）
+- 過濾清單換成 3.2.0 的預設：沒改過黑潮進階設定的話，syslog 有「設定檔是舊版預設值，已換成這一版的預設」，`grep -c "config filter_list" /etc/storage/kuroshio/kuroshio.uci` 應該是 13（改過的話不會換，syslog 會提示用「恢復預設清單」）
+- `/kuroshio_api.cgi` 用 POST 呼叫 `op=action&path=/api/persist/flush` 回 `{ok, files, bytes, at, dir}`
 
 全部通過再做第二件。
 
@@ -85,15 +84,15 @@ git clone --depth 1 --branch v3.2.0 https://github.com/candy999/kuroshio-dns.git
 ### 3.2.0 新增、也要做進來的
 | 功能 | 放在哪 | 後端 |
 |---|---|---|
-| **立即儲存學習資料** | 狀態頁的操作區 | `POST op=flush`（已有）；3.2.0 起也可以 `op=action&path=/api/persist/flush`（回 `{ok, files, bytes, at, dir}`，雲端升級 3.2.0 時會加進白名單） |
+| **立即儲存學習資料** | 狀態頁的操作區 | 建議 `op=action&path=/api/persist/flush`（POST，回 `{ok, files, bytes, at, dir}`，可以顯示寫了幾個檔、多少位元組）；`op=flush` 也可以 |
 | **恢復預設清單** | 廣告過濾頁 | 預設值用 `op=defaults` 的 `filter.lists`；比對、列出差異、確認後改 UCI 檔的 `filter_list` 區段（照 LuCI `filter.js` 的做法：先用網址、再用名稱對應，自己加的清單預設保留） |
-| **恢復預設自訂規則** | 廣告過濾頁的自訂規則下方 | `op=action&path=/api/filter/reset-rules`（服務會先備份成 `custom-rules.txt.bak`；雲端升級 3.2.0 時加進白名單） |
+| **恢復預設自訂規則** | 廣告過濾頁的自訂規則下方 | `op=action&path=/api/filter/reset-rules`（POST；服務會先備份成 `custom-rules.txt.bak`） |
 
 ### 升級時的預設清單（Padavan 要注意）
 OpenWrt 升級時有腳本把「還是舊預設值」的清單換成 3.2.0 的新預設；Padavan 的 UCI 檔在 `/etc/storage/kuroshio/kuroshio.uci`，**雲端升級 3.2.0 時會在 `kuroshio.sh` 做同樣的搬移**（使用者沒改過的 UCI 檔直接換成新預設，改過的不動、在後台提示可以用「恢復預設清單」）。介面這邊只要做好「恢復預設清單」即可。
 
 ### 實機與預覽
-- 3.2.0 的三個新功能要等雲端推出 3.2.0 版韌體才能在實機測；在那之前用預覽工具的模擬資料做
+- 6f3e3df 起 `/api/filter/reset-rules`、`/api/persist/flush` 已加進 `/kuroshio_api.cgi` 的動作白名單，3.2.0 的三個新功能可以直接在實機測
 - 其他照第 13.5、13.6 節
 
 完成後依第 13.6 節驗收，在 `docs/HANDOFF-UI.md` 記錄進度，提交並推送。
