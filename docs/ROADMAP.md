@@ -61,9 +61,9 @@
 
 ## E. 硬體 QoS（QDMA）：主線（延後開發，先做漫遊中控）
 
-> ⚠️ 2026-11-13 實機：D3（上游設定：單一 GMAC＋VLAN，eth2.1／eth2.2）有線 LAN／WAN 完全收不到封包，改 PDMA 也一樣；
-> 同一台刷 hanwckf 3.4 正常。上游所有機型只有 NEWIFI3 用 USE_SINGLE_MAC、刪掉 gmac2，MeIsReallyBa 4.4 的 D3 也是雙 GMAC。
-> 測試版改回雙 GMAC（LAN eth2、WAN eth3），QDMA 維持開啟。確認後 E 章 D3 的方向分流改用 GMAC1／GMAC2，不需要 iptables 標記
+> ⚠️ 2026-11-13 實機（調查中）：D3 用上游設定（單一 GMAC＋VLAN，eth2.1／eth2.2）有線 LAN／WAN 完全收不到封包，改 PDMA 也一樣。
+> hanwckf 3.4 同樣是單一 GMAC＋VLAN，實測正常；MeIsReallyBa 4.4 雙 GMAC：LAN 正常、WAN 不通（vb1980：4.4 要拆 C48 電容）。
+> 上游只有 NEWIFI3 走 4.4 的單一 GMAC 路徑，判斷是 4.4 驅動這條路徑的問題，修好前 D3 不能發布。
 
 軟體 SQM（cake）對 MT7621 負擔太大（PPPoE 下大約 400 Mbps 就到頂），改以晶片內建的 QDMA 硬體排程為主線。
 **同一個韌體**內建，後台切換「關閉／固定／自動」，不另外出版本；每個機型只有標準版與 OC 1000 版。
