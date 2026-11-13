@@ -124,15 +124,21 @@ cat /proc/mtd
 
 | 項目 | 結果 | 備註／輸出 |
 |---|---|---|
-| 版本含 d8c9062 | | |
-| 3.1 A 後台重開機 | | |
-| 3.1 B SSH reboot | | |
-| 3.1 C 設定保留 | | |
-| 3.2 資料區 jffs2 掛載 | | |
-| 3.3 第一次開機背景工作（時間、NI） | | |
-| 3.3 記憶體（工作中／閒置） | | |
-| 3.3 第二次開機不重跑 | | |
-| 3.4 Wi-Fi 掃描 2.4G | | |
-| 3.4 Wi-Fi 掃描 5G | | |
-| 3.5 裝置清單表頭 | | |
-| 3.6 回歸檢查 | | |
+| 版本含 d8c9062 | ✅ 通過 | `nvram get firmver_sub` → `4.4.198.9-100_d8c9062`（使用者用後台韌體更新刷入，設定保留，SSH 金鑰還在）。黑潮 DNS 是 `kuroshio 3.0.1` |
+| 3.1 A 後台重開機 | ✅ 通過 | 新介面「重開機」20:40:52 送出：+9 秒斷線、+44 秒 ping 回來、+51 秒 SSH 可登入。原始頁面頂部列按鈕 20:42:21 送出：+14 秒斷線、+67 秒 ping 回來。都不用拔電；syslog 第一行 `firmware version: 4.4.198.9-100_d8c9062` |
+| 3.1 B SSH reboot | ✅ 通過 | 20:43:5x `reboot`：+18 秒斷線、+53 秒 ping 回來、+60 秒 SSH 可登入（之前會停住要拔電） |
+| 3.1 C 設定保留 | ✅ 通過 | 重開前用新介面關燈號（`front_led_all=0`），三次重開後都還是 0 |
+| 3.2 資料區 jffs2 掛載 | ❌ **失敗** | `mode` 是 `ram`；**沒有** `area_note`；`/proc/mounts` 沒有 kuroshio；`status`：「學習資料：記憶體（每天 04:41 備份到 /etc/storage）」。分割區表讀得到（device-tree 9 個 label，含 `partition@1800000/label: Kuroshio`），所以重疊判斷已經正確。**原因**：`prepare_jffs2` 用 `blk_erased` 只檢查第一個 64 KB（全是 FF）就跳過抹除，但 mtd9 在 `0x600000` 還有舊資料（`BZh91AY&SY…`），核心：`jffs2_scan_eraseblock(): Magic bitmask 0x1985 not found at 0x0060000c` … `Cowardly refusing to erase blocks on filesystem with no valid JFFS2 nodes`、`empty_blocks 119, bad_blocks 0, c->nr_blocks 120`；手動 `mount -t jffs2 -o ro /dev/mtdblock9` → `I/O error`。腳本把 mount 的錯誤丟掉（`2>/dev/null`），所以沒有留下任何提示就退回 ram。**建議**：判斷「空白」要檢查整個分割區（或開頭不是 JFFS2 就一律 `mtd_write erase`），mount 失敗要寫 `area_note` 與 syslog |
+| 3.3 第一次開機背景工作（時間、NI） | ✅ NI／⚠️ 時間 | `top`：`1108 1105 admin S N … /usr/bin/kuroshio run --uci`，`/proc/<pid>/stat` 第 19 欄 nice=10；全機 `22.9% nic 70.8% idle`（之前是 100% usr、0% idle）。因為是 ram 模式＋開機時「已匯入學習資料備份」，第一次開機**沒有**重跑 cdn-scan／dns-benchmark，只有 cdn-pool 在 20:32:49 開始（原因「azure 節點不足」，syslog：`Azure Front Door / CDN IPv6 可用台灣節點只剩 2 個，排入節點池重建`），開機 7 分鐘時 CPU 已降到 0～13% |
+| 3.3 記憶體（工作中／閒置） | ✅ | 開機 6 分鐘（cdn-pool 中）：VmRSS 27,036 kB、VmHWM 29,080 kB；開機 1～2 分鐘：VmRSS 25,540～27,064 kB、VmHWM 27,828～28,184 kB（舊版 3.0 開機 40 分鐘時 RSS 78～80 MB） |
+| 3.3 第二次開機不重跑 | ⚠️ 部分 | SSH 重開後（20:44:30 開機）觀察 10 分鐘，每分鐘取樣：**cdn-scan、dns-benchmark 沒有重跑**；但 **cdn-pool 每次開機都重跑**：20:45:27 開始（`jobs.json` 只有 `lastStart`、沒有 `lastEnd`，原因「azure 節點不足」），syslog 20:45:27 與 20:51:44 各一次 `WARN Azure Front Door / CDN IPv6 可用台灣節點只剩 2 個，排入節點池重建`——兩次開機都沒看到 cdn-pool 完成，看起來是一直重排，不是資料遺失。CPU（佔全機）：開機 1～6 分鐘 22～27%，之後 1～5%。記憶體：VmRSS 25,540 → 32,188 kB，VmHWM 28,184 → 39,592 kB（開機 7～8 分鐘時跳升）。目前 ram 模式下開機會「已匯入學習資料備份」（/etc/storage/kuroshio/backup.kuroshio，301 KB）。建議雲端確認：Azure IPv6 台灣節點只有 2 個時是否該停止重建，或 cdn-pool 是否有完成條件 |
+| 3.4 Wi-Fi 掃描 2.4G | ✅ 通過 | `wds_aplist_2g.asp`：約 5 秒、10 筆、沒有換行、BSSID 全是 MAC、頻道與訊號全是數字；逐筆對照 `iwpriv ra0 get_site_survey` 原始表（含 BcnRept 欄）一致（訊號 100 的幾筆是同一台鄰近路由器的多個 SSID，原始表也是 100） |
+| 3.4 Wi-Fi 掃描 5G | ✅ 通過 | `wds_aplist.asp`：約 5 秒、8 筆、格式正確，頻道 36、44、153 |
+| 3.5 裝置清單表頭 | ✅ 通過 | `Clients_table`、`xClients_table` 的標題都是 colspan=6、表格 6 欄；網路地圖畫面上表頭橫跨整個表格 |
+| 3.6 回歸檢查 | ✅ 通過（部分待使用者） | WAN：預設路由 10.0.0.1、ping HiNet 3 ms；DNS：路由器上 `nslookup www.google.com 192.168.2.1` 正常、電腦經路由器解析 www.google.com、www.cht.com.tw 正常，`/tmp/kuroshio/use`=kuroshio；Wi-Fi：ra0、rai0 都在廣播；有線：這台電腦拿到 192.168.2.233；後台登入與套用（燈號開關）正常。**4 個 LAN 孔逐一接線、手機實際連 2.4G／5G 需要使用者測** |
+
+### 6.1 其他發現（前端，本機已處理）
+- 新介面的重開機對話框寫「開機完成後會自動重新載入」，但 Padavan 的進度條只會在時間到時收起遮罩，不會重新載入 → 改成等路由器斷線又回來才重新載入（`tw_ui.js` `waitRouterBack()`）。實機（記憶體副本）測試：20:55:31 送出、路由器約 20:56:13 回來、頁面 20:56:23 自動重新載入
+- 測試結束後設定已還原：跟測試前的 nvram 備份逐鍵比對，只差執行期的 `ntp_ready`
+- 韌體更新、設定還原、套用中的進度框跑到畫面最上面壓住頂部列（框架把 `.container-fluid` 的 margin 歸零）→ 改成固定蓋住整個畫面、框置中（`tw.css`）
+- 新 Wi-Fi 頁的「掃描壞掉就顯示需要更新韌體」判斷保留給舊韌體；新韌體的輸出會通過判斷，正常畫出鄰近 AP
