@@ -297,7 +297,7 @@ function show_banner(L3){
 	bc += '<div class="tw-stats" id="main_info">\n';
 	bc += '<button type="button" class="tw-stat" onclick="click_info_cpu();">'+tw_label('<#SI_LoadCPU#>')+' <b id="cpu_info">-- %</b></button>\n';
 	bc += '<button type="button" class="tw-stat" onclick="click_info_mem();">'+tw_label('<#SI_FreeMem#>')+' <b id="mem_info">--</b></button>\n';
-	bc += '<span class="tw-stat">'+tw_label('<#SI_Uptime#>')+' <b id="uptime_info">--</b></span>\n';
+	bc += '<span class="tw-stat tw-stat-up">'+tw_label('<#SI_Uptime#>')+' <b id="uptime_info">--</b></span>\n';
 	bc += '<span class="tw-stat tw-stat-la">'+tw_label('<#SI_LoadAvg#>')+' <span id="la_info">-- -- --</span></span>\n';
 	bc += '</div>\n';
 
@@ -556,6 +556,9 @@ if (found_app_frp()){
 //Level 1 Menu in Gateway, Router mode
 menuL1_title = new Array("", "<#menu1#>", "", "<#menu2#>", "<#menu6#>", "<#menu4#>", "<#menu5_8#>", "<#menu5#>");
 menuL1_link = new Array("", "index.asp", "", "vpnsrv.asp", "vpncli.asp", "Main_TrafficMonitor_realtime.asp", "Advanced_System_Info.asp", "as.asp");
+/* padavan-tw：原本的「進階設定」網站地圖（as.asp）已由主選單的「進階設定」總表取代，側欄不再重複列出 */
+menuL1_title[7] = '';
+menuL1_link[7] = '';
 menuL1_icon = new Array("", "icon-home", "icon-hdd", "icon-retweet", "icon-globe", "icon-tasks", "icon-random", "icon-wrench");
 
 if (!found_app_vpnsvr()) {
@@ -1817,6 +1820,12 @@ function tw_ui_init(){
 	if (side) side.addEventListener('click', function(e){
 		var a = e.target.closest ? e.target.closest('a') : null;
 		if (a && a.getAttribute('href') && a.getAttribute('href').indexOf('javascript') != 0) tw_nav(false);
+	});
+	// 圖表（Highcharts）在版面定案前就量了寬度：載入後讓它依最後的欄寬重排一次
+	window.addEventListener('load', function(){
+		setTimeout(function(){
+			if (window.Highcharts && Highcharts.charts) Highcharts.charts.forEach(function(c){ if (c && c.reflow) c.reflow(); });
+		}, 300);
 	});
 	// 很多頁面在載入後才用 JS 填入表格（裝置清單、轉送規則…），內容變動時重新標記
 	var main = document.querySelector('.tw-main');

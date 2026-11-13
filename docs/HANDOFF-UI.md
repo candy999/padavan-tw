@@ -380,6 +380,13 @@ scp -r trunk/user/www/n56u_ribbon_fixed/state.js admin@192.168.2.1:/www/
 
 截圖：`node tools/ui-preview/shoot.js` 桌機 1440／手機 390、亮／暗色，全部頁面沒有橫向溢出、沒有 JS 錯誤。
 
+**跑版檢查**（使用者回報流量圖表被切、頂部列換行、網路地圖圖示跑版後加上）：`node tools/ui-preview/layout-check.js`，每個頁面 × 10 種寬度（360～1920），`RESIZE=1` 另測「寬視窗載入後再縮小」。抓三種問題：整頁橫向溢出、頂部列換成兩行、內容欄裡有元素超出右緣（被 `overflow: hidden` 切掉也算，只有可捲動的容器算正常）。目前 83 頁全部歸零。**改版面後請跑一次。**
+- 頂部列：任何寬度一行；狀態區先縮，依寬度收起平均負載 → 韌體版本 → 運作時間 → Wi-Fi 按鈕；1240 以下收起釋放記憶體、關機（系統頁有）；手機的狀態列固定在第二行
+- 內容欄寬螢幕置中
+- Highcharts（流量監控）：所在表格 `table-layout: fixed`、圖表最多 100%，載入後 reflow 一次
+- 網路地圖（`Main_NetMap.asp`）：左側固定高度的點陣圖示欄 → 上方磚塊（線條圖示用 CSS mask、文字、狀態標籤），手機一排兩塊；iframe 內的裝置清單窄畫面收起 MAC 欄。JS 的 id／class 沒改
+- 原本的「進階設定」網站地圖 `as.asp` 轉到 `tw_advanced.asp`（同一份選單資料），側欄不再重複列出
+
 ### 11.1 新增與修改的檔案
 - 新頁面：`index.asp`（總覽，取代原首頁）、`tw_devices.asp`、`tw_wifi.asp`、`tw_internet.asp`、`tw_remote.asp`、`tw_qos.asp`、`tw_diag.asp`、`tw_system.asp`、`tw_advanced.asp`；頁面邏輯在 `tw_p_<頁>.js`
 - 保留舊首頁：`Main_NetMap.asp`（原 `index.asp`，只改 `current_page`）

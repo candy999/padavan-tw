@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+<script>/* padavan-tw：原本的網站地圖由新的「進階設定」總表取代（同一份選單資料、可搜尋、手機可用） */ location.replace('/tw_advanced.asp');</script>
 <title><#Web_Title#> - <#menu5_title#></title>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <meta http-equiv="Pragma" content="no-cache">

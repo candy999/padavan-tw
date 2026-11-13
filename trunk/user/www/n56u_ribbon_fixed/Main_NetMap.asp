@@ -619,7 +619,7 @@ $j(document).ready(function(){
 </style>
 </head>
 
-<body onunload="return unload_body();">
+<body onunload="return unload_body();" class="tw-netmap">
 
 <div class="wrapper">
     <noscript>
@@ -707,7 +707,7 @@ $j(document).ready(function(){
 
                 <div class="row-fluid">
                     <div class="span2">
-                        <div class="well" style="height: 570px; padding-left: 18px;">
+                        <div class="well tw-nm-panel">
                             <div id="tabMenu"></div>
 
                             <table class="table table-big" style="margin-top: 12px;">
@@ -717,6 +717,7 @@ $j(document).ready(function(){
                                             <a id="linkInternet" href="/device-map/internet.asp" target="statusframe" style="outline:0;">
                                                 <div id="iconInternet" class="big-icons big-icons-globe" onclick="clickEvent(this);"></div>
                                             </a>
+                                            <span class="tw-nm-label" onclick="var o=this.parentNode.querySelector('[onclick]:not(.tw-nm-label)'); if (o) o.click();">網際網路</span>
                                             <div id="overDiv" style="position:absolute; visibility:hidden; z-index:1000;"></div>
                                             <div style="position: absolute; margin-top: -47px; margin-left: 50px;"><div id="internetStatus" style="padding-left: 3px;"></div></div>
                                             <div class="arrow-right" id="arrow-internet"><img src="/bootstrap/img/arrow-right.png"></div>
@@ -725,6 +726,7 @@ $j(document).ready(function(){
                                     <tr id="row_radio">
                                         <td width="30%">
                                             <a href="device-map/router2g.asp" target="statusframe" style="outline:0;"><div id="iconRouter" class="big-icons big-icons-router" onclick="clickEvent(this);"></div></a>
+                                            <span class="tw-nm-label" onclick="var o=this.parentNode.querySelector('[onclick]:not(.tw-nm-label)'); if (o) o.click();">路由器與 Wi-Fi</span>
                                             <div style="position: absolute; margin-top: -47px; margin-left: 50px;"><div id="wl_securitylevel_span" style="padding-right: 3px;"></div></div>
                                             <div class="arrow-right" id="arrow-router"><img src="/bootstrap/img/arrow-right.png"></div>
                                         </td>
@@ -732,6 +734,7 @@ $j(document).ready(function(){
                                     <tr>
                                         <td>
                                             <a id="clientStatusLink" href="device-map/clients.asp" target="statusframe" style="outline:0;"><div id="iconClient" class="big-icons big-icons-laptop" onclick="clickEvent(this);"></div></a>
+                                            <span class="tw-nm-label" onclick="var o=this.parentNode.querySelector('[onclick]:not(.tw-nm-label)'); if (o) o.click();">裝置</span>
                                             <div style="position: absolute; margin-top: -47px; margin-left: 50px;"><b><div id="clientNumber">&nbsp;</div></b></div>
                                             <div class="arrow-right" id="arrow-clients"><img src="/bootstrap/img/arrow-right.png"></div>
                                         </td>
@@ -739,6 +742,7 @@ $j(document).ready(function(){
                                     <tr id="row_usb_port1">
                                         <td width="30%">
                                             <div id="deviceIcon_0" class="big-icons big-icons-usb"></div>
+                                            <span class="tw-nm-label" onclick="var o=this.parentNode.querySelector('[onclick]:not(.tw-nm-label)'); if (o) o.click();">USB</span>
                                             <div style="position: absolute; margin-top: -47px; margin-left: 50px;"><div id="deviceDec_0"></div></div>
                                             <div class="arrow-right" id="arrow-usb1"><img src="/bootstrap/img/arrow-right.png"></div>
                                         </td>
@@ -746,6 +750,7 @@ $j(document).ready(function(){
                                     <tr id="row_usb_port2" style="display:none">
                                         <td width="30%">
                                             <div id="deviceIcon_1" class="big-icons big-icons-usb"></div>
+                                            <span class="tw-nm-label" onclick="var o=this.parentNode.querySelector('[onclick]:not(.tw-nm-label)'); if (o) o.click();">USB</span>
                                             <div style="position: absolute; margin-top: -47px; margin-left: 50px;"><div id="deviceDec_1"></div></div>
                                             <div class="arrow-right" id="arrow-usb2"><img src="/bootstrap/img/arrow-right.png"></div>
                                         </td>
@@ -753,6 +758,7 @@ $j(document).ready(function(){
                                     <tr id="row_ata_pool" style="display:none">
                                         <td width="30%">
                                             <div id="sataIcon" class="big-icons big-icons-ata"></div>
+                                            <span class="tw-nm-label" onclick="var o=this.parentNode.querySelector('[onclick]:not(.tw-nm-label)'); if (o) o.click();">SATA</span>
                                             <div style="position: absolute; margin-top: -47px; margin-left: 50px;"><div id="sataDec"></div></div>
                                             <div class="arrow-right" id="arrow-ata"><img src="/bootstrap/img/arrow-right.png"></div>
                                         </td>
@@ -760,6 +766,7 @@ $j(document).ready(function(){
                                     <tr id="row_mmc_slot" style="display:none">
                                         <td width="30%">
                                             <div id="cardIcon" class="big-icons big-icons-mmc"></div>
+                                            <span class="tw-nm-label" onclick="var o=this.parentNode.querySelector('[onclick]:not(.tw-nm-label)'); if (o) o.click();">記憶卡</span>
                                             <div style="position: absolute; margin-top: -47px; margin-left: 50px;"><div id="cardDec"></div></div>
                                             <div class="arrow-right" id="arrow-mmc"><img src="/bootstrap/img/arrow-right.png"></div>
                                         </td>
