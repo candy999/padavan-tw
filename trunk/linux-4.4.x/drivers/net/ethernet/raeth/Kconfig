@@ -11,6 +11,15 @@ config RAETH
 
 if RAETH
 
+config RAETH_PDMA_TX
+	bool "Send with PDMA instead of QDMA (padavan-tw)"
+	default n
+	---help---
+	  Turn off QDMA (CONFIG_RAETH_QDMA in raeth_config.h) and send packets
+	  with PDMA, like padavan before 2024-06. Needed on boards where QDMA
+	  transmit does not work (e.g. Newifi D3: wired LAN/WAN never send).
+	  Hardware QoS (QDMA scheduler) is not available when this is set.
+
 choice
 	prompt "GMAC is connected to"
 	depends on RAETH

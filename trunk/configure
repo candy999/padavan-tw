@@ -108,7 +108,7 @@ ln -sf vendors/Ralink/config.arch config.arch
 cp -fL "$kernel_cf" "$kernel_tf"
 
 # padavan-tw：台灣版的核心設定差異放在 configs/tw/kernel-<機型>.config（上游機型設定檔保持不改）
-# 格式：CONFIG_X=y／CONFIG_X=m 開啟；# CONFIG_X is not set 關閉（只改原本就有的項目）
+# 格式：CONFIG_X=y／CONFIG_X=m 開啟（設定檔裡沒有這一項就補上）；# CONFIG_X is not set 關閉
 tw_kernel_cf="$ROOTDIR/configs/tw/kernel-${CONFIG_FIRMWARE_PRODUCT_ID}.config"
 if [ -f "$tw_kernel_cf" ] ; then
 	while read -r tw_line ; do
@@ -119,9 +119,11 @@ if [ -f "$tw_kernel_cf" ] ; then
 			;;
 		CONFIG_*=y)
 			func_enable_kernel_param "${tw_line%%=*}"
+			grep -q "^${tw_line%%=*}=" $kernel_tf || echo "$tw_line" >> $kernel_tf
 			;;
 		CONFIG_*=m)
 			func_enable_kernel_param "${tw_line%%=*}" "m"
+			grep -q "^${tw_line%%=*}=" $kernel_tf || echo "$tw_line" >> $kernel_tf
 			;;
 		esac
 	done < "$tw_kernel_cf"
