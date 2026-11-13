@@ -19,7 +19,7 @@
 # - 保護：黑潮 DNS 不在或連續 3 次沒回答 → 改用業者 DNS（這段期間沒有過濾）；恢復回答就切回
 # - 學習資料放專用的 Flash 資料區，由黑潮 DNS 自己控制寫入（每 6～24 小時、內容沒變不寫、停止時寫出）：
 #   CR6608 → RWFS（UBIFS，97 MB）；D3 → Kuroshio 分割區（JFFS2，7.5 MB，原本沒人用的重複 Storage 區，跟真正的 Storage 不重疊）
-#   第一次使用前檢查：CR6608 的 RWFS 裡是別人的資料就不碰；D3 的分割區表跟其他分割區重疊就不碰；
+#   使用前檢查：CR6608 的 RWFS 裡是別人的資料就不碰；D3 的分割區表跟其他分割區重疊就不碰（不重疊但掛不上就清除重建）；
 #   不能用時改放記憶體＋每天匯出備份到 /etc/storage、開機時匯入
 
 BIN=/usr/bin/kuroshio
@@ -138,9 +138,9 @@ kuro_layout_ok() {
 }
 
 # D3：Kuroshio 分割區（JFFS2，0x1800000～0x1f80000）。設定存放的 Storage 在它後面（0x1f80000，512K），不重疊。
-# 先確認分割區表真的不重疊；開頭不是 JFFS2 也不是全空 → 這塊是專用的，清除後使用
+# 先確認分割區表真的不重疊；掛載失敗（裡面有別的資料）→ 這塊是專用的，清除後重新建立
 prepare_jffs2() {
-	local n
+	local n err
 	n=$(mtd_idx Kuroshio)
 	[ -n "$n" ] || return 1
 	grep -q " $JFFS2 " /proc/mounts && return 0
@@ -152,12 +152,26 @@ prepare_jffs2() {
 	*)	note "讀不到分割區表，無法確認黑潮 DNS 資料區是否安全，學習資料暫時放記憶體"
 		return 1 ;;
 	esac
-	if [ "$(head -c 2 "/dev/mtd$n" 2>/dev/null | tr '\205\031' 'ab')" != "ab" ] && ! blk_erased "/dev/mtd$n"; then
-		log "第一次使用黑潮 DNS 資料區：清除舊資料（約 1 分鐘）"
-		mtd_write erase Kuroshio >/dev/null 2>&1 || return 1
-	fi
 	mkdir -p "$JFFS2"
-	mount -t jffs2 "/dev/mtdblock$n" "$JFFS2" 2>/dev/null
+	# 先直接掛載：已經是 JFFS2、或整塊都是空的（0xFF）都掛得上。
+	# 不能只看開頭判斷：實機上第一個 64 KB 是空的，但後面還留著舊資料（早期韌體的設定備份），
+	# 核心會拒絕掛載（Cowardly refusing to erase blocks on filesystem with no valid JFFS2 nodes）
+	if err=$(mount -t jffs2 "/dev/mtdblock$n" "$JFFS2" 2>&1); then
+		return 0
+	fi
+	# 掛不上 → 裡面有不是 JFFS2 的資料。這塊是黑潮專用、上面已確認不跟其他分割區重疊，
+	# 清除後重新建立（學習資料可以重建）
+	log "黑潮 DNS 資料區無法掛載（${err:-未知原因}），清除後重新建立（約 1 分鐘）"
+	if ! err=$(mtd_write erase Kuroshio 2>&1); then
+		note "黑潮 DNS 資料區清除失敗（${err:-未知原因}），學習資料暫時放記憶體"
+		return 1
+	fi
+	if err=$(mount -t jffs2 "/dev/mtdblock$n" "$JFFS2" 2>&1); then
+		log "黑潮 DNS 資料區已重新建立"
+		return 0
+	fi
+	note "黑潮 DNS 資料區清除後仍無法掛載（${err:-未知原因}），學習資料暫時放記憶體"
+	return 1
 }
 
 state_mode() {
