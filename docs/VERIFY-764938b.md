@@ -107,18 +107,23 @@ fetch('/kuroshio_api.cgi', {method:'POST', headers:{'Content-Type':'application/
 
 | 項目 | 結果 | 備註／輸出 |
 |---|---|---|
-| 版本含 764938b、黑潮 3.1.0 | | |
-| 3.1 第一次開機清除重建 | | |
-| 3.1 mode=jffs2、掛載 | | |
-| 3.1 重開機後學習資料還在、不重跑 | | |
-| 3.2 health=0 | | |
-| 3.2 status --json（version、data.ok、storage、clock、warnings） | | |
-| 3.2 保護程式切換與恢復 | | |
-| 3.3 WAN 變動通知 | | |
-| 3.4 API 轉接（8 項） | | |
-| 3.5 回歸（重開機、Wi-Fi 掃描、有線、Wi-Fi、DNS、套用） | | |
-| 3.5 CPU／記憶體 | | |
-| cdn-pool 重排頻率 | | |
+| 版本含 764938b、黑潮 3.1.0 | ✅（用 6f3e3df／3.2.0 驗證） | 依 `docs/LOCAL-NEXT.md` 改用 3.2.0 版韌體：`firmver_sub` 含 `6f3e3df`、`kuroshio --version` = `kuroshio 3.2.0`、`status --json` 的 `data.version` = 3.2.0 |
+| 3.1 第一次開機清除重建 | ✅ | 07:01:12「黑潮 DNS 資料區無法掛載（mount: mounting /dev/mtdblock9 on /media/kuroshio failed: I/O error），清除後重新建立（約 1 分鐘）」→ 07:01:59「黑潮 DNS 資料區已重新建立」→ 07:02:22「已匯入學習資料備份」→ 07:02:25「接管 DNS」。dmesg：`jffs2: Cowardly refusing to erase blocks on filesystem with no valid JFFS2 nodes`（掛載失敗的原因，清除後就好） |
+| 3.1 mode=jffs2、掛載 | ✅ | `mode` = `jffs2`、沒有 `area_note`；`/dev/mtdblock9 /media/kuroshio jffs2 rw,relatime`；7.5 MB、用 1.1 MB |
+| 3.1 重開機後學習資料還在、不重跑 | ⚠️ 資料還在；cdn-pool 會重跑 | 開機 4.5 分鐘時 `kuroshio.sh flush`（exit 0，state 292 個檔、4,027 KB）→ 07:06 後台重開機（36 秒回來，頁面自動重新載入）。**重開機後**：沒有「清除後重新建立」、state 檔案還在（292 個，2 個大小不同＝有更新）。**重跑**：cdn-scan 重跑是正常的（第一次開機的掃描被重開機中斷，沒有完成紀錄）；但 **cdn-pool 每次啟動都重跑**——工作設定 `runIfMissing: state/cdn/pools.json`，Flash 上存的是 `pools.json.zst`，所以一直判斷「首次執行（缺少 state/cdn/pools.json）」，07:24 成功後、07:44 服務重新啟動又跑一次（07:46～08:13）。**黑潮核心的問題**，見 `docs/HANDOFF-UI.md` 13.9 第 5 點。3 天後要重測重開機時，電腦已不在 D3 的區網，沒有再測 |
+| 3.2 health=0 | ✅ | `kuroshio health --uci` 要帶 `kuroshio.sh` 的環境變數（`KUROSHIO_UCI_FILE=/tmp/kuroshio/kuroshio.uci` 等），直接照第 3.2 節的指令跑會回 health=2「讀不到 /etc/config/kuroshio」——不是韌體問題，是 Padavan 的設定檔不在 OpenWrt 的位置。帶環境變數：「127.0.0.1:5335 有回答（rcode 0，1 ms）」health=0 |
+| 3.2 status --json（version、data.ok、storage、clock、warnings） | ✅ | `version` 3.2.0、`data.ok` true、`storage.class` flash（`/media/kuroshio/kuroshio/state`）、`clock.synced` true、`warnings` [] |
+| 3.2 保護程式切換與恢復 | ✅ | 07:03:34 `kill -STOP` → 07:04:01「沒有回應，暫時改用業者 DNS（這段期間沒有過濾）」（27 秒）、`use`=fallback，期間電腦查 DNS 正常；07:04:14 `kill -CONT` → 同一秒「接管 DNS」、`use`=kuroshio |
+| 3.3 WAN 變動通知 | ✅ | 07:04:32 後台重新連線 → 07:04:33 WAN down → 07:04:37 WAN up → 07:04:38「WAN 變動：已通知更新 DDNS 與對外 IP」 |
+| 3.4 API 轉接（8 項） | ✅ | `op=status`、`op=api&path=/api/status`（`{"ok":true,"result":…}`）、`op=log&n=20`、`op=defaults` 都回 JSON；`/api/admin/shutdown`「不允許的路徑」；GET 的 action「這個操作需要用 POST」；POST `/api/cache/flush` `ok:true`；POST `backup-export` `{"ok":true,"size":…}`，接著下載 `/kuroshio_backup.kuroshio` 成功、第二次是空的。3.2.0 追加：POST `op=action&path=/api/persist/flush` 回 `{"ok":true,"files":1,"bytes":4255,"dir":"/media/kuroshio/kuroshio/state",…}` |
+| 3.5 回歸（重開機、Wi-Fi 掃描、有線、Wi-Fi、DNS、套用） | ✅ | 後台重開機正常回來；Wi-Fi 鄰近 AP 掃描 2.4G 14 筆、5G 7 筆；兩個頻段都開著；WAN 延遲 3 ms；DHCP 租約 2；黑潮 DNS 查詢正常；後台套用（頻寬管理、黑潮 DNS 設定）正常 |
+| 3.5 CPU／記憶體 | ✅（背景工作期間很忙） | 開機 4.5 分鐘：CPU 97.9% idle、RSS 62.6 MB（HWM 75.8 MB）。重開機後 88 秒：RSS 18.7 MB。之後每 5 分鐘取樣一小時：cdn-scan／cdn-pool 期間黑潮 DNS 自己的 CPU 0～6%、RSS 19～27 MB；**dns-benchmark 期間 76～98%（nice 10，後台、Wi-Fi 操作不卡）、RSS 一路到 96 MB**（HWM 96 MB，系統 437 MB）；工作結束後回到約 53 MB |
+| cdn-pool 重排頻率 | ✅（3.2.0 已修好） | 開機後 1 小時內 `grep -c 節點池重建 /tmp/syslog.log` = 0（3.1.0 時每 6 分鐘一次）。3.2.0 追加：第一次開機 syslog「設定檔是舊版預設值，已換成這一版的預設（過濾清單等）」、`config filter_list` = 13 |
+
+其他觀察：
+- 開機後第一次下載「CHN: anti-AD」失敗（`bootstrap 解析不到 adguardteam.github.io；先用本機副本`），之後正常；不影響使用
+- `/etc/storage/kuroshio/backup.kuroshio`（303 KB，放記憶體時代的備份）在 jffs2 模式下還留著，`/etc/storage` 壓縮後已 333 KB／512 KB，見 `docs/HANDOFF-UI.md` 13.9 第 4 點
+- 長時間運作會一直出現 `WARN duplicate reset token`（每 15 秒左右一行），會洗掉日誌，請黑潮 DNS 確認是不是正常
 
 完成後：`git pull`，提交「docs: 764938b 實機驗證結果」並推送，同時把摘要告訴使用者。
 **全部通過**才開始 `docs/HANDOFF-UI.md` 第 13 節的黑潮 LuCI 介面移植（實機測試就用這版韌體）。
