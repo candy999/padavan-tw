@@ -570,7 +570,8 @@ Padavan 跟 LuCI 不同的地方（照 13.2、13.4）：網域、Token、DDNS �
 - 恢復預設自訂規則：檔案換成 `/usr/share/kuroshio/default-custom-rules.txt`（12,946 位元組），舊的備份成 `custom-rules.txt.bak`
 - 恢復預設清單：預覽測過（停用一份、刪一份、加一份自己的 → 列出「會新增／啟用改回／保留自己加的」，套用後順序與內容回到預設，自己的清單排最後）
 - 匯出：分享檔 247 KB 下載成功（zstd），第二次開是空的（下載後刪除）
-- **還沒測：重開機後設定還在、自訂規則重設後還在**——測完 UCI 改動後，電腦離開了 D3 的區網（3 天後只連得到上層路由器，D3 的 WAN 不開 SSH）。下次在 D3 區網：`/usr/bin/kuroshio.sh flush` → 後台重開機 → 確認 `/etc/storage/kuroshio/kuroshio.uci` 的 smart-tv 還是關、`tw_unknown_*` 還在、`custom-rules.txt` 是 12,946 位元組；然後把 UCI 還原（測試前的備份在 `/tmp/kuroshio.uci.before-uitest`，重開機後就沒了，可以改用「恢復預設清單」並刪掉測試用的兩段）
+- **重開機後設定還在**（2026-11-17 重測）：在新頁關掉 smart-tv＋恢復預設自訂規則（檔案裡事先加了不認得的選項與區段）→ `kuroshio.sh flush` → 後台重開機（約 50 秒回來）→ `kuroshio.uci` 雜湊值不變（smart-tv 仍是 `enabled '0'`、`tw_unknown_*` 都在）、`custom-rules.txt` 是 12,946 位元組的新預設＋`.bak`、`op=status` 過濾清單 9 份、學習資料 299 個檔都在；cdn-scan／cdn-ranges／dns-benchmark 沒有重跑（cdn-pool 照樣重跑，13.9 第 5 點）。測完用「恢復預設清單」改回，再刪掉測試用的兩段，UCI 檔跟韌體預設一模一樣
+- **但斷電會不見**：11/14 第一次測完沒有重開機，3 天後路由器斷過電，那之後在後台改的黑潮設定、恢復的自訂規則**全部不見**（`/etc/storage/system_time` 停在 11/14 07:06，就是最後一次正常重開機）。見 13.9 第 8 點
 
 ### 13.9 後端問題（交給雲端，2026-11-14 實機）
 1. **`kuroshio.sh` 的 `api_fetch` 用 `curl -f`，管理 API 的錯誤原因被吃掉**：DDNS 沒開時按「立即更新 DDNS」，管理 API 回 `HTTP 400 {"error":"DDNS 未啟用"}`，轉接後變成 `{"ok":false,"error":"黑潮 DNS 沒有回應"}`。建議拿掉 `-f`、用 `-w '%{http_code}'` 判斷：2xx 包成 `{"ok":true,"result":…}`，其他回 `{"ok":false,"error":<回應的 error>}`。前端先把 DDNS 沒開時的按鈕停用
@@ -580,3 +581,4 @@ Padavan 跟 LuCI 不同的地方（照 13.2、13.4）：網域、Token、DDNS �
 5. **黑潮核心：`cdn-pool` 每次重新啟動都重跑**：工作設定 `runIfMissing: state/cdn/pools.json`，但學習資料寫到 Flash 的是 `pools.json.zst`，所以每次啟動都判斷「首次執行（缺少 state/cdn/pools.json）」，即使 07:24 剛成功過。在後台改任何黑潮設定都會重新啟動服務，接著重跑約 20 分鐘的節點池重建（CPU 很高）。要回報黑潮 DNS 專案（檢查時也認 `.zst`）
 6. 黑潮核心：長時間運作每 15 秒左右一行 `WARN duplicate reset token`，會洗掉日誌緩衝區（請黑潮 DNS 確認）
 7. 小問題：`/etc/storage/kuroshio/.migrate_note` 與（3.2.0 之前寫的）`custom-rules.txt` 權限是 0666；13.7 的三項（匯入、SIGHUP 重新載入、憑證進度 API）照舊需要
+8. **【重要】後台存的設定要到正常重開機才寫進 Flash**：`/etc/storage` 只有在正常關機／重開機（rc 的 `write_storage_to_mtd`）時才存到 Storage 分割區；httpd 套用時寫了 `kuroshio.uci` 卻不存，`rstats_stored=1` 也沒有定時存。所以在後台改了黑潮 DNS 設定（新頁或舊的 `Advanced_kuroshio.asp` 都一樣）、或黑潮 DNS 自己寫進 `/etc/storage/kuroshio` 的東西（恢復預設自訂規則、`.bak`、`.migrate_note`），**斷電就全部回到上次重開機前的樣子**。D3 上已經實際發生（13.8）。建議：httpd 寫入 `File` 類欄位有變更時呼叫 `mtd_storage.sh save`（或 `kuroshio.sh` 重新啟動前存一次），黑潮 DNS 寫 `/etc/storage` 的動作完成後也存一次；注意第 4 點的 303 KB 會讓每次存檔變慢、也更容易超過上限
