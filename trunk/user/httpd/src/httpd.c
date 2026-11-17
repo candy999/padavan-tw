@@ -110,7 +110,8 @@ int http_is_ssl = 0;
 char req_host[128] = {0};
 char req_origin[256] = {0};
 char req_referer[256] = {0};
-char req_fetch_site[16] = {0};	/* Sec-Fetch-Site：瀏覽器標的請求來源（same-origin、same-site、cross-site、none） */
+char req_fetch_site[16] = {0};	/* Sec-Fetch-Site：瀏覽器標的請求來源（same-origin、same-site、cross-site、none）；只有 HTTPS 才會送 */
+int req_tw_header = 0;		/* 有 X-TW-Request 標頭：後台自己的頁面用 fetch 送的（別的網站加不了自訂標頭） */
 
 static int daemon_exit = 0;
 static int http_has_lang = 0;
@@ -863,6 +864,7 @@ handle_request(FILE *conn_fp, const conn_item_t *item)
 	/* Initialize the request variables. */
 	authorization = boundary = NULL;
 	req_host[0] = req_origin[0] = req_referer[0] = req_fetch_site[0] = '\0';
+	req_tw_header = 0;
 
 	/* Parse the first line of the request. */
 	if (!fgets(line, sizeof(line), conn_fp)) {
@@ -926,6 +928,9 @@ handle_request(FILE *conn_fp, const conn_item_t *item)
 			cp = cur + 7;
 			cp += strspn(cp, " \t");
 			snprintf(req_origin, sizeof(req_origin), "%.*s", (int)strcspn(cp, "\r\n"), cp);
+		}
+		else if (strncasecmp(cur, "X-TW-Request:", 13) == 0) {
+			req_tw_header = 1;
 		}
 		else if (strncasecmp(cur, "Sec-Fetch-Site:", 15) == 0) {
 			cp = cur + 15;

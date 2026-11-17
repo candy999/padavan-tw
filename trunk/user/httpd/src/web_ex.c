@@ -4344,12 +4344,20 @@ kuroshio_same_origin(void)
 }
 
 /*
- * 瀏覽器標明是別的網站發起的請求（Sec-Fetch-Site: cross-site）：查看類的 GET 也不接受。
- * 別的網頁可以用 <img>、<script> 叫已登入的瀏覽器打 GET（例如 /api/trace 會對所有上游發查詢），
- * 讀不到回應但動作會發生，還會卡住單執行緒的 httpd。沒有這個標頭（舊瀏覽器、curl）照舊
+ * 不是後台自己的頁面發的請求，查看類的 GET 也不接受：別的網頁可以用 <img>、<script>、表單叫已登入的瀏覽器
+ * 打 GET（例如 /api/trace 會對所有上游發查詢），讀不到回應但動作會發生，還會卡住單執行緒的 httpd。
+ * - 後台頁面的 fetch 都帶 X-TW-Request 標頭；別的網站加不了自訂標頭（跨來源的 fetch 帶自訂標頭要先 OPTIONS 預檢，httpd 不支援就失敗）
+ * - Sec-Fetch-Site: cross-site 也擋（瀏覽器只在 HTTPS 才送，HTTP 後台靠上面那一條）
  */
 static int
 kuroshio_cross_site(void)
+{
+	return !req_tw_header || strcasecmp(req_fetch_site, "cross-site") == 0;
+}
+
+/* 下載匯出檔是 <a> 連結（帶不了自訂標頭）：只看 Sec-Fetch-Site。拿到檔的是自己的瀏覽器，別的網站讀不到 */
+static int
+kuroshio_cross_site_nav(void)
 {
 	return strcasecmp(req_fetch_site, "cross-site") == 0;
 }
@@ -4397,7 +4405,7 @@ kuroshio_api_out(const char *url, FILE *stream)
 	}
 
 	if (kuroshio_cross_site()) {
-		fputs("{\"ok\":false,\"error\":\"請從路由器後台的頁面操作（別的網站發起的請求）\"}", stream);
+		fputs("{\"ok\":false,\"error\":\"請從路由器後台的頁面操作（不是後台頁面送的請求；剛更新韌體的話請重新整理頁面）\"}", stream);
 		goto out;
 	}
 
@@ -4462,7 +4470,7 @@ do_kuroshio_import_cgi(const char *url, FILE *stream)
 	size_t len;
 
 	if (kuroshio_cross_site())
-		fputs("{\"ok\":false,\"error\":\"請從路由器後台的頁面操作（別的網站發起的請求）\"}", stream);
+		fputs("{\"ok\":false,\"error\":\"請從路由器後台的頁面操作（不是後台頁面送的請求；剛更新韌體的話請重新整理頁面）\"}", stream);
 	else if (!f_exists(KUROSHIO_IMPORT_FILE))
 		fputs("{\"ok\":false,\"error\":\"沒有收到檔案，或不是黑潮 DNS 的備份檔（.kuroshio，最大 16 MB）\"}", stream);
 	else if (!get_login_safe())
@@ -4485,7 +4493,7 @@ do_kuroshio_backup_file(const char *url, FILE *stream)
 	const char *f = "/tmp/kuroshio/export.kuroshio";
 
 	/* 沒有權限、或別的網站發起的請求，不能拿到也不能順手刪掉管理員剛匯出的檔 */
-	if (get_login_safe() && !kuroshio_cross_site()) {
+	if (get_login_safe() && !kuroshio_cross_site_nav()) {
 		do_file(f, stream);
 		unlink(f);
 	}

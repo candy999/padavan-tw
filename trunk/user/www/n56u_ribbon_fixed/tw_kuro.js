@@ -33,9 +33,10 @@ var KURO = (function () {
 			return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]);
 		}).join('&');
 		var body = 'op=' + op + (path ? '&path=' + encodeURIComponent(path) : '') + (inner ? '&q=' + encodeURIComponent(inner) : '') + (extra || '');
+		/* X-TW-Request：httpd 只收帶這個標頭的請求（別的網站加不了自訂標頭，擋跨站請求） */
 		var req = post ? fetch('/kuroshio_api.cgi', { method: 'POST', credentials: 'same-origin', cache: 'no-store',
-			headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: body })
-			: fetch('/kuroshio_api.cgi?' + body, { credentials: 'same-origin', cache: 'no-store' });
+			headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-TW-Request': '1' }, body: body })
+			: fetch('/kuroshio_api.cgi?' + body, { credentials: 'same-origin', cache: 'no-store', headers: { 'X-TW-Request': '1' } });
 		return req.then(function (r) { return r.text(); }).then(function (t) {
 			if (!t) return { ok: false, error: '這個韌體沒有黑潮 DNS 管理介面（請更新韌體）' };
 			try { return JSON.parse(t); } catch (e) { return { ok: false, error: '回應格式錯誤' }; }

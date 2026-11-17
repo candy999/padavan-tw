@@ -767,7 +767,7 @@
 					out.textContent = '上傳中…（' + Math.ceil(f.size / 1024) + ' KB）';
 					/* 先記下上一次匯入的時間（路由器與電腦的時鐘可能不同，不拿電腦的時間比） */
 					K.view('/api/backup/last-import').then(function (li) { prev = (li && li.importedAt) || 0; })
-						.then(function () { return fetch('/kuroshio_import.cgi', { method: 'POST', credentials: 'same-origin', cache: 'no-store', body: fd }); })
+						.then(function () { return fetch('/kuroshio_import.cgi', { method: 'POST', credentials: 'same-origin', cache: 'no-store', headers: { 'X-TW-Request': '1' }, body: fd }); })
 						.then(function (r) { return r.text(); })
 						.then(function (t) { try { return JSON.parse(t); } catch (e) { return { ok: false, error: '回應格式錯誤' }; } },
 							function (e) { return { ok: false, error: '連不到路由器：' + (e && e.message || e) }; })
