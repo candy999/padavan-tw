@@ -481,24 +481,37 @@ var KURO = (function () {
 	function noUci() { return !/^config\s/m.test(uci.orig); }
 
 	/* ---------- 儲存並套用 ---------- */
+	/*
+	 * 表單送出時的大小：httpd 一次只收 64 KB（post_buf），超過的部分會被直接截掉、照樣存進 Flash。
+	 * 送出時換行是 CRLF、中文一個字網址編碼後 9 bytes，所以要算整份編碼後的長度，不能只看檔案大小
+	 */
+	var FORM_MAX = 64000;
+	function formBytes(fields) {
+		var all = { current_page: location.pathname.replace(/^\//, ''), next_page: '', sid_list: 'KuroshioConf;', group_id: '', action_mode: ' Apply ', action_script: '' };
+		Object.keys(fields).forEach(function (k) { all[k] = String(fields[k] == null ? '' : fields[k]).replace(/\r?\n/g, '\r\n'); });
+		return new URLSearchParams(all).toString().length;
+	}
 	function save() {
-		var fields = {}, impacts = [], tooBig = null;
+		var fields = {}, impacts = [];
 		if (Object.keys(errors).length) { U.toast('有欄位格式不正確', 'bad'); return; }
-		if (uci.dirty() && !noUci()) {
-			var t = uci.text();
-			if (new Blob([t]).size > 60000) { U.toast('設定檔超過 60 KB（表單上限），請刪掉一些自訂內容', 'bad'); return; }
-			fields['kuroshio.kuroshio.uci'] = t;
-		}
+		if (uci.dirty() && !noUci()) fields['kuroshio.kuroshio.uci'] = uci.text();
 		nvDirty().forEach(function (k) { fields[k] = nv.cur[k]; });
 		var restart = Object.keys(fields).length > 0;
 		fileDirty().forEach(function (n) {
 			var t = files.cur[n];
 			if (t && !/\n$/.test(t)) t += '\n';
-			if (new Blob([t]).size > 60000) tooBig = n;
 			fields['kuroshio.' + n] = t;
 		});
-		if (tooBig) { U.toast(tooBig + ' 超過 60 KB（表單上限），請刪掉一些內容', 'bad'); return; }
-		if (restart) impacts.push('黑潮 DNS 重新啟動（約 5～10 秒），這段期間由業者 DNS 暫代、沒有過濾');
+		var size = formBytes(fields);
+		if (size > FORM_MAX) {
+			U.toast('這次要存的內容送出時約 ' + Math.ceil(size / 1024) + ' KB，超過路由器一次能收的 62 KB。' +
+				(fileDirty().length + (uci.dirty() ? 1 : 0) > 1 ? '請分幾次存（一次改一個檔），或' : '請') + '刪掉一些內容', 'bad');
+			return;
+		}
+		/* 開關本身改了：下面另外有一行說明（啟動或停止），不是重新載入 */
+		if (restart && !nv.cur.hasOwnProperty('kuroshio_enable')) impacts.push(nv.cur.hasOwnProperty('kuroshio_log')
+			? '黑潮 DNS 重新啟動（約 5～10 秒，日誌等級要重新啟動才會生效），這段期間由業者 DNS 暫代、沒有過濾'
+			: '黑潮 DNS 重新載入設定（不改用業者 DNS；換上新設定時約有幾秒查不到。新設定有錯時繼續用原本的設定，原因顯示在狀態頁）');
 		if (files.cur.hasOwnProperty('custom-rules.txt')) impacts.push('自訂規則 3 秒內生效（不用重新啟動）');
 		if (fileDirty().some(function (n) { return n.indexOf('benchmark/') === 0; })) impacts.push('評測名單在下次每日評測時使用');
 		impacts.push('設定存在路由器上，存檔後立即寫進 Flash，斷電也不會遺失');
@@ -825,8 +838,12 @@ var KURO = (function () {
 		else if (!st.enabled) c = { state: 'off', title: '黑潮 DNS 已停用，使用業者的 DNS', sub: '到「基本設定」打開。' };
 		else if (!st.running) c = { state: 'bad', title: '黑潮 DNS 沒有執行', sub: '區網暫時使用業者的 DNS，原因請看「日誌」。' };
 		else if (st.use == 'fallback') c = { state: 'warn', title: '黑潮 DNS 沒有回應，暫時改用業者的 DNS', sub: '這段期間沒有過濾與 CDN 加速；恢復回答後會自動切回。' };
-		else c = { state: 'ok', title: '黑潮 DNS 運作中', sub: '區網的 DNS 查詢由黑潮 DNS 回答' + (api && api.stats ? '，已執行 ' + uptime(api.stats.uptimeSec) : '') + '。' };
+		else if (api && api.reload && api.reload.usingPrevious) c = { state: 'warn', title: '新設定無法套用，黑潮 DNS 繼續用原本的設定', sub: esc(api.reload.error || '') + '（改好設定再存一次就會換上）' };
+		else c = { state: (api && api.warnings && api.warnings.length) ? 'warn' : 'ok', title: (api && api.warnings && api.warnings.length) ? '黑潮 DNS 運作中，但有需要注意的事' : '黑潮 DNS 運作中',
+			sub: '區網的 DNS 查詢由黑潮 DNS 回答' + (api && api.stats ? '，這一輪已執行 ' + uptime(api.stats.uptimeSec) : '') + '。' };
 		h += U.conclusion(c);
+		/* 3.3.2：清單下載失敗、存取控制資料讀不到、時間沒對時、重新載入失敗等都在 warnings */
+		if (api && api.warnings && api.warnings.length) h += K.note('<b>需要注意：</b><br>' + api.warnings.map(esc).join('<br>'), 'warn');
 		if (st && st.area_note) h += K.note('<b>學習資料區：</b>' + esc(st.area_note) + (/RWFS/.test(st.area_note) ? ' <a href="Advanced_kuroshio.asp">到舊版頁面處理</a>' : ''), 'warn');
 		if (st && st.ok !== false) h += K.card('服務', K.kv([
 			['版本', esc(st.version || '-')],
@@ -858,7 +875,10 @@ var KURO = (function () {
 				(mem.enabled ? ' · ' + (mem.stateLabel || mem.state) + (mem.growth === false ? '（不再長大）' : '') : '') + (mem.psi ? ' · PSI ' + mem.psi.someAvg10 + '%' : '') +
 				/* 3.3.0：kuroshio notify trim（韌體更新等佔記憶體的操作之前）讓出記憶體後，這段時間不長大 */
 				(mem.holdUntil && mem.holdUntil > Date.now() ? ' · 已先讓出記憶體（到 ' + K.time(mem.holdUntil, 'time') + ' 前不長大）' : '')],
-			['本程式記憶體', sys.rssKB ? (sys.rssKB / 1024).toFixed(1) + ' MB' : '-', memSizes(mem.sizes)],
+			['本程式記憶體', sys.rssKB ? (sys.rssKB / 1024).toFixed(1) + ' MB' : '-', memSizes(mem.sizes) +
+				/* 3.3.1：背景工作（每日評測手上的原始答案估計值與開著的連線） */
+				(mem.jobs && mem.jobs.running ? ' · 執行中：' + esc(JOBS[mem.jobs.running] || mem.jobs.running) +
+					(mem.jobs.rawBytes ? '（原始答案約 ' + (mem.jobs.rawBytes / 1048576).toFixed(1) + ' MB' + (mem.jobs.openConnections ? '、' + K.fmtNum(mem.jobs.openConnections) + ' 條連線' : '') + '）' : '') : '')],
 			['快取命中率', d.hitRate != null ? d.hitRate + '%' : '-', '預取 ' + K.fmtNum(d.prefetch) + ' · 斷線回舊資料 ' + K.fmtNum(d.stale)],
 			['回應時間 p50 / p95', ms(lat.hit), '問上游 ' + ms(lat.miss)],
 			['Flash 寫入（今天）', per.bytesToday != null ? (per.bytesToday / 1024).toFixed(0) + ' KB' : '-', (per.storage || '') + ' · 間隔 ' + (per.effectiveIntervalMin != null ? per.effectiveIntervalMin : (per.intervalMin || '-')) + ' 分' +

@@ -659,8 +659,9 @@
 			'<li><b>完整備份</b>：全部學習資料、自訂規則、社群身分與好友。含私鑰，請自己保管，不要給別人。</li>' +
 			'<li><b>分享給朋友</b>：CDN 網域驗證紀錄（只有網域名稱與驗證結果）、台灣節點池（匯入的一方只當候選，本機驗證通過才使用）。沒有身分、金鑰、統計與自訂規則。</li></ul>' +
 			'<div class="tw-actions">' + K.btn('下載完整備份', 'export', { primary: true, arg: 'full' }) + K.btn('下載分享檔', 'export', { arg: 'share' }) +
-			'<button type="button" class="tw-btn tw-btn-sm" disabled title="這一版韌體還不能匯入">匯入 .kuroshio 檔…</button></div>' +
-			'<p class="tw-small tw-muted">匯入（上傳檔案）這一版韌體還沒提供。</p><div id="kr-export-out" class="kr-out" role="status"></div>', { id: 'kuroshio-backup' }); +
+			K.btn('匯入 .kuroshio 檔…', 'import') + '</div>' +
+			'<p class="tw-small tw-muted">匯入是合併：本機已經有的資料以本機為準，不會被舊備份蓋掉；朋友的分享檔只當候選。匯入時黑潮 DNS 會重新載入一次（幾秒，不改用業者 DNS）。</p>' +
+			'<div id="kr-export-out" class="kr-out" role="status"></div>', { id: 'kuroshio-backup' }) +
 			K.card('直接編輯設定檔', '<p class="tw-lead">熟悉 UCI 格式的話，可以在舊版頁面直接編輯整份設定檔（CR6608 的 RWFS 資料區也在那裡啟用）。網域、Token、DDNS、DoT／DoQ／DoH、對外開放、來源模式以這裡的表單為準，在設定檔裡改不會生效。</p>' +
 				'<div class="tw-actions">' + U.button('開啟舊版頁面', { small: true, href: 'Advanced_kuroshio.asp' }) + '</div>');
 	}
@@ -747,6 +748,54 @@
 					setTimeout(function () { a.remove(); }, 2000);
 					out.textContent = '已下載 ' + name + '（' + Math.ceil((r.size || 0) / 1024) + ' KB）' + (kind == 'full' ? '。含私鑰，請自己保管。' : '');
 				});
+			},
+			/*
+			 * 匯入：上傳到 /kuroshio_import.cgi（httpd 檢查開頭是 zstd、最大 16 MB）→ kuroshio.sh 交給黑潮的
+			 * /api/backup/import → 黑潮重新載入時合併，結果在 /api/backup/last-import（importedAt 跟送出前不同就是這次）
+			 */
+			'import': function () {
+				var out = U.$('kr-export-out'), inp = document.createElement('input');
+				inp.type = 'file'; inp.accept = '.kuroshio'; inp.style.display = 'none';
+				document.body.appendChild(inp);
+				inp.addEventListener('change', function () {
+					var f = inp.files && inp.files[0];
+					inp.remove();
+					if (!f) return;
+					if (f.size > 16 * 1048576) { U.toast('檔案太大（超過 16 MB）', 'bad'); return; }
+					var prev = null, fd = new FormData();
+					fd.append('file', f, f.name);
+					out.textContent = '上傳中…（' + Math.ceil(f.size / 1024) + ' KB）';
+					/* 先記下上一次匯入的時間（路由器與電腦的時鐘可能不同，不拿電腦的時間比） */
+					K.view('/api/backup/last-import').then(function (li) { prev = (li && li.importedAt) || 0; })
+						.then(function () { return fetch('/kuroshio_import.cgi', { method: 'POST', credentials: 'same-origin', cache: 'no-store', body: fd }); })
+						.then(function (r) { return r.text(); })
+						.then(function (t) { try { return JSON.parse(t); } catch (e) { return { ok: false, error: '回應格式錯誤' }; } },
+							function (e) { return { ok: false, error: '連不到路由器：' + (e && e.message || e) }; })
+						.then(function (r) {
+							var res = r && r.ok && r.result;
+							if (!res || res.ok === false) { out.textContent = ''; U.toast('匯入失敗：' + ((r && r.error) || (res && res.error) || ''), 'bad'); return; }
+							var label = (res.preview && res.preview.kindLabel) || '備份';
+							out.textContent = '已收到' + label + '，黑潮 DNS 重新載入後合併…';
+							var tries = 0;
+							(function wait() {
+								K.view('/api/backup/last-import').then(function (li) {
+									if (li && li.importedAt && li.importedAt !== prev) {
+										var items = (li.items || []).map(function (i) {
+											var n = [['added', '新增'], ['updated', '更新'], ['kept', '保留本機'], ['skipped', '略過']]
+												.filter(function (k) { return i[k[0]]; }).map(function (k) { return k[1] + ' ' + K.fmtNum(i[k[0]]); });
+											return (i.label || i.file) + (i.error ? '：失敗（' + i.error + '）' : (n.length ? '：' + n.join('、') : ''));
+										});
+										out.textContent = (li.ok === false ? '匯入有部分失敗：' : '匯入完成：') + (items.join('；') || label);
+										U.toast(li.ok === false ? '匯入有部分失敗，詳細在下方' : '匯入完成', li.ok === false ? 'bad' : 'ok');
+										return;
+									}
+									if (++tries > 30) { out.textContent = '已送出，但 60 秒內沒看到合併結果，請稍後看「日誌」'; return; }
+									setTimeout(wait, 2000);
+								});
+							})();
+						});
+				});
+				inp.click();
 			}
 		} }
 	});

@@ -539,6 +539,11 @@ void start_kuroshio(void){
 }
 
 void restart_kuroshio(void){
+	/* padavan-tw：還在執行、也還是啟用 → 先試 kuroshio.sh reload（SIGHUP 在同一個行程裡重新載入，
+	 * 不必停掉改用業者 DNS）。結束碼 0＝已經套用；非 0（例如改了日誌等級，要重新啟動才會生效）才完整重新啟動 */
+	if (nvram_get_int("kuroshio_enable") == 1 && pids("kuroshio") &&
+	    eval("/usr/bin/kuroshio.sh", "reload") == 0)
+		return;
 	stop_kuroshio();
 	start_kuroshio();
 	/* no-resolv 是否加上要看開關，所以重寫 dnsmasq 設定 */

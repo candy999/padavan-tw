@@ -106,6 +106,11 @@ int debug_mode = 0;
 int http_is_ssl = 0;
 #endif
 
+/* padavan-tw：這次請求的 Host、Origin、Referer，給 kuroshio_api.cgi 擋跨站請求（CSRF） */
+char req_host[128] = {0};
+char req_origin[256] = {0};
+char req_referer[256] = {0};
+
 static int daemon_exit = 0;
 static int http_has_lang = 0;
 static int http_acl_mode = 0;
@@ -843,6 +848,7 @@ handle_request(FILE *conn_fp, const conn_item_t *item)
 
 	/* Initialize the request variables. */
 	authorization = boundary = NULL;
+	req_host[0] = req_origin[0] = req_referer[0] = '\0';
 
 	/* Parse the first line of the request. */
 	if (!fgets(line, sizeof(line), conn_fp)) {
@@ -896,6 +902,21 @@ handle_request(FILE *conn_fp, const conn_item_t *item)
 			cp = cur + 18;
 			cp += strspn( cp, " \t" );
 			if_modified_since = tdate_parse(cp);
+		}
+		else if (strncasecmp(cur, "Host:", 5) == 0) {
+			cp = cur + 5;
+			cp += strspn(cp, " \t");
+			snprintf(req_host, sizeof(req_host), "%.*s", (int)strcspn(cp, "\r\n"), cp);
+		}
+		else if (strncasecmp(cur, "Origin:", 7) == 0) {
+			cp = cur + 7;
+			cp += strspn(cp, " \t");
+			snprintf(req_origin, sizeof(req_origin), "%.*s", (int)strcspn(cp, "\r\n"), cp);
+		}
+		else if (strncasecmp(cur, "Referer:", 8) == 0) {
+			cp = cur + 8;
+			cp += strspn(cp, " \t");
+			snprintf(req_referer, sizeof(req_referer), "%.*s", (int)strcspn(cp, "\r\n"), cp);
 		}
 		else if ((cp = strstr( cur, "boundary=" ))) {
 			boundary = cp + 9;

@@ -4291,6 +4291,28 @@ kuroshio_arg_ok(const char *s, const char *extra, size_t maxlen)
 	return 1;
 }
 
+/*
+ * 送出請求的網頁跟這台路由器是同一個來源：Origin（沒有就看 Referer）的 主機[:埠] 等於這次請求的 Host。
+ * 瀏覽器的跨站 POST 一定帶 Origin；兩個都沒有（不是瀏覽器、或擴充套件拿掉了來源）時不放行。
+ * Origin 是 "null"（沙箱 iframe、本機檔案）也不放行
+ */
+static int
+kuroshio_same_origin(void)
+{
+	const char *src = req_origin[0] ? req_origin : req_referer;
+	const char *h;
+	size_t n;
+
+	if (!src[0] || !req_host[0])
+		return 0;
+	h = strstr(src, "://");
+	if (!h)
+		return 0;
+	h += 3;
+	n = strcspn(h, "/?#");
+	return n == strlen(req_host) && strncasecmp(h, req_host, n) == 0;
+}
+
 static void
 kuroshio_api_out(const char *url, FILE *stream)
 {
@@ -4327,6 +4349,11 @@ kuroshio_api_out(const char *url, FILE *stream)
 	else if (!strcmp(op, "log"))
 		snprintf(cmd, sizeof(cmd), "/usr/bin/kuroshio.sh log '%s'", n);
 	else if (is_post && get_login_safe()) {
+		/* 跨站請求（CSRF）：別的網站的網頁可以叫已登入的瀏覽器送 POST 過來，要確認是後台自己的頁面 */
+		if (!kuroshio_same_origin()) {
+			fputs("{\"ok\":false,\"error\":\"請從路由器後台的頁面操作（來源網頁不符）\"}", stream);
+			goto out;
+		}
 		if (!strcmp(op, "action"))
 			snprintf(cmd, sizeof(cmd), "/usr/bin/kuroshio.sh action '%s' '%s'", path, q);
 		else if (!strcmp(op, "backup-export"))
@@ -4360,15 +4387,40 @@ out:
 	init_cgi(NULL);
 }
 
+/* 上傳的學習資料備份（do_kuroshio_import_post 收下、檢查過開頭）：交給黑潮 DNS 合併，之後刪除 */
+static void
+do_kuroshio_import_cgi(const char *url, FILE *stream)
+{
+	char buf[1024];
+	FILE *fp;
+	size_t len;
+
+	if (!f_exists(KUROSHIO_IMPORT_FILE))
+		fputs("{\"ok\":false,\"error\":\"沒有收到檔案，或不是黑潮 DNS 的備份檔（.kuroshio，最大 16 MB）\"}", stream);
+	else if (!get_login_safe())
+		fputs("{\"ok\":false,\"error\":\"這個操作只能從區網或 VPN 登入後使用\"}", stream);
+	else if (!kuroshio_same_origin())
+		fputs("{\"ok\":false,\"error\":\"請從路由器後台的頁面操作（來源網頁不符）\"}", stream);
+	else if ((fp = popen("/usr/bin/kuroshio.sh import-upload", "r")) != NULL) {
+		while ((len = fread(buf, 1, sizeof(buf), fp)) > 0)
+			fwrite(buf, 1, len, stream);
+		pclose(fp);
+	} else
+		fputs("{\"ok\":false,\"error\":\"無法執行\"}", stream);
+	unlink(KUROSHIO_IMPORT_FILE);
+}
+
 /* 匯出的學習資料（kuroshio_api.cgi 的 backup-export 產生），下載後刪除 */
 static void
 do_kuroshio_backup_file(const char *url, FILE *stream)
 {
 	const char *f = "/tmp/kuroshio/export.kuroshio";
 
-	if (get_login_safe())
+	/* 沒有權限的請求不能順手把管理員剛匯出的檔刪掉 */
+	if (get_login_safe()) {
 		do_file(f, stream);
-	unlink(f);
+		unlink(f);
+	}
 }
 #endif
 
@@ -4406,6 +4458,7 @@ struct mime_handler mime_handlers[] = {
 	/* padavan-tw：黑潮 DNS 管理 API 轉接與學習資料下載 */
 	{ "kuroshio_api.cgi*", "application/json", no_cache_IE, kuroshio_api_post, kuroshio_api_out, 1 },
 	{ "kuroshio_backup.kuroshio", "application/force-download", NULL, NULL, do_kuroshio_backup_file, 1 },
+	{ "kuroshio_import.cgi*", "application/json", no_cache_IE, do_kuroshio_import_post, do_kuroshio_import_cgi, 1 },
 #endif
 
 	/* no-cached html/asp files with translations */
