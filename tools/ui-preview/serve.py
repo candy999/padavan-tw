@@ -313,6 +313,8 @@ def render(text, dct):
 
 MOCK_KURO = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mock', 'kuroshio')
 KURO_DATA = ''
+# 黑潮 3.3.0（管理 API 版本 2）：立即更新過濾清單改成背景執行，預覽假裝跑 8 秒
+FILTER_RUN = {'runId': None, 'startedAt': None, 'finishedAt': None}
 
 
 def kuroshio_api(query, post):
@@ -339,6 +341,17 @@ def kuroshio_api(query, post):
             tw = ip.startswith(('1.', '36.', '59.', '61.', '101.', '114.', '118.', '168.95.'))
             return json.dumps({'ok': True, 'result': {'allowed': tw, 'reason': '台灣 IP（中華電信）' if tw else '不是台灣的 IP', 'applyTo': ['dot', 'doh', 'doq', 'doh3', 'site']}}, ensure_ascii=False)
         body = load('api_%s.json' % path.replace('/api/', '', 1).replace('/', '_'))
+        if body and path == '/api/status':
+            j = json.loads(body)
+            r = j.get('result') or {}
+            r['api'] = 2
+            run = FILTER_RUN
+            busy = run['runId'] is not None and now < run['runId'] + 8000
+            r.setdefault('filter', {})['update'] = {
+                'state': 'running' if busy else 'idle', 'runId': run['runId'], 'startedAt': run['startedAt'],
+                'finishedAt': None if busy or run['runId'] is None else run['runId'] + 8000,
+                'changed': None if busy or run['runId'] is None else True, 'error': None}
+            body = json.dumps(j, ensure_ascii=False)
         return body or '{"ok":false,"error":"黑潮 DNS 沒有回應"}'
     if not post:
         return '{"ok":false,"error":"不支援的操作，或這個操作需要用 POST"}'
@@ -349,6 +362,13 @@ def kuroshio_api(query, post):
             return json.dumps({'ok': True, 'result': {'ok': True, 'changed': True, 'backup': '/etc/storage/kuroshio/custom-rules.txt.bak'}})
         if path == '/api/ddns/update':
             return load('api_ddns.json')
+        if path == '/api/filter/update':
+            run = FILTER_RUN
+            started = run['runId'] is None or now >= run['runId'] + 8000
+            if started:
+                run['runId'] = run['startedAt'] = now
+            u = {'state': 'running', 'runId': run['runId'], 'startedAt': run['startedAt'], 'finishedAt': None, 'changed': None, 'error': None}
+            return json.dumps({'ok': True, 'result': {'started': started, 'running': True, 'runId': run['runId'], 'startedAt': run['startedAt'], 'update': u}})
         return json.dumps({'ok': True, 'result': {'ok': True}})
     if op == 'backup-export':
         return '{"ok":true,"size":304128}'
@@ -386,6 +406,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if path == '/kuroshio_api.cgi':
             self._send(kuroshio_api(url.query, False).encode('utf-8'), 'application/json')
             return
+        if path.startswith('/kuroshio-shared/') and KURO_DATA:
+            # 黑潮 3.3.0 的介面共用純函式（韌體裡是 /usr/share/kuroshio/shared 的連結）：data/dashboard 旁邊的 data/shared
+            f = os.path.join(os.path.dirname(os.path.normpath(KURO_DATA)), 'shared', os.path.basename(path))
+            if os.path.isfile(f):
+                self._send(open(f, 'rb').read(), 'application/javascript')
+                return
         if path.startswith('/kuroshio/') and KURO_DATA:
             # 儀表板（韌體裡是 /usr/share/kuroshio/dashboard 的連結）：--kuroshio-data 指到黑潮 DNS 原始碼的 data/dashboard
             f = os.path.join(KURO_DATA, os.path.basename(path))

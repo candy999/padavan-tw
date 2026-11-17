@@ -353,6 +353,23 @@
 	 * 廣告過濾（filter.js，含 3.2.0 的恢復預設清單、恢復預設自訂規則）
 	 * ===================================================================== */
 	var CAT = { ads: '廣告 / 追蹤', telemetry: '遙測 / 驗證', malware: '惡意 / 詐騙' };
+	/*
+	 * 恢復預設清單的比對：黑潮 3.3.0 起用韌體附的 KuroshioUiCore（跟 LuCI 同一份，K.core()）；
+	 * 3.2.x 韌體沒有那個檔，用下面這份（照 3.2.0 LuCI common.js 移植，同一份規則）
+	 */
+	function planner(core) {
+		if (core && typeof core.restorePlan === 'function' && typeof core.restoreSummary === 'function') return {
+			plan: core.restorePlan,
+			summary: function (ch) {
+				var s = core.restoreSummary(ch);
+				if (s.empty) return '<p class="kuroshio-restore-none">' + esc(s.empty) + '</p>';
+				return '<div class="kuroshio-restore-list">' + s.blocks.map(function (b) {
+					return '<div class="kuroshio-restore-' + esc(b.cls) + '"><b>' + esc(b.title) + '</b><ul class="kr-ul">' + b.items.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div>';
+				}).join('') + '</div>';
+			}
+		};
+		return { plan: restorePlan, summary: restoreSummary };
+	}
 	/* 跟 LuCI common.js 的 restorePlan 同一份規則：先用網址、再用名稱對應；網址不在預設裡的是自己加的 */
 	function restorePlan(cur, defs, removeOwn) {
 		var norm = function (x) {
@@ -486,21 +503,28 @@
 			restoreLists: function () {
 				var defs = K.def('filter.lists');
 				if (!Array.isArray(defs) || !defs.length) { U.toast('讀不到這個版本的預設清單，沒有變更', 'bad'); return; }
-				var cur = currentLists(), plan = restorePlan(cur, defs, false);
-				var p = U.dialog({ title: '恢復預設清單', ok: '恢復預設清單', danger: true,
-					body: '<p>把訂閱清單改回這個版本的預設：名稱、網址、分類、啟用狀態與順序。網址不在預設裡的清單是你自己加的，會保留並排在預設清單後面。</p>' +
-						'<div id="kuroshio-restore-summary">' + restoreSummary(plan.changes) + '</div>' +
-						'<p><label class="kr-inline-check"><input type="checkbox" id="kuroshio-restore-own"> 一併移除我自己加的清單</label></p>' +
-						'<p class="tw-small tw-muted">按下「恢復預設清單」後，還要按「儲存並套用」才會生效。</p>' });
-				var own = U.$('kuroshio-restore-own'), ok = U.$('tw-dialog-ok');
-				var draw = function () { plan = restorePlan(cur, defs, own.checked); U.$('kuroshio-restore-summary').innerHTML = restoreSummary(plan.changes); ok.disabled = !plan.changes.count; };
-				own.onchange = draw;
-				ok.disabled = !plan.changes.count;
-				return p.then(function (y) {
-					if (!y) return;
-					applyRestore(cur, plan);
-					K.redrawGrid('filter_list');
-					U.toast('已改成這個版本的預設清單（' + plan.changes.count + ' 項變更），按「儲存並套用」後生效', 'ok');
+				return K.core().then(function (core) {
+					var P = planner(core), cur = currentLists(), plan = null;
+					/* 比對失敗時說明原因並停用按鈕（同 LuCI 3.2.1），不要讓按鈕按了沒反應 */
+					var calc = function (removeOwn) {
+						try { plan = P.plan(cur, defs, removeOwn); return P.summary(plan.changes); }
+						catch (e) { plan = null; return K.note('無法比對目前的清單：' + esc(e && e.message || e), 'bad'); }
+					};
+					var p = U.dialog({ title: '恢復預設清單', ok: '恢復預設清單', danger: true,
+						body: '<p>把訂閱清單改回這個版本的預設：名稱、網址、分類、啟用狀態與順序。網址不在預設裡的清單是你自己加的，會保留並排在預設清單後面。</p>' +
+							'<div id="kuroshio-restore-summary">' + calc(false) + '</div>' +
+							'<p><label class="kr-inline-check"><input type="checkbox" id="kuroshio-restore-own"> 一併移除我自己加的清單</label></p>' +
+							'<p class="tw-small tw-muted">按下「恢復預設清單」後，還要按「儲存並套用」才會生效。</p>' });
+					var own = U.$('kuroshio-restore-own'), ok = U.$('tw-dialog-ok');
+					var draw = function () { U.$('kuroshio-restore-summary').innerHTML = calc(own.checked); ok.disabled = !plan || !plan.changes.count; };
+					own.onchange = draw;
+					ok.disabled = !plan || !plan.changes.count;
+					return p.then(function (y) {
+						if (!y || !plan) return;
+						applyRestore(cur, plan);
+						K.redrawGrid('filter_list');
+						U.toast('已改成這個版本的預設清單（' + plan.changes.count + ' 項變更），按「儲存並套用」後生效', 'ok');
+					});
 				});
 			},
 			/* 3.2.0：恢復預設自訂規則（服務會先備份成 custom-rules.txt.bak） */

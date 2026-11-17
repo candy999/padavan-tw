@@ -47,12 +47,40 @@ var KURO = (function () {
 	}
 	/* 動作類（POST，不自動重試：可能已經送到） */
 	function action(path, params) { return api('action', path, params, true); }
-	/* 更新過濾清單：要下載十幾份清單，D3 實測約 68 秒，超過後端轉接的 60 秒上限，會回「沒有回應」但其實有在更新 */
+	/*
+	 * 更新過濾清單
+	 * - 黑潮 3.3.0 起（管理 API 版本 2）：背景執行，立刻回 runId；結果在 /api/status 的 filter.update，
+	 *   state 是 idle 而且 runId 大於等於拿到的那一個，就是這一次（或之後的一次）結束了（docs/integration.md）
+	 * - 3.2.x 以前：等到下載完才回，D3 實測約 68 秒，超過後端轉接的 60 秒上限，會回「沒有回應」但其實有在更新
+	 */
+	var listsRun = null;
 	function updateLists() {
-		U.toast('更新中…清單下載約需 1～2 分鐘', 'ok');
-		return action('/api/filter/update').then(function (r) {
+		if (listsRun) { U.toast('過濾清單還在更新中，完成後會通知', 'warn'); return listsRun; }
+		U.toast('開始更新過濾清單…', 'ok');
+		listsRun = action('/api/filter/update').then(function (r) {
+			var x = r && r.ok !== false ? r.result : null;
+			if (x && x.runId != null) return waitLists(x.runId, Date.now());
 			if (r && r.ok === false && /沒有回應/.test(r.error || '')) { U.toast('已送出更新：清單下載比較久，約 1～2 分鐘後到「狀態」看過濾規則數', 'warn'); return; }
 			done(r, '已重新下載過濾清單');
+		}).then(function () { listsRun = null; }, function (e) { listsRun = null; throw e; });
+		return listsRun;
+	}
+	function waitLists(runId, t0) {
+		return new Promise(function (res) {
+			var tick = function () {
+				view('/api/status').then(function (s) {
+					var u = s && s.filter && s.filter.update;
+					if (u && u.state === 'idle' && u.runId != null && u.runId >= runId) {
+						if (u.error) U.toast('更新過濾清單失敗：' + u.error, 'bad');
+						else U.toast(u.changed === false ? '過濾清單都是最新的，沒有變動' : '已重新下載過濾清單', 'ok');
+						return res();
+					}
+					/* 等太久就不再追（服務可能重新啟動過，runId 從頭算） */
+					if (Date.now() - t0 > 6 * 60 * 1000) { U.toast('過濾清單更新還沒有結果，稍後到「狀態」看過濾規則數', 'warn'); return res(); }
+					setTimeout(tick, 3000);
+				});
+			};
+			setTimeout(tick, 2000);
 		});
 	}
 	/* 動作的結果：失敗時跳通知並回 null */
@@ -575,6 +603,22 @@ var KURO = (function () {
 			document.head.appendChild(s);
 		}));
 	}
+	/*
+	 * 黑潮 3.3.0 起的共用純函式（KuroshioUiCore：恢復預設清單的比對等，LuCI 與 Windows 設定頁用同一份）
+	 * 韌體的 /usr/share/kuroshio/shared，www 用連結 kuroshio-shared 指過去；3.2.x 沒有這個檔，回 null 讓各頁用自己的一份
+	 */
+	var coreP = null;
+	function core() {
+		if (window.KuroshioUiCore) return Promise.resolve(window.KuroshioUiCore);
+		if (coreP) return coreP;
+		return (coreP = new Promise(function (res) {
+			var s = document.createElement('script');
+			s.src = '/kuroshio-shared/ui-core.js';
+			s.onload = function () { res(window.KuroshioUiCore || null); };
+			s.onerror = function () { res(null); };
+			document.head.appendChild(s);
+		}));
+	}
 	function every(fn, ms) { var p = U.poll(fn, ms); timers.push(p); return p; }
 	function stopTimers() { timers.forEach(function (p) { p.stop(); }); timers = []; }
 
@@ -689,7 +733,7 @@ var KURO = (function () {
 		api: api, view: view, action: action, done: done, updateLists: updateLists, loadDefaults: loadDefaults, def: def,
 		uci: uci, nvGet: nvGet, nvSet: nvSet, isPro: isPro, field: field, fields: fields, grid: grid, redrawGrid: redrawGrid,
 		refresh: refresh, value: value, valueOfKey: valueOfKey, write: write, range: range, CHECK: CHECK, isIp4: isIp4, isIp6: isIp6, checkCidr: checkCidr,
-		card: card, badge: badge, table: table, kv: kv, tiles: tiles, pre: pre, note: note, btn: btn, fmtNum: fmtNum, pct: pct, time: time, bytes: bytes,
+		card: card, badge: badge, table: table, kv: kv, tiles: tiles, pre: pre, note: note, btn: btn, fmtNum: fmtNum, pct: pct, time: time, bytes: bytes, core: core,
 		page: page, every: every, start: start, render: render, current: function () { return cur; }, changes: changes, FIELDS: function () { return FIELDS; }
 	};
 })();
@@ -739,7 +783,8 @@ var KURO = (function () {
 			['拉回台灣', K.fmtNum(ra), 'CDN 連線的 ' + K.pct(ra, rn)],
 			['CDN 置換', K.fmtNum(cdn.rewrites), 'ECS ' + K.fmtNum(cdn.ecsRewrites) + ' · 跨 CDN ' + K.fmtNum(cdn.crossRewrites)],
 			['快取筆數', K.fmtNum(api.cacheEntries), 'CDN 網域庫 ' + K.fmtNum(api.cdn && api.cdn.domains)],
-			['過濾規則', K.fmtNum(api.filter && (api.filter.lists + api.filter.custom)), '自訂 ' + K.fmtNum(api.filter && api.filter.custom)]
+			['過濾規則', K.fmtNum(api.filter && (api.filter.lists + api.filter.custom)), '自訂 ' + K.fmtNum(api.filter && api.filter.custom) +
+				(api.filter && api.filter.update && api.filter.update.state === 'running' ? ' · 清單更新中…' : '')]
 		]));
 
 		var sys = api.system || {}, per = sys.persist || {}, lat = d.latency || {}, ls = api.listeners || {}, mem = sys.memory || {};
@@ -750,7 +795,9 @@ var KURO = (function () {
 			['硬體', (sys.memTotalMB ? sys.memTotalMB + ' MB · ' : '') + (sys.cores || '?') + ' 核', sys.arch || ''],
 			['系統記憶體', mem.availKB != null ? '可用 ' + mb(mem.availKB) + ' MB' : (sys.memAvailableMB != null ? '可用 ' + sys.memAvailableMB + ' MB' : '-'),
 				'保留 ' + mb(mem.reserveKB) + ' MB（' + (mem.reserveAuto ? '自動' : '設定') + '）' + (mem.headroomKB != null ? ' · 保留以上 ' + mb(mem.headroomKB) + ' MB' : '') +
-				(mem.enabled ? ' · ' + (mem.stateLabel || mem.state) + (mem.growth === false ? '（不再長大）' : '') : '') + (mem.psi ? ' · PSI ' + mem.psi.someAvg10 + '%' : '')],
+				(mem.enabled ? ' · ' + (mem.stateLabel || mem.state) + (mem.growth === false ? '（不再長大）' : '') : '') + (mem.psi ? ' · PSI ' + mem.psi.someAvg10 + '%' : '') +
+				/* 3.3.0：kuroshio notify trim（韌體更新等佔記憶體的操作之前）讓出記憶體後，這段時間不長大 */
+				(mem.holdUntil && mem.holdUntil > Date.now() ? ' · 已先讓出記憶體（到 ' + K.time(mem.holdUntil, 'time') + ' 前不長大）' : '')],
 			['本程式記憶體', sys.rssKB ? (sys.rssKB / 1024).toFixed(1) + ' MB' : '-', memSizes(mem.sizes)],
 			['快取命中率', d.hitRate != null ? d.hitRate + '%' : '-', '預取 ' + K.fmtNum(d.prefetch) + ' · 斷線回舊資料 ' + K.fmtNum(d.stale)],
 			['回應時間 p50 / p95', ms(lat.hit), '問上游 ' + ms(lat.miss)],
