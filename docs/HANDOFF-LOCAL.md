@@ -105,7 +105,7 @@ git pull
 
 詳細紀錄：HANDOFF-UI 第 11～13 節、`docs/VERIFY-*.md`。
 
-**注意**：`docs/ROADMAP.md` 的 C 章（後台）與 E8 等狀態**還沒跟實際進度同步**（例如 C3～C7 其實大部分已經做了），第一件事請先依 HANDOFF-UI 第 11 節把 ROADMAP 更新正確。
+**ROADMAP 已在 2026-11-18 跟實際進度同步**（C 章、E8、G、H1、I5、J6，並補上 A9～A12 的 D3 修正）。
 
 ---
 
