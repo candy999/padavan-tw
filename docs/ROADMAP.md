@@ -145,23 +145,23 @@
 
 ## G. 黑潮 DNS 整合
 
-使用官方 Release 的「Linux 通用包」（v3.3.0，執行檔＋`data/`＋預設 UCI 設定，核對 SHA256）；Release 附黑潮 DNS 原始碼包（核對 SHA256）；憑證用 acme.sh（Cloudflare DNS 驗證）。
+使用官方 Release 的「Linux 通用包」（v3.3.2，執行檔＋`data/`＋預設 UCI 設定，核對 SHA256）；Release 附黑潮 DNS 原始碼包（核對 SHA256）；憑證用 acme.sh（Cloudflare DNS 驗證）。
 設定用 OpenWrt 版同一套 UCI 格式，由 padavan-tw 的設定頁管理（黑潮 DNS 的管理網頁只接受本機連線）。**預設開啟**。
 
 | # | 項目 | 狀態 |
 |---|---|---|
-| G1 | 打包：執行檔、`data/`、預設 UCI 設定、acme.sh、CA 憑證清單；Release 附黑潮 DNS 原始碼（GPL-3.0） | ✅ D3 實機（3.3.0，613323c） |
-| G2 | `kuroshio.sh`：啟停、nvram → UCI、學習資料存放：兩台都放專用 Flash 資料區、由黑潮 DNS 自己控制寫入（CR6608 RWFS／UBIFS；D3 把原本重複、沒人用的 8 MB「Storage」改成 7.5 MB 的 Kuroshio 分割區 0x1800000～0x1f80000／JFFS2，真正存設定的 Storage（0x1f80000，512 KB）不動）；使用前讀裝置樹確認不重疊，CR6608 的 RWFS 有別人的資料就不碰，不能用時退回記憶體＋每日備份；升級時沒改過的設定檔換成新版預設；黑潮的設定改了就存進 Flash（`kuroshio.sh storage-save`） | ✅ D3 實機（CR6608 待實機） |
+| G1 | 打包：執行檔、`data/`、預設 UCI 設定、acme.sh、CA 憑證清單；Release 附黑潮 DNS 原始碼（GPL-3.0） | ✅ D3 實機（3.3.2，0bb30a1） |
+| G2 | `kuroshio.sh`：啟停、nvram → UCI、學習資料存放：兩台都放專用 Flash 資料區、由黑潮 DNS 自己控制寫入（CR6608 RWFS／UBIFS；D3 把原本重複、沒人用的 8 MB「Storage」改成 7.5 MB 的 Kuroshio 分割區 0x1800000～0x1f80000／JFFS2，真正存設定的 Storage（0x1f80000，512 KB）不動）；使用前讀裝置樹確認不重疊，CR6608 的 RWFS 有別人的資料就不碰，不能用時退回記憶體＋每日備份；升級時沒改過的設定檔換成新版預設、改過的用 `kuroshio uci-migrate`；黑潮的設定改了就存進 Flash（`KUROSHIO_ON_CONFIG_WRITE` → `kuroshio.sh storage-save`） | ✅ D3 實機（CR6608 待實機） |
 | G3 | dnsmasq 接管：`no-resolv`、`cache-size=0`，上游依保護狀態寫進 servers-file；DDR（網域指向路由器）、DNR（DHCP 選項 162） | ✅ 待實機 |
-| G4 | 保護：每秒檢查程式、每 10 秒查 `_dns.resolver.arpa`，連續 3 次沒回答改用業者 DNS，恢復就切回 | ✅ 待實機 |
+| G4 | 保護：每秒檢查程式、每 10 秒查 `_dns.resolver.arpa`（沒回答過一次就改成每秒查），連續 3 次沒回答改用業者 DNS，恢復就切回；重新載入設定期間不算 | ✅ D3 實機 |
 | G5 | 防火牆：開放 DoT／DoQ／DoH 給外網、外部 443 轉到路由器 8443；只讓台灣 IP 由黑潮 DNS 在程式內判斷 | ✅ 待實機 |
 | G6 | 設定頁（DNS 服務）：網域、Token、DDNS、憑證申請、加密 DNS、對外開放、進階 UCI 編輯、狀態、啟用 RWFS | ✅ |
 | G7 | 憑證同步給後台 HTTPS；WireGuard 連線位址帶入黑潮 DNS 網域；隱藏 Padavan 原本的 DDNS 頁 | ✅ 待實機 |
 | G8 | SmartDNS 從韌體移除 | ✅ |
 | G9 | 儀表板加上 DNS 統計（經路由器本機讀黑潮 DNS 的 `/api/status`、`/api/dashboard`）：黑潮 DNS 頁的「儀表板」分頁，直接用韌體附的 `dashboard.js` | ✅ |
-| G10 | 實機記錄：MIPS 上的記憶體高點、每天寫入量、啟動時間，回報給黑潮 DNS 專案（評測 96 MB → 3.3.0 的 45.5 MB、節點池重跑、日誌洗版都已回報並修正） | ✅ |
+| G10 | 實機記錄：MIPS 上的記憶體高點、每天寫入量、啟動時間，回報給黑潮 DNS 專案（評測 96 MB → 3.3.0 的 45.5 MB、節點池重跑、日誌洗版、寫入設定的外部指令、UCI 重新載入失敗都已回報並修正；3.3.2 的記憶體三階段與重新載入後幾秒不回答已回報） | ✅ |
 | G11 | 黑潮 DNS 後台頁（LuCI 介面移植：狀態、儀表板、設定、連線來源、廣告過濾、CDN、社群、進階、日誌；自訂規則與評測名單可以編輯） | ✅ D3 實機 |
-| G12 | 學習資料匯入（上傳 .kuroshio）、UCI 改用 SIGHUP 重新載入（不重新啟動） | 📋 |
+| G12 | 學習資料匯入（上傳 .kuroshio）、UCI 改用 SIGHUP 重新載入（不重新啟動） | ✅ D3 實機（0bb30a1） |
 
 ## H. 測試
 

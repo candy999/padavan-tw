@@ -642,3 +642,47 @@ Padavan 跟 LuCI 不同的地方（照 13.2、13.4）：網域、Token、DDNS �
 - 黑潮的 `KUROSHIO_ON_CONFIG_WRITE` 在 Padavan 上不會觸發（監看的資料夾不含 `KUROSHIO_ETC`），已回報黑潮；Padavan 這邊用「每個後台動作之後存一次」補上，黑潮修好後兩邊都會呼叫，沒有副作用
 - Padavan 其他檔案欄位（腳本、dnsmasq 設定等）照上游的做法，還是只在正常重開機時寫進 Flash；要一起改的話，在 `web_ex.c` 的檔案欄位處理後面同樣呼叫 `mtd_storage.sh save`
 - CR6608 還沒在實機上測過 3.3.0（RWFS 模式、128 MB 記憶體）
+
+> 上面「還沒做」的前三項已在 13.12（黑潮 DNS 3.3.2）完成。
+
+### 13.12 黑潮 DNS 3.3.2 整合（2026-11-18，D3 實機）
+3.3.1 沒有單獨發布，3.3.0 回報的五點與 3.3.1 審查的修正都在 3.3.2。設定格式與 API 跟 3.3.0 相同；預設 UCI 也跟 3.3.0 一模一樣（sha256 `2acf7cb3…`），所以 D3 升級時不會動設定檔。
+
+| 項目 | 做法 | D3 實機結果 |
+|---|---|---|
+| 升級到 3.3.2 | `Makefile`：v3.3.2、通用包與原始碼包的 SHA256 | CI 四個機型都成功；D3 用 SSH 刷 `0bb30a1` 的 `NEWIFI3-oc1000`（SHA256 `78ecebad…3992`，uImage 標頭與資料 CRC 都核對過），約 115 秒開機，`kuroshio 3.3.2`；設定檔等於預設，沒有遷移；開機 2 秒接管 DNS |
+| 改設定不重新啟動 | rc 的 `restart_kuroshio` 先呼叫 `kuroshio.sh reload`：還在執行、日誌等級沒改 → 重寫 UCI 後送 SIGHUP，在同一個行程裡重新載入，不改用業者 DNS、不重啟 dnsmasq；`reload` 回非 0（例如改了日誌等級、黑潮沒在跑）才照舊 stop／start。等新的一輪跑滿 8 秒、有回答才結束，這段期間保護程式不算沒回應（`$RUN/reloading`，最多 2 分鐘） | 同一個 PID、`uptimeSec` 歸零、`use` 一直是 kuroshio、dnsmasq 沒重啟。新設定有錯（同名區段型別不同）時黑潮繼續用上一份設定，`/api/status` 的 `reload.usingPrevious=true`、warnings 有原因，狀態頁顯示「新設定無法套用」；改回來再存就清掉。經 rc（改 `kuroshio_access` 後通知 `restart_kuroshio`）約 10 秒套用；改 `kuroshio_log` 則照舊完整重新啟動（PID 換了） |
+| 檢查用小設定檔 | `kuroshio health／status` 改讀 `$RUN/probe.uci`（只有 DNS 埠與管理埠）：使用者存了一份讀不進來的 UCI 時，用 `$UCI` 會讀不到設定、保護程式以為黑潮沒回應而改用業者 DNS | 壞設定期間保護程式沒有切換 |
+| 升級遷移 | 設定檔等於舊版預設 → 整份換新（加上 3.3.0 的雜湊值）；改過的 → `kuroshio uci-migrate <使用者設定檔> -o 暫存檔`，比對內容有變才換上（看不懂的 lists_version 會印說明但不改檔，不能看輸出判斷）。不再留 `.migrate_note` 提示 | 3.1.0／3.2.0 預設 → 整份換成 3.3.2 預設；3.2.0 改過（停用 OISD、加自己的清單）→ 最後加 4 份不勾選的清單、lists_version 3.3，OISD 仍停用、自己的清單還在；再跑一次不改檔；CRLF＋BOM 的檔照樣遷移；`lists_version 'abc'` 不動並記一行說明 |
+| 寫入設定後存 Flash | 3.3.2 起黑潮連社群金鑰與邀請也會呼叫 `KUROSHIO_ON_CONFIG_WRITE`，`api_action` 不再每個動作都存一次 | 恢復預設自訂規則後 3 秒內執行一次，`KUROSHIO_CONFIG_FILES` 帶 custom-rules.txt 與 .bak |
+| `storage_save` 的鎖 | 鎖裡記 PID，程式不在了就接手；最後一次檢查之後才進來的呼叫會再搶一次鎖接著存 | 殘留的鎖（PID 不存在）會被接手、做完清掉；活著的程式拿著鎖時不重複開 |
+| 程式辨識 | `main_pid` 只認 `kuroshio run`：`pidof` 會把 `kuroshio health／export／notify` 也算進去，`stop` 以前會連 04:41 的每日匯出一起殺掉 | 啟停、保護、flush 都用它 |
+| 停止 | 只對服務本體送 SIGTERM，最多等 30 秒（以前 15 秒；結束了就不等），被強制停止會記一行 | 2 秒停完；黑潮日誌「關機前寫出 0 份快照，0 KB，9 ms」 |
+| 保護程式 | 平常每 10 秒檢查；沒回答過一次就改成每秒檢查，約 5 秒內決定要不要改用業者 DNS（以前要 30 秒） | |
+| dnsmasq 額外設定 | busybox 沒有 `cmp`，以前每次比對都當成不同、每次啟動都重啟一次 DHCP／dnsmasq；改用 md5sum | `kuroshio.sh restart` 前後 dnsmasq 的啟動次數不變 |
+| 開機匯入備份 | 3.3.2 起部分項目失敗時結束碼是 1：失敗不建 `imported`，下次啟動再試，日誌記一行 | |
+| 學習資料匯入（G12） | httpd 新增 `kuroshio_import.cgi`：multipart 上傳到 `/tmp/kuroshio/import.kuroshio`（檢查開頭是 zstd、最大 16 MB、0600），要 login_safe 與同一個來源才交給 `kuroshio.sh import-upload` → `curl --data-binary` 到黑潮的 `/api/backup/import`；前端「進階」頁的匯入按鈕打開，送出後等 `/api/backup/last-import` 的 `importedAt` 變了就顯示每一項的結果 | 匯出 305 KB 的完整備份再匯入：十項都是「保留本機」（「CDN 候選 IP」也正確判斷成本機已有，這是 3.3.2 的修正）；不是 zstd 的檔案回「不是黑潮 DNS 的備份檔」；「進階」頁的匯入按鈕與說明都在，主控台沒有錯誤 |
+| 後台存檔被截斷 | httpd 的表單緩衝只有 64 KB，超過的部分直接丟掉、照樣存進 Flash。前端改成算整份表單編碼後的大小（換行是 CRLF、中文一個字 9 bytes），超過 64000 就擋下並提示分次存 | 自訂規則加 450 行中文（檔案 35.9 KB，以前 60 KB 的檢查會放行、送出後被截斷）：提示「送出時約 97 KB」，沒有送出 |
+| 跨站請求（CSRF） | httpd 解析 `Host`、`Origin`、`Referer`；`kuroshio_api.cgi` 會改變狀態的操作與匯入，要 Origin（沒有就看 Referer）的主機等於 Host 才執行 | 從 `http://127.0.0.1:8088` 的網頁送表單到 `kuroshio_api.cgi`（瀏覽器有帶登入資訊）：回「來源網頁不符」、沒有執行；後台頁面自己的 flush、匯出、匯入照常 |
+| 狀態頁 | 顯示 `warnings`（清單下載失敗、存取控制資料讀不到、時間沒對時等）與 `reload.error`（結論改成「新設定無法套用」），「本程式記憶體」顯示 `memory.jobs`（評測中的原始答案、連線） | |
+| 其他 | UCI 值改用環境變數傳給 awk（反斜線不會被吃掉）；網域只收英數字、點、連字號；DoH 埠號 1～65535 以外用預設；UCI 去掉 BOM 與 CR；`/api/cdn/domains` 一次最多 2000 筆；日誌 JSON 濾掉控制字元；匯出檔只有有權限的請求才刪；「直接編輯設定檔」卡片以前因為多一個分號從沒顯示 | |
+| dhcp6c 洗日誌 | busybox dhcp6c：Solicit 帶 rapid commit、Reply 裡要的 IA 一個前綴都沒有（業者回 NoPrefixAvail）時，以前會 `remove_ia → client6_start` 立刻重來，每秒送 2～5 次、syslog 整個被洗掉；改成跟 Advertise 一樣忽略，照 Solicit 的重送間隔逐次加倍 | 刷機後 5 分鐘 dhcp6c 只有 19 行（以前每秒 2～5 行），重送間隔 36 → 16 → 33 → 68 → 132 秒；開機 5 分鐘 syslog 共 615 行 |
+
+**實機觀察，已回報黑潮**：SIGHUP 之後新的一輪第 1 秒就會回答，接著約 4 秒忙著載入（過濾清單、CDN 資料庫）不回答 DNS、管理 API 也沒回應（`uptimeSec` 照樣在算，不是又重啟）。`reload` 因此等跑滿 8 秒才結束，避免保護程式誤判。
+
+**記憶體三階段（3.3.2，D3，手動跑一次每日評測，已回報黑潮）**：
+
+| 時間點 | RSS | memory.jobs | memory.sizes（快取／CDN／清單） |
+|---|---|---|---|
+| 評測前 | 19.9 MB | 沒有工作 | 4 KB／1.73 MB／2.95 MB |
+| 開始 3 分鐘（資格賽） | 30.8 MB | rawBytes 0、連線 0 | 同上（清單補到 3.40 MB） |
+| 評測中高點 | 44.7 MB（HWM 45.5 MB） | rawBytes 6.08 MB、連線 32 | 18 KB／1.73 MB／3.40 MB |
+| 評測後 | 44.4 MB | 回到 null／0 | 同上 |
+| `notify trim` 後 75 秒 | 43.4 MB | null／0 | 18 KB／**12 KB**／3.40 MB |
+
+trim 把 CDN 冷資料移出記憶體（1.7 MB），RSS 只降 1 MB；評測後比評測前多約 24 MB，`memory.sizes` 只能解釋約 1 MB 的增加。資格賽階段 RSS 漲了約 11 MB，`rawBytes` 卻還是 0。
+
+**還沒做（不影響使用）**：
+- CR6608 還沒實機測（RWFS、256 MB 記憶體）
+- 查看類的 GET（`/api/trace` 等）還沒擋跨站與外網登入；httpd 的 `login_safe` 看的是上一個登入者的來源（httpd 本身的問題）
+- Padavan 其他檔案欄位（腳本、dnsmasq 設定等）仍然只在正常重開機時存進 Flash
