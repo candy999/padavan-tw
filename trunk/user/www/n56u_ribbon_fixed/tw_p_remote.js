@@ -51,7 +51,7 @@ function rm_vpn(r) {
 		return;
 	}
 	var ep = rm_endpoint();
-	if (ep && !NV.wgs_host && ep == NV.wan_ip) h += '<div class="tw-note tw-s-warn">用的是目前的 IP（' + U.esc(ep) + '），浮動 IP 會變。建議在 <a href="Advanced_kuroshio.asp">黑潮 DNS</a> 設定網域並開啟 DDNS。</div>';
+	if (ep && !NV.wgs_host && ep == NV.wan_ip) h += '<div class="tw-note tw-s-warn">用的是目前的 IP（' + U.esc(ep) + '），浮動 IP 會變。建議在 <a href="tw_kuroshio.asp#settings">黑潮 DNS</a> 設定網域並開啟 DDNS。</div>';
 	var live = {};
 	if (r && r.available !== false && r.peers) r.peers.forEach(function (p) { live[p.name] = p; });
 	var rows = WGPEERS.map(function (p) {
@@ -183,6 +183,6 @@ function rm_domain(r) {
 	h += '<dt>自動更新 IP</dt><dd>' + (NV.kuro_on == '1' && NV.kuro_ddns == '1' ? '黑潮 DNS DDNS 開啟' : NV.ddns_on == '1' ? 'DDNS 開啟' : '關閉') + '</dd>';
 	if (r && r.cert_expiry_ts) h += '<dt>憑證</dt><dd>' + Math.round((r.cert_expiry_ts - Date.now() / 1000) / 86400) + ' 天後到期（自動更新）</dd>';
 	else h += '<dt>憑證</dt><dd class="tw-muted">' + (r && r.available === false ? '--' : '到期日需要更新韌體後才看得到') + '</dd>';
-	h += '</dl><p class="tw-small">有了網域，WireGuard 和連接埠轉送就不怕浮動 IP 改變。</p><div class="tw-actions">' + U.button('設定網域與 DDNS', { small: true, href: 'Advanced_kuroshio.asp' }) + '</div>';
+	h += '</dl><p class="tw-small">有了網域，WireGuard 和連接埠轉送就不怕浮動 IP 改變。</p><div class="tw-actions">' + U.button('設定網域與 DDNS', { small: true, href: 'tw_kuroshio.asp#settings' }) + '</div>';
 	U.set('rm-domain', h);
 }

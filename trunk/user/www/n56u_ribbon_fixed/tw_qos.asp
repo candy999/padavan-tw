@@ -22,9 +22,14 @@
 /* padavan-tw：頻寬管理：怎麼讓視訊、遊戲不卡？（docs/HANDOFF-UI.md 5.5） */
 <% login_state_hook(); %>
 var NV = {
-	qos_mode: "<% nvram_get_x("", "tw_qos_mode"); %>",
-	qos_down: "<% nvram_get_x("", "tw_qos_down"); %>",
-	qos_up: "<% nvram_get_x("", "tw_qos_up"); %>",
+	mode: "<% nvram_get_x("", "hw_qos_mode"); %>",
+	wlan: "<% nvram_get_x("", "hw_qos_wlan"); %>",
+	down: "<% nvram_get_x("", "hw_qos_down"); %>",
+	up: "<% nvram_get_x("", "hw_qos_up"); %>",
+	tech: "<% nvram_get_x("", "hw_qos_tech"); %>",
+	over: "<% nvram_get_x("", "hw_qos_over"); %>",
+	under: "<% nvram_get_x("", "hw_qos_under"); %>",
+	method: "<% nvram_get_x("", "hw_qos_method"); %>",
 	sqm_on: "<% nvram_get_x("", "sqm_enable"); %>",
 	hw_nat: "<% nvram_get_x("", "hw_nat_mode"); %>"
 };

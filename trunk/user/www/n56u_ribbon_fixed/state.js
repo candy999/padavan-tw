@@ -422,7 +422,7 @@ if (found_app_adbyby()){
 	tablink[14] = (ad_array);
 }
 if (found_app_kuroshio()){
-	kuroshio_array = new Array("","Advanced_kuroshio.asp");
+	kuroshio_array = new Array("","tw_kuroshio.asp");
 	tablink[15] = (kuroshio_array);
 }else if (found_app_smartdns()){
 	smartdns_array = new Array("","Advanced_smartdns.asp");
@@ -1821,10 +1821,21 @@ function tw_ui_init(){
 		var a = e.target.closest ? e.target.closest('a') : null;
 		if (a && a.getAttribute('href') && a.getAttribute('href').indexOf('javascript') != 0) tw_nav(false);
 	});
-	// 圖表（Highcharts）在版面定案前就量了寬度：載入後讓它依最後的欄寬重排一次
+	// 圖表（Highcharts）在版面定案前就量了寬度，分頁隱藏中的圖表也跟不上視窗縮放：
+	// 監看每個圖表的容器，寬度變了（包括從隱藏變成顯示）就重排
 	window.addEventListener('load', function(){
 		setTimeout(function(){
-			if (window.Highcharts && Highcharts.charts) Highcharts.charts.forEach(function(c){ if (c && c.reflow) c.reflow(); });
+			if (!window.Highcharts || !Highcharts.charts) return;
+			Highcharts.charts.forEach(function(c){
+				if (!c || !c.reflow) return;
+				c.reflow();
+				if (window.ResizeObserver && c.renderTo) {
+					new ResizeObserver(function(){
+						var w = c.renderTo.clientWidth;
+						if (w > 0 && Math.abs(w - c.chartWidth) > 2) c.reflow();
+					}).observe(c.renderTo);
+				}
+			});
 		}, 300);
 	});
 	// 很多頁面在載入後才用 JS 填入表格（裝置清單、轉送規則…），內容變動時重新標記

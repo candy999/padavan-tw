@@ -410,7 +410,7 @@ scp -r trunk/user/www/n56u_ribbon_fixed/state.js admin@192.168.2.1:/www/
 | 連接埠轉送 | `IPConnection;` 清單 `VSList` | `vts_port_x_0` 等 7 欄，未開啟時 `vts_enable_x=1` |
 | UPnP | `IPConnection;` | `upnp_enable_x` |
 | 管理密碼、定時重開機、燈號 | `General;` | `http_passwd`；`reboot_schedule_enable`、`reboot_schedule`（7 碼星期＋HHMM）；`front_led_all` |
-| 頻寬管理 | `IPConnection;` | `hw_qos_mode`、`hw_qos_wlan`、`hw_qos_down`、`hw_qos_up`、`hw_qos_tech`、`hw_qos_over`、`hw_qos_under`、`hw_qos_method`（後端已登記；限速控制器 E4～E8 還沒做，見 `docs/LOCAL-NEXT.md`） |
+| 頻寬管理 | `IPConnection;` | `hw_qos_mode`、`hw_qos_wlan`、`hw_qos_down`、`hw_qos_up`、`hw_qos_tech`、`hw_qos_over`、`hw_qos_under`、`hw_qos_method`（後端已登記；限速控制器 E4～E8 還沒做，見 `docs/LOCAL-NEXT.md`）。**2026-11-14 頁面已改用並實機驗證**（6f3e3df）：切到自動 → `hnat_qos=1`、`hnat_qos_wlan=1`，syslog「Hardware QoS: on (wired), on (wlan)」；進階區關掉「Wi-Fi 裝置也套用頻寬管理」→ `hnat_qos_wlan=0`、「on (wired), off (wlan)」；關閉 → 兩個都 0。頁面在模式不是關閉時明寫「限速功能尚未提供，只會經過排程、不限速」 |
 
 清單類先送 `action_mode=" Add "`（或 `" Del "`），等 `start_apply.htm` 呼叫 `parent.done_validating()` 後再送 `" Restart "`，與舊頁面相同（`TW.listAdd()`）。
 
@@ -548,3 +548,35 @@ scp -r trunk/user/www/n56u_ribbon_fixed/state.js admin@192.168.2.1:/www/
 - 學習資料匯入（上傳檔案）
 - UCI 改動不重新啟動、改用 SIGHUP 重新載入（較快、不中斷 DNS）
 - 憑證申請進度（`acme-log`）的 API
+
+### 13.8 實作進度（本機，2026-11-14，韌體 6f3e3df、黑潮 DNS 3.2.0）
+**已完成**，入口：「網際網路」→ DNS 卡片的「黑潮 DNS 完整設定」，或直接開 `tw_kuroshio.asp`（`#status`、`#dashboard`、`#settings`、`#access`、`#filter`、`#cdn`、`#community`、`#advanced`、`#log`）。「進階設定」裡原本的黑潮 DNS 連結也改到新頁；舊的 `Advanced_kuroshio.asp`（整份 UCI 文字框、CR6608 的 RWFS 啟用）保留，從「進階」分頁連過去。
+
+| 檔案 | 內容 |
+|---|---|
+| `tw_kuroshio.asp` | 外殼：nvram（`KuroshioConf`，Token 只傳「有沒有設定」）、UCI 檔與自訂規則、評測名單原文（`<xmp>`，不解析 HTML 實體） |
+| `tw_kuro.js` | 框架：`/kuroshio_api.cgi`（13.3 的雙層編碼，同時最多 2 個請求）、UCI 讀寫（沒改的行原樣輸出，保留註解與不認得的區段／選項）、表單產生器（欄位描述、檢查、依賴、簡易／專業模式）、區段清單（新增、刪除、上下移）、儲存列（一次送出 UCI＋nvram，超過 60 KB 擋下）；狀態、儀表板、日誌三頁 |
+| `tw_kuro_conf.js` | 基本設定、連線來源、廣告過濾（含 3.2.0 恢復預設清單、恢復預設自訂規則）、CDN 台灣節點、進階（含學習資料匯出） |
+| `tw_kuro_comm.js` | 社群（身分、邀請碼、加好友、好友與請求、事件、自動規則） |
+| `trunk/user/www/Makefile` | `/www/kuroshio` → `/usr/share/kuroshio/dashboard`（儀表板直接用韌體裡黑潮 DNS 附帶的 dashboard.js／css，不另外複製一份） |
+| `tools/ui-preview/serve.py`、`mock/kuroshio/` | `/kuroshio_api.cgi` 模擬（從 D3 抓的真實回應，已遮掉 IPv6 前綴、MAC、瀏覽過的網域；社群是示範資料）；`--kuroshio-data <黑潮原始碼>/data/dashboard` 讓儀表板分頁也能預覽 |
+
+Padavan 跟 LuCI 不同的地方（照 13.2、13.4）：網域、Token、DDNS 開關、DoT／DoQ／DoH、DoH 埠、開放外網、來源模式、日誌等級改 nvram；DNS 接管方式、DNS／管理 API 埠、資料目錄、憑證來源與金鑰類型、DDNS 的 IP 來源由 `kuroshio.sh` 決定，不顯示；DoT／DoQ 埠號固定 853（防火牆規則跟著它）。憑證申請進度沿用舊頁的 `SystemCmd kuroshio.sh acme-log`（只限區網登入）。
+
+**驗收（13.6）**
+- 預覽：9 頁 × 360／390／768／1024／1440 寬跑版檢查 0 個問題；亮／暗色、手機底部選單下的儲存列位置正確
+- 實機（D3）：9 頁都讀到真實資料；清除快取、立即儲存學習資料（「寫了 31 份快照，共 89 KB」）、執行排程工作（排進佇列）都有效
+- UCI：關掉「blocklistproject smart-tv」→ 儲存並套用 → 檔案只變那一行；事先手動加進檔案的不認得選項（`main.tw_unknown_opt`）與區段（`config tw_unknown_section`＋兩個 `list`）都保留；服務重新啟動後 `op=status` 的過濾清單 10 → 9
+- 恢復預設自訂規則：檔案換成 `/usr/share/kuroshio/default-custom-rules.txt`（12,946 位元組），舊的備份成 `custom-rules.txt.bak`
+- 恢復預設清單：預覽測過（停用一份、刪一份、加一份自己的 → 列出「會新增／啟用改回／保留自己加的」，套用後順序與內容回到預設，自己的清單排最後）
+- 匯出：分享檔 247 KB 下載成功（zstd），第二次開是空的（下載後刪除）
+- **還沒測：重開機後設定還在、自訂規則重設後還在**——測完 UCI 改動後，電腦離開了 D3 的區網（3 天後只連得到上層路由器，D3 的 WAN 不開 SSH）。下次在 D3 區網：`/usr/bin/kuroshio.sh flush` → 後台重開機 → 確認 `/etc/storage/kuroshio/kuroshio.uci` 的 smart-tv 還是關、`tw_unknown_*` 還在、`custom-rules.txt` 是 12,946 位元組；然後把 UCI 還原（測試前的備份在 `/tmp/kuroshio.uci.before-uitest`，重開機後就沒了，可以改用「恢復預設清單」並刪掉測試用的兩段）
+
+### 13.9 後端問題（交給雲端，2026-11-14 實機）
+1. **`kuroshio.sh` 的 `api_fetch` 用 `curl -f`，管理 API 的錯誤原因被吃掉**：DDNS 沒開時按「立即更新 DDNS」，管理 API 回 `HTTP 400 {"error":"DDNS 未啟用"}`，轉接後變成 `{"ok":false,"error":"黑潮 DNS 沒有回應"}`。建議拿掉 `-f`、用 `-w '%{http_code}'` 判斷：2xx 包成 `{"ok":true,"result":…}`，其他回 `{"ok":false,"error":<回應的 error>}`。前端先把 DDNS 沒開時的按鈕停用
+2. **`/api/filter/update` 超過轉接的 60 秒上限**：D3 實測 68 秒（`curl -m 280` 直接打管理 API，回 `{"changed":true}`），轉接的 `curl -m 60` 先逾時，頁面看到「沒有回應」但其實有更新。建議這個路徑放寬到 180 秒，或改成背景執行。前端先改成提示「已送出，約 1～2 分鐘後看過濾規則數」
+3. **自訂規則、評測名單不能從後台寫入**：`KuroshioConf` 只有 `kuroshio.kuroshio.uci` 一個檔案欄位。需要 `kuroshio.custom-rules.txt`（存檔後黑潮 DNS 3 秒內自己重新載入，不用重新啟動）與 `kuroshio.benchmark/{iplist,dohlist,dotlist,doqlist,web,blacklist}.txt`（`benchmark` 子資料夾要先建立）。前端目前唯讀顯示，標明「這一版還不能修改」
+4. **`/etc/storage/kuroshio/backup.kuroshio`（303 KB）在 jffs2 模式下還留著**：是之前放記憶體時的每日備份，第一次開機已經匯入（syslog「已匯入學習資料備份」），之後沒用了，卻佔掉 Storage 分割區（512 KB）的大半：整個 `/etc/storage` 壓縮後 333 KB，再大就會超過 `mtd_storage.sh save` 的上限、**所有設定都存不進去**（存檔失敗只記 log）。建議資料區是 jffs2／rwfs 時，匯入成功後刪掉這個檔
+5. **黑潮核心：`cdn-pool` 每次重新啟動都重跑**：工作設定 `runIfMissing: state/cdn/pools.json`，但學習資料寫到 Flash 的是 `pools.json.zst`，所以每次啟動都判斷「首次執行（缺少 state/cdn/pools.json）」，即使 07:24 剛成功過。在後台改任何黑潮設定都會重新啟動服務，接著重跑約 20 分鐘的節點池重建（CPU 很高）。要回報黑潮 DNS 專案（檢查時也認 `.zst`）
+6. 黑潮核心：長時間運作每 15 秒左右一行 `WARN duplicate reset token`，會洗掉日誌緩衝區（請黑潮 DNS 確認）
+7. 小問題：`/etc/storage/kuroshio/.migrate_note` 與（3.2.0 之前寫的）`custom-rules.txt` 權限是 0666；13.7 的三項（匯入、SIGHUP 重新載入、憑證進度 API）照舊需要

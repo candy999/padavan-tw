@@ -44,6 +44,7 @@ NVRAM = {
     'wl_HT_BW': '2', 'tw_acs_hour': '4', 'ipv6_service': 'dhcp6', 'wan_dnsenable_x': '1', 'upnp_enable_x': '1', 'wan_mtu': '1500', 'wan_pppoe_mtu': '1492',
     'wan_pppoe_passwd': 'secret', 'wan_ipaddr': '', 'wan_netmask': '', 'wan_gateway': '', 'wan_dns1_x': '', 'wan_dns2_x': '', 'wan_hostname': '',
     'kuroshio_filter': '1', 'kuroshio_cdn': '1', 'reboot_schedule_enable': '1', 'reboot_schedule': '00000010500', 'front_led_all': '1',
+    'hw_qos_mode': '2', 'hw_qos_wlan': '1', 'hw_qos_down': '500', 'hw_qos_up': '250', 'hw_qos_tech': 'ftth', 'hw_qos_over': '15', 'hw_qos_under': '15', 'hw_qos_method': '0',
     'http_username': 'admin', 'dhcp_static_arp': '0', 'dhcp_static_x': '1', 'dhcp_staticnum_x': '3', 'vts_enable_x': '1', 'vts_num_x': '2', 'dhcp_start': '192.168.2.100', 'dhcp_end': '192.168.2.244',
 }
 
@@ -263,6 +264,10 @@ def call_hook(name, args):
         return '["3478:3480","192.168.2.52","","BOTH","","","PS5"],["5001","192.168.2.20","","TCP","","","NAS 遠端存取"]'
     if name == 'get_nvram_list' and 'WGSPeerList' in args:
         return '["我的手機","Hj8kZ3T0aB9cD1eF2gH3iJ4kL5mN6oP7qR8sT9uV0wX=","*","2"],["公司筆電","Qw1eR2tY3uI4oP5aS6dF7gH8jK9lZ0xC1vB2nM3qW4=","*","3"]'
+    if name == 'nvram_dump' and args and args[0].startswith('kuroshio.'):
+        # 黑潮 DNS 的 UCI 設定檔、自訂規則（mock/kuroshio/ 底下；沒有的檔案跟 httpd 一樣輸出空白）
+        f = os.path.join(MOCK_KURO, args[0][9:].replace('/', '_'))
+        return open(f, encoding='utf-8').read() if os.path.isfile(f) else ''
     if name == 'kuroshio_status':
         return 'function kuroshio_status() { return 2;}\n'
     if name == 'nf_values':
@@ -306,6 +311,52 @@ def render(text, dct):
     return text
 
 
+MOCK_KURO = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mock', 'kuroshio')
+KURO_DATA = ''
+
+
+def kuroshio_api(query, post):
+    """/kuroshio_api.cgi 的模擬：查看類讀 mock/kuroshio/（從實機抓的回應，已遮掉個人資料），動作類回成功"""
+    qv = urllib.parse.parse_qs(query, keep_blank_values=True)
+    op = qv.get('op', [''])[0]
+    path = qv.get('path', [''])[0]
+    inner = urllib.parse.parse_qs(qv.get('q', [''])[0])
+    arg = lambda k: inner.get(k, [''])[0]
+    now = int(time.time() * 1000)
+
+    def load(name):
+        f = os.path.join(MOCK_KURO, name)
+        return open(f, encoding='utf-8').read() if os.path.isfile(f) else None
+    if op in ('status', 'defaults', 'about', 'dnr', 'log'):
+        return load('op_%s.json' % op) or '{"ok":false,"error":"預覽沒有這個模擬資料"}'
+    if op == 'api':
+        if path == '/api/filter/check' and arg('name'):
+            n = arg('name')
+            hit = any(w in n for w in ('ad', 'track', 'doubleclick'))
+            return json.dumps({'ok': True, 'result': {'action': 'block' if hit else None, 'rule': '||%s^' % n if hit else None, 'tier': 'list' if hit else None, 'cat': 'ads' if hit else None}}, ensure_ascii=False)
+        if path == '/api/access' and arg('ip'):
+            ip = arg('ip')
+            tw = ip.startswith(('1.', '36.', '59.', '61.', '101.', '114.', '118.', '168.95.'))
+            return json.dumps({'ok': True, 'result': {'allowed': tw, 'reason': '台灣 IP（中華電信）' if tw else '不是台灣的 IP', 'applyTo': ['dot', 'doh', 'doq', 'doh3', 'site']}}, ensure_ascii=False)
+        body = load('api_%s.json' % path.replace('/api/', '', 1).replace('/', '_'))
+        return body or '{"ok":false,"error":"黑潮 DNS 沒有回應"}'
+    if not post:
+        return '{"ok":false,"error":"不支援的操作，或這個操作需要用 POST"}'
+    if op == 'action':
+        if path == '/api/persist/flush':
+            return json.dumps({'ok': True, 'result': {'ok': True, 'files': 1, 'bytes': 4255, 'at': now, 'dir': '/media/kuroshio/kuroshio/state'}})
+        if path == '/api/filter/reset-rules':
+            return json.dumps({'ok': True, 'result': {'ok': True, 'changed': True, 'backup': '/etc/storage/kuroshio/custom-rules.txt.bak'}})
+        if path == '/api/ddns/update':
+            return load('api_ddns.json')
+        return json.dumps({'ok': True, 'result': {'ok': True}})
+    if op == 'backup-export':
+        return '{"ok":true,"size":304128}'
+    if op in ('notify', 'flush', 'acme'):
+        return '{"ok":true}'
+    return '{"ok":false,"error":"不支援的操作，或這個操作需要用 POST"}'
+
+
 class Handler(http.server.SimpleHTTPRequestHandler):
     lang = 'TW'
 
@@ -313,6 +364,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         super().__init__(*a, directory=WEBUI, **kw)
 
     def do_POST(self):
+        url = urllib.parse.urlparse(self.path)
+        if url.path == '/kuroshio_api.cgi':
+            n = int(self.headers.get('Content-Length') or 0)
+            body = self.rfile.read(n).decode('utf-8', 'replace')
+            self._send(kuroshio_api(body, True).encode('utf-8'), 'application/json')
+            return
         self.send_response(204)
         self.end_headers()
 
@@ -325,6 +382,18 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             qv = urllib.parse.parse_qs(url.query)
             body = mock_api(qv.get('q', [''])[0], qv.get('scenario', [''])[0])
             self._send(body.encode('utf-8'), 'text/html; charset=utf-8')
+            return
+        if path == '/kuroshio_api.cgi':
+            self._send(kuroshio_api(url.query, False).encode('utf-8'), 'application/json')
+            return
+        if path.startswith('/kuroshio/') and KURO_DATA:
+            # 儀表板（韌體裡是 /usr/share/kuroshio/dashboard 的連結）：--kuroshio-data 指到黑潮 DNS 原始碼的 data/dashboard
+            f = os.path.join(KURO_DATA, os.path.basename(path))
+            if os.path.isfile(f):
+                self._send(open(f, 'rb').read(), 'text/css' if f.endswith('.css') else 'application/javascript')
+                return
+        if path == '/kuroshio_backup.kuroshio':
+            self._send(b'KUROSHIO-PREVIEW', 'application/octet-stream')
             return
         if path.startswith('/update.cgi') or path.endswith('.cgi'):
             self._send(b'', 'text/plain')
@@ -360,8 +429,10 @@ def main():
     ap.add_argument('--port', type=int, default=8088)
     ap.add_argument('--lang', default='TW')
     ap.add_argument('--all-apps', action='store_true', help='假裝韌體包含所有套件（found_app_* 都是 1）')
+    ap.add_argument('--kuroshio-data', default=os.environ.get('KUROSHIO_DATA', ''), help='黑潮 DNS 原始碼的 data/dashboard（儀表板分頁用）')
     args = ap.parse_args()
-    global ALL_APPS
+    global ALL_APPS, KURO_DATA
+    KURO_DATA = args.kuroshio_data
     ALL_APPS = args.all_apps
     Handler.lang = args.lang
     socketserver.TCPServer.allow_reuse_address = True

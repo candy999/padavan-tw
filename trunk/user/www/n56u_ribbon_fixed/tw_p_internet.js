@@ -182,7 +182,7 @@ function in_dns(r) {
 		h += '<div class="tw-small ' + (days < 14 ? '' : 'tw-muted') + '"' + (days < 14 ? ' style="color:var(--warn)"' : '') + '>憑證 ' + days + ' 天後到期' + (days < 14 ? '（會自動更新；如果一直沒更新，檢查 Cloudflare Token）' : '') + '</div>';
 	}
 	if (r.partial) h += '<div class="tw-partial">' + U.icon('info', 14) + '<span>查詢數、擋下數、上游狀態需要更新韌體後才有。</span></div>';
-	h += '<div class="tw-actions">' + U.button('套用', { primary: true, onclick: 'in_dns_apply()' }) + U.button('完整設定（網域、DDNS、加密 DNS）', { small: true, ghost: true, href: 'Advanced_kuroshio.asp' }) + '</div>';
+	h += '<div class="tw-actions">' + U.button('套用', { primary: true, onclick: 'in_dns_apply()' }) + U.button('黑潮 DNS 完整設定', { small: true, ghost: true, href: 'tw_kuroshio.asp' }) + '</div>';
 	U.set('in-dns', h);
 }
 function in_dns_apply() {

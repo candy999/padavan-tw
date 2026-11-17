@@ -1,0 +1,1 @@
+{"ok": true, "result": [{"at": 1794609400000, "domain": "newcomer.example.net", "type": "收到好友請求", "detail": "等待人工審核"}, {"at": 1794608800000, "domain": "friend-a.example.org", "type": "同步完成", "detail": "節點池 12、網站驗證 88"}]}
