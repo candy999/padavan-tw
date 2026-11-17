@@ -614,3 +614,5 @@ Padavan 跟 LuCI 不同的地方（照 13.2、13.4）：網域、Token、DDNS �
    - 停止服務已經等 15 秒，符合黑潮的建議，不用改
 4. httpd `upload.c`：收韌體映像（寫進 `/tmp/linux.trx`，tmpfs）之前呼叫 `kuroshio.sh notify trim`，失敗就略過
 5. 13.9 第 8 點 httpd 存 Flash 的部分照舊要做
+
+**實機刷機（2026-11-17）**：D3 刷了 `170a85d` 的 `NEWIFI3-oc1000`（SHA256 `1df6ed32…a401`，uImage 標頭與 kernel CRC 都核對過），用 SSH 走跟後台升級同一條路（`/tmp/linux.trx` ＋ rc 的 `flash_firmware`），約 111 秒開機。韌體版本 `4.4.198.9-100_170a85d`，新頁與 `/www/kuroshio`、`/www/kuroshio-shared` 連結都在韌體裡；設定檔、自訂規則、SSH 金鑰都保留。黑潮仍是 3.2.0：恢復預設清單改用頁面自己的一份（13 份，沒有變更）、更新過濾清單 18 秒完成、狀態頁與儀表板正常、頻寬管理頁正常，主控台都沒有錯誤。
