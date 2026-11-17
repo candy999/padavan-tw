@@ -110,6 +110,7 @@ int http_is_ssl = 0;
 char req_host[128] = {0};
 char req_origin[256] = {0};
 char req_referer[256] = {0};
+char req_fetch_site[16] = {0};	/* Sec-Fetch-Site：瀏覽器標的請求來源（same-origin、same-site、cross-site、none） */
 
 static int daemon_exit = 0;
 static int http_has_lang = 0;
@@ -436,6 +437,13 @@ get_login_mac(void)
 	return login_mac;
 }
 
+/* padavan-tw：這次請求的來源（handle_request 填入）。get_login_safe() 依它判斷，不是依「第一個登入者」：
+ * http_login_check() 讓別的 IP 用同一組帳密登入時回 3、不會再呼叫 http_login()，
+ * 以前 login_safe 會一直是第一個登入者（例如區網）的值，外網登入的人也能做只允許區網的事 */
+static uaddr req_ip;
+static int req_local = 0;
+static int req_safe = -1;	/* -1＝這次請求還沒算（is_safe_ipaddr 要列舉網卡，套用設定時每個變數都會問一次） */
+
 int
 get_login_safe(void)
 {
@@ -447,7 +455,13 @@ get_login_safe(void)
 		return 1;
 #endif
 
-	return login_safe;
+	if (req_local || get_ap_mode())
+		return 1;
+
+	if (req_safe < 0)
+		req_safe = is_safe_ipaddr(&req_ip) ? 1 : 0;
+
+	return req_safe;
 }
 
 static void
@@ -848,7 +862,7 @@ handle_request(FILE *conn_fp, const conn_item_t *item)
 
 	/* Initialize the request variables. */
 	authorization = boundary = NULL;
-	req_host[0] = req_origin[0] = req_referer[0] = '\0';
+	req_host[0] = req_origin[0] = req_referer[0] = req_fetch_site[0] = '\0';
 
 	/* Parse the first line of the request. */
 	if (!fgets(line, sizeof(line), conn_fp)) {
@@ -913,6 +927,11 @@ handle_request(FILE *conn_fp, const conn_item_t *item)
 			cp += strspn(cp, " \t");
 			snprintf(req_origin, sizeof(req_origin), "%.*s", (int)strcspn(cp, "\r\n"), cp);
 		}
+		else if (strncasecmp(cur, "Sec-Fetch-Site:", 15) == 0) {
+			cp = cur + 15;
+			cp += strspn(cp, " \t");
+			snprintf(req_fetch_site, sizeof(req_fetch_site), "%.*s", (int)strcspn(cp, "\r\n"), cp);
+		}
 		else if (strncasecmp(cur, "Referer:", 8) == 0) {
 			cp = cur + 8;
 			cp += strspn(cp, " \t");
@@ -969,6 +988,11 @@ handle_request(FILE *conn_fp, const conn_item_t *item)
 	usockaddr_to_uaddr(&item->usa, &conn_ip);
 
 	login_state = http_login_check(&conn_ip);
+
+	/* 這次請求的來源：get_login_safe() 用 */
+	memcpy(&req_ip, &conn_ip, sizeof(uaddr));
+	req_local = (login_state == 1) ? 1 : 0;
+	req_safe = -1;
 
 	if (login_state == 0) {
 		if (strstr(file, ".htm") != NULL || strstr(file, ".asp") != NULL) {

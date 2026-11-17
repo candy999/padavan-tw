@@ -513,7 +513,17 @@ stop() {
 	done
 	p=$(main_pid) && { kill -KILL "$p" 2>/dev/null; log "黑潮 DNS 30 秒內沒有結束，已強制停止"; }
 	sync
-	[ "$(cat "$RUN/mode" 2>/dev/null)" = ram ] && save_backup
+	# 學習資料放記憶體：備份寫進 /etc/storage 之後也要存進 Flash，不然之後斷電就回到上一份每日備份。
+	# 同步執行（重開機時 rc 接著也會存 /etc/storage，兩個 mtd_storage.sh 不能同時跑），先等背景的存檔做完
+	if [ "$(cat "$RUN/mode" 2>/dev/null)" = ram ]; then
+		if save_backup; then
+			i=0
+			while [ -d "$RUN/storage.lock" ] && [ $i -lt 15 ]; do sleep 1; i=$((i + 1)); done
+			/sbin/mtd_storage.sh save >/dev/null 2>&1 || log "學習資料備份存進 Flash 失敗"
+		else
+			log "學習資料備份失敗（沿用上一份）"
+		fi
+	fi
 	log "已停止"
 }
 

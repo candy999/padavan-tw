@@ -103,6 +103,7 @@ typedef FILE * webs_t;
 extern char req_host[128];
 extern char req_origin[256];
 extern char req_referer[256];
+extern char req_fetch_site[16];
 
 /* Regular file handler */
 extern void do_file(const char *url, FILE *stream);

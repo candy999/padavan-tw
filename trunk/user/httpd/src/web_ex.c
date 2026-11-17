@@ -297,7 +297,7 @@ write_file_dos2unix(const char* value, const char* file_path)
 }
 
 static int
-write_textarea_to_file(const char* value, const char* dir_name, const char* file_name)
+write_textarea_to_file0(const char* value, const char* dir_name, const char* file_name)
 {
 	int file_type, ret;
 	char *extensions;
@@ -367,6 +367,35 @@ write_textarea_to_file(const char* value, const char* dir_name, const char* file
 	unlink(temp_path);
 
 	return ret;
+}
+
+/* padavan-tw：檔案欄位（腳本、dnsmasq、crontab、憑證、OpenVPN、黑潮 DNS 的設定檔）都在 /etc/storage，
+ * 平常只在正常重開機時寫進 Flash，斷電就回到上次重開機前的樣子。改了就記下來，套用完再存一次（在背景、內容沒變不寫） */
+static int storage_files_dirty = 0;
+
+static int
+write_textarea_to_file(const char* value, const char* dir_name, const char* file_name)
+{
+	int changed = write_textarea_to_file0(value, dir_name, file_name);
+
+	if (changed)
+		storage_files_dirty = 1;
+
+	return changed;
+}
+
+static void
+storage_save_if_dirty(void)
+{
+	if (!storage_files_dirty)
+		return;
+	storage_files_dirty = 0;
+#if defined(APP_KUROSHIO)
+	/* 背景執行、2 秒內合併、跟黑潮 DNS 自己觸發的存檔共用同一個鎖 */
+	doSystem("/usr/bin/kuroshio.sh %s", "storage-save");
+#else
+	doSystem("/sbin/mtd_storage.sh %s >/dev/null 2>&1 &", "save");
+#endif
 }
 
 static void
@@ -933,8 +962,7 @@ validate_asp_apply(webs_t wp, int sid)
 					restart_needed_bits |= event_mask;
 					snprintf(kpath, sizeof(kpath), "%s/%s", "/etc/storage/kuroshio", v->name+9);
 					chmod(kpath, 0600);
-					/* /etc/storage 平常只在正常重開機時寫進 Flash，斷電會遺失：改了就存（在背景、內容沒變不寫） */
-					doSystem("/usr/bin/kuroshio.sh %s", "storage-save");
+					/* 存進 Flash：套用完由 storage_save_if_dirty() 一起做 */
 				}
 			}
 #endif
@@ -1281,6 +1309,8 @@ update_variables_ex(int eid, webs_t wp, int argc, char **argv)
 		
 		sid_list = sid_list+strlen(serviceId)+1;
 	}
+
+	storage_save_if_dirty();
 
 	if (strlen(script) > 0) {
 		if (!strcmp(script, "networkmap_refresh")) {
@@ -4313,6 +4343,32 @@ kuroshio_same_origin(void)
 	return n == strlen(req_host) && strncasecmp(h, req_host, n) == 0;
 }
 
+/*
+ * 瀏覽器標明是別的網站發起的請求（Sec-Fetch-Site: cross-site）：查看類的 GET 也不接受。
+ * 別的網頁可以用 <img>、<script> 叫已登入的瀏覽器打 GET（例如 /api/trace 會對所有上游發查詢），
+ * 讀不到回應但動作會發生，還會卡住單執行緒的 httpd。沒有這個標頭（舊瀏覽器、curl）照舊
+ */
+static int
+kuroshio_cross_site(void)
+{
+	return strcasecmp(req_fetch_site, "cross-site") == 0;
+}
+
+/* 會對外發查詢、或內容等同密碼的查看：只給區網／VPN 登入的人（從外網登入的看不到） */
+static int
+kuroshio_view_needs_safe(const char *path)
+{
+	static const char *const paths[] = {
+		"/api/trace", "/api/community/invite", "/api/paths", "/api/interfaces", NULL
+	};
+	int i;
+
+	for (i = 0; paths[i]; i++)
+		if (!strcmp(path, paths[i]))
+			return 1;
+	return 0;
+}
+
 static void
 kuroshio_api_out(const char *url, FILE *stream)
 {
@@ -4337,6 +4393,16 @@ kuroshio_api_out(const char *url, FILE *stream)
 	if (!kuroshio_arg_ok(op, "-", 32) || !kuroshio_arg_ok(path, "/_-", 64) ||
 	    !kuroshio_arg_ok(q, "._=&%:,~-", 1024) || !kuroshio_arg_ok(n, "", 5)) {
 		fputs("{\"ok\":false,\"error\":\"參數格式錯誤\"}", stream);
+		goto out;
+	}
+
+	if (kuroshio_cross_site()) {
+		fputs("{\"ok\":false,\"error\":\"請從路由器後台的頁面操作（別的網站發起的請求）\"}", stream);
+		goto out;
+	}
+
+	if (!strcmp(op, "api") && kuroshio_view_needs_safe(path) && !get_login_safe()) {
+		fputs("{\"ok\":false,\"error\":\"這個資訊只能從區網或 VPN 登入後查看\"}", stream);
 		goto out;
 	}
 
@@ -4395,7 +4461,9 @@ do_kuroshio_import_cgi(const char *url, FILE *stream)
 	FILE *fp;
 	size_t len;
 
-	if (!f_exists(KUROSHIO_IMPORT_FILE))
+	if (kuroshio_cross_site())
+		fputs("{\"ok\":false,\"error\":\"請從路由器後台的頁面操作（別的網站發起的請求）\"}", stream);
+	else if (!f_exists(KUROSHIO_IMPORT_FILE))
 		fputs("{\"ok\":false,\"error\":\"沒有收到檔案，或不是黑潮 DNS 的備份檔（.kuroshio，最大 16 MB）\"}", stream);
 	else if (!get_login_safe())
 		fputs("{\"ok\":false,\"error\":\"這個操作只能從區網或 VPN 登入後使用\"}", stream);
@@ -4416,8 +4484,8 @@ do_kuroshio_backup_file(const char *url, FILE *stream)
 {
 	const char *f = "/tmp/kuroshio/export.kuroshio";
 
-	/* 沒有權限的請求不能順手把管理員剛匯出的檔刪掉 */
-	if (get_login_safe()) {
+	/* 沒有權限、或別的網站發起的請求，不能拿到也不能順手刪掉管理員剛匯出的檔 */
+	if (get_login_safe() && !kuroshio_cross_site()) {
 		do_file(f, stream);
 		unlink(f);
 	}
