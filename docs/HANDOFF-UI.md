@@ -573,7 +573,7 @@ Padavan 跟 LuCI 不同的地方（照 13.2、13.4）：網域、Token、DDNS �
 - **重開機後設定還在**（2026-11-17 重測）：在新頁關掉 smart-tv＋恢復預設自訂規則（檔案裡事先加了不認得的選項與區段）→ `kuroshio.sh flush` → 後台重開機（約 50 秒回來）→ `kuroshio.uci` 雜湊值不變（smart-tv 仍是 `enabled '0'`、`tw_unknown_*` 都在）、`custom-rules.txt` 是 12,946 位元組的新預設＋`.bak`、`op=status` 過濾清單 9 份、學習資料 299 個檔都在；cdn-scan／cdn-ranges／dns-benchmark 沒有重跑（cdn-pool 照樣重跑，13.9 第 5 點）。測完用「恢復預設清單」改回，再刪掉測試用的兩段，UCI 檔跟韌體預設一模一樣
 - **但斷電會不見**：11/14 第一次測完沒有重開機，3 天後路由器斷過電，那之後在後台改的黑潮設定、恢復的自訂規則**全部不見**（`/etc/storage/system_time` 停在 11/14 07:06，就是最後一次正常重開機）。見 13.9 第 8 點
 
-### 13.9 後端問題（交給雲端，2026-11-14 實機）
+### 13.9 後端問題（2026-11-14 實機；**2026-11-17 已在 613323c 處理完**，見 13.11）
 1. **`kuroshio.sh` 的 `api_fetch` 用 `curl -f`，管理 API 的錯誤原因被吃掉**：DDNS 沒開時按「立即更新 DDNS」，管理 API 回 `HTTP 400 {"error":"DDNS 未啟用"}`，轉接後變成 `{"ok":false,"error":"黑潮 DNS 沒有回應"}`。建議拿掉 `-f`、用 `-w '%{http_code}'` 判斷：2xx 包成 `{"ok":true,"result":…}`，其他回 `{"ok":false,"error":<回應的 error>}`。前端先把 DDNS 沒開時的按鈕停用
 2. **`/api/filter/update` 超過轉接的 60 秒上限**：D3 實測 68 秒（`curl -m 280` 直接打管理 API，回 `{"changed":true}`），轉接的 `curl -m 60` 先逾時，頁面看到「沒有回應」但其實有更新。建議這個路徑放寬到 180 秒，或改成背景執行。前端先改成提示「已送出，約 1～2 分鐘後看過濾規則數」 **3.3.0（2026-11-17）**：黑潮改成背景執行（管理 API 版本 2，立刻回 `runId`，結果在 `/api/status` 的 `filter.update`），前端已改成等到這一次結束才通知（3.2.x 照舊）；韌體換成 3.3.0 後這點就解決，轉接不用放寬逾時
 3. **自訂規則、評測名單不能從後台寫入**：`KuroshioConf` 只有 `kuroshio.kuroshio.uci` 一個檔案欄位。需要 `kuroshio.custom-rules.txt`（存檔後黑潮 DNS 3 秒內自己重新載入，不用重新啟動）與 `kuroshio.benchmark/{iplist,dohlist,dotlist,doqlist,web,blacklist}.txt`（`benchmark` 子資料夾要先建立）。前端目前唯讀顯示，標明「這一版還不能修改」
@@ -583,7 +583,7 @@ Padavan 跟 LuCI 不同的地方（照 13.2、13.4）：網域、Token、DDNS �
 7. 小問題：`/etc/storage/kuroshio/.migrate_note` 與（3.2.0 之前寫的）`custom-rules.txt` 權限是 0666；13.7 的三項（匯入、SIGHUP 重新載入、憑證進度 API）照舊需要
 8. **【重要】後台存的設定要到正常重開機才寫進 Flash**：`/etc/storage` 只有在正常關機／重開機（rc 的 `write_storage_to_mtd`）時才存到 Storage 分割區；httpd 套用時寫了 `kuroshio.uci` 卻不存，`rstats_stored=1` 也沒有定時存。所以在後台改了黑潮 DNS 設定（新頁或舊的 `Advanced_kuroshio.asp` 都一樣）、或黑潮 DNS 自己寫進 `/etc/storage/kuroshio` 的東西（恢復預設自訂規則、`.bak`、`.migrate_note`），**斷電就全部回到上次重開機前的樣子**。D3 上已經實際發生（13.8）。建議：httpd 寫入 `File` 類欄位有變更時呼叫 `mtd_storage.sh save`（或 `kuroshio.sh` 重新啟動前存一次），黑潮 DNS 寫 `/etc/storage` 的動作完成後也存一次；注意第 4 點的 303 KB 會讓每次存檔變慢、也更容易超過上限 **3.3.0（2026-11-17）**：黑潮新增環境變數 `KUROSHIO_ON_CONFIG_WRITE`（寫入設定目錄後合併執行一次，結束服務前也會先跑完），但 **Padavan 上目前不會觸發**（見 13.10），已回報黑潮；httpd 自己寫入 `kuroshio.uci` 的部分仍然要 Padavan 處理
 
-### 13.10 黑潮 DNS 3.3.0（2026-11-17 實機；後端升級交給雲端）
+### 13.10 黑潮 DNS 3.3.0（2026-11-17 實機；後端升級已在 613323c 完成，見 13.11）
 測法：把 Release 的 `kuroshio-linux-mipsel-unknown-linux-musl.tar.gz`（SHA256 與 `SHA256SUMS` 相符）解到 D3 的 `/tmp`，用 bind mount 蓋過 `/usr/bin/kuroshio` 與 `/usr/share/kuroshio`（重開機就恢復成韌體的 3.2.0），新頁面用 `push.py` 推上去。
 
 | 項目 | 結果 |
@@ -604,7 +604,7 @@ Padavan 跟 LuCI 不同的地方（照 13.2、13.4）：網域、Token、DDNS �
 - `www/Makefile`：多一個連結 `/www/kuroshio-shared` → `/usr/share/kuroshio/shared`
 - `tools/ui-preview/serve.py`：模擬 API 2 的背景更新（8 秒），並提供 `/kuroshio-shared/`
 
-**後端要做的（交給雲端）：**
+**後端要做的（613323c 已全部完成，不用再交給雲端）：**
 1. `trunk/user/kuroshio/Makefile`：`KUROSHIO_VER := v3.3.0`、`KUROSHIO_COMMIT := 23db5a1a5aaaff43579fcc5c6600bb274c7cf832`、`KUROSHIO_PKG_SHA256 := 3b8167cbab4997d13f8fab8ff0a79c7727c6a385bf79aad68a2b4fc249d1ba3a`。預設 UCI 改用通用包裡的 `dl/kuroshio/data/kuroshio.config` 安裝成 `kuroshio.uci.default`，可以拿掉 `KUROSHIO_RAW` 的下載與 `KUROSHIO_UCI_SHA256`。`cp -a data/.` 會一起裝進 `shared/`（新頁要用）；`shared/ui-core.tests.json`（33 KB）是測試資料，可以不裝
 2. `.github/workflows/build.yml`：原始碼改附 Release 的 `kuroshio-dns-${ver}-source.tar.xz`（SHA256 `711e6bfb1f5c9a0da1db20dd56cc10007d4d456894432191cd92545ccf66ac96`，在 `SHA256SUMS` 裡；含全部依賴套件、可以離線編譯），不要再用 `archive/refs/tags/*.tar.gz`
 3. `kuroshio.sh`：
@@ -616,3 +616,29 @@ Padavan 跟 LuCI 不同的地方（照 13.2、13.4）：網域、Token、DDNS �
 5. 13.9 第 8 點 httpd 存 Flash 的部分照舊要做
 
 **實機刷機（2026-11-17）**：D3 刷了 `170a85d` 的 `NEWIFI3-oc1000`（SHA256 `1df6ed32…a401`，uImage 標頭與 kernel CRC 都核對過），用 SSH 走跟後台升級同一條路（`/tmp/linux.trx` ＋ rc 的 `flash_firmware`），約 111 秒開機。韌體版本 `4.4.198.9-100_170a85d`，新頁與 `/www/kuroshio`、`/www/kuroshio-shared` 連結都在韌體裡；設定檔、自訂規則、SSH 金鑰都保留。黑潮仍是 3.2.0：恢復預設清單改用頁面自己的一份（13 份，沒有變更）、更新過濾清單 18 秒完成、狀態頁與儀表板正常、頻寬管理頁正常，主控台都沒有錯誤。
+
+### 13.11 完成事項與交接（2026-11-17，613323c，D3 實機）
+黑潮 DNS 3.3.0 整合完成，13.9 與 13.10 的後端項目都在這次處理，雲端不用再做。
+
+| 項目 | 做法 | D3 實機結果 |
+|---|---|---|
+| 升級到 3.3.0 | `trunk/user/kuroshio/Makefile`：v3.3.0、通用包 SHA256；預設 UCI 改用通用包的 `data/kuroshio.config`（不再另外下載）；`build.yml` 改附 Release 的 `kuroshio-dns-3.3.0-source.tar.xz`（核對 Makefile 的 `KUROSHIO_SRC_SHA256`） | 四個機型編譯成功；原始碼附加步驟在本機照樣跑過，雜湊值相符（Release 只在打標籤時建立） |
+| 升級時換成新預設 | `kuroshio.sh` 的 `UCI_OLD_DEFAULTS` 加上 3.2.0 預設檔 | D3 開機時「設定檔是舊版預設值，已換成這一版的預設」，過濾清單 17 份（新增的 4 份不勾選） |
+| 設定存進 Flash（13.9 第 8 點） | `kuroshio.sh storage-save`：背景執行、2 秒內合併、內容沒變不寫。呼叫的時機：黑潮啟動（後台改設定一定會重新啟動）、每個後台動作之後（恢復預設自訂規則、社群等）、`KUROSHIO_ON_CONFIG_WRITE`、httpd 寫入黑潮的檔案欄位之後 | 開機、存自訂規則、存評測名單、恢復預設自訂規則之後，`bzcat /dev/mtdblock6` 裡都是新內容 |
+| 自訂規則、評測名單可以在後台修改（13.9 第 3 點） | httpd 新增 `kuroshio.custom-rules.txt`、`kuroshio.benchmark/*.txt` 檔案欄位（不重新啟動），寫入後 0600；前端改成可編輯的文字框，跟其他設定一起「儲存並套用」，存檔列算一處變更 | 新增一條規則：黑潮沒有重新啟動，`filter/check` 立刻回 `tier: custom`；評測名單寫進 `benchmark/iplist.txt` |
+| 恢復預設自訂規則 | 完成後重新讀檔（重抓頁面取 xmp），文字框直接換成新內容 | 測試規則消失、備份 `.bak` |
+| 管理 API 的錯誤原因（13.9 第 1 點） | `api_fetch` 不用 `curl -f`，4xx／5xx 取出回應的 `error`；逾時另外說明 | DDNS 沒開時回「DDNS 未啟用」（HTTP 400），不再是「沒有回應」 |
+| 立即更新過濾清單（13.9 第 2 點） | 3.3.0 背景執行（API 2），前端等這一次結束才通知 | 15 秒後通知「已重新下載過濾清單」 |
+| 舊的 303 KB 備份（13.9 第 4 點） | 學習資料在 Flash（rwfs／jffs2）而且已經有資料、這次開機沒有匯入 → 刪掉 `backup.kuroshio` | 已刪除；Storage 從 333 KB 降到 86 KB |
+| 節點池重跑、日誌洗版（13.9 第 5、6 點） | 黑潮 3.3.0 修正 | 開機 290 秒後節點池沒有重跑；`duplicate reset token` 3.3.0 預設不記（觀察時間只有幾分鐘，長時間運作請再看日誌） |
+| 檔案權限（13.9 第 7 點） | `.migrate_note` 用 umask 077 寫；啟動時把設定目錄的 .txt／.bak／.migrate_note 改成 0600、benchmark 資料夾 0700 | `.migrate_note` 從 0666 變成 0600 |
+| 上傳韌體前讓出記憶體 | httpd `upload.c` 收映像檔之前呼叫 `kuroshio.sh notify trim 600` | 用 1 KB 的假檔案打 `upgrade.cgi`（標頭檢查不過、不會刷入）：日誌「已先讓出記憶體（600 秒內不長大）」，`memory.holdUntil` 有值 |
+
+**驗證的方式**：D3 用 SSH 走跟後台升級同一條路刷 `613323c` 的 `NEWIFI3-oc1000`（`/tmp/linux.trx` ＋ rc 的 `flash_firmware`），刷之前核對 SHA256、uImage 標頭與 kernel CRC。刷之前的 `170a85d`（3.2.0 ＋ 新頁）也刷過一次，確認新頁在 3.2.x 韌體上會用自己的比對程式。測試用的規則、評測名單、`.bak` 都已清掉並存進 Flash；D3 現在是 3.3.0 的預設設定。
+
+**還沒做（不影響使用，之後要再開）：**
+- 學習資料匯入（上傳 .kuroshio 檔）：頁面上的按鈕停用中，要在 httpd 加上傳處理（同韌體上傳）再呼叫 `kuroshio import`
+- UCI 改動改用 SIGHUP 重新載入、不重新啟動（13.7）：目前改設定會重新啟動黑潮（約 5～10 秒由業者 DNS 暫代）
+- 黑潮的 `KUROSHIO_ON_CONFIG_WRITE` 在 Padavan 上不會觸發（監看的資料夾不含 `KUROSHIO_ETC`），已回報黑潮；Padavan 這邊用「每個後台動作之後存一次」補上，黑潮修好後兩邊都會呼叫，沒有副作用
+- Padavan 其他檔案欄位（腳本、dnsmasq 設定等）照上游的做法，還是只在正常重開機時寫進 Flash；要一起改的話，在 `web_ex.c` 的檔案欄位處理後面同樣呼叫 `mtd_storage.sh save`
+- CR6608 還沒在實機上測過 3.3.0（RWFS 模式、128 MB 記憶體）
