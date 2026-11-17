@@ -920,11 +920,22 @@ validate_asp_apply(webs_t wp, int sid)
 			}
 #endif
 #if defined(APP_KUROSHIO)
-			/* padavan-tw：黑潮 DNS 的 UCI 設定檔（/etc/storage/kuroshio/kuroshio.uci） */
+			/* padavan-tw：黑潮 DNS 的設定檔（/etc/storage/kuroshio/ 底下的 kuroshio.uci、custom-rules.txt、benchmark/*.txt） */
 			else if (!strncmp(v->name, "kuroshio.", 9)) {
+				char kpath[128];
 				mkdir("/etc/storage/kuroshio", 0700);
-				if (write_textarea_to_file(value, "/etc/storage/kuroshio", v->name+9))
+				if (!strncmp(v->name+9, "benchmark/", 10)) {
+					/* write_textarea_to_file 先寫到 /tmp/.<檔名> 比對，子資料夾兩邊都要先有 */
+					mkdir("/etc/storage/kuroshio/benchmark", 0700);
+					mkdir("/tmp/.benchmark", 0700);
+				}
+				if (write_textarea_to_file(value, "/etc/storage/kuroshio", v->name+9)) {
 					restart_needed_bits |= event_mask;
+					snprintf(kpath, sizeof(kpath), "%s/%s", "/etc/storage/kuroshio", v->name+9);
+					chmod(kpath, 0600);
+					/* /etc/storage 平常只在正常重開機時寫進 Flash，斷電會遺失：改了就存（在背景、內容沒變不寫） */
+					doSystem("/usr/bin/kuroshio.sh %s", "storage-save");
+				}
 			}
 #endif
 #if defined(APP_OPENVPN)

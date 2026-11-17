@@ -329,6 +329,12 @@ do_upgrade_fw_post(const char *url, FILE *stream, int clen, char *boundary)
 	/* copy mtd_write to RAM */
 	doSystem("cp -f %s %s", "/bin/mtd_write", "/tmp");
 
+#if defined(APP_KUROSHIO)
+	/* padavan-tw：映像檔寫進 /tmp（tmpfs，佔記憶體）之前，請黑潮 DNS 先讓出快取（10 分鐘內不再長大）；
+	 * 核心 4.4 沒有 PSI，突然的大量配置黑潮來不及讓，被 OOM 結束的會是別的程式（黑潮的 oom_score_adj 是 -500） */
+	doSystem("/usr/bin/kuroshio.sh %s %s %s", "notify", "trim", "600");
+#endif
+
 	/* reclaim RAM from caches */
 	fput_int("/proc/sys/vm/drop_caches", 1);
 

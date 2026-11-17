@@ -6,6 +6,8 @@
 #   kuroshio.sh save             學習資料存檔（每天自動執行一次）
 #   kuroshio.sh guard            保護程式（由 start 在背景啟動）
 #   kuroshio.sh notify wan-changed   WAN 換了 IP：通知黑潮 DNS 立即更新 DDNS、重新偵測對外 IP（rc 在 WAN 上線時呼叫）
+#   kuroshio.sh notify trim [秒]      先讓出記憶體（httpd 收韌體映像之前呼叫；3.3.0 起）
+#   kuroshio.sh storage-save     把 /etc/storage 存進 Flash（在背景、合併連續的呼叫；內容沒變就不寫）
 #   kuroshio.sh flush            立即把學習資料寫出（SIGUSR1）
 #   後台轉接（httpd 的 kuroshio_api.cgi 呼叫，輸出 JSON）：
 #   kuroshio.sh api <路徑> [參數]      查看類管理 API（白名單）
@@ -39,6 +41,8 @@ CA=/usr/lib/acme/cacert.pem
 TAG="黑潮DNS"
 
 export KUROSHIO_UCI_FILE="$UCI" KUROSHIO_ETC="$ETC" KUROSHIO_SHARE="$SHARE" NO_COLOR=1
+# 3.3.0：黑潮寫入設定目錄（自訂規則、.bak 等）之後執行，Padavan 的 /etc/storage 要另外存進 Flash
+export KUROSHIO_ON_CONFIG_WRITE="/usr/bin/kuroshio.sh storage-save"
 export KUROSHIO_LOG="${KUROSHIO_LOG:-$(nvram get kuroshio_log 2>/dev/null)}"
 [ -n "$KUROSHIO_LOG" ] || export KUROSHIO_LOG=warn
 
@@ -55,6 +59,24 @@ notify_rc() {
 }
 
 lan_ip() { nv lan_ipaddr; }
+
+# ---------- 存進 Flash ----------
+# /etc/storage 在記憶體裡，rc 只在正常關機／重開機時寫進 Storage 分割區，斷電就回到上次重開機前的樣子。
+# 黑潮 DNS 的設定改了（後台存檔、恢復預設自訂規則、升級搬移、憑證）就自己存一次：
+# mtd_storage.sh save 比對內容，沒變就不寫 Flash；在背景執行，2 秒內連續的呼叫合併成一次
+storage_save() {
+	mkdir -p "$RUN"
+	: > "$RUN/storage.pending"
+	mkdir "$RUN/storage.lock" 2>/dev/null || return 0
+	(
+		while [ -f "$RUN/storage.pending" ]; do
+			sleep 2
+			rm -f "$RUN/storage.pending"
+			/sbin/mtd_storage.sh save >/dev/null 2>&1 || log "設定存進 Flash 失敗（請看 Storage save 的紀錄）"
+		done
+		rmdir "$RUN/storage.lock"
+	) </dev/null >/dev/null 2>&1 &
+}
 
 # ---------- 學習資料放哪裡 ----------
 
@@ -233,8 +255,9 @@ is_public_ip() {
 # 升級時的預設設定搬移（OpenWrt 由 uci-defaults 腳本做；Padavan 的設定檔在 /etc/storage，要自己做）：
 # 使用者的設定檔跟某一個「舊版預設檔」一模一樣（從沒改過）→ 換成這一版的預設（新的過濾清單等）；
 # 改過的不動，留提示（後台黑潮 DNS 的過濾頁有「恢復預設清單」）
-# 舊版預設檔的 sha256：3.0.1～3.1.0（這幾版內容相同）
-UCI_OLD_DEFAULTS="f0cbe30c3856635eb6a28621ee3d84b88fa9a9b5fe38d07ddaa1ef310b6df66e"
+# 舊版預設檔的 sha256：3.0.1～3.1.0（這幾版內容相同）、3.2.0
+UCI_OLD_DEFAULTS="f0cbe30c3856635eb6a28621ee3d84b88fa9a9b5fe38d07ddaa1ef310b6df66e
+2d1a9a7ce393269243957adb124d31a2bf66e70e0098e29c830be6bce31d47b6"
 migrate_uci() {
 	local cur new h
 	[ -f "$UCI_SRC" ] && [ -f "$SHARE/kuroshio.uci.default" ] || return 0
@@ -251,7 +274,7 @@ migrate_uci() {
 	# 改過的設定檔：只提示一次（同一版不重複）
 	if [ "$(cat "$ETC/.migrate_note" 2>/dev/null)" != "$new" ]; then
 		log "設定檔改過，沒有自動換成這一版的預設；需要新的過濾清單請到後台黑潮 DNS 的過濾頁按「恢復預設清單」"
-		echo "$new" > "$ETC/.migrate_note"
+		(umask 077; echo "$new" > "$ETC/.migrate_note")
 	fi
 }
 
@@ -263,6 +286,9 @@ sync_uci() {
 	grep -q "^config " "$UCI_SRC" 2>/dev/null || cp "$SHARE/kuroshio.uci.default" "$UCI_SRC"
 	migrate_uci
 	chmod 600 "$UCI_SRC"
+	# 設定目錄裡的檔案只給 root 讀寫（舊版寫的 custom-rules.txt、.migrate_note 是 0666）
+	for f in "$ETC"/*.txt "$ETC"/*.bak "$ETC/.migrate_note"; do [ -f "$f" ] && chmod 600 "$f"; done
+	[ -d "$ETC/benchmark" ] && chmod 700 "$ETC/benchmark" && chmod 600 "$ETC"/benchmark/* 2>/dev/null
 	cp -f "$UCI_SRC" "$UCI"
 	chmod 600 "$UCI"
 
@@ -377,6 +403,13 @@ start() {
 		$BIN import "$BACKUP" --uci >/dev/null 2>&1 && log "已匯入學習資料備份"
 		: > "$RUN/imported"
 	fi
+	# 學習資料放 Flash（rwfs、jffs2）而且已經有資料：放記憶體時代的每日備份用不到了，
+	# 卻佔掉 Storage 分割區（512 KB）的大半，再大就整個 /etc/storage 都存不進去。這次開機剛匯入的話下次再刪
+	if [ "$mode" != ram ] && [ -f "$BACKUP" ] && [ ! -f "$RUN/imported" ] && [ -n "$(ls -A "$sdir" 2>/dev/null)" ]; then
+		rm -f "$BACKUP"
+		log "學習資料已經在 Flash 資料區，刪除用不到的記憶體模式備份（/etc/storage/kuroshio/backup.kuroshio）"
+	fi
+	storage_save
 
 	: > "$RUN/enabled"
 	run_loop &
@@ -530,10 +563,16 @@ running() { pidof kuroshio >/dev/null 2>&1; }
 
 notify() {
 	case "$1" in
-	wan-changed) ;;
-	*) echo "用法：$0 notify wan-changed"; return 2 ;;
+	wan-changed|trim) ;;
+	*) echo "用法：$0 notify wan-changed | trim [秒]"; return 2 ;;
 	esac
 	running || return 0
+	if [ "$1" = trim ]; then
+		# 3.3.0：立刻縮小快取、把 CDN 冷資料移出記憶體，並在幾分鐘內不再長大（預設 300 秒）
+		case "$2" in ''|*[!0-9]*) set -- trim 300 ;; esac
+		$BIN notify trim --hold "$2" --uci >/dev/null 2>&1 && log "已先讓出記憶體（$2 秒內不長大）"
+		return 0
+	fi
 	$BIN notify "$1" --uci >/dev/null 2>&1 && log "WAN 變動：已通知更新 DDNS 與對外 IP"
 }
 
@@ -556,19 +595,33 @@ valid_query() { case "$1" in *[!A-Za-z0-9._=\&%:,~-]*) return 1 ;; esac; return 
 
 # api_fetch <路徑> [參數] [post]：輸出 {"ok":true,"result":…} 或 {"ok":false,"error":…}
 # 會改變狀態的動作用 POST（管理 API 不接受用 GET 做這些事）
+# 不用 curl -f：管理 API 的 4xx／5xx 會帶 {"error":"原因"}（例如「DDNS 未啟用」），要轉給後台看
 api_fetch() {
-	local url body
+	local url out rc code body err
 	url="http://127.0.0.1:$(api_port)$1"
 	[ -n "$2" ] && url="$url?$2"
+	# 最後一行是 HTTP 狀態碼（curl 的 -w），前面是回應內容
 	if [ "$3" = post ]; then
-		body=$(curl -fsS -m 60 -X POST -H 'Content-Type: application/x-www-form-urlencoded' --data "${2:-_}" "$url" 2>/dev/null)
+		out=$(curl -sS -m 60 -w '\n%{http_code}' -X POST -H 'Content-Type: application/x-www-form-urlencoded' --data "${2:-_}" "$url" 2>/dev/null)
 	else
-		body=$(curl -fsS -m 60 "$url" 2>/dev/null)
+		out=$(curl -sS -m 60 -w '\n%{http_code}' "$url" 2>/dev/null)
 	fi
-	case "$body" in
-	'{'*|'['*) printf '{"ok":true,"result":%s}' "$body" ;;
-	*) if running; then echo '{"ok":false,"error":"黑潮 DNS 沒有回應"}'; else echo '{"ok":false,"error":"黑潮 DNS 沒有執行"}'; fi ;;
+	rc=$?
+	code=$(printf '%s' "$out" | tail -n 1)
+	body=$(printf '%s' "$out" | sed '$d')
+	case "$code" in
+	2??)
+		case "$body" in
+		'{'*|'['*) printf '{"ok":true,"result":%s}' "$body"; return 0 ;;
+		esac ;;
+	[45]??)
+		err=$(printf '%s' "$body" | tr -d '\n' | sed -n 's/.*"error"[ ]*:[ ]*"\([^"]*\)".*/\1/p')
+		printf '{"ok":false,"status":%s,"error":%s}' "$code" "$(json_str "${err:-黑潮 DNS 回應錯誤（HTTP $code）}")"
+		return 0 ;;
 	esac
+	if ! running; then echo '{"ok":false,"error":"黑潮 DNS 沒有執行"}'
+	elif [ "$rc" = 28 ]; then echo '{"ok":false,"error":"黑潮 DNS 沒有在 60 秒內回應（可能還在處理）"}'
+	else echo '{"ok":false,"error":"黑潮 DNS 沒有回應"}'; fi
 }
 
 # 白名單跟 OpenWrt 版（openwrt/kuroshio/files/rpcd.sh）相同
@@ -594,6 +647,8 @@ api_action() {
 	esac
 	valid_query "$2" || { echo '{"ok":false,"error":"參數格式錯誤"}'; return 0; }
 	api_fetch "$1" "$2" post
+	# 動作可能寫了設定目錄（恢復預設自訂規則、社群設定等）：存進 Flash（內容沒變就不寫）
+	storage_save
 }
 
 # 是 JSON 物件就原樣輸出，否則輸出錯誤
@@ -661,6 +716,7 @@ stop) stop ;;
 restart) stop; start ;;
 guard) guard ;;
 save) save ;;
+storage-save) storage_save ;;
 acme) shift; acme "$@" ;;
 acme-bg) shift; acme_bg "$@" ;;
 acme-log) cat "$RUN/acme.log" 2>/dev/null; [ -f "$RUN/acme.pid" ] && echo "（申請中…）" ;;
@@ -676,5 +732,5 @@ about) json_or "$($BIN about --uci --qr 2>/dev/null)" "讀不到版本資訊" ;;
 dnr) json_or "$($BIN dnr --uci --lan "$(lan_ip)" 2>/dev/null)" "黑潮 DNS 沒有回應" ;;
 log) log_json "$2" ;;
 backup-export) backup_export "$2" ;;
-*) echo "用法：$0 start | stop | restart | status | acme [force] | save | notify wan-changed | flush" ;;
+*) echo "用法：$0 start | stop | restart | status | acme [force] | save | storage-save | notify wan-changed | notify trim [秒] | flush" ;;
 esac

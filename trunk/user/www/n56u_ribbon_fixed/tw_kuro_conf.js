@@ -485,8 +485,8 @@
 			}));
 			h += K.card('自訂規則', '<p class="tw-lead">最高原則：這裡的規則永遠優先於所有訂閱清單。一行一條，例：||ads.example.com^ 封鎖、@@||good.example.com^ 白名單、! 或 # 開頭是註解。分類段落用「! @begin 分類」開頭、「! @end」結尾。</p>' +
 				(rules == null ? U.stateBox('unavailable', '讀不到自訂規則檔') :
-					'<textarea class="kr-mono kr-rules" rows="14" wrap="off" readonly aria-label="自訂規則（唯讀）">' + esc(rules) + '</textarea>') +
-				K.note('<b>這一版韌體還不能在這裡修改自訂規則：</b>後台寫入自訂規則檔的功能還沒做（已回報）。可以用下面的按鈕恢復成這一版的預設規則。', 'warn') +
+					K.fileArea('custom-rules.txt', { cls: 'kr-rules', rows: 14, label: '自訂規則', ph: '||ads.example.com^' })) +
+				'<p class="tw-small tw-muted">按「儲存並套用」後 3 秒內生效，不用重新啟動黑潮 DNS；檔案在 /etc/storage/kuroshio/custom-rules.txt。</p>' +
 				'<div class="tw-actions">' + K.btn('恢復預設自訂規則', 'resetRules', { danger: true, id: 'kuroshio-reset-rules' }) + '</div><div id="kr-rules-out" class="kr-out" role="status"></div>');
 			h += K.card('規則檢查', '<div class="tw-actions"><input type="text" id="kr-check-name" placeholder="ads.example.com" style="max-width:24em" aria-label="要檢查的網域">' +
 				K.btn('檢查', 'check', { primary: true }) + K.btn('立即更新清單', 'update') + '</div><div id="kr-check-out" class="kr-out" role="status"></div>');
@@ -530,14 +530,17 @@
 			/* 3.2.0：恢復預設自訂規則（服務會先備份成 custom-rules.txt.bak） */
 			resetRules: function () {
 				return U.dialog({ title: '恢復預設自訂規則？', ok: '恢復預設', danger: true,
-					body: '<p>把自訂規則換成這個版本的預設規則，3 秒內生效。</p><p>目前的內容會先備份成同一個資料夾的 custom-rules.txt.bak（只保留最近一次）。</p>' }).then(function (y) {
+					body: '<p>把自訂規則換成這個版本的預設規則，3 秒內生效。</p><p>目前的內容會先備份成同一個資料夾的 custom-rules.txt.bak（只保留最近一次）。</p>' +
+						'<p class="tw-small tw-muted">這裡還沒儲存的自訂規則修改會一併捨棄。</p>' }).then(function (y) {
 					if (!y) return;
 					return K.action('/api/filter/reset-rules').then(function (r) {
 						var x = K.done(r);
 						if (!x) return;
 						var t = x.changed === false ? '自訂規則已經是這個版本的預設，不需要變更。' : '已恢復預設自訂規則，3 秒內生效。原本的內容備份在 ' + (x.backup || 'custom-rules.txt.bak');
 						U.toast(t, 'ok');
-						U.set('kr-rules-out', esc(t) + (x.changed === false ? '' : ' <a href="#filter" onclick="location.reload();return false;">重新整理頁面</a>看新的內容。'));
+						/* 檔案是黑潮改的：重新讀一次，文字框換成新的內容 */
+						return K.fileReload(true).then(function () { K.render(); U.set('kr-rules-out', esc(t)); },
+							function () { U.set('kr-rules-out', esc(t) + ' <a href="#filter" onclick="location.reload();return false;">重新整理頁面</a>看新的內容。'); });
 					});
 				});
 			}
@@ -657,7 +660,7 @@
 			'<li><b>分享給朋友</b>：CDN 網域驗證紀錄（只有網域名稱與驗證結果）、台灣節點池（匯入的一方只當候選，本機驗證通過才使用）。沒有身分、金鑰、統計與自訂規則。</li></ul>' +
 			'<div class="tw-actions">' + K.btn('下載完整備份', 'export', { primary: true, arg: 'full' }) + K.btn('下載分享檔', 'export', { arg: 'share' }) +
 			'<button type="button" class="tw-btn tw-btn-sm" disabled title="這一版韌體還不能匯入">匯入 .kuroshio 檔…</button></div>' +
-			'<p class="tw-small tw-muted">匯入（上傳檔案）這一版韌體還沒提供，已回報。</p><div id="kr-export-out" class="kr-out" role="status"></div>', { id: 'kuroshio-backup' }); +
+			'<p class="tw-small tw-muted">匯入（上傳檔案）這一版韌體還沒提供。</p><div id="kr-export-out" class="kr-out" role="status"></div>', { id: 'kuroshio-backup' }); +
 			K.card('直接編輯設定檔', '<p class="tw-lead">熟悉 UCI 格式的話，可以在舊版頁面直接編輯整份設定檔（CR6608 的 RWFS 資料區也在那裡啟用）。網域、Token、DDNS、DoT／DoQ／DoH、對外開放、來源模式以這裡的表單為準，在設定檔裡改不會生效。</p>' +
 				'<div class="tw-actions">' + U.button('開啟舊版頁面', { small: true, href: 'Advanced_kuroshio.asp' }) + '</div>');
 	}
@@ -722,13 +725,11 @@
 			h += K.card('CDN 網段掃描', K.fields([num('scan', 'samples_per_subnet', '每個 /24 抽樣幾個 IP', 'scan.samplesPerSubnet'), num('scan', 'concurrency', '同時連線數', 'scan.concurrency'), num('scan', 'timeout_ms', '逾時（毫秒）', 'scan.timeoutMs')]));
 			h += K.card('節點池建立', K.fields([num('pool', 'candidates_per_provider', '每家 CDN 候選 IP 數', 'pool.candidatesPerProvider'), num('pool', 'pool_size', '節點池大小', 'pool.poolSize'),
 				num('pool', 'speed_top', '取前幾名測下載速度', 'pool.speedTop'), num('pool', 'speed_seconds', '每次下載測速秒數', 'pool.speedSeconds')]));
-			var bf = FILES.bench || {};
 			h += K.card('評測名單', '<p class="tw-lead">只放自己要加的；韌體附帶的預設名單會自動一起測，更新韌體時更新。</p>' +
-				K.note('<b>這一版韌體還不能在這裡修改評測名單：</b>後台寫入這些檔案的功能還沒做（已回報），下面只顯示目前的內容。', 'warn') +
+				'<p class="tw-small tw-muted">存檔後不用重新啟動，下次每日評測時使用；檔案在 /etc/storage/kuroshio/benchmark/。</p>' +
 				BENCH.map(function (f) {
-					var t = bf[f[0]];
 					return '<div class="tw-field kr-wide"><span class="tw-field-label">' + esc(f[1]) + ' <small class="tw-muted">' + esc(f[0]) + '</small></span>' +
-						(t ? '<textarea class="kr-mono" rows="5" wrap="off" readonly>' + esc(t) + '</textarea>' : '<p class="tw-small tw-muted">（沒有自己加的）</p>') + '<div class="tw-help">' + esc(f[2]) + '</div></div>';
+						K.fileArea('benchmark/' + f[0], { rows: 5, label: f[1], ph: '（沒有自己加的）' }) + '<div class="tw-help">' + esc(f[2]) + '</div></div>';
 				}).join('') + '<p class="tw-small tw-muted">評測自動淘汰的 DNS（每一筆都實際驗證過）記在學習資料的 blacklist.txt，可以在「儀表板」的上游區塊查看。</p>');
 			return h + backupCard();
 		},

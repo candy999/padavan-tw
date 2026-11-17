@@ -426,7 +426,7 @@ var KURO = (function () {
 	}
 	function cssEsc(s) { return String(s).replace(/["\\]/g, '\\$&'); }
 	function changes() {
-		var n = nvDirty().length;
+		var n = nvDirty().length + fileDirty().length;
 		if (uci.dirty()) {
 			/* 多出來與少掉的行（不看順序），取較多的一邊當作改了幾處 */
 			var cnt = {}, add = 0, del = 0;
@@ -438,12 +438,51 @@ var KURO = (function () {
 		return n;
 	}
 
+	/*
+	 * 黑潮 DNS 的文字檔：自訂規則 custom-rules.txt、評測名單 benchmark/*.txt
+	 * （/etc/storage/kuroshio/ 底下；httpd 的 kuroshio.<檔名> 欄位，存檔不用重新啟動：自訂規則 3 秒內生效、評測名單下次評測時讀）
+	 */
+	var files = { orig: {}, cur: {} };
+	function fileNorm(v) { return String(v == null ? '' : v).replace(/\r\n/g, '\n'); }
+	function fileLoad(map) {
+		files.orig = {}; files.cur = {};
+		Object.keys(map || {}).forEach(function (k) { files.orig[k] = map[k] == null ? null : fileNorm(map[k]); });
+	}
+	function fileGet(n) { return files.cur.hasOwnProperty(n) ? files.cur[n] : files.orig[n]; }
+	function fileSet(n, v) {
+		v = fileNorm(v);
+		if (v === fileNorm(files.orig[n])) delete files.cur[n]; else files.cur[n] = v;
+		refresh();
+	}
+	function fileDirty() { return Object.keys(files.cur); }
+	/* 重新讀一次檔案內容（黑潮自己改了檔案之後，例如恢復預設自訂規則）：重抓這一頁，取出 xmp 裡的原文 */
+	function fileReload(drop) {
+		return fetch(location.pathname, { credentials: 'same-origin', cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
+			var d = new DOMParser().parseFromString(t, 'text/html'), map = {};
+			Object.keys(files.orig).forEach(function (k) { map[k] = files.orig[k]; });
+			var get = function (id) { var el = d.getElementById(id); return el ? el.textContent.replace(/^\n/, '') : null; };
+			map['custom-rules.txt'] = get('kuro-rules');
+			['iplist.txt', 'dohlist.txt', 'dotlist.txt', 'doqlist.txt', 'web.txt', 'blacklist.txt'].forEach(function (f, i) { map['benchmark/' + f] = get('kuro-b' + (i + 1)); });
+			var keep = drop ? {} : files.cur;
+			fileLoad(map);
+			Object.keys(keep).forEach(function (k) { if (keep[k] !== files.orig[k]) files.cur[k] = keep[k]; });
+		});
+	}
+	/* 檔案用的文字框：data-kfile 是檔名，內容跟著 fileGet（換分頁回來還在） */
+	function fileArea(name, o) {
+		o = o || {};
+		var v = fileGet(name);
+		/* textarea 開頭的換行會被 HTML 吃掉，前面多放一個 */
+		return '<textarea class="kr-mono' + (o.cls ? ' ' + o.cls : '') + '" rows="' + (o.rows || 8) + '" wrap="off" spellcheck="false" data-kfile="' + esc(name) + '"' +
+			(o.label ? ' aria-label="' + esc(o.label) + '"' : '') + (o.ph ? ' placeholder="' + esc(o.ph) + '"' : '') + '>\n' + esc(v == null ? '' : v) + '</textarea>';
+	}
+
 	/* 設定檔還沒建立（黑潮 DNS 第一次啟動時才會從預設值複製）：這時不能寫 UCI，否則會蓋掉預設的過濾清單等 */
 	function noUci() { return !/^config\s/m.test(uci.orig); }
 
 	/* ---------- 儲存並套用 ---------- */
 	function save() {
-		var fields = {}, impacts = ['黑潮 DNS 重新啟動（約 5～10 秒），這段期間由業者 DNS 暫代、沒有過濾', '設定存在路由器上，重新開機後仍然有效'];
+		var fields = {}, impacts = [], tooBig = null;
 		if (Object.keys(errors).length) { U.toast('有欄位格式不正確', 'bad'); return; }
 		if (uci.dirty() && !noUci()) {
 			var t = uci.text();
@@ -451,6 +490,18 @@ var KURO = (function () {
 			fields['kuroshio.kuroshio.uci'] = t;
 		}
 		nvDirty().forEach(function (k) { fields[k] = nv.cur[k]; });
+		var restart = Object.keys(fields).length > 0;
+		fileDirty().forEach(function (n) {
+			var t = files.cur[n];
+			if (t && !/\n$/.test(t)) t += '\n';
+			if (new Blob([t]).size > 60000) tooBig = n;
+			fields['kuroshio.' + n] = t;
+		});
+		if (tooBig) { U.toast(tooBig + ' 超過 60 KB（表單上限），請刪掉一些內容', 'bad'); return; }
+		if (restart) impacts.push('黑潮 DNS 重新啟動（約 5～10 秒），這段期間由業者 DNS 暫代、沒有過濾');
+		if (files.cur.hasOwnProperty('custom-rules.txt')) impacts.push('自訂規則 3 秒內生效（不用重新啟動）');
+		if (fileDirty().some(function (n) { return n.indexOf('benchmark/') === 0; })) impacts.push('評測名單在下次每日評測時使用');
+		impacts.push('設定存在路由器上，存檔後立即寫進 Flash，斷電也不會遺失');
 		if (['kuroshio_enable', 'kuroshio_dot', 'kuroshio_doq', 'kuroshio_doh', 'kuroshio_doh_port', 'kuroshio_doh_wan_port', 'kuroshio_wan'].some(function (k) { return nv.cur.hasOwnProperty(k); }))
 			impacts.push('防火牆重新載入（開放外網的埠號跟著更新），連線會斷一下');
 		if (nv.cur.hasOwnProperty('kuroshio_enable')) impacts.push(nv.cur.kuroshio_enable == '1' ? '區網的 DNS 改由黑潮 DNS 回答' : '改回業者的 DNS（沒有過濾與 CDN 加速）');
@@ -461,6 +512,7 @@ var KURO = (function () {
 	function revert() {
 		uci.load(uci.orig);
 		nv.cur = {};
+		files.cur = {};
 		errors = {};
 		render();
 	}
@@ -709,10 +761,18 @@ var KURO = (function () {
 	function start(o) {
 		nv.orig = o.nv || {};
 		uci.load(o.uci || '');
+		var F = window.KURO_FILES || {}, fm = {};
+		if (F.rules !== undefined) fm['custom-rules.txt'] = F.rules;
+		Object.keys(F.bench || {}).forEach(function (k) { fm['benchmark/' + k] = F.bench[k]; });
+		fileLoad(fm);
 		try { var t = sessionStorage.getItem('kuro-tab'); if (t && !location.hash) location.replace('#' + t); sessionStorage.removeItem('kuro-tab'); } catch (e) {}
 		var root = U.$('tw-page');
 		root.addEventListener('change', onInput);
-		root.addEventListener('input', function (ev) { if (ev.target.tagName == 'TEXTAREA' || ev.target.type == 'text') onInput(ev); });
+		root.addEventListener('input', function (ev) {
+			var fn = ev.target.getAttribute && ev.target.getAttribute('data-kfile');
+			if (fn) { fileSet(fn, ev.target.value); return; }
+			if (ev.target.tagName == 'TEXTAREA' || ev.target.type == 'text') onInput(ev);
+		});
 		root.addEventListener('click', onClick);
 		window.addEventListener('hashchange', go);
 		window.addEventListener('beforeunload', function (e) { if (changes()) { e.preventDefault(); e.returnValue = ''; } });
@@ -733,7 +793,7 @@ var KURO = (function () {
 		api: api, view: view, action: action, done: done, updateLists: updateLists, loadDefaults: loadDefaults, def: def,
 		uci: uci, nvGet: nvGet, nvSet: nvSet, isPro: isPro, field: field, fields: fields, grid: grid, redrawGrid: redrawGrid,
 		refresh: refresh, value: value, valueOfKey: valueOfKey, write: write, range: range, CHECK: CHECK, isIp4: isIp4, isIp6: isIp6, checkCidr: checkCidr,
-		card: card, badge: badge, table: table, kv: kv, tiles: tiles, pre: pre, note: note, btn: btn, fmtNum: fmtNum, pct: pct, time: time, bytes: bytes, core: core,
+		card: card, badge: badge, table: table, kv: kv, tiles: tiles, pre: pre, note: note, btn: btn, fmtNum: fmtNum, pct: pct, time: time, bytes: bytes, core: core, fileArea: fileArea, fileReload: fileReload, fileGet: fileGet,
 		page: page, every: every, start: start, render: render, current: function () { return cur; }, changes: changes, FIELDS: function () { return FIELDS; }
 	};
 })();

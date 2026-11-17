@@ -1222,6 +1222,14 @@
 			{"kuroshio_access", "", NULL, EVM_RESTART_KUROSHIO},
 			{"kuroshio_log", "", NULL, EVM_RESTART_KUROSHIO},
 			{"kuroshio.kuroshio.uci", "File", NULL, EVM_RESTART_KUROSHIO},
+			/* 自訂規則：黑潮 DNS 3 秒內自己重新載入；評測名單：下次評測時讀。都不用重新啟動 */
+			{"kuroshio.custom-rules.txt", "File", NULL, 0},
+			{"kuroshio.benchmark/iplist.txt", "File", NULL, 0},
+			{"kuroshio.benchmark/dohlist.txt", "File", NULL, 0},
+			{"kuroshio.benchmark/dotlist.txt", "File", NULL, 0},
+			{"kuroshio.benchmark/doqlist.txt", "File", NULL, 0},
+			{"kuroshio.benchmark/web.txt", "File", NULL, 0},
+			{"kuroshio.benchmark/blacklist.txt", "File", NULL, 0},
 			{0,0,0,0}
 		};
 #endif
