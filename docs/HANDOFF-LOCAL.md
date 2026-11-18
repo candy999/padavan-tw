@@ -162,7 +162,8 @@ git pull
 
 ### 5.7 黑潮 DNS 剩下的
 - ~~學習資料匯入、UCI 改用 SIGHUP 重新載入~~：2026-11-18 在 `0bb30a1` 完成（黑潮 3.3.2，HANDOFF-UI 第 13.12 節）
-- 憑證申請進度 API（`acme-log`）
+- ~~憑證申請進度 API~~：`8ca57dc` 完成（`op=acme-log`，以前前端借 SystemCmd 讀）
+- 黑潮 3.3.3：作者已依 D3 實測校正、還沒發布；發布後升級 Makefile（`kuroshio.sh reload` 已依版本自動改成等 2 秒），並驗證 `memory.jobs.lastBenchmark`、副本補記規則數、`memory-plan`（HANDOFF-UI 13.13）
 - 黑潮新版本：照 `trunk/user/kuroshio/Makefile` 開頭的說明升級；預設設定有變時把舊預設檔的 sha256 加進 `kuroshio.sh` 的 `UCI_OLD_DEFAULTS`（改過的設定檔由 `kuroshio uci-migrate` 處理）
 - ~~查看類的 GET 擋跨站與外網登入~~：`5771f9a` 完成（`X-TW-Request` 標頭、登入來源每次請求判斷）
 - J7 Cloudflare 以外的 DDNS（在黑潮專案做）
@@ -171,7 +172,7 @@ git pull
 - A6 miniupnpd 2.0 → 2.3.x（CVE-2019-12107～12111、CallStranger）
 - A8 定期同步 TurBoTse（上游設定檔不改；衝突多在 `www`、`rc`）
 - B4 預編工具鏈改放本專案 Release（目前抓 TurBoTse 的 `toolchain` 標籤，上游刪檔就編不了）
-- B5 Actions 升級 Node 24 版本（黑潮專案已經換過，可以參考它的版本號）
+- ~~B5 Actions 升級 Node 24~~：`8ca57dc` 完成
 - B6 第一個正式 Release：開 PR 合併到 main → 打 `v*` 標籤 → 更新 README
 - 低優先：D3 裝置樹整理重複的 MTD 項目（改了 mtd 編號會影響 `mtd_storage.sh` 以外用編號的地方，先全專案搜尋）
 

@@ -704,3 +704,5 @@ trim 把 CDN 冷資料移出記憶體（1.7 MB），RSS 只降 1 MB；評測後�
 | 清單副本 | 10 份啟用清單都有副本（3.3.0 時 6 份），Kuroshio 資料區用 63%；其中 4 份的索引規則數是 0（3.3.2 寫的），`memory-plan` 因此說「還沒有本機副本」並高估規則數（429,825 對實際 369,652） |
 | `memory-plan` | 推算子程序最高約 18 MB，實測約 37 MB；其他欄位合理 |
 | 開機日誌 | 沒有「分片不見了」洗版 |
+
+**之後（`8ca57dc`）**：憑證申請進度改走 `kuroshio_api.cgi` 的 `op=acme-log`（`kuroshio.sh acme-log-json`：`{ok, running, log}`，只給區網／VPN 登入的人），拿掉前端借 `apply.cgi` SystemCmd 的 `sysCmd()`；`kuroshio.sh reload` 依黑潮版本決定要等新的一輪跑滿幾秒（3.3.3 起 2 秒、以前 8 秒）。D3：`op=acme-log` 回 `{ok:true, running:false, log:""}`，沒帶 X-TW-Request 的被擋；3.3.2 的 reload 照舊約 12 秒（含重寫設定）

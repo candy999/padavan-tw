@@ -33,7 +33,7 @@
 | B2 | 手動編譯任何上游機型（社群支援），機型請求 Issue 範本 | ✅ |
 | B3 | **OC 1000 MHz 版本**：每次同時產出標準版（880 MHz）與 `-oc1000` 版；`make <機型> OC=1000` | ✅ |
 | B4 | 預編工具鏈改放本專案的 Release（目前沿用 TurBoTse 的），避免上游刪檔就無法編譯 | 📋 |
-| B5 | Actions 升級到 Node 24 版本（checkout、upload-artifact、ccache-action） | 📋 |
+| B5 | Actions 升級到 Node 24 版本（checkout v7、upload-artifact v7、download-artifact v8、action-gh-release v3、ccache-action v1.2.25；toolchain.yml 改成固定版本） | ✅ 8ca57dc（編譯通過；發布用的兩個 action 等下次發布時驗證） |
 | B6 | 第一個正式 Release：PR #1 已合併到 main（未經實機測試）；D3 實機測試通過後推送 `v*` 標籤 | 📋 |
 
 ## C. 後台介面（細節見 UI-PLAN.md）
