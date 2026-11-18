@@ -682,7 +682,15 @@ Padavan 跟 LuCI 不同的地方（照 13.2、13.4）：網域、Token、DDNS �
 
 trim 把 CDN 冷資料移出記憶體（1.7 MB），RSS 只降 1 MB；評測後比評測前多約 24 MB，`memory.sizes` 只能解釋約 1 MB 的增加。資格賽階段 RSS 漲了約 11 MB，`rawBytes` 卻還是 0。
 
+**之後補上（2026-11-18，`d92c48c`、`5771f9a`，D3 實機）**：
+
+| 項目 | 做法 | D3 實機結果 |
+|---|---|---|
+| 登入來源每次請求判斷 | `get_login_safe()` 改看這次請求的 IP（每個請求只算一次）。以前 `http_login_check()` 讓別的 IP 用同一組帳密登入時回 3、不再呼叫 `http_login()`，`login_safe` 一直是第一個登入者的值 | 從區網：狀態、trace、paths、flush、匯出、匯入照常。**從外網登入還沒測**（要有外網連線與密碼） |
+| 查看類請求擋跨站 | `kuroshio_api.cgi`（含 GET）與匯入只收帶 `X-TW-Request` 標頭的請求（後台的 fetch 都帶；別的網站的 `<img>`、表單、導覽帶不了，跨來源 fetch 帶自訂標頭要先 OPTIONS 預檢，httpd 不支援）；`Sec-Fetch-Site: cross-site` 也擋（瀏覽器只在 HTTPS 才送）。`/api/trace`、`/api/community/invite`、`/api/paths`、`/api/interfaces` 只給區網／VPN 登入的人 | 從 `127.0.0.1:8088` 的網頁用表單 GET 打 `op=api&path=/api/status`：回「請從路由器後台的頁面操作」；只靠 Sec-Fetch-Site 的第一版（`d92c48c`）在 HTTP 後台擋不住，所以改用標頭 |
+| 其他檔案欄位存進 Flash | `write_textarea_to_file()` 有改到檔就記下來，`apply.cgi` 處理完呼叫 `kuroshio.sh storage-save`（沒有黑潮時直接 `mtd_storage.sh save`）：腳本、dnsmasq、crontab、憑證、OpenVPN 都算 | 後台存 `dnsmasq.conf` 加一行註解：套用後 `/dev/mtdblock6` 裡就是新內容；測完已還原（md5 與原本一致） |
+| 記憶體模式停止時存進 Flash | `stop` 匯出備份後，等背景存檔做完，再同步執行 `mtd_storage.sh save`（重開機時 rc 接著也會存，兩個不能同時跑） | 暫時把模式標成 ram 後停止：11 秒，305 KB 的備份在 Flash 裡；回到 jffs2 啟動時刪掉用不到的備份並存回 |
+
 **還沒做（不影響使用）**：
 - CR6608 還沒實機測（RWFS、256 MB 記憶體）
-- 查看類的 GET（`/api/trace` 等）還沒擋跨站與外網登入；httpd 的 `login_safe` 看的是上一個登入者的來源（httpd 本身的問題）
-- Padavan 其他檔案欄位（腳本、dnsmasq 設定等）仍然只在正常重開機時存進 Flash
+- 從外網登入的權限判斷還沒實測

@@ -86,7 +86,7 @@ git pull
 | **D3 重開機** | 上游開了 `CONFIG_32M_REBOOT_FIXUP`（`mtd_write -r unlock mtd1`），4.4 的 mtd_write 找不到叫 mtd1 的分割區 → 不重開、SSH reboot 卡死。D3 已關掉，走一般流程（核心的 spi-nor 關機時會把 W25Q256 切回 3-byte） | `configs/tw/NEWIFI3.config` |
 | **D3 分割區** | 真正存設定的 Storage 是 dtsi 的 `0x1f80000`（512 KB，/proc/mtd 第一個叫 Storage 的）。`0x1800000～0x1f80000`（7.5 MB）是黑潮 DNS 專用的 JFFS2 資料區 `Kuroshio`。MTD 表裡重複的 ALL、第二個 Bootloader、整顆晶片是上游 dtsi＋dts 重複定義，無害 | `linux-4.4.x/arch/mips/boot/dts/ralink/newifi3.dts` |
 | **黑潮資料區** | `kuroshio.sh` 先讀裝置樹確認不重疊（`/proc/device-tree/` **一定要加斜線**，busybox find 不跟進捷徑），掛不上 JFFS2 就清除重建；CR6608 用 RWFS（UBIFS） | `trunk/user/kuroshio/kuroshio.sh` |
-| **設定存進 Flash** | `/etc/storage` 是記憶體，只有正常重開機或 `mtd_storage.sh save` 才寫進 Flash。黑潮的設定已用 `kuroshio.sh storage-save` 處理（黑潮自己寫的由 `KUROSHIO_ON_CONFIG_WRITE` 觸發、httpd 寫的由 httpd 呼叫）；**Padavan 其他檔案欄位（腳本、dnsmasq 設定等）仍然只在重開機時存**（第 5.6 節） | `trunk/user/scripts/files/sbin/mtd_storage.sh`、`httpd/src/web_ex.c` |
+| **設定存進 Flash** | `/etc/storage` 是記憶體，只有正常重開機或 `mtd_storage.sh save` 才寫進 Flash。黑潮的設定已用 `kuroshio.sh storage-save` 處理（黑潮自己寫的由 `KUROSHIO_ON_CONFIG_WRITE` 觸發、httpd 寫的由 httpd 呼叫）；其他檔案欄位（腳本、dnsmasq 設定等）`d92c48c` 起套用完也會存 | `trunk/user/scripts/files/sbin/mtd_storage.sh`、`httpd/src/web_ex.c` |
 | **Wi-Fi 掃描** | MT7603 開了 11k 後掃描表多一欄，表頭與資料欄寬不同；httpd 已改成依表頭逐行解析。改驅動選項後要確認掃描頁 | `httpd/src/ralink.c`（`ssurv_*`） |
 | **QDMA／硬體 QoS** | 硬體 NAT 的佇列在「連線被接手的那一刻」依封包標記查 `M2Q_table` 決定；改分類規則要清硬體表（`hw_nat -y`），只改限速不用。`hnat_qos`（有線）、`hnat_qos_wlan`（網際網路↔Wi-Fi，兩個方向；Wi-Fi↔Wi-Fi 固定不經過）是 `/sys/module/hw_nat/parameters/` 的執行中開關 | `linux-4.4.x/net/nat/hw_nat/ra_nat.c`、`rc/src/net.c`（`hwnat_qos_apply`） |
 | **QDMA／PDMA** | 核心選項 `CONFIG_RAETH_PDMA_TX` 可以改回 PDMA（預設關）。D3 的有線問題跟 QDMA 無關（實測過），維持 QDMA | `raeth/raeth_config.h` |
@@ -114,7 +114,7 @@ git pull
 | 事項 | 狀態 |
 |---|---|
 | D3 長時間穩定性測試（第 5.1 節） | 雲端提議、使用者還沒同意；使用者想確認「4.4 長期是否跟 3.4 一樣穩」 |
-| D3 交換器 bug 回報上游 TurBoTse（開 issue 或 PR） | 要使用者決定，會用他的 GitHub 帳號對外發文，**AI 不要自己發** |
+| D3 交換器 bug 回報上游 TurBoTse | 2026-11-18 使用者同意後已發 [TurBoTse/padavan#32](https://github.com/TurBoTse/padavan/issues/32)（繁體中文；連同無法重開機） |
 | 第一個正式 Release | D3 長時間測試通過後，由使用者決定合併 main 與打標籤 |
 | MI-MINI | 暫緩（第 5.9 節） |
 
@@ -157,14 +157,14 @@ git pull
 - 11v 在 D3 列為長遠計畫
 
 ### 5.6 設定存進 Flash 的其餘部分
-- HANDOFF-UI 13.11 最後幾點：Padavan 其他檔案欄位（腳本、dnsmasq 設定等）在 `web_ex.c` 寫入後也呼叫 `mtd_storage.sh save`（注意 Storage 只有 512 KB、寫入次數）
+- ~~Padavan 其他檔案欄位存進 Flash~~：`d92c48c` 完成（套用完存一次，內容沒變不寫）
 - 黑潮 `KUROSHIO_ON_CONFIG_WRITE`：3.3.2 已修好（含社群金鑰），`kuroshio.sh` 的 `api_action` 不再每個動作存一次
 
 ### 5.7 黑潮 DNS 剩下的
 - ~~學習資料匯入、UCI 改用 SIGHUP 重新載入~~：2026-11-18 在 `0bb30a1` 完成（黑潮 3.3.2，HANDOFF-UI 第 13.12 節）
 - 憑證申請進度 API（`acme-log`）
 - 黑潮新版本：照 `trunk/user/kuroshio/Makefile` 開頭的說明升級；預設設定有變時把舊預設檔的 sha256 加進 `kuroshio.sh` 的 `UCI_OLD_DEFAULTS`（改過的設定檔由 `kuroshio uci-migrate` 處理）
-- 查看類的 GET（`/api/trace`、`/api/community/invite` 等）還沒擋跨站與外網登入
+- ~~查看類的 GET 擋跨站與外網登入~~：`5771f9a` 完成（`X-TW-Request` 標頭、登入來源每次請求判斷）
 - J7 Cloudflare 以外的 DDNS（在黑潮專案做）
 
 ### 5.8 維護與發布（ROADMAP A、B 章）
