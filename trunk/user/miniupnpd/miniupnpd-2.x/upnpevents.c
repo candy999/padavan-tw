@@ -1,7 +1,8 @@
-/* $Id: upnpevents.c,v 1.37 2016/02/20 19:10:17 nanard Exp $ */
-/* MiniUPnP project
+/* $Id: upnpevents.c,v 1.44 2019/09/24 11:47:06 nanard Exp $ */
+/* vim: tabstop=4 shiftwidth=4 noexpandtab
+ * MiniUPnP project
  * http://miniupnp.free.fr/ or http://miniupnp.tuxfamily.org/
- * (c) 2008-2016 Thomas Bernard
+ * (c) 2008-2019 Thomas Bernard
  * This software is subject to the conditions detailed
  * in the LICENCE file provided within the distribution */
 
@@ -13,6 +14,7 @@
 #include <unistd.h>
 #include <time.h>
 #include <sys/types.h>
+#include <sys/select.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -181,7 +183,7 @@ upnpevents_addSubscriber(const char * eventurl,
 	if(!tmp)
 		return NULL;
 	if(timeout)
-		tmp->timeout = time(NULL) + timeout;
+		tmp->timeout = upnp_time() + timeout;
 	LIST_INSERT_HEAD(&subscriberlist, tmp, entries);
 	upnp_event_create_notify(tmp);
 	return tmp->uuid;
@@ -196,10 +198,10 @@ upnpevents_renewSubscription(const char * sid, int sidlen, int timeout)
 		if((sidlen == 41) && (memcmp(sid, sub->uuid, 41) == 0)) {
 #ifdef UPNP_STRICT
 			/* check if the subscription already timeouted */
-			if(sub->timeout && time(NULL) > sub->timeout)
+			if(sub->timeout && upnp_time() > sub->timeout)
 				continue;
 #endif
-			sub->timeout = (timeout ? time(NULL) + timeout : 0);
+			sub->timeout = (timeout ? upnp_time() + timeout : 0);
 			return sub->uuid;
 		}
 	}
@@ -340,7 +342,7 @@ upnp_event_notify_connect(struct upnp_event_notify * obj)
 		i = 1;
 		p++;
 		port = (unsigned short)atoi(p);
-		while(*p != '/') {
+		while(*p != '\0' && *p != '/') {
 			if(i<7) obj->portstr[i++] = *p;
 			p++;
 		}
@@ -442,19 +444,35 @@ static void upnp_event_prepare(struct upnp_event_notify * obj)
 		l = 0;
 	}
 	obj->buffersize = 1024;
-	obj->buffer = malloc(obj->buffersize);
-	if(!obj->buffer) {
-		syslog(LOG_ERR, "%s: malloc returned NULL", "upnp_event_prepare");
-		if(xml) {
-			free(xml);
+	for (;;) {
+		obj->buffer = malloc(obj->buffersize);
+		if(!obj->buffer) {
+			syslog(LOG_ERR, "%s: malloc returned NULL", "upnp_event_prepare");
+			if(xml) {
+				free(xml);
+			}
+			obj->state = EError;
+			return;
 		}
-		obj->state = EError;
-		return;
+		obj->tosend = snprintf(obj->buffer, obj->buffersize, notifymsg,
+		                       (obj->path[0] != '\0') ? obj->path : "/",
+		                       obj->addrstr, obj->portstr, l+2,
+		                       obj->sub->uuid, obj->sub->seq,
+		                       l, xml);
+		if (obj->tosend < 0) {
+			syslog(LOG_ERR, "%s: snprintf() failed", "upnp_event_prepare");
+			if(xml) {
+				free(xml);
+			}
+			obj->state = EError;
+			return;
+		} else if (obj->tosend < obj->buffersize) {
+			break; /* the buffer was large enough */
+		}
+		/* Try again with a buffer big enough */
+		free(obj->buffer);
+		obj->buffersize = obj->tosend + 1;	/* reserve space for the final 0 */
 	}
-	obj->tosend = snprintf(obj->buffer, obj->buffersize, notifymsg,
-	                       obj->path, obj->addrstr, obj->portstr, l+2,
-	                       obj->sub->uuid, obj->sub->seq,
-	                       l, xml);
 	if(xml) {
 		free(xml);
 		xml = NULL;
@@ -473,7 +491,8 @@ static void upnp_event_send(struct upnp_event_notify * obj)
 	i = send(obj->s, obj->buffer + obj->sent, obj->tosend - obj->sent, 0);
 	if(i<0) {
 		if(errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR) {
-			syslog(LOG_DEBUG, "%s: send(): %m", "upnp_event_send");
+			syslog(LOG_DEBUG, "%s: send(%s%s): %m", "upnp_event_send",
+			       obj->addrstr, obj->portstr);
 			obj->state = EError;
 			return;
 		} else {
@@ -565,6 +584,9 @@ void upnpevents_selectfds(fd_set *readset, fd_set *writeset, int * max_fd)
 				upnp_event_notify_connect(obj);
 				if(obj->state != EConnecting)
 					break;
+#if defined(__GNUC__) && (__GNUC__ >= 7)
+				__attribute__ ((fallthrough));
+#endif
 			case EConnecting:
 			case ESending:
 				FD_SET(obj->s, writeset);
@@ -610,6 +632,8 @@ void upnpevents_processfds(fd_set *readset, fd_set *writeset)
 				obj->sub->notify = NULL;
 			/* remove also the subscriber from the list if there was an error */
 			if(obj->state == EError && obj->sub) {
+				syslog(LOG_DEBUG, "%s: %p, remove subscriber %s after an ERROR cb: %s",
+				       "upnpevents_processfds", obj, obj->sub->uuid, obj->sub->callback);
 				LIST_REMOVE(obj->sub, entries);
 				free(obj->sub);
 			}
@@ -622,7 +646,7 @@ void upnpevents_processfds(fd_set *readset, fd_set *writeset)
 		obj = next;
 	}
 	/* remove timeouted subscribers */
-	curtime = time(NULL);
+	curtime = upnp_time();
 	for(sub = subscriberlist.lh_first; sub != NULL; ) {
 		subnext = sub->entries.le_next;
 		if(sub->timeout && curtime > sub->timeout && sub->notify == NULL) {

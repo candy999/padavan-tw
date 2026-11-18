@@ -21,6 +21,9 @@
  #define NMP_DEBUG_M(fmt, args...)
 #endif
 
+/* padavan-tw：裝置名稱最多幾個 bytes。後台「取名並固定 IP」最多 24 個字，中文一個字 3 bytes（UTF-8）＝72 */
+#define DEVICE_NAME_MAX		72
+
 typedef struct net_client {
 	SLIST_ENTRY(net_client) entry;
 	unsigned long ip_addr;
@@ -32,7 +35,7 @@ typedef struct net_client {
 	unsigned char probed:1;
 	unsigned char macval:1;
 	unsigned char pending:4;
-	char          device_name[33];
+	char          device_name[DEVICE_NAME_MAX+1];
 } NET_CLIENT, *PNET_CLIENT;
 
 typedef struct net_client_list {

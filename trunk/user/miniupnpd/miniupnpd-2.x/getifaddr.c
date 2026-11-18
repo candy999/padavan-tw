@@ -1,7 +1,8 @@
-/* $Id: getifaddr.c,v 1.24 2015/07/09 12:27:26 nanard Exp $ */
-/* MiniUPnP project
- * http://miniupnp.free.fr/ or http://miniupnp.tuxfamily.org/
- * (c) 2006-2014 Thomas Bernard
+/* $Id: getifaddr.c,v 1.30 2024/06/04 23:05:28 nanard Exp $ */
+/* vim: tabstop=4 shiftwidth=4 noexpandtab
+ * MiniUPnP project
+ * http://miniupnp.free.fr/ or https://miniupnp.tuxfamily.org/
+ * (c) 2006-2024 Thomas Bernard
  * This software is subject to the conditions detailed
  * in the LICENCE file provided within the distribution */
 
@@ -46,7 +47,7 @@ getifaddr(const char * ifname, char * buf, int len,
 		syslog(LOG_ERR, "socket(PF_INET, SOCK_DGRAM): %m");
 		return -1;
 	}
-	strncpy(ifr.ifr_name, ifname, IFNAMSIZ);
+	strncpy(ifr.ifr_name, ifname, IFNAMSIZ-1);
 	ifr.ifr_name[IFNAMSIZ-1] = '\0';
 	if(ioctl(s, SIOCGIFFLAGS, &ifr, &ifrlen) < 0)
 	{
@@ -58,7 +59,8 @@ getifaddr(const char * ifname, char * buf, int len,
 		syslog(LOG_DEBUG, "network interface %s is down", ifname);
 		goto err;
 	}
-	strncpy(ifr.ifr_name, ifname, IFNAMSIZ);
+	strncpy(ifr.ifr_name, ifname, IFNAMSIZ-1);
+	ifr.ifr_name[IFNAMSIZ-1] = '\0';
 	if(ioctl(s, SIOCGIFADDR, &ifr, &ifrlen) < 0)
 	{
 		syslog(LOG_DEBUG, "ioctl(s, SIOCGIFADDR, ...): %m");
@@ -76,7 +78,8 @@ getifaddr(const char * ifname, char * buf, int len,
 	}
 	if(mask)
 	{
-		strncpy(ifr.ifr_name, ifname, IFNAMSIZ);
+		strncpy(ifr.ifr_name, ifname, IFNAMSIZ-1);
+		ifr.ifr_name[IFNAMSIZ-1] = '\0';
 		if(ioctl(s, SIOCGIFNETMASK, &ifr, &ifrlen) < 0)
 		{
 			syslog(LOG_DEBUG, "ioctl(s, SIOCGIFNETMASK, ...): %m");
@@ -89,13 +92,14 @@ getifaddr(const char * ifname, char * buf, int len,
 #endif
 	}
 	ret = 0;
- err:
+err:
 	close(s);
 	return ret;
 #else /* ifndef USE_GETIFADDRS */
 	/* Works for all address families (both ip v4 and ip v6) */
 	struct ifaddrs * ifap;
 	struct ifaddrs * ife;
+	struct ifaddrs * candidate = NULL;
 
 	if(!ifname || ifname[0]=='\0')
 		return -1;
@@ -114,14 +118,14 @@ getifaddr(const char * ifname, char * buf, int len,
 		switch(ife->ifa_addr->sa_family)
 		{
 		case AF_INET:
-			if(buf)
-			{
-				inet_ntop(ife->ifa_addr->sa_family,
-				          &((struct sockaddr_in *)ife->ifa_addr)->sin_addr,
-				          buf, len);
-			}
-			if(addr) *addr = ((struct sockaddr_in *)ife->ifa_addr)->sin_addr;
-			if(mask) *mask = ((struct sockaddr_in *)ife->ifa_netmask)->sin_addr;
+			/* only consider the address if it is the 1st candidate or
+			   if it is not privante AND the current candidate is a private address.
+			   So we return a private address only if there is no public address
+			   on this interface */
+			if(!candidate ||
+			   (addr_is_reserved(&((struct sockaddr_in *)candidate->ifa_addr)->sin_addr) &&
+			    !addr_is_reserved(&((struct sockaddr_in *)ife->ifa_addr)->sin_addr)))
+				candidate = ife;
 			break;
 /*
 		case AF_INET6:
@@ -130,6 +134,23 @@ getifaddr(const char * ifname, char * buf, int len,
 			          buf, len);
 */
 		}
+	}
+	if(candidate)
+	{
+		if(buf)
+		{
+			inet_ntop(candidate->ifa_addr->sa_family,
+			          &((struct sockaddr_in *)candidate->ifa_addr)->sin_addr,
+			          buf, len);
+		}
+		if(addr) *addr = ((struct sockaddr_in *)candidate->ifa_addr)->sin_addr;
+		if(mask) *mask = ((struct sockaddr_in *)candidate->ifa_netmask)->sin_addr;
+	}
+	else
+	{
+		syslog(LOG_WARNING, "no AF_INET address found for %s", ifname);
+		freeifaddrs(ifap);
+		return -1;
 	}
 	freeifaddrs(ifap);
 
@@ -242,7 +263,10 @@ find_ipv6_addr(const char * ifname,
 		{
 			addr = (const struct sockaddr_in6 *)ife->ifa_addr;
 			if(!IN6_IS_ADDR_LOOPBACK(&addr->sin6_addr)
-			   && !IN6_IS_ADDR_LINKLOCAL(&addr->sin6_addr))
+			   && !IN6_IS_ADDR_LINKLOCAL(&addr->sin6_addr)
+			   /* RFC4193 "Unique Local IPv6 Unicast Addresses" only if no
+			    * other address found */
+			   && (r == 0 || (addr->sin6_addr.s6_addr[0] & 0xfe) != 0xfc))
 			{
 				inet_ntop(ife->ifa_addr->sa_family,
 				          &addr->sin6_addr,
@@ -258,3 +282,43 @@ find_ipv6_addr(const char * ifname,
 }
 #endif
 
+/* List of IP address blocks which are private / reserved and therefore not suitable for public external IP addresses */
+/* If interface has IP address from one of this block, then it is either behind NAT or port forwarding is impossible */
+#define IP(a, b, c, d) (((a) << 24) + ((b) << 16) + ((c) << 8) + (d))
+#define MSK(m) (32-(m))
+static const struct { uint32_t address; uint32_t rmask; } reserved[] = {
+	{ IP(  0,   0,   0, 0), MSK( 8) }, /* RFC1122 "This host on this network" */
+	{ IP( 10,   0,   0, 0), MSK( 8) }, /* RFC1918 Private-Use */
+	{ IP(100,  64,   0, 0), MSK(10) }, /* RFC6598 Shared Address Space */
+	{ IP(127,   0,   0, 0), MSK( 8) }, /* RFC1122 Loopback */
+	{ IP(169, 254,   0, 0), MSK(16) }, /* RFC3927 Link-Local */
+	{ IP(172,  16,   0, 0), MSK(12) }, /* RFC1918 Private-Use */
+	{ IP(192,   0,   0, 0), MSK(24) }, /* RFC6890 IETF Protocol Assignments */
+	{ IP(192,   0,   2, 0), MSK(24) }, /* RFC5737 Documentation (TEST-NET-1) */
+	{ IP(192,  31, 196, 0), MSK(24) }, /* RFC7535 AS112-v4 */
+	{ IP(192,  52, 193, 0), MSK(24) }, /* RFC7450 AMT */
+	{ IP(192,  88,  99, 0), MSK(24) }, /* RFC7526 6to4 Relay Anycast */
+	{ IP(192, 168,   0, 0), MSK(16) }, /* RFC1918 Private-Use */
+	{ IP(192, 175,  48, 0), MSK(24) }, /* RFC7534 Direct Delegation AS112 Service */
+	{ IP(198,  18,   0, 0), MSK(15) }, /* RFC2544 Benchmarking */
+	{ IP(198,  51, 100, 0), MSK(24) }, /* RFC5737 Documentation (TEST-NET-2) */
+	{ IP(203,   0, 113, 0), MSK(24) }, /* RFC5737 Documentation (TEST-NET-3) */
+	{ IP(224,   0,   0, 0), MSK( 4) }, /* RFC1112 Multicast */
+	{ IP(240,   0,   0, 0), MSK( 4) }, /* RFC1112 Reserved for Future Use + RFC919 Limited Broadcast */
+};
+#undef IP
+#undef MSK
+
+int
+addr_is_reserved(struct in_addr * addr)
+{
+	uint32_t address = ntohl(addr->s_addr);
+	size_t i;
+
+	for (i = 0; i < sizeof(reserved)/sizeof(reserved[0]); ++i) {
+		if ((address >> reserved[i].rmask) == (reserved[i].address >> reserved[i].rmask))
+			return 1;
+	}
+
+	return 0;
+}
