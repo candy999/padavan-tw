@@ -364,7 +364,7 @@ lookup_dhcp_list(struct in_addr *dst_ip, NET_CLIENT* pnet_client){
 	struct in_addr src_ip;
 
 	if (!(fp = fopen("/tmp/dnsmasq.leases", "r")))
-		return ret;
+		return;
 
 	while (fgets(buff, sizeof(buff), fp)) {
 		if (sscanf(buff, "%31s %63s %63s %63s %*s", dh_lease, dh_mac, dh_ip, dh_host) != 4)
@@ -677,10 +677,11 @@ nmap_receive_arp(void)
 				// Find all application
 				find_all_app(&my_ipaddr, &src_addr, item);
 				fixup_hostname(item);
-				if (!item->device_name[0]) {
+				if (!item->device_name[0])
 					lookup_dhcp_list(&src_addr, item);
-					lookup_static_dhcp_list(&src_addr, item);
-				}
+				/* padavan-tw：使用者在後台「取名並固定 IP」取的名稱優先。以前只有反查、應用程式偵測都沒拿到名稱
+				 * 才查固定 IP 清單，DNS 反查幾乎都有答案（例如 DESKTOP-XXXX.lan），取的名稱就一直用不到 */
+				lookup_static_dhcp_list(&src_addr, item);
 				
 				need_update_file |= 1;
 			}
