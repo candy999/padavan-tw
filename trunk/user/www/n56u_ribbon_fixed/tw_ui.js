@@ -534,7 +534,7 @@ var TW = (function () {
 	/* ---------- 資料層 ---------- */
 	var scenario = qs('scenario');	/* 只有預覽工具會用到 */
 	var apiMissing = false;
-	try { apiMissing = sessionStorage.getItem('tw_api_missing') == '1'; } catch (e) {}
+	try { apiMissing = sessionStorage.getItem('tw_api_missing2') == '1'; } catch (e) {}
 
 	function getText(url) {
 		return fetch(url, { cache: 'no-store', credentials: 'same-origin' }).then(function (r) {
@@ -560,10 +560,13 @@ var TW = (function () {
 		return getText(url).then(function (t) {
 			t = t.trim();
 			if (!t) {
-				if (!scenario) { apiMissing = true; try { sessionStorage.setItem('tw_api_missing', '1'); } catch (e) {} }
+				if (!scenario) { apiMissing = true; try { sessionStorage.setItem('tw_api_missing2', '1'); } catch (e) {} }
 				return null;
 			}
-			return JSON.parse(t);
+			var o = JSON.parse(t);
+			/* 韌體有 tw_api.asp、但這個名稱還沒實作：用現有資料組（不影響其他名稱） */
+			if (o && o._fallback) return null;
+			return o;
 		});
 	}
 	/* 路由器現有資料（tw_status.asp 把現有 ej 函式包成一次請求） */
@@ -587,15 +590,21 @@ var TW = (function () {
 				if (prevCpu && c.total > prevCpu.total) b.cpu_pct = Math.round((c.busy - prevCpu.busy) / (c.total - prevCpu.total) * 100);
 				prevCpu = { busy: c.busy, total: c.total };
 			}
-			/* 網際網路即時速率：兩次取樣的差（交換器硬體計數，硬體 NAT 也算得到） */
+			/* 網際網路即時速率：兩次取樣的差。WAN 介面的計數算不到硬體 NAT 轉送的流量，
+			   所以有 WAN 孔的交換器計數（ESW_P0）時兩者取大的；WAN 走 Wi-Fi 或行動網路時交換器計數接近 0，自然用 WAN 介面 */
 			if (b.netdevs && b.netdevs.WAN) {
-				var w = b.netdevs.WAN;
-				if (prevNet && b.at > prevNet.at && w.rx >= prevNet.rx) {
-					var dt = (b.at - prevNet.at) / 1000;
-					b.rx_kbps = Math.round((w.rx - prevNet.rx) * 8 / 1000 / dt);
-					b.tx_kbps = Math.round((w.tx - prevNet.tx) * 8 / 1000 / dt);
+				var w = b.netdevs.WAN, p0 = b.netdevs.ESW_P0 || null;
+				if (prevNet && b.at > prevNet.at && w.rx >= prevNet.rx && w.tx >= prevNet.tx) {
+					var dt = (b.at - prevNet.at) / 1000, f = 8 / 1000 / dt;
+					var rx = w.rx - prevNet.rx, tx = w.tx - prevNet.tx;
+					if (p0 && prevNet.p0 && p0.rx >= prevNet.p0.rx && p0.tx >= prevNet.p0.tx) {
+						rx = Math.max(rx, p0.rx - prevNet.p0.rx);
+						tx = Math.max(tx, p0.tx - prevNet.p0.tx);
+					}
+					b.rx_kbps = Math.round(rx * f);
+					b.tx_kbps = Math.round(tx * f);
 				}
-				prevNet = { rx: w.rx, tx: w.tx, at: b.at };
+				prevNet = { rx: w.rx, tx: w.tx, p0: p0 ? { rx: p0.rx, tx: p0.tx } : null, at: b.at };
 			}
 			baseCache = b; baseAt = Date.now(); basePending = null;
 			return b;
@@ -653,7 +662,14 @@ var TW = (function () {
 					series: null
 				};
 				return rstats().then(function (r) {
-					var h = r.hist && r.hist.WAN;
+					/* 同即時速率：WAN 介面與 WAN 孔（ESW_P0）的歷史逐點取大的（硬體 NAT 的流量只在後者） */
+					var h = r.hist && r.hist.WAN, e = r.hist && r.hist.ESW_P0;
+					if (h && h.rx && e && e.rx && e.rx.length == h.rx.length && e.tx && e.tx.length == h.tx.length) {
+						h = {
+							rx: h.rx.map(function (x, i) { return Math.max(x, e.rx[i]); }),
+							tx: h.tx.map(function (x, i) { return Math.max(x, e.tx[i]); })
+						};
+					}
 					if (h && h.rx && h.rx.length > 2) {
 						var step = r.period || 120, k = 8 / 1000 / step, n = h.rx.length;
 						o.series = {

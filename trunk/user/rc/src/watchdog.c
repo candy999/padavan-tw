@@ -261,6 +261,19 @@ tw_roamd_check(void)
 		doSystem("killall %s", "tw-roamd");
 }
 
+/* padavan-tw：監測取樣器（延遲與掉包）；nvram tw_stats_enable 預設開，設 0 才關（程式結束也會自動重新啟動） */
+static void
+tw_stats_check(void)
+{
+	int on = !nvram_match("tw_stats_enable", "0");
+	int running = pids("tw-stats");
+
+	if (on && !running)
+		eval("/sbin/tw-stats");
+	else if (!on && running)
+		doSystem("killall %s", "tw-stats");
+}
+
 static void
 ntpc_handler(void)
 {
@@ -628,6 +641,7 @@ watchdog_on_timer(void)
 
 	tw_acs_daily_check();
 	tw_roamd_check();
+	tw_stats_check();
 
 	/* update kernel timezone daylight */
 	setkernel_tz();

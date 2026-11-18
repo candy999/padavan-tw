@@ -102,13 +102,20 @@ function dg_lat() {
 	if (!show.length) { U.set('dg-lat', U.stateBox('empty')); return; }
 	var h = '<div class="tw-grid-metrics">' + show.map(function (t) {
 		var st = t.loss_pct > 2 || t.current_ms > t.baseline_ms * 3 + 20 ? 'bad' : (t.current_ms > t.baseline_ms * 1.8 + 10 ? 'warn' : '');
-		return U.metric({ label: t.label + '（' + t.host + '）', value: U.num(t.current_ms, 1), unit: 'ms', state: st, ref: '平常 ' + U.num(t.baseline_ms, 1) + ' ms · 掉包 ' + t.loss_pct + ' %' });
+		return U.metric({ label: t.label + (t.host ? '（' + t.host + '）' : ''), value: t.host ? U.num(t.current_ms, 1) : '--', unit: t.host ? 'ms' : '', state: st,
+			ref: t.host ? '平常 ' + U.num(t.baseline_ms, 1) + ' ms · 掉包 ' + U.num(t.loss_pct, 1) + ' %' : '找不到閘道（網際網路還沒連線？）' });
 	}).join('') + '</div>';
-	h += U.chart({ series: show.map(function (t, i) { return { values: t.series.values, color: DG_COLORS[i % 4], label: t.label }; }), step: show[0].series.step, start: show[0].series.start,
-		height: 180, fmt: function (v) { return Math.round(v) + ' ms'; }, label: '24 小時延遲' });
-	var loss = show[0].loss;
+	/* 路由器時鐘對時之前沒有 24 小時圖（series 是 null） */
+	var withS = show.filter(function (t) { return t.series && t.series.values; });
+	if (withS.length) {
+		h += U.chart({ series: withS.map(function (t) { return { values: t.series.values, color: DG_COLORS[ts.indexOf(t) % 4], label: t.label }; }), step: withS[0].series.step, start: withS[0].series.start,
+			height: 180, fmt: function (v) { return Math.round(v) + ' ms'; }, label: '24 小時延遲' });
+	} else {
+		h += U.stateBox('warming', '路由器時鐘對時後才開始記錄 24 小時延遲');
+	}
+	var loss = (withS[0] || {}).loss;
 	if (loss && loss.values && loss.values.some(function (x) { return x; })) {
-		h += '<div class="tw-small tw-muted">掉包（' + U.esc(show[0].label) + '）</div>' + U.chart({ series: [{ values: loss.values, color: 'var(--bad)', label: '掉包 %', area: true }], step: loss.step, start: loss.start, height: 70, min: 0, fmt: function (v) { return Math.round(v) + ' %'; }, label: '掉包率' });
+		h += '<div class="tw-small tw-muted">掉包（' + U.esc(withS[0].label) + '）</div>' + U.chart({ series: [{ values: loss.values, color: 'var(--bad)', label: '掉包 %', area: true }], step: loss.step, start: loss.start, height: 70, min: 0, fmt: function (v) { return Math.round(v) + ' %'; }, label: '掉包率' });
 	}
 	h += '<div class="tw-small tw-muted">怎麼看：只有業者閘道正常、後面都變慢 → 問題在業者往外的路；業者閘道就變慢 → 業者那段或家裡有人在大量下載（看「頻寬管理」）。</div>';
 	U.set('dg-lat', h);

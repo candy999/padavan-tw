@@ -4777,8 +4777,38 @@ ej_available_disk_names_and_sizes(int eid, webs_t wp, int argc, char **argv)
 }
 #endif
 
+/* padavan-tw：新後台的資料介面 /tw_api.asp?q=<名稱>（格式見 docs/HANDOFF-UI.md 第 6 節）
+ * 有實作的名稱回 JSON；還沒實作的回 {"_fallback":true}，前端就改用現有資料組 */
+static int
+ej_tw_api(int eid, webs_t wp, int argc, char **argv)
+{
+	const char *q = websGetVar(wp, "q", "");
+	char buf[2048];
+	size_t n;
+	FILE *fp;
+
+	if (strcmp(q, "latency") == 0) {
+		if (nvram_match("tw_stats_enable", "0")) {
+			websWrite(wp, "{\"ok\":true,\"available\":false,\"reason\":\"disabled\"}");
+			return 0;
+		}
+		fp = fopen("/tmp/twstats/latency.json", "r");
+		if (!fp) {
+			websWrite(wp, "{\"ok\":true,\"available\":true,\"warming_up\":true}");
+			return 0;
+		}
+		while ((n = fread(buf, 1, sizeof(buf), fp)) > 0)
+			fwrite(buf, 1, n, wp);
+		fclose(fp);
+		return 0;
+	}
+	websWrite(wp, "{\"_fallback\":true}");
+	return 0;
+}
+
 struct ej_handler ej_handlers[] =
 {
+	{ "tw_api", ej_tw_api},
 	{ "nvram_get_x", ej_nvram_get_x},
 	{ "nvram_get_list_x", ej_nvram_get_list_x},
 	{ "nvram_get_buf_x", ej_nvram_get_buf_x},
