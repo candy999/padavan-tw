@@ -65,7 +65,9 @@
 | D6 | 頻道忙碌率：確認閉源驅動是否提供；鄰近 AP 掃描已有 | 🔬 |
 | D7 | 每台裝置流量排行：硬體 NAT 會繞過計數器，**不做**；只顯示驅動自己統計的 Wi-Fi 流量 | ❌ 不做 |
 
-## E. 硬體 QoS（QDMA）：主線（延後開發，先做漫遊中控）
+## E. 硬體 QoS（QDMA）：❌ 捨棄（2026-11-18）
+
+> **2026-11-18 決定不做，相關介面與程式已移除**（頁面 `tw_qos.asp`、`hw_qos_*` 設定、rc 的 QDMA 開關、`tw-qos-check`）。D3 實測（docs/WIFI-STABILITY.md）：開 QDMA 排程 CPU 平均 17%→57%，限速 250／200、150／100 時 Wi-Fi 延遲都沒有改善（Wi-Fi 滿載延遲是驅動佇列與空中時間不公平造成，不在 WAN）。核心 hw_nat 的 `hnat_qos` 參數保留、預設關閉；`/proc/mt7621/qdma` 狀態頁保留。以下為當時的規劃，留作紀錄。
 
 > ⚠️ 2026-11-13 實機：D3 有線 LAN／WAN 全不通。原因（交換器暫存器與 VLAN 表確認）：上游 `mtk_esw/esw_common.h` 把雙 GMAC 寫死
 > （WAN→P5、P6 不帶標籤），但 D3 是單一 GMAC（USE_SINGLE_MAC、eth2.1／eth2.2），WAN 封包被送往沒接的 P5，LAN 封包不帶標籤進不了 eth2.1。

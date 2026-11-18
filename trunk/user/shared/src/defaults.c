@@ -1085,21 +1085,12 @@ struct nvram_pair router_defaults[] = {
 #endif
 	{ "hw_nat_mode", "1" },
 	{ "sw_nat_mode", "0" },
-	/* padavan-tw：硬體 QoS（QDMA） */
 	/* padavan-tw：每天自動重選頻道（只在頻道設為自動、Wi-Fi 閒置時；預設凌晨 4 點） */
 	{ "tw_acs_daily", "1" },
 	/* padavan-tw：輕量漫遊中控（觀察模式：只記錄、不引導） */
 	{ "tw_roam_enable", "1" },
 	{ "tw_roam_weak", "-75" },	/* 弱訊號門檻（dBm） */
 	{ "tw_acs_hour", "4" },
-	{ "hw_qos_mode", "0" },		/* 0=關閉 1=固定限速 2=自動 */
-	{ "hw_qos_wlan", "1" },		/* 開啟時 Wi-Fi 方向也經過 QDMA 排程 */
-	{ "hw_qos_down", "0" },		/* 申裝下載頻寬（Mbps），0=未設定 */
-	{ "hw_qos_up", "0" },		/* 申裝上傳頻寬（Mbps），0=未設定 */
-	{ "hw_qos_tech", "ftth" },	/* 最後一里：ftth、vdsl、cable、mobile、other */
-	{ "hw_qos_over", "15" },	/* 上浮 %：上限＝申裝 ×(100+over)% */
-	{ "hw_qos_under", "15" },	/* 下探 %：下限＝申裝 ×(100-under)%（預設上下對稱 ±15%） */
-	{ "hw_qos_method", "0" },	/* 0=排程常開只調速率（切換不掉封包）、1=需要時才開排程（切換時清硬體表） */
 #if defined(USE_SFE)
 	{ "sfe_enable", "2" },		/* Software Offload Routing IPv4/IPv6 */
 #endif

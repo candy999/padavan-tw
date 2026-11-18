@@ -44,7 +44,6 @@ NVRAM = {
     'wl_HT_BW': '2', 'tw_acs_hour': '4', 'ipv6_service': 'dhcp6', 'wan_dnsenable_x': '1', 'upnp_enable_x': '1', 'wan_mtu': '1500', 'wan_pppoe_mtu': '1492',
     'wan_pppoe_passwd': 'secret', 'wan_ipaddr': '', 'wan_netmask': '', 'wan_gateway': '', 'wan_dns1_x': '', 'wan_dns2_x': '', 'wan_hostname': '',
     'kuroshio_filter': '1', 'kuroshio_cdn': '1', 'reboot_schedule_enable': '1', 'reboot_schedule': '00000010500', 'front_led_all': '1',
-    'hw_qos_mode': '2', 'hw_qos_wlan': '1', 'hw_qos_down': '500', 'hw_qos_up': '250', 'hw_qos_tech': 'ftth', 'hw_qos_over': '15', 'hw_qos_under': '15', 'hw_qos_method': '0',
     'http_username': 'admin', 'dhcp_static_arp': '0', 'dhcp_static_x': '1', 'dhcp_staticnum_x': '3', 'vts_enable_x': '1', 'vts_num_x': '2', 'dhcp_start': '192.168.2.100', 'dhcp_end': '192.168.2.244',
 }
 

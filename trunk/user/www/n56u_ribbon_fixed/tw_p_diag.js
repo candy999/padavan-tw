@@ -117,7 +117,7 @@ function dg_lat() {
 	if (loss && loss.values && loss.values.some(function (x) { return x; })) {
 		h += '<div class="tw-small tw-muted">掉包（' + U.esc(withS[0].label) + '）</div>' + U.chart({ series: [{ values: loss.values, color: 'var(--bad)', label: '掉包 %', area: true }], step: loss.step, start: loss.start, height: 70, min: 0, fmt: function (v) { return Math.round(v) + ' %'; }, label: '掉包率' });
 	}
-	h += '<div class="tw-small tw-muted">怎麼看：只有業者閘道正常、後面都變慢 → 問題在業者往外的路；業者閘道就變慢 → 業者那段或家裡有人在大量下載（看「頻寬管理」）。</div>';
+	h += '<div class="tw-small tw-muted">怎麼看：只有業者閘道正常、後面都變慢 → 問題在業者往外的路；業者閘道就變慢 → 業者那段，或家裡有人在大量上傳／下載（Wi-Fi 滿載時延遲本來就會變高）。</div>';
 	U.set('dg-lat', h);
 }
 

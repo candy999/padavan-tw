@@ -201,7 +201,7 @@ scp -r trunk/user/www/n56u_ribbon_fixed/state.js admin@192.168.2.1:/www/
 | **Wi-Fi** | Wi-Fi 好不好？怎麼分享？ | 名稱密碼（2.4G／5G 同名）、分享 QR 碼、訪客網路（可設時效）、頻道與干擾（目前頻道、鄰近 AP、每日自動選頻的紀錄）、**多台 AP 與漫遊**（各 AP 狀態、漫遊事件、建議） | 無線 2.4G／5G、訪客、漫遊紀錄 |
 | **網際網路** | 連線方式對不對？ | 業者精靈（光世代 PPPoE、有線電視、固定 IP…）、MTU 自動偵測、IPv6、DNS（黑潮 DNS 的白話設定）、**CGNAT 偵測**、MOD 接法 | 廣域網路、IPv6、DNS 服務 |
 | **遠端與分享** | 外出怎麼連回家？外面怎麼連進來？ | WireGuard 伺服器（裝置、QR、誰在線）、連接埠轉送（依用途：遊戲、NAS、監視器，自動帶入裝置）、UPnP 狀態、網域（黑潮 DDNS）與憑證 | WireGuard、虛擬伺服器、UPnP、DDNS |
-| **頻寬管理** | 怎麼讓視訊、遊戲不卡？ | 硬體 QoS 模式（關閉／固定／自動）、申裝方案、目前狀態、最近介入紀錄與前後延遲 | （新） |
+| ~~**頻寬管理**~~（2026-11-18 捨棄，頁面已移除） | 怎麼讓視訊、遊戲不卡？ | 硬體 QoS 模式（關閉／固定／自動）、申裝方案、目前狀態、最近介入紀錄與前後延遲 | （新） |
 | **診斷** | 哪裡出問題？怎麼辦？ | 一鍵檢查（逐段：Wi-Fi → 路由器 → 業者 → DNS → 網站）、延遲與丟包歷史、事件時間軸、測速、匯出診斷報告 | 系統記錄、網路工具 |
 | **系統** | 路由器本身 | 韌體更新（目前版本、最新版本、更新說明）、備份還原、管理密碼與存取、時間、定時重開機、LED、語言 | 系統管理 |
 | **進階設定** | （專家） | 保留所有原始 Padavan 頁面，原樣可用 | 全部上游頁面 |
@@ -248,7 +248,7 @@ scp -r trunk/user/www/n56u_ribbon_fixed/state.js admin@192.168.2.1:/www/
 - 網域與憑證：黑潮 DDNS 網域、憑證到期日
 - 資料：`vpn`、`portfwd`（現有 nvram）、`dns`
 
-#### 頻寬管理（硬體 QoS）
+#### 頻寬管理（硬體 QoS）——2026-11-18 捨棄，`tw_qos.asp` 已移除（見 docs/WIFI-STABILITY.md）
 - 模式：關閉／固定／自動，每個模式一句白話說明與代價
 - 申裝方案：下載／上傳 Mbps（光世代常見方案可選）
 - 狀態：自動模式目前在哪一步（平常／確認中／控制中／判斷／結束），目前限速值
@@ -308,7 +308,7 @@ scp -r trunk/user/www/n56u_ribbon_fixed/state.js admin@192.168.2.1:/www/
 | `wifi` | `bands[{id, ssid, enabled, channel, auto_channel, width_mhz, txpower_pct, clients, busy_pct, neighbors{count, by_channel{頻道: 數量}, strongest[{ssid, channel, rssi_dbm}]}, acs_last{ts, from, to, reason}}]`；`guest{enabled, ssid, expires_ts, clients}` | 30 秒 | 部分現有；**鄰近 AP 要 B 階段**（見第 12 節：現有的 `wl_scan_*` 在 D3 輸出壞掉） |
 | `roam` | `mode: off/observe/steer`、`weak_dbm`；`aps[{name, model, ip, online, self, clients_24, clients_5, steer_capable}]`；`events[{ts, mac, name, from, to, rssi_from, rssi_to, type: roam/sticky}]`；`advice[{level, title, detail}]` | 30 秒 | 資料已有（/tmp/tw-roamd.*），轉 JSON 是 B 階段；現在頁面提供「查看漫遊紀錄」文字 |
 | `events` | `events[{ts, type: wan/channel/device/qos/dns/system/roam/vpn, level, text, device}]`，新的在前 | 30 秒 | B 階段（D5） |
-| `qos` | `mode: off/fixed/auto`、`plan_down_kbps`、`plan_up_kbps`、`state: idle/probing/limiting/deciding/ending`、`limit_down_kbps`、`limit_up_kbps`、`interventions[{ts, reason, action, latency_before_ms, latency_after_ms, duration_s}]` | 5 秒 | B 階段（E4～E8）。**設定寫入**（後端 E1 已登記，2026-11-13 更正）：`hw_qos_mode`（0 關閉／1 固定／2 自動）、`hw_qos_wlan`（Wi-Fi 也套用，預設 1）、`hw_qos_down`、`hw_qos_up`（Mbps）、`hw_qos_tech`、`hw_qos_over`、`hw_qos_under`、`hw_qos_method`，頁面用 `sid_list=IPConnection;` 送出。見 `docs/LOCAL-NEXT.md` 第二件 |
+| ~~`qos`~~（捨棄） | `mode: off/fixed/auto`、`plan_down_kbps`、`plan_up_kbps`、`state: idle/probing/limiting/deciding/ending`、`limit_down_kbps`、`limit_up_kbps`、`interventions[{ts, reason, action, latency_before_ms, latency_after_ms, duration_s}]` | 5 秒 | B 階段（E4～E8）。**設定寫入**（後端 E1 已登記，2026-11-13 更正）：`hw_qos_mode`（0 關閉／1 固定／2 自動）、`hw_qos_wlan`（Wi-Fi 也套用，預設 1）、`hw_qos_down`、`hw_qos_up`（Mbps）、`hw_qos_tech`、`hw_qos_over`、`hw_qos_under`、`hw_qos_method`，頁面用 `sid_list=IPConnection;` 送出。見 `docs/LOCAL-NEXT.md` 第二件 |
 | `dns` | `enabled`、`running`、`healthy`、`zone_mode`、`filter_ads`、`encrypted`、`cdn_tw`、`queries`、`blocked`、`cdn_rewrites`、`cache_hit_pct`、`avg_ms`、`upstreams[{name, addr, ok, ms}]`、`domain`、`cert_expiry_ts`、`queries_series` | 30 秒 | 現在由 kuroshio_status 組出啟用與健康；統計 B 階段（G9） |
 | `vpn` | `enabled`、`listen_port`、`peers[{name, ip, last_handshake_ts, rx_bytes, tx_bytes, endpoint}]`（`name` 對應 WGSPeerList 的名稱） | 10 秒 | B 階段（J4）；現在裝置清單來自 nvram |
 | `cgnat` | `cgnat`（true/false/null）、`kind: public/cgnat/double_nat`、`wan_ip`、`public_ip`、`reason`、`method: stun/wan_ip` | 開頁時 | 現在前端依 WAN 位址判斷（`method: "wan_ip"`，分得出公網／私人／100.64），比對對外位址是 B 階段 |

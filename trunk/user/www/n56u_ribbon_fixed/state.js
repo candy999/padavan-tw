@@ -717,14 +717,13 @@ function tw_menu_icon(cls){
 	return tw_icon(map[cls] || 'info', 18);
 }
 
-/* padavan-tw：新的主選單（9 項）。新頁面呼叫 tw_show_menu(id)，上游頁面由 show_menu() 標成「進階設定」 */
+/* padavan-tw：新的主選單（8 項）。新頁面呼叫 tw_show_menu(id)，上游頁面由 show_menu() 標成「進階設定」 */
 var tw_nav_items = [
 	['home', 'index.asp', '總覽', 'home'],
 	['devices', 'tw_devices.asp', '裝置', 'devices'],
 	['wifi', 'tw_wifi.asp', 'Wi-Fi', 'wifi'],
 	['internet', 'tw_internet.asp', '網際網路', 'globe'],
 	['remote', 'tw_remote.asp', '遠端與分享', 'vpn'],
-	['qos', 'tw_qos.asp', '頻寬管理', 'gauge'],
 	['diag', 'tw_diag.asp', '診斷', 'search'],
 	['system', 'tw_system.asp', '系統', 'gear'],
 	['adv', 'tw_advanced.asp', '進階設定', 'sliders']
