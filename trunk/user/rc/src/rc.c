@@ -503,9 +503,16 @@ flash_firmware(void)
 	sync();
 	sleep(1);
 
-	if (eval("/tmp/mtd_write", "-r", "write", FW_IMG_NAME, FW_MTD_NAME) != 0) {
+	/* padavan-tw：mtd_write 只寫入，不讓它重開。寫完之後舊的 squashfs 已被覆蓋，任何「執行程式」的步驟
+	 * 都可能讀不到而卡死（D3 實測 2026-11-18：mtd_write 叫 /sbin/reboot、init 關機流程的 wireguard.sh→ip、
+	 * 核心自動載入模組的 modprobe 都卡過）。這裡就在 init 裡，服務已停、設定已存，
+	 * 寫完直接 sync＋reboot()：核心的關機流程會讓 SPI Flash 回到 3-byte 模式，Breed 讀得到新韌體 */
+	if (eval("/tmp/mtd_write", "write", FW_IMG_NAME, FW_MTD_NAME) != 0) {
 		start_watchdog();
+		return;
 	}
+	sync();
+	reboot(RB_AUTOBOOT);
 }
 
 static void
