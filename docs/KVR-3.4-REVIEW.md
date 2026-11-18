@@ -52,3 +52,9 @@ vb1980 `trunk/configs/boards/NEWIFI3/kernel-3.4.x.config`：
 ## 5. 可以借鏡、但目前不需要做的
 - 如果將來要做 MI-MINI（只有 3.4）的精簡版：3.4 的 KVR 要自己在驅動設定打開（上面那幾個 `CONFIG_*`），並修 `ralink.c` 的同樣兩個 bug；MI-MINI 的 2.4G 是 MT7620 內建（rt2860v2 驅動），11k/v/r 支援要另外查
 - CleanPadavan 的「依核心版本分流」Actions 寫法（一份腳本選 3.4／4.4、各自的 Release 標籤）可以參考，但 padavan-tw 只維護 4.4
+
+## 6. 2026-11-18 補充確認
+- vb1980 的 `trunk/build_firmware(_modify)` 完全沒有處理 `CONFIG_FIRMWARE_INCLUDE_WIFI_KVR`：這個選項設了也沒有作用，KVR 只看核心設定
+- vb1980/padavan-4.4（2025-09）的 NEWIFI3：MT7603 的 11k／11r／11v 一樣全關；MT7612 的 11k、11r 開（跟 padavan-tw 相同）。README 寫明 D3 要拆 C48 電容 WAN 才會通（雙 GMAC）
+- vb1980/padavan-4.4 的 CR660x 核心設定與 padavan-tw 相同（11k、11r、11v 開，KVRH 關）
+- 結論不變：沒有哪個分支在 D3 上有更完整的 KVR；維護者決定 D3 2.4G 不開 11v／11r（主要給 IoT 裝置）

@@ -17,7 +17,7 @@
 | A3 | 台灣版共用設定（`trunk/configs/tw/`）：移除科學上網、廣告外掛、中國服務、校園網、KMS；開啟 SFE、WireGuard、msd_lite | ✅ |
 | A4 | 修正 802.11k/v 開關無效、MT7915 DBDC 的 802.11r 設定值錯誤 | ✅ |
 | A5 | OpenSSH 9.7p1 → 9.9p2（regreSSHion 等漏洞） | ✅ |
-| A6 | miniupnpd 2.0 → 2.3.x（CVE-2019-12107～12111、CallStranger） | 📋 |
+| A6 | miniupnpd 2.0 → 2.3.7（CVE-2019-12107～12111、CallStranger）；另收 dropbear 2025.88、networkmap 中文裝置名稱 | ✅ D3 實機（4750c57、f826b34） |
 | A7 | Wi-Fi 國家碼預設改為台灣（NCC）：**只標示、不鎖定**。手動可選所有頻道與功率，DFS 頻段、非台灣頻段、12／13 頻道在選單上標示並說明；自動選頻只選 36–48、149–165 與 1–11 | ✅ |
 | A8 | 定期同步 TurBoTse 上游；上游設定檔保持不改，台灣版差異集中在 `configs/tw/` | 📋 持續 |
 | A9 | D3 有線網路：單一 GMAC＋VLAN（核心選項 `CONFIG_RAETH_ESW_SINGLE_GMAC`，只有 D3 開；上游把雙 GMAC 寫死） | ✅ D3 實機（ff54088） |
