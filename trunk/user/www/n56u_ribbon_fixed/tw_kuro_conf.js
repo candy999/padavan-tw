@@ -12,12 +12,6 @@
 	var TF = [['0', '關閉'], ['1', '開啟']];
 
 	/* 後台原有的指令機制（只限區網登入），用來看憑證申請的進度（跟舊的黑潮 DNS 頁一樣） */
-	function sysCmd(cmd) {
-		var body = 'action_mode=' + encodeURIComponent(' SystemCmd ') + '&current_page=console_response.asp&next_page=console_response.asp&SystemCmd=' + encodeURIComponent(cmd);
-		return fetch('/apply.cgi', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: body })
-			.then(function () { return fetch('/console_response.asp?t=' + Date.now(), { credentials: 'same-origin', cache: 'no-store' }); })
-			.then(function (r) { return r.text(); }).then(function (t) { return String(t).replace(/^\s+|\s+$/g, ''); });
-	}
 	function panel(id, html) { var el = U.$(id); if (el) el.innerHTML = html; }
 
 	/* =====================================================================
@@ -205,12 +199,15 @@
 						out.hidden = false; out.textContent = '啟動中…';
 						return K.api('acme', null, null, true, force ? '&q=force' : '').then(function (r) {
 							if (!r || r.ok === false) { out.textContent = (r && r.error) || '無法啟動'; return; }
+							/* op=acme-log：{ok, running, log}（kuroshio.sh acme-log-json；只給區網／VPN 登入的人） */
 							var n = 0, tick = function () {
-								sysCmd('kuroshio.sh acme-log').then(function (t) {
+								K.api('acme-log').then(function (r) {
+									if (!r || r.ok === false) { out.textContent = (r && r.error) || '讀不到進度'; return; }
+									var t = r.log || '';
 									out.textContent = t || '（還沒有輸出）';
-									if (t.indexOf('== 結束') < 0 && t.indexOf('（申請中…）') >= 0 || (!t && n < 3)) { n++; setTimeout(tick, 4000); }
+									if (r.running || (!t && n < 3)) { n++; setTimeout(tick, 4000); }
 									else K.view('/api/paths').then(function (p) { S.paths = p || S.paths; var c = U.$('kr-cert'); if (c) { var keep = out.textContent; c.innerHTML = certPanel(); var o2 = U.$('kr-acme-log'); o2.hidden = false; o2.textContent = keep; } });
-								}, function () { out.textContent = '讀不到進度（只能在區網登入時查看）'; });
+								});
 							};
 							setTimeout(tick, 2500);
 						});

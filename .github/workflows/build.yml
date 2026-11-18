@@ -132,11 +132,11 @@ jobs:
         variant: ${{ fromJSON(needs.matrix.outputs.variants) }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 1
 
-      - uses: hendrikmuhs/ccache-action@v1.2
+      - uses: hendrikmuhs/ccache-action@v1.2.25
         with:
           key: ${{ matrix.target }}-${{ matrix.variant }}-${{ env.TOOLCHAIN }}
 
@@ -169,7 +169,7 @@ jobs:
           (cd out && sha256sum *.trx > SHA256SUMS-${{ matrix.target }}${SUFFIX}.txt)
           ls -l out
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: padavan-tw-${{ matrix.target }}${{ env.SUFFIX }}-${{ env.BUILD_DATE }}-${{ env.SHORT_SHA }}
           path: out/*
@@ -182,12 +182,12 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           path: out
           merge-multiple: true
       # GPL-3.0：韌體裡的黑潮 DNS 要一併提供對應版本的原始碼
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           path: src
           sparse-checkout: trunk/user/kuroshio/Makefile
@@ -209,7 +209,7 @@ jobs:
           else
             echo "TAG=build-$(TZ='Asia/Taipei' date +%Y%m%d-%H%M)" >> "$GITHUB_ENV"
           fi
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ env.TAG }}
           name: ${{ env.TAG }}

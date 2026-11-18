@@ -527,6 +527,14 @@ stop() {
 	log "已停止"
 }
 
+# kuro_ver_ge <主> <次> <修訂>：黑潮 DNS 的版本（kuroshio --version 的「kuroshio X.Y.Z」）大於等於指定版本
+kuro_ver_ge() {
+	$BIN --version 2>/dev/null | awk -v a="$1" -v b="$2" -v c="$3" 'NR == 1 {
+		split($2, v, "."); x = v[1] + 0; y = v[2] + 0; z = v[3] + 0
+		exit !(x > a || (x == a && (y > b || (y == b && z >= c))))
+	}'
+}
+
 # 這一輪啟動以來的秒數（kuroshio status --json 的 uptimeSec；重新載入設定會歸零）
 gen_uptime() {
 	probe status --json 2>/dev/null | tr -d '\n' | sed -n 's/.*"uptimeSec"[ ]*:[ ]*\([0-9][0-9]*\).*/\1/p'
@@ -536,7 +544,7 @@ gen_uptime() {
 # （3.3.1 起 UCI 模式新設定有錯也不會結束，用上一份設定繼續跑），不必停掉、不會有改用業者 DNS 的空檔。
 # 結束碼 0＝已經套用；1＝要完整重新啟動（rc 接著 stop、start）
 reload() {
-	local p mode u0 u i st seen
+	local p mode u0 u i st seen settle
 	[ "$(nv kuroshio_enable)" = "1" ] || return 1
 	[ -f "$RUN/enabled" ] || return 1
 	p=$(main_pid) || return 1
@@ -558,9 +566,12 @@ reload() {
 		rm -f "$RUN/reloading"
 		return 1
 	fi
-	# 等新的一輪穩定：uptimeSec 歸零之後，跑滿 8 秒而且 health 有回答（最多 90 秒）。
-	# D3 實測（3.3.2）：新的一輪第 1 秒就會回答，接著約 4 秒忙著載入（過濾清單、CDN 資料庫）不回答，
-	# 太早拿掉 reloading 標記的話，保護程式會以為沒回應、改用業者 DNS
+	# 等新的一輪穩定：uptimeSec 歸零之後，跑滿 settle 秒而且 health 有回答（最多 90 秒）。
+	# D3 實測：3.3.2 新的一輪第 1 秒就會回答，接著約 4 秒忙著載入（過濾清單、CDN 資料庫）不回答，
+	# 太早拿掉 reloading 標記的話，保護程式會以為沒回應、改用業者 DNS → 等 8 秒。
+	# 3.3.3 起載入改在背景執行緒，只剩換監聽的約 0.1 秒（SIGHUP 後 0.2～0.4 秒）→ 等 2 秒
+	settle=8
+	kuro_ver_ge 3 3 3 && settle=2
 	i=0; seen=""
 	while [ $i -lt 90 ]; do
 		sleep 1
@@ -568,7 +579,7 @@ reload() {
 		u=$(gen_uptime)
 		[ -n "$u" ] || continue
 		[ -n "$seen" ] || { [ "$u" -lt "$u0" ] && seen=1; }
-		[ -n "$seen" ] && [ "$u" -ge 8 ] && alive && break
+		[ -n "$seen" ] && [ "$u" -ge "$settle" ] && alive && break
 	done
 	rm -f "$RUN/reloading"
 	st=$(curl -s -m 5 "http://127.0.0.1:$(api_port)/api/status" 2>/dev/null | tr -d ' \n')
@@ -686,6 +697,17 @@ certsync() {
 		/sbin/mtd_storage.sh save >/dev/null 2>&1
 		log "憑證已更新（後台 HTTPS 一併更新）"
 	fi
+}
+
+# 給後台（kuroshio_api.cgi 的 op=acme-log）：{"ok":true,"running":是否申請中,"log":"最後 100 行"}；保留換行
+acme_log_json() {
+	local run=false
+	[ -f "$RUN/acme.pid" ] && kill -0 "$(cat "$RUN/acme.pid")" 2>/dev/null && run=true
+	printf '{"ok":true,"running":%s,"log":"' "$run"
+	tail -n 100 "$RUN/acme.log" 2>/dev/null | awk '{
+		gsub(/\\/, "\\\\"); gsub(/"/, "\\\""); gsub(/\t/, " "); gsub(/\r/, ""); gsub(/[\001-\037\177]/, " ")
+		printf "%s%s", (NR > 1 ? "\\n" : ""), $0 }'
+	printf '"}'
 }
 
 # 網頁用：在背景申請，網頁每幾秒讀一次紀錄
@@ -890,6 +912,7 @@ storage-save) storage_save ;;
 acme) shift; acme "$@" ;;
 acme-bg) shift; acme_bg "$@" ;;
 acme-log) cat "$RUN/acme.log" 2>/dev/null; [ -f "$RUN/acme.pid" ] && echo "（申請中…）" ;;
+acme-log-json) acme_log_json ;;
 certsync) certsync ;;
 status) status ;;
 notify) shift; notify "$@" ;;

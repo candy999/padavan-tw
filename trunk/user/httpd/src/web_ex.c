@@ -4295,7 +4295,7 @@ static char mentohust_log_txt[] =
  *
  * 黑潮 DNS 的管理 API 只聽 127.0.0.1:8054，瀏覽器連不到；這裡驗證參數後交給
  * /usr/bin/kuroshio.sh（路徑白名單在那裡，跟 OpenWrt 版相同），原樣回傳 JSON。
- * - 查看類（GET 即可）：status、api、defaults、about、dnr、log
+ * - 查看類（GET 即可）：status、api、defaults、about、dnr、log、acme-log（acme-log 要 login_safe）
  * - 會改變狀態的（只接受 POST，而且要 login_safe）：action、backup-export、notify、flush、acme
  * - 參數只允許固定字元集，並用單引號傳給 shell（字元集不含引號與空白）
  */
@@ -4422,6 +4422,9 @@ kuroshio_api_out(const char *url, FILE *stream)
 		snprintf(cmd, sizeof(cmd), "/usr/bin/kuroshio.sh %s", op);
 	else if (!strcmp(op, "log"))
 		snprintf(cmd, sizeof(cmd), "/usr/bin/kuroshio.sh log '%s'", n);
+	/* 憑證申請進度（acme.sh 的輸出，有網域與信箱）：只給區網／VPN 登入的人。以前前端借 SystemCmd 讀 */
+	else if (!strcmp(op, "acme-log") && get_login_safe())
+		snprintf(cmd, sizeof(cmd), "/usr/bin/kuroshio.sh acme-log-json");
 	else if (is_post && get_login_safe()) {
 		/* 跨站請求（CSRF）：別的網站的網頁可以叫已登入的瀏覽器送 POST 過來，要確認是後台自己的頁面 */
 		if (!kuroshio_same_origin()) {
