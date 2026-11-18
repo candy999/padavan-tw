@@ -143,7 +143,7 @@ git pull
 - 總覽、診斷、裝置詳情、頻寬管理自動模式都靠它。目前頁面用「後備資料」與誠實的「功能未提供」
 - D1 延遲（多目標中位數、閒置基準）、D2 WAN 流量（交換器埠計數，硬體 NAT 開著也準）、D3 連線追蹤表、D4 每台 Wi-Fi 裝置訊號／速率 24 小時、D5 事件時間軸
 - 資料只存記憶體（環形緩衝），不寫 Flash
-- `/tw_api.asp`（或等效）依第 6 節的約定回 JSON；前端已經用 `TW.api()` 等著
+- 2026-11-18 完成 D1、D2（`d230446`，HANDOFF-UI 第 13.14 節）：rc applet `tw-stats`（watchdog 依 `tw_stats_enable` 啟停，預設開）寫 `/tmp/twstats/latency.json`；`/tw_api.asp?q=<名稱>`，還沒實作的名稱回 `{"_fallback":true}`。下一步 D3～D5 加在 `tw-stats` 裡、各寫一個 `/tmp/twstats/<名稱>.json`，`ej_tw_api` 加白名單
 
 ### 5.4 CR6608（H2）
 - 使用者的主路由器，**D3 接手後才刷**

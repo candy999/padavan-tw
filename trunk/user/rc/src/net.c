@@ -420,6 +420,7 @@ stop_igmpproxy(char *wan_ifname)
 	}
 
 	kill_services(svcs, 3, 1);
+	unlink(IGMPPROXY_WANT);
 }
 
 void
@@ -464,6 +465,10 @@ start_igmpproxy(char *wan_ifname)
 	}
 
 	eval("/bin/igmpproxy", igmpproxy_conf);
+	/* padavan-tw：igmpproxy 0.3 會當掉（D3 實測 SIGSEGV），watchdog 看到這個檔案、igmpproxy 卻不在時重新啟動 */
+	fp = fopen(IGMPPROXY_WANT, "w");
+	if (fp)
+		fclose(fp);
 }
 
 void

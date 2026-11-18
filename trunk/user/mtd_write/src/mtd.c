@@ -42,6 +42,7 @@
 #include <sys/mount.h>
 #include <sys/stat.h>
 #include <sys/reboot.h>
+#include <sys/wait.h>
 #include <linux/reboot.h>
 #include <mtd/mtd-user.h>
 //#include "fis.h"
@@ -779,12 +780,33 @@ static void usage(void)
 
 static void do_reboot(void)
 {
+	pid_t pid;
+	int i, status;
+
 	fprintf(stderr, "Rebooting ...\n");
 	fflush(stderr);
+	sync();
 
-	/* try regular reboot method first */
-	system("/sbin/reboot");
+	/* try regular reboot method first
+	 * padavan-tw：寫完韌體後舊的 squashfs 已被覆蓋，/sbin/reboot（以前用 system()，還要先載入 /bin/sh）
+	 * 可能讀不出來而永遠卡住（D3 實測：4.4 刷 3.4 時卡在這裡）。最多等 10 秒，等不到就結束它，
+	 * 改由下面的 reboot 系統呼叫重開機（會走正常的裝置關閉流程） */
+	pid = fork();
+	if (pid == 0) {
+		execl("/sbin/reboot", "reboot", (char *)NULL);
+		_exit(127);
+	}
+	if (pid > 0) {
+		for (i = 0; i < 20; i++) {
+			if (waitpid(pid, &status, WNOHANG) == pid)
+				break;
+			usleep(500000);
+		}
+		if (i == 20)
+			kill(pid, SIGKILL);
+	}
 	sleep(2);
+	sync();
 
 	/* if we're still alive at this point, force the kernel to reboot */
 	syscall(SYS_reboot,LINUX_REBOOT_MAGIC1,LINUX_REBOOT_MAGIC2,LINUX_REBOOT_CMD_RESTART,NULL);

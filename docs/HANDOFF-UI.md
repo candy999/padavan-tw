@@ -287,7 +287,8 @@ scp -r trunk/user/www/n56u_ribbon_fixed/state.js admin@192.168.2.1:/www/
 
 所有新資料都用 **JSON**，前端統一透過一個函式取得（例如 `twApi('health')`），網址集中在一處，方便之後調整。
 
-- 網址：`/tw_api.asp?q=<名稱>[&<參數>]`（實作方式由 B 階段決定；前端只依賴 `TW.api()`，在 `tw_ui.js`）
+- 網址：`/tw_api.asp?q=<名稱>[&<參數>]`（2026-11-18 起有：`tw_api.asp` 呼叫 web_ex.c 的 ej `tw_api`；前端只依賴 `TW.api()`，在 `tw_ui.js`）
+- **有 `tw_api.asp`、但名稱還沒實作**：回 `{"_fallback":true}`，前端只對這個名稱改用後備資料（空白則會讓整個工作階段都不再問 API，所以新名稱不能回空白）
 - **還沒有 API 時**：httpd 對不存在的檔案回 **200 空白**（實機確認）。前端把空白視為「API 不存在」，改用 `tw_status.asp`／`tw_rstats.asp`（把現有 ej 函式包成一次請求的純前端檔案）組出能給的部分，並帶 `partial: true`、`_source: "base"`；組不出來的回 `available: false`，畫面顯示「需要更新韌體後才有」。B 階段做好 `tw_api.asp` 後，前端自動改用 API，不用改頁面
 - 預覽工具：回傳 `tools/ui-preview/mock/<名稱>[.<情境>].json`；頁面網址加 `?scenario=` 切換：`normal`（預設）、`problem`（有問題）、`empty`（資料收集中）、`none`（現在的韌體＝沒有 API，走上面的後備資料）
 - 共同欄位：每個回應都有 `ok`（布林）、`ts`（Unix 秒）、`available`（這個功能目前韌體是否提供）、`warming_up`（資料收集中）
@@ -299,8 +300,8 @@ scp -r trunk/user/www/n56u_ribbon_fixed/state.js admin@192.168.2.1:/www/
 | 名稱 | 內容（欄位） | 更新頻率 | 狀態 |
 |---|---|---|---|
 | `health` | `headline`、`level`；`segments[{id: device/wifi/router/isp/internet/dns, label, state, summary, evidence, actions[{label, cost, href}]}]`（`href: "#reconnect"` 代表「重新連線網際網路」）；`notices[{level, title, evidence, href, action}]` 最多 3 則（總覽的「值得注意」） | 10 秒 | B 階段（依 twstats）；現在前端用現有資料組出簡化版 |
-| `latency` | `baseline_ms`、`current_ms`、`loss_pct`；`targets[{id: gw/hinet/twnic/cf, label, host, current_ms, baseline_ms, loss_pct, series, loss}]`（`series`、`loss` 是時間序列，loss 單位 %） | 10 秒 | B 階段（twstats D1） |
-| `wan` | `connected`、`internet`（狀態值）、`proto`（pppoe/dhcp/static）、`proto_label`、`isp`、`ip4`、`gw4`、`ip6`、`dns[]`、`uptime_s`、`ether`、`rx_kbps`、`tx_kbps`、`plan_down_kbps`、`plan_up_kbps`、`mtu`、`last_error`；`series{step, start, down_kbps[], up_kbps[]}` | 2 秒（即時）／60 秒（序列） | 現在由 wanlink、netdev、rstats 組出（序列 120 秒一筆）；`isp`、方案頻寬 B 階段 |
+| `latency` | `baseline_ms`、`current_ms`、`loss_pct`；`targets[{id: gw/hinet/twnic/cf, label, host, current_ms, baseline_ms, loss_pct, series, loss}]`（`series`、`loss` 是時間序列，loss 單位 %） | 10 秒 | ✅ `tw-stats`（D1）；時鐘對時前 `series`／`loss` 是 null，找不到閘道時 gw 的 `host` 是空字串 |
+| `wan` | `connected`、`internet`（狀態值）、`proto`（pppoe/dhcp/static）、`proto_label`、`isp`、`ip4`、`gw4`、`ip6`、`dns[]`、`uptime_s`、`ether`、`rx_kbps`、`tx_kbps`、`plan_down_kbps`、`plan_up_kbps`、`mtu`、`last_error`；`series{step, start, down_kbps[], up_kbps[]}` | 2 秒（即時）／60 秒（序列） | 現在由 wanlink、netdev、rstats 組出（序列 120 秒一筆；速率與序列都取 WAN 介面與 `ESW_P0` 大的，硬體 NAT 也準）；`isp`、方案頻寬 B 階段 |
 | `router` | `cpu_pct`、`mem_used_pct`、`mem_total_kb`、`uptime_s`、`load[]`、`conntrack_count`、`conntrack_max`、`temp_c`（可能 null）、`cpu_series`（選用） | 5 秒 | 現在由 json_system_status、nf_values 組出 |
 | `devices` | `devices[{mac（有冒號）, name, hostname, type: phone/computer/tv/game/iot/nas/camera/router/other, conn: wifi/wired/guest, band: "2.4"/"5", ap, signal_dbm, tx_rate_mbps, rx_rate_mbps, ip, static_ip, online, since_s, last_seen_ts, paused, disconnects_today, usage_today_bytes}]` | 10 秒 | 現在由 get_static_client、wl_auth_list 組出：分不出有線或剛離開 Wi-Fi（`conn: "wired_guess"`），沒有頻段、AP、上線時間；整合 B 階段 |
 | `device?mac=` | `signal`、`rate`（時間序列）、`disconnects[{ts, reason}]`、`roams[{ts, from, to, rssi_from, rssi_to}]`、`advice[{title, detail, action, href}]`、`usage_today_bytes` | 60 秒 | B 階段（D4） |

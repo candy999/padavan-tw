@@ -261,6 +261,19 @@ tw_roamd_check(void)
 		doSystem("killall %s", "tw-roamd");
 }
 
+/* padavan-tw：igmpproxy 0.3 會當掉（D3 實測開機約 1 分鐘 SIGSEGV），應該在跑卻不在時重新啟動 */
+static void
+tw_igmpproxy_check(void)
+{
+	static int restarts = 0;
+
+	if (!check_if_file_exist(IGMPPROXY_WANT) || pids("igmpproxy"))
+		return;
+	if (++restarts <= 5)
+		logmessage("igmpproxy", "沒有在執行（可能當掉了），重新啟動");
+	eval("/bin/igmpproxy", "/etc/igmpproxy.conf");
+}
+
 /* padavan-tw：監測取樣器（延遲與掉包）；nvram tw_stats_enable 預設開，設 0 才關（程式結束也會自動重新啟動） */
 static void
 tw_stats_check(void)
@@ -642,6 +655,7 @@ watchdog_on_timer(void)
 	tw_acs_daily_check();
 	tw_roamd_check();
 	tw_stats_check();
+	tw_igmpproxy_check();
 
 	/* update kernel timezone daylight */
 	setkernel_tz();

@@ -570,8 +570,8 @@ reload() {
 	# D3 實測：3.3.2 新的一輪第 1 秒就會回答，接著約 4 秒忙著載入（過濾清單、CDN 資料庫）不回答，
 	# 太早拿掉 reloading 標記的話，保護程式會以為沒回應、改用業者 DNS → 等 8 秒。
 	# 3.3.3 起載入改在背景執行緒，只剩換監聽的約 0.1 秒（SIGHUP 後 0.2～0.4 秒）→ 等 2 秒
-	settle=8
-	kuro_ver_ge 3 3 3 && settle=2
+	settle=8; gap="約有幾秒不回答"
+	kuro_ver_ge 3 3 3 && { settle=2; gap="不回答的時間不到 1 秒"; }
 	i=0; seen=""
 	while [ $i -lt 90 ]; do
 		sleep 1
@@ -585,7 +585,7 @@ reload() {
 	st=$(curl -s -m 5 "http://127.0.0.1:$(api_port)/api/status" 2>/dev/null | tr -d ' \n')
 	case "$st" in
 	*'"usingPrevious":true'*) log "新設定無法套用，黑潮 DNS 繼續用上一份設定（原因在後台黑潮 DNS 的狀態頁）" ;;
-	*) [ $i -lt 90 ] && log "設定已重新載入（沒有改用業者 DNS；換上新設定時約有幾秒不回答）" || log "送出重新載入後 90 秒還沒換上新設定，請看黑潮 DNS 的紀錄" ;;
+	*) [ $i -lt 90 ] && log "設定已重新載入（沒有改用業者 DNS；換上新設定時$gap）" || log "送出重新載入後 90 秒還沒換上新設定，請看黑潮 DNS 的紀錄" ;;
 	esac
 	dnsmasq_extra	# 網域改了：區網解析與 DHCP 選項 162 跟著更新
 	return 0
