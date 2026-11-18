@@ -64,7 +64,7 @@ struct target {
 	long slot_sum[TWS_SLOTS];	/* 毫秒×10 的總和 */
 	int slot_ok[TWS_SLOTS], slot_n[TWS_SLOTS];
 	unsigned short seq;
-	long sent_ms;			/* 這一輪送出的時間（單調時鐘） */
+	long long sent_us;		/* 這一輪送出的時間（單調時鐘，微秒） */
 	int got;			/* 這一輪收到了（毫秒×10），-1＝還沒 */
 };
 
@@ -85,6 +85,15 @@ mono_ms(void)
 	struct timespec ts;
 	clock_gettime(CLOCK_MONOTONIC, &ts);
 	return ts.tv_sec * 1000L + ts.tv_nsec / 1000000L;
+}
+
+/* 延遲用微秒算（毫秒×10 的精度要 0.1 ms） */
+static long long
+mono_us(void)
+{
+	struct timespec ts;
+	clock_gettime(CLOCK_MONOTONIC, &ts);
+	return ts.tv_sec * 1000000LL + ts.tv_nsec / 1000;
 }
 
 static unsigned short
@@ -195,7 +204,7 @@ probe_round(int fd)
 		memset(&to, 0, sizeof(to));
 		to.sin_family = AF_INET;
 		to.sin_addr = t->addr;
-		t->sent_ms = mono_ms();
+		t->sent_us = mono_us();
 		if (sendto(fd, buf, sizeof(buf), 0, (struct sockaddr *)&to, sizeof(to)) == (ssize_t)sizeof(buf))
 			pending++;
 	}
@@ -225,10 +234,10 @@ probe_round(int fd)
 			struct target *t = &g_t[i];
 			if (t->valid && t->got < 0 && from.sin_addr.s_addr == t->addr.s_addr &&
 			    ntohs(r->un.echo.sequence) == t->seq) {
-				long d = mono_ms() - t->sent_ms;
-				t->got = (int)(d * 10);
+				long long d = mono_us() - t->sent_us;
+				t->got = (int)((d + 50) / 100);
 				if (t->got < 1)
-					t->got = 1;	/* 1 ms 以內記成 0.1 */
+					t->got = 1;	/* 0.1 ms 以內記成 0.1 */
 				pending--;
 				break;
 			}
@@ -467,6 +476,7 @@ tw_stats_main(int argc, char **argv)
 
 	if (daemon(0, 0) < 0)
 		return 1;
+	umask(022);
 
 	fp = fopen(TWS_PID_FILE, "w");
 	if (fp) {
