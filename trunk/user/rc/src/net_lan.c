@@ -733,7 +733,7 @@ full_restart_lan(void)
 	if (!is_ap_mode) {
 		if (is_lan_stp) {
 			br_set_stp(IFNAME_BR, 1);
-			br_set_fd(IFNAME_BR, 15);
+			tw_stp_timers();	/* padavan-tw：8 秒計時＋急速連線（tw_wifibpdu.c） */
 		}
 		
 		if (is_wan_err) {

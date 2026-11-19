@@ -33,6 +33,60 @@
 #define TWB_FLOOD	10	/* 一次檢查收到這麼多就暫停逐筆記錄 */
 #define TWB_MUTE_CHECKS	120	/* 120 次 × 30 秒＝約 1 小時 */
 
+/* ---------- STP 計時與急速連線 ----------
+ * 原本 STP 開著時，連接埠啟用到轉送要 2 × forward_delay（15 秒）＝30 秒；Wi-Fi 每次重啟（每日換頻道、
+ * 改 Wi-Fi 設定、驅動自己重啟）那個頻段就 30 秒不通，裝置在這段時間連上會拿不到 DHCP
+ * （Windows 會顯示「沒有網際網路」好幾分鐘）。
+ * - 計時縮短：hello 2、max_age 6、forward_delay 4 秒（802.1D：2×(4−1) ≥ 6、6 ≥ 2×(2+1)），30 秒 → 8 秒；
+ *   家用網路只有一兩層，短計時沒問題，有線埠照常有迴圈保護
+ * - 急速連線（nvram tw_wifi_fast，預設 1）：Wi-Fi AP 介面一啟用就轉送（核心 br_stp.c 的 br_tw_fast_port()）。
+ *   只在 Wi-Fi BPDU 擋法有開時才開（Wi-Fi 本來就不參與 STP）
+ * - 退回：Wi-Fi 收到 BPDU（環境可能有橋接裝置，真的可能成環）就關掉急速連線、改回 8 秒，到重開機為止 */
+#define TWB_BR_SYS	"/sys/class/net/" IFNAME_BR "/bridge/"
+#define TWB_FAST_OFF	"/tmp/tw-wifi-fast-off"
+
+static void
+twb_write_int(const char *path, int val)
+{
+	FILE *fp = fopen(path, "w");
+
+	if (fp) {
+		fprintf(fp, "%d\n", val);
+		fclose(fp);
+	}
+}
+
+static int
+tw_wifi_fast_wanted(void)
+{
+	return !nvram_match("tw_wifi_fast", "0") && !nvram_match("lan_stp", "0") &&
+	       tw_wifi_bpdu_mode() != 0 && access(TWB_FAST_OFF, F_OK) != 0;
+}
+
+/* STP 開啟後呼叫（net_lan.c、services.c 原本 br_set_fd(IFNAME_BR, 15) 的位置） */
+void
+tw_stp_timers(void)
+{
+	twb_write_int(TWB_BR_SYS "hello_time", 200);
+	twb_write_int(TWB_BR_SYS "max_age", 600);
+	twb_write_int(TWB_BR_SYS "forward_delay", 400);
+	twb_write_int(TWB_BR_SYS "tw_wifi_fast", tw_wifi_fast_wanted());
+}
+
+static void
+tw_wifi_fast_fallback(unsigned long d_in)
+{
+	FILE *fp;
+
+	if (access(TWB_FAST_OFF, F_OK) == 0)
+		return;
+	fp = fopen(TWB_FAST_OFF, "w");
+	if (fp)
+		fclose(fp);
+	twb_write_int(TWB_BR_SYS "tw_wifi_fast", 0);
+	logmessage("Wi-Fi BPDU", "Wi-Fi 收到 %lu 個 BPDU，環境可能有橋接裝置：關閉急速連線，Wi-Fi 啟用改回等 8 秒（到重開機為止）", d_in);
+}
+
 static int twb_tick = 0;
 static int twb_mute = 0;
 static unsigned long twb_prev_in = 0;
@@ -142,6 +196,8 @@ tw_wifi_bpdu_check(void)
 	d_guard = guard - twb_prev_guard;
 	twb_prev_guard = guard;
 
+	if (d_in)
+		tw_wifi_fast_fallback(d_in);
 	if (d_in || d_guard)
 		doSystem("/sbin/tw-bpdu-snap %lu %lu %lu %lu &", d_in, in, d_guard, guard);
 

@@ -31,6 +31,8 @@ who() {
 {
 	echo "=== $(date '+%Y-%m-%d %H:%M:%S')｜開機 $(cut -d. -f1 /proc/uptime) 秒｜韌體 $(nvram get firmver_sub)"
 	echo "觸發：Wi-Fi 收到 BPDU +$1（累計 $2）｜硬體 NAT 保險 +$3（累計 $4）｜模式 tw_wifi_bpdu=$(nvram get tw_wifi_bpdu)、STP=$(cat /sys/class/net/br0/bridge/stp_state 2>/dev/null)"
+	B=/sys/class/net/br0/bridge
+	echo "STP 計時（百分之一秒）：hello $(cat $B/hello_time) max_age $(cat $B/max_age) forward_delay $(cat $B/forward_delay)｜急速連線 $(cat $B/tw_wifi_fast 2>/dev/null)$([ -f /tmp/tw-wifi-fast-off ] && echo '（已因收到 BPDU 退回 8 秒）')"
 	dmesg | grep -E "TW-BPDU|HNAT: drop non-IP" | tail -4 | while read -r l; do
 		echo "  $l"
 		src=$(echo "$l" | sed -n 's/.*MAC source = \([0-9a-fA-F:]*\).*/\1/p')

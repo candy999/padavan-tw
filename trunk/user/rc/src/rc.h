@@ -185,6 +185,7 @@ void tw_nat66_check(void);
 int  tw_wifi_bpdu_mode(void);
 void tw_wifi_bpdu_rules(void);
 void tw_wifi_bpdu_check(void);
+void tw_stp_timers(void);
 int rand_seed_by_time(void);
 void set_pagecache_reclaim(void);
 void restart_all_sysctl(void);

@@ -793,7 +793,7 @@ start_services_once(int is_ap_mode)
 		
 		if (!nvram_match("lan_stp", "0")) {
 			br_set_stp(IFNAME_BR, 1);
-			br_set_fd(IFNAME_BR, 15);
+			tw_stp_timers();	/* padavan-tw：8 秒計時＋急速連線（tw_wifibpdu.c） */
 		}
 	} else {
 		start_udpxy(IFNAME_BR);
