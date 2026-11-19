@@ -88,9 +88,10 @@ git pull
 | **黑潮資料區** | `kuroshio.sh` 先讀裝置樹確認不重疊（`/proc/device-tree/` **一定要加斜線**，busybox find 不跟進捷徑），掛不上 JFFS2 就清除重建；CR6608 用 RWFS（UBIFS） | `trunk/user/kuroshio/kuroshio.sh` |
 | **設定存進 Flash** | `/etc/storage` 是記憶體，只有正常重開機或 `mtd_storage.sh save` 才寫進 Flash。黑潮的設定已用 `kuroshio.sh storage-save` 處理（黑潮自己寫的由 `KUROSHIO_ON_CONFIG_WRITE` 觸發、httpd 寫的由 httpd 呼叫）；其他檔案欄位（腳本、dnsmasq 設定等）`d92c48c` 起套用完也會存 | `trunk/user/scripts/files/sbin/mtd_storage.sh`、`httpd/src/web_ex.c` |
 | **Wi-Fi 掃描** | MT7603 開了 11k 後掃描表多一欄，表頭與資料欄寬不同；httpd 已改成依表頭逐行解析。改驅動選項後要確認掃描頁 | `httpd/src/ralink.c`（`ssurv_*`） |
-| **QDMA／硬體 QoS** | 硬體 NAT 的佇列在「連線被接手的那一刻」依封包標記查 `M2Q_table` 決定；改分類規則要清硬體表（`hw_nat -y`），只改限速不用。`hnat_qos`（有線）、`hnat_qos_wlan`（網際網路↔Wi-Fi，兩個方向；Wi-Fi↔Wi-Fi 固定不經過）是 `/sys/module/hw_nat/parameters/` 的執行中開關 | `linux-4.4.x/net/nat/hw_nat/ra_nat.c`、`rc/src/net.c`（`hwnat_qos_apply`） |
+| **QDMA／硬體 QoS** | **已捨棄（6959e79）**：實測 CPU 約 3 倍、沒有改善，介面與 `hw_qos_*` 都已移除，hw_nat 只帶 `wan_vid` 載入。不要再加回來 | `rc/src/net.c` |
 | **QDMA／PDMA** | 核心選項 `CONFIG_RAETH_PDMA_TX` 可以改回 PDMA（預設關）。D3 的有線問題跟 QDMA 無關（實測過），維持 QDMA | `raeth/raeth_config.h` |
 | **黑潮 DNS 整合** | 官方 Linux 通用包＋UCI 文字模式；dnsmasq 照常佔 53 埠、轉給 127.0.0.1:5335；保護程式用 `kuroshio health`（讀只有埠號的 `/tmp/kuroshio/probe.uci`，使用者存壞設定也不會誤判）；改設定走 rc `restart_kuroshio` → `kuroshio.sh reload`（SIGHUP）；後台經 `/kuroshio_api.cgi` 轉接管理 API（白名單同 OpenWrt 的 rpcd.sh，動作只收 POST＋login_safe）；nvram 覆蓋 UCI 的對照表在 HANDOFF-UI 第 13.4 節 | `trunk/user/kuroshio/`、`httpd/src/web_ex.c`（`kuroshio_api_*`） |
+| **自動 NAT66** | 二級路由 WAN 有全球 IPv6、但上一層沒有可分配的前綴（DHCPv6-PD 要不到，例如 HiNet 只給主路由 /64）時，watchdog 等 60 秒後在 br0 加 ULA `fdXX:XXXX:XXXX::1/64`（由 MAC 算）＋ `ip6tables -t nat MASQUERADE`；dnsmasq `constructor:br0` 自動廣播。開關 `ip6_nat66_auto`（預設 1，網際網路頁可關），狀態在暫存 nvram `ip6_nat66_state`；防火牆重啟時 `ip6t_nat_rules()` 照狀態寫回規則。上游原本就有 `fc00:101:101::/64 FULLCONENAT`（手動設 LAN IPv6 用），兩者不衝突 | `rc/src/tw_nat66.c`、`firewall_ex.c` |
 | **新增 nvram** | 要在 `httpd/src/variables.c` 登記（群組＋變更後要重啟的服務）、`shared/src/defaults.c` 給預設值；表單用 `sid_list` 指定群組 | HANDOFF-UI 第 3.3 節 |
 
 ---

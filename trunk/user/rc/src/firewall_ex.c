@@ -1755,6 +1755,14 @@ ip6t_nat_rules(char *man_if)
 	fprintf(fp, ":%s %s [0:0]\n", "OUTPUT", "ACCEPT");
 	fprintf(fp, ":%s %s [0:0]\n", "POSTROUTING", "ACCEPT");
 	fprintf(fp, "-A POSTROUTING -s fc00:101:101::1/64 -j FULLCONENAT\n");
+	/* padavan-tw：自動 NAT66（tw_nat66.c）啟用中就一起寫進去，防火牆重啟（例如 WAN 重撥）時區網 IPv6 不中斷 */
+	{
+		char *n66 = nvram_safe_get("ip6_nat66_state");
+		char *w6 = get_wan_unit_value(0, "ifname6");
+
+		if (*n66 && w6 && *w6)
+			fprintf(fp, "-A POSTROUTING -s %s -o %s -j MASQUERADE\n", n66, w6);
+	}
 	fprintf(fp, "COMMIT\n\n");
 	fclose(fp);
 		doSystem("ip6tables-restore %s", ipt_file);
