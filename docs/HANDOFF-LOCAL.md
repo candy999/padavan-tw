@@ -170,6 +170,10 @@ git pull
 - 黑潮新版本：照 `trunk/user/kuroshio/Makefile` 開頭的說明升級；預設設定有變時把舊預設檔的 sha256 加進 `kuroshio.sh` 的 `UCI_OLD_DEFAULTS`（改過的設定檔由 `kuroshio uci-migrate` 處理）
 - ~~查看類的 GET 擋跨站與外網登入~~：`5771f9a` 完成（`X-TW-Request` 標頭、登入來源每次請求判斷）
 - J7 Cloudflare 以外的 DDNS（在黑潮專案做）
+- **黑潮 3.3.6 整合與驗證**（作者 2026-11-19 回覆，3.3.6 發布後做；結果當 3.4.0 串接模式的設計回饋）：
+  - 整合：升級 Makefile；`kuroshio.sh` 在路由器 IPv6 關閉時帶 `option ipv6 '0'`（`config upstream`；另有 `path_check`、`intercept_policy`，預設即建議值）；WAN 連上／位址改變時呼叫 `kuroshio notify wan-changed`
+  - 驗證 ①`kuroshio check-path`：一般 DNS 是否判成被接走、攔截者是誰、IPv6 判斷是否符合實際（主路由器也升 3.3.6 時應認出是黑潮——主路由器由使用者決定）②狀態頁／`/api/status` 的 `network.path`、`warnings` ③手動評測一次，提供 `/media/kuroshio/kuroshio/state/benchmark-last/`（judge.log、eliminated.csv、upstreams.json）與 `blacklist-suspects.json`；`upstreams.json` 的 `pathSkipped` 應有 `plain-intercepted` 約 300（沒 IPv6 時另有 `ipv6-unavailable`）④沒有 IPv6 的期間 syslog 不應再有 `sendmsg error: AddrNotAvailable` ⑤評測記憶體高點 `memory.jobs.lastBenchmark.processPeakRssBytes` 跟 3.3.3 比（預期較低）
+  - 評測很吃 CPU，不要跟 Wi-Fi 測試同時跑
 
 ### 5.8 維護與發布（ROADMAP A、B 章）
 - A6 miniupnpd 2.0 → 2.3.x（CVE-2019-12107～12111、CallStranger）
