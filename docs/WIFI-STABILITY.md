@@ -55,7 +55,7 @@
 - `net/core/skbuff.c`：`__alloc_skb`、`__netdev_alloc_skb`、`__napi_alloc_skb` 配置後清掉頭尾 `FOE_INFO_LEN`（`build_skb` 不清，那時緩衝區可能已有收到的資料）
 - `hw_nat/ra_nat.c`：ping-pong 路徑遇到 802.3／LLC 框（不可能是真的 ping-pong）直接丟掉並記錄 `HNAT: drop non-IP frame in ping-pong path`，當保險；60 分鐘驗證期間 0 次
 
-d1b0869 的「Wi-Fi 介面不收不送 BPDU」目前仍保留，當第二層保險；要不要拿掉待使用者決定（拿掉的好處：經 Wi-Fi 的真實迴圈也能被 STP 擋下；WDS 介面 wds*／wdsi* 本來就不在這條規則內）。
+d1b0869 的「Wi-Fi 介面不收不送 BPDU」**保留**當第二層保險（使用者 2026-11-19 決定；WDS 介面 wds*／wdsi* 不在這條規則內，經 WDS 的迴圈仍由 STP 處理）。
 
 ## 刷機重開卡住（已修）
 
