@@ -11,10 +11,31 @@ function page_init() {
 	h += '<div class="tw-grid-2">' + U.card({ title: '事件時間軸', bodyId: 'dg-events', body: U.stateBox('loading') }) + U.card({ title: '測速', bodyId: 'dg-speed', body: U.stateBox('loading') }) + '</div>';
 	h += U.card({ title: '更多工具', body: '<div class="tw-actions">' + U.button('系統記錄', { small: true, href: 'Main_LogStatus_Content.asp' }) + U.button('連線狀態表', { small: true, href: 'Main_CTStatus_Content.asp' }) +
 		U.button('路由表', { small: true, href: 'Main_RouteStatus_Content.asp' }) + U.button('即時流量', { small: true, href: 'Main_TrafficMonitor_realtime.asp' }) + U.button('網路地圖', { small: true, href: 'Main_NetMap.asp' }) + '</div>' });
+	h += dg_loop_card();
 	U.mount(h);
 	if (TW.qs('run') == '1') dg_run();
 	U.poll(function () { return Promise.all([U.api('latency').then(function (r) { DG.lat = r; dg_lat(); }), U.api('events').then(dg_events)]); }, 30000);
 	U.api('speedtest').then(dg_speed);
+}
+
+/* ---------- Wi-Fi 迴圈保護（tw_wifi_bpdu、tw_wifi_fast；rc 的 tw_wifibpdu.c） ----------
+ * 只放開關；觸發時的原因與當下狀態由路由器寫進系統記錄（Wi-Fi BPDU）與 /etc/storage/tw-diag/，排錯時再看 */
+function dg_loop_card() {
+	var U = TW, stp = NV.lan_stp != '0', bpdu = NV.wifi_bpdu != '0', fast = NV.wifi_fast != '0';
+	var b = '<label class="tw-switch"><input type="checkbox" id="dg-bpdu"' + (bpdu ? ' checked' : '') + '><span class="tw-track"></span>擋掉 Wi-Fi 上的 STP 封包（避免 Wi-Fi 被誤判成迴圈而中斷）</label>' +
+		'<label class="tw-switch"><input type="checkbox" id="dg-fast"' + (fast ? ' checked' : '') + '><span class="tw-track"></span>急速連線（Wi-Fi 重新啟動後立刻恢復，不等 8 秒）</label>' +
+		'<p class="tw-small tw-muted">' + (stp ? '平常不用調整。某個 Wi-Fi 頻段收到其他裝置的 STP 封包（家裡可能有橋接器或中繼器）時，那個頻段會自動改回標準保護並記錄在系統記錄，重開機後恢復。急速連線要在「擋掉 Wi-Fi 上的 STP 封包」開著時才有作用。'
+			: '目前 STP 是關閉的（區網設定），這兩個設定不會作用。') + '</p>' +
+		'<div class="tw-actions">' + U.button('套用', { small: true, onclick: 'dg_loop_apply()' }) + '</div>';
+	return U.card({ title: 'Wi-Fi 迴圈保護', body: b });
+}
+function dg_loop_apply() {
+	var U = TW, b = U.$('dg-bpdu').checked, f = U.$('dg-fast').checked;
+	/* 開著且原本是 1（只擋收進來的，進階用）就保留 1；其他一律 2（收送都擋，出廠預設） */
+	var vb = b ? (NV.wifi_bpdu == '1' ? '1' : '2') : '0', vf = f ? '1' : '0';
+	if (vb == (NV.wifi_bpdu || '2') && vf == (NV.wifi_fast || '1')) { U.toast('沒有變更'); return; }
+	U.apply({ sid: 'LANHostConfig;', fields: { tw_wifi_bpdu: vb, tw_wifi_fast: vf }, title: '套用 Wi-Fi 迴圈保護？',
+		impacts: ['區網會重新啟動，有線與 Wi-Fi 約中斷 10～20 秒'] });
 }
 
 /* ---------- 一鍵檢查 ---------- */

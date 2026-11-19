@@ -831,7 +831,11 @@ gen_ralink_config(int is_soc_ap, int is_aband, int disable_autoscan)
 			sprintf(list, "%d;%d;%d", 12, 13, 14);
 		else
 			sprintf(list, "%d", 14);
-	} else
+	} else if (nvram_wlan_get_int(1, "HT_BW") >= 1)
+		/* padavan-tw：165 沒有可以組 40／80 MHz 的相鄰頻道，選到它頻寬會掉成 20 MHz；
+		 * 頻寬設 40 以上時自動選頻不選（36-48、149-161 剛好是完整的 80 MHz 區塊） */
+		sprintf(list, "%d;%d;%d;%d;%d", 52, 56, 60, 64, 165);
+	else
 		sprintf(list, "%d;%d;%d;%d", 52, 56, 60, 64);
 	fprintf(fp, "AutoChannelSkipList=%s\n", list);
 

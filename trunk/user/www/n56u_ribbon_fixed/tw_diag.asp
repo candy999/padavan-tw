@@ -26,6 +26,9 @@ var NV = {
 	firmver: "<% nvram_get_x("", "firmver_sub"); %>",
 	wan_proto: "<% nvram_get_x("", "wan_proto"); %>",
 	lan_ip: "<% nvram_get_x("", "lan_ipaddr"); %>",
+	lan_stp: "<% nvram_get_x("", "lan_stp"); %>",
+	wifi_bpdu: "<% nvram_get_x("", "tw_wifi_bpdu"); %>",
+	wifi_fast: "<% nvram_get_x("", "tw_wifi_fast"); %>",
 	sw_mode: "<% nvram_get_x("", "sw_mode"); %>"
 };
 </script>
