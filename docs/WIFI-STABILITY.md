@@ -70,7 +70,9 @@ d1b0869 的「Wi-Fi 介面不收不送 BPDU」**保留**當第二層保險（使
 修法（使用者 2026-11-19 決定）：
 - **8 秒**：STP 計時改成 hello 2、max_age 6、forward_delay 4 秒（802.1D 限制：2×(4−1) ≥ 6、6 ≥ 2×(2+1)），所有連接埠啟用到轉送從 30 秒變 8 秒，有線埠照常有迴圈保護（rc `tw_stp_timers()`，取代原本的 `br_set_fd(IFNAME_BR, 15)`）
 - **急速連線**（nvram `tw_wifi_fast`，預設 1）：Wi-Fi AP 介面（名稱 `ra` 開頭，跟 ebtables 擋 BPDU 的範圍一樣；不含 WDS、ApCli）一啟用就直接轉送（核心 `br_stp.c` 的 `br_tw_fast_port()`，網橋參數 `/sys/class/net/br0/bridge/tw_wifi_fast`）。只在 Wi-Fi BPDU 擋法開著時才開
-- **退回**：watchdog 看到 Wi-Fi 收到 BPDU（環境可能有橋接裝置、真的可能成環）就關掉急速連線、改回 8 秒，到重開機為止，並寫進 BPDU 觸發紀錄
+- **個別退回**（使用者決定：只記在記憶體、沒遇到就不降、重開機忘掉沒關係、遇到再說）：某個 Wi-Fi 介面收到**外部裝置**的 BPDU（環境中有會送 BPDU 的橋接裝置，真的可能成環）→ 只把那個介面改回標準 STP：放行它的 BPDU（不然 STP 看不到迴圈，只等 8 秒也沒有保護效果）、啟用時等 8 秒（核心 `brport/tw_slow`）；其他 Wi-Fi 介面照樣急速。清單 `/tmp/tw-bpdu-conflict`（介面、來源 MAC、時間）
+- 來源是**本機介面的 MAC**（D3 內部回送）不算衝突、不降級，只記錄，留給韌體修
+- 每次觸發都寫系統日誌與 `/etc/storage/tw-diag/bpdu-events.log`（重開機保留），包含當下的 STP 計時、急速狀態與已改回標準 STP 的介面，用來微調
 
 ## 刷機重開卡住（已修）
 

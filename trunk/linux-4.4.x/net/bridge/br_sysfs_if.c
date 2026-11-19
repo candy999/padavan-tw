@@ -207,7 +207,21 @@ BRPORT_ATTR_FLAG(multicast_fast_leave, BR_MULTICAST_FAST_LEAVE);
 BRPORT_ATTR_FLAG(multicast_to_unicast, BR_MULTICAST_TO_UCAST);
 #endif
 
+/* padavan-tw：這個連接埠不用急速連線（見 br_stp.c 的 br_tw_fast_port()） */
+static ssize_t show_tw_slow(struct net_bridge_port *p, char *buf)
+{
+	return sprintf(buf, "%d\n", p->tw_slow ? 1 : 0);
+}
+
+static int store_tw_slow(struct net_bridge_port *p, unsigned long v)
+{
+	p->tw_slow = v ? true : false;
+	return 0;
+}
+static BRPORT_ATTR(tw_slow, S_IRUGO | S_IWUSR, show_tw_slow, store_tw_slow);
+
 static const struct brport_attribute *brport_attrs[] = {
+	&brport_attr_tw_slow,
 	&brport_attr_path_cost,
 	&brport_attr_priority,
 	&brport_attr_port_id,

@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <net/if.h>
 
 #include "rc.h"
 
@@ -41,9 +42,13 @@
  *   家用網路只有一兩層，短計時沒問題，有線埠照常有迴圈保護
  * - 急速連線（nvram tw_wifi_fast，預設 1）：Wi-Fi AP 介面一啟用就轉送（核心 br_stp.c 的 br_tw_fast_port()）。
  *   只在 Wi-Fi BPDU 擋法有開時才開（Wi-Fi 本來就不參與 STP）
- * - 退回：Wi-Fi 收到 BPDU（環境可能有橋接裝置，真的可能成環）就關掉急速連線、改回 8 秒，到重開機為止 */
+ * - 個別退回（只記在記憶體，重開機就忘，遇到再說）：某個 Wi-Fi 介面收到「外部裝置」的 BPDU
+ *   （環境中有會送 BPDU 的橋接裝置，真的可能成環）→ 只把那個介面改回標準 STP：放行它的 BPDU，
+ *   讓 STP 真的看得到迴圈，啟用時等 8 秒（brport/tw_slow）；其他介面照樣急速。
+ *   來源是本機介面的 MAC（D3 內部回送，韌體問題）不算衝突，不降級，只記錄。
+ *   判斷與處理在 /sbin/tw-bpdu-snap，清單在 TWB_CONFLICT（每行：介面 來源MAC 時間） */
 #define TWB_BR_SYS	"/sys/class/net/" IFNAME_BR "/bridge/"
-#define TWB_FAST_OFF	"/tmp/tw-wifi-fast-off"
+#define TWB_CONFLICT	"/tmp/tw-bpdu-conflict"
 
 static void
 twb_write_int(const char *path, int val)
@@ -51,7 +56,8 @@ twb_write_int(const char *path, int val)
 	FILE *fp = fopen(path, "w");
 
 	if (fp) {
-		fprintf(fp, "%d\n", val);
+		fprintf(fp, "%d
+", val);
 		fclose(fp);
 	}
 }
@@ -60,7 +66,7 @@ static int
 tw_wifi_fast_wanted(void)
 {
 	return !nvram_match("tw_wifi_fast", "0") && !nvram_match("lan_stp", "0") &&
-	       tw_wifi_bpdu_mode() != 0 && access(TWB_FAST_OFF, F_OK) != 0;
+	       tw_wifi_bpdu_mode() != 0;
 }
 
 /* STP 開啟後呼叫（net_lan.c、services.c 原本 br_set_fd(IFNAME_BR, 15) 的位置） */
@@ -73,18 +79,45 @@ tw_stp_timers(void)
 	twb_write_int(TWB_BR_SYS "tw_wifi_fast", tw_wifi_fast_wanted());
 }
 
+/* 讀衝突清單，對每個介面呼叫 fn（介面名稱只收英數字，避免拼進指令出事） */
 static void
-tw_wifi_fast_fallback(unsigned long d_in)
+twb_for_conflicts(void (*fn)(const char *ifname))
 {
-	FILE *fp;
+	FILE *fp = fopen(TWB_CONFLICT, "r");
+	char line[128], ifn[IFNAMSIZ + 1];
 
-	if (access(TWB_FAST_OFF, F_OK) == 0)
+	if (!fp)
 		return;
-	fp = fopen(TWB_FAST_OFF, "w");
-	if (fp)
-		fclose(fp);
-	twb_write_int(TWB_BR_SYS "tw_wifi_fast", 0);
-	logmessage("Wi-Fi BPDU", "Wi-Fi 收到 %lu 個 BPDU，環境可能有橋接裝置：關閉急速連線，Wi-Fi 啟用改回等 8 秒（到重開機為止）", d_in);
+	while (fgets(line, sizeof(line), fp)) {
+		const char *c;
+		int ok = 1;
+
+		if (sscanf(line, "%16s", ifn) != 1)
+			continue;
+		for (c = ifn; *c; c++)
+			if (!((*c >= 'a' && *c <= 'z') || (*c >= '0' && *c <= '9')))
+				ok = 0;
+		if (ok)
+			fn(ifn);
+	}
+	fclose(fp);
+}
+
+static void
+twb_allow_bpdu(const char *ifn)
+{
+	doSystem("ebtables -A INPUT -i %s -d %s -j ACCEPT", ifn, TWB_BGA);
+	doSystem("ebtables -A OUTPUT -o %s -d %s -j ACCEPT", ifn, TWB_BGA);
+}
+
+static void
+twb_set_slow(const char *ifn)
+{
+	char path[80];
+
+	snprintf(path, sizeof(path), "/sys/class/net/%s/brport/tw_slow", ifn);
+	if (access(path, F_OK) == 0)
+		twb_write_int(path, 1);
 }
 
 static int twb_tick = 0;
@@ -110,6 +143,7 @@ tw_wifi_bpdu_rules(void)
 {
 	int with_log = (access(TWB_NOLOG_FLAG, F_OK) != 0);
 
+	twb_for_conflicts(twb_allow_bpdu);	/* 個別退回的介面照標準 STP（規則要在擋法前面） */
 	if (with_log)
 		module_smart_load("ebt_log", NULL);
 	doSystem("ebtables -A INPUT -i ra+ -d %s %s-j DROP", TWB_BGA, with_log ? TWB_LOG_OPT : "");
@@ -166,7 +200,8 @@ twb_swap_input(int to_log)
 	doSystem("ebtables -D INPUT -i ra+ -d %s %s-j DROP", TWB_BGA, to_log ? "" : TWB_LOG_OPT);
 	if (to_log)
 		module_smart_load("ebt_log", NULL);
-	doSystem("ebtables -I INPUT 1 -i ra+ -d %s %s-j DROP", TWB_BGA, to_log ? TWB_LOG_OPT : "");
+	/* 加在最後：個別退回介面的放行規則要留在前面 */
+	doSystem("ebtables -A INPUT -i ra+ -d %s %s-j DROP", TWB_BGA, to_log ? TWB_LOG_OPT : "");
 }
 
 void
@@ -196,8 +231,7 @@ tw_wifi_bpdu_check(void)
 	d_guard = guard - twb_prev_guard;
 	twb_prev_guard = guard;
 
-	if (d_in)
-		tw_wifi_fast_fallback(d_in);
+	twb_for_conflicts(twb_set_slow);	/* Wi-Fi 介面重建（驅動重載）後旗標會不見，每次補上 */
 	if (d_in || d_guard)
 		doSystem("/sbin/tw-bpdu-snap %lu %lu %lu %lu &", d_in, in, d_guard, guard);
 

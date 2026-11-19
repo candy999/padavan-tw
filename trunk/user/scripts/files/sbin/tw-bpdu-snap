@@ -4,6 +4,8 @@
 # 紀錄：/etc/storage/tw-diag/bpdu-events.log（上限 48 KB，超過留最新的一半），重開機也保留
 # 完整快照最多每 10 分鐘一份（其餘只記觸發）；存進 Flash 最多每小時一次
 # 判斷依據：來源 MAC 是本機任何介面的 MAC → D3 內部回送（還有沒修到的路徑）；不是 → 環境中有橋接裝置或真的迴圈
+# 個別退回（只記在記憶體 /tmp/tw-bpdu-conflict，重開機就忘）：外部裝置的 BPDU → 只把收到的那個 Wi-Fi 介面
+#   改回標準 STP（放行 BPDU 讓 STP 看得到迴圈、啟用時等 8 秒）；本機回送不降級（是韌體問題，只記錄）
 
 D=/etc/storage/tw-diag
 F=$D/bpdu-events.log
@@ -17,6 +19,13 @@ full=1
 
 # 本機所有介面的 MAC（名稱 MAC）
 own=$(for n in /sys/class/net/*; do [ -f $n/address ] && echo "$(basename $n) $(cat $n/address)"; done)
+
+C=/tmp/tw-bpdu-conflict
+
+is_own() {
+	m=$(echo "$1" | tr 'A-F' 'a-f')
+	echo "$own" | awk -v m="$m" '$2 == m {f = 1} END {exit !f}'
+}
 
 who() {
 	m=$(echo "$1" | tr 'A-F' 'a-f')
@@ -32,12 +41,21 @@ who() {
 	echo "=== $(date '+%Y-%m-%d %H:%M:%S')｜開機 $(cut -d. -f1 /proc/uptime) 秒｜韌體 $(nvram get firmver_sub)"
 	echo "觸發：Wi-Fi 收到 BPDU +$1（累計 $2）｜硬體 NAT 保險 +$3（累計 $4）｜模式 tw_wifi_bpdu=$(nvram get tw_wifi_bpdu)、STP=$(cat /sys/class/net/br0/bridge/stp_state 2>/dev/null)"
 	B=/sys/class/net/br0/bridge
-	echo "STP 計時（百分之一秒）：hello $(cat $B/hello_time) max_age $(cat $B/max_age) forward_delay $(cat $B/forward_delay)｜急速連線 $(cat $B/tw_wifi_fast 2>/dev/null)$([ -f /tmp/tw-wifi-fast-off ] && echo '（已因收到 BPDU 退回 8 秒）')"
+	echo "STP 計時（百分之一秒）：hello $(cat $B/hello_time) max_age $(cat $B/max_age) forward_delay $(cat $B/forward_delay)｜急速連線 $(cat $B/tw_wifi_fast 2>/dev/null)｜改回標準 STP 的介面：$(awk '{printf "%s（%s，%s） ", $1, $2, $3}' $C 2>/dev/null)"
 	dmesg | grep -E "TW-BPDU|HNAT: drop non-IP" | tail -4 | while read -r l; do
 		echo "  $l"
 		src=$(echo "$l" | sed -n 's/.*MAC source = \([0-9a-fA-F:]*\).*/\1/p')
 		[ -z "$src" ] && src=$(echo "$l" | sed -n 's/.* src \([0-9a-fA-F:]*\),.*/\1/p')
 		[ -n "$src" ] && echo "    來源 $src：$(who $src)"
+		in=$(echo "$l" | sed -n 's/.* IN=\([a-z0-9]*\) .*/\1/p')
+		if [ -n "$src" ] && [ -n "$in" ] && ! is_own "$src" && ! grep -q "^$in " $C 2>/dev/null; then
+			echo "$in $src $(date +%T)" >> $C
+			ebtables -I INPUT 1 -i $in -d 01:80:c2:00:00:00 -j ACCEPT
+			ebtables -I OUTPUT 1 -o $in -d 01:80:c2:00:00:00 -j ACCEPT
+			[ -f /sys/class/net/$in/brport/tw_slow ] && echo 1 > /sys/class/net/$in/brport/tw_slow
+			echo "    → $in 改回標準 STP（放行 BPDU、啟用時等 8 秒），其他 Wi-Fi 介面照樣急速；重開機後恢復"
+			logger -t "Wi-Fi BPDU" "$in 收到外部裝置 $src 的 BPDU（環境可能有橋接裝置）：這個介面改回標準 STP，其他照樣急速（重開機後恢復）"
+		fi
 		port=$(echo "$l" | sed -n 's/.* port 0x\([0-9a-fA-F]*\),.*/\1/p')
 		if [ -n "$port" ]; then
 			pn=$(( 0x$port & 0xff ))

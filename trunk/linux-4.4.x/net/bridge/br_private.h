@@ -196,6 +196,8 @@ struct net_bridge_port
 	u16				port_no;
 	unsigned char			topology_change_ack;
 	unsigned char			config_pending;
+	/* padavan-tw：這個連接埠不用急速連線（/sys/class/net/<if>/brport/tw_slow），見 br_stp.c 的 br_tw_fast_port() */
+	bool				tw_slow;
 	port_id				port_id;
 	port_id				designated_port;
 	bridge_id			designated_root;
