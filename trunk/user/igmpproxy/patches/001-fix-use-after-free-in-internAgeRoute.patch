@@ -1,0 +1,25 @@
+padavan-tw：修正 internAgeRoute() 的 use-after-free（上游 issue #90、PR #98 的同一個修法）
+
+removeRoute(croute) 已經 free(croute)，之後還寫 croute->ageVifBits。路由表結構大，uClibc 用
+mmap 配置，釋放後還給系統，一寫就 SIGSEGV。D3 實測：任何群組老化移除（例如 tw-roamd 的
+239.255.77.77、MOD 轉台後舊頻道）約 1 分鐘就當機（epc 0x406d00，寫入 0x77xxxxxx）。
+
+--- a/src/rttable.c
++++ b/src/rttable.c
+@@ -697,13 +697,15 @@
+ 
+             // No activity was registered within the timelimit, so remove the route.
+             removeRoute(croute);
++            croute = NULL;
+         }
+         // Tell that the route was updated...
+         result = 1;
+     }
+ 
+     // The aging vif bits must be reset for each round...
+-    BIT_ZERO(croute->ageVifBits);
++    if (croute != NULL)
++        BIT_ZERO(croute->ageVifBits);
+ 
+     return result;
+ }
