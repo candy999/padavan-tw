@@ -385,6 +385,10 @@ sync_uci() {
 	uci_set doh open_wan "${yes:-0}"
 	uci_set doh wan_port "$(port_or "$(nv kuroshio_doh_wan_port)" 443)"
 	uci_set access mode "$(nv kuroshio_access)"
+
+	# 3.3.6 起：路由器的 IPv6 關閉時告訴黑潮不要用 IPv6 連上游（只改 /tmp 裡的執行用副本）；
+	# 開著時照使用者的設定（預設 auto，黑潮自己看路由判斷）
+	[ -z "$(nv ip6_service)" ] && uci_set upstream ipv6 0
 }
 
 # ---------- dnsmasq ----------
@@ -738,7 +742,8 @@ notify() {
 		$BIN notify trim --hold "$2" --uci >/dev/null 2>&1 && log "已先讓出記憶體（$2 秒內不長大）"
 		return 0
 	fi
-	$BIN notify "$1" --uci >/dev/null 2>&1 && log "WAN 變動：已通知更新 DDNS 與對外 IP"
+	# 3.3.6 起 wan-changed 也會重新做路徑檢查（一般 DNS 是否被接走、協定被擋、IPv6）
+	$BIN notify "$1" --uci >/dev/null 2>&1 && log "WAN 變動：已通知黑潮（DDNS、對外 IP、路徑檢查）"
 }
 
 # 立即把學習資料寫出：3.2.0 起有 kuroshio notify save；舊版或失敗時送 SIGUSR1（效果相同）
