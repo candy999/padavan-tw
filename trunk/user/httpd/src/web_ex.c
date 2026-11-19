@@ -2798,6 +2798,10 @@ ej_firmware_caps_hook(int eid, webs_t wp, int argc, char **argv)
 	int has_5g_txbf = 0;
 	int has_5g_160mhz = 0;
 #endif
+	/* padavan-tw：5G TxBF 要原廠校正資料（rc 開機時讀 Factory 判斷，nvram wl_txbf_en）；
+	 * 沒有校正（例如 Newifi D3）時 rc 一律寫 ITxBfEn=0，設定了也不會生效，介面就不顯示這個選項 */
+	if (has_5g_txbf && nvram_get_int("wl_txbf_en") != 1)
+		has_5g_txbf = 0;
 #if defined (USE_WID_2G) && (USE_WID_2G==7615 || USE_WID_2G==7915)
 	int has_2g_band_steering = 1;
 	int has_2g_turbo_qam = 1;

@@ -126,6 +126,8 @@ git pull
 
 ## 5. 待辦清單（依建議優先順序）
 
+> **2026-11-19 起最新的優先順序與工作量以 [ROADMAP.md「目前優先順序」](ROADMAP.md) 為準**；本節以下是較早的細節（硬體 QoS 已捨棄、監測只留漫遊相關），保留參考。
+
 ### 5.1 【建議先做】D3 長時間穩定性測試
 目的：用數據回答「4.4 在 D3 上長期是否穩定」（別人的分支推薦 3.4，但他們的 4.4 在 D3 上本來就有交換器與重開機的問題，見 `docs/KVR-3.4-REVIEW.md` 與 HANDOFF-UI 第 12 節）。
 - 寫一個記錄腳本（例如 `trunk/user/scripts/files/usr/bin/tw-soak`，或先放在 `/etc/storage` 手動執行）：每小時記錄運作時間、可用記憶體（`/proc/meminfo`）、各程式 RSS（kuroshio、httpd、dnsmasq）、`nf_conntrack_count`、WAN 連線狀態與重連次數、Wi-Fi 裝置數、黑潮保護程式切換次數（syslog）、`dmesg` 的錯誤；寫到 `/tmp`，每天複製一份到 USB 或用 `scp` 拉回本機
