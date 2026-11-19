@@ -205,7 +205,7 @@ struct nvram_pair router_defaults[] = {
 	{ "wl_TxBurst", "1" },
 	{ "wl_PktAggregate", "1" },
 	{ "wl_APSDCapable", "0" },
-	{ "wl_HT_OpMode", "1" },
+	{ "wl_HT_OpMode", "0" },	/* padavan-tw：5G 預設混合模式（不用 Greenfield）；D3 實測 5 輪 0 斷線，Greenfield 5 輪 1 次斷線 */
 	{ "wl_pmf", "0" },
 	{ "wl_pmfsha256", "0" },
 #if BOARD_HAS_5G_11AC
