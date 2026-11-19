@@ -55,7 +55,13 @@
 - `net/core/skbuff.c`：`__alloc_skb`、`__netdev_alloc_skb`、`__napi_alloc_skb` 配置後清掉頭尾 `FOE_INFO_LEN`（`build_skb` 不清，那時緩衝區可能已有收到的資料）
 - `hw_nat/ra_nat.c`：ping-pong 路徑遇到 802.3／LLC 框（不可能是真的 ping-pong）直接丟掉並記錄 `HNAT: drop non-IP frame in ping-pong path`，當保險；60 分鐘驗證期間 0 次
 
-d1b0869 的「Wi-Fi 介面不收不送 BPDU」**保留**當第二層保險（使用者 2026-11-19 決定；WDS 介面 wds*／wdsi* 不在這條規則內，經 WDS 的迴圈仍由 STP 處理）。
+d1b0869 的「Wi-Fi 介面不收不送 BPDU」**保留**當第二層保險（使用者 2026-11-19 決定；WDS 介面 wds*／wdsi* 不在這條規則內，經 WDS 的迴圈仍由 STP 處理）。目標是持續收集觸發原因、修到可以拿掉為止：
+
+- nvram `tw_wifi_bpdu`：0＝不擋（標準 STP）、1＝只擋收進來的、2＝收送都擋（預設）；收進來的一律記錄
+- 觸發來源：① Wi-Fi 介面收到 BPDU（ebtables 計數；核心日誌前綴 `TW-BPDU`，含來源 MAC；韌體補回 ebtables 的 log 擴充）② 硬體 NAT 保險（`/sys/module/hw_nat/parameters/tw_bogus_pingpong`；日誌含來源 MAC、BPDU 的 bridge-id 與送出埠）
+- watchdog 約 30 秒檢查一次，有增加就跑 `/sbin/tw-bpdu-snap`，寫進 `/etc/storage/tw-diag/bpdu-events.log`（重開機保留，上限 48 KB；完整快照最多 10 分鐘一份；存 Flash 最多每小時一次）
+- 快照內容：觸發紀錄與判斷（來源是本機介面 MAC → D3 內部回送；不是 → 環境中有橋接裝置或真的迴圈；保險紀錄另外標出 BPDU 從網橋第幾埠送出）、網橋各埠 STP 狀態、2.4G／5G 連線裝置、3 秒流量、CPU、硬體 NAT 參數、可用記憶體
+- 30 秒內收到 10 個以上（可能真的有迴圈）：照樣擋，暫停逐筆記錄 1 小時，避免洗版
 
 ## 刷機重開卡住（已修）
 

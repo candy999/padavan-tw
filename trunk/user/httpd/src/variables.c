@@ -586,6 +586,7 @@
 			{"lan_dns1", "", NULL, EVM_RESTART_LAN},
 			{"lan_dns2", "", NULL, EVM_RESTART_LAN},
 			{"lan_stp", "", NULL, EVM_RESTART_LAN},
+			{"tw_wifi_bpdu", "", NULL, EVM_RESTART_LAN},	/* padavan-tw：Wi-Fi BPDU 擋法（tw_wifibpdu.c） */
 			{"lan_domain", "", NULL, EVM_RESTART_DHCPD},
 			{"force_igmp", "", NULL, EVM_RESTART_SYSCTL},
 #if defined (USE_IPV6)

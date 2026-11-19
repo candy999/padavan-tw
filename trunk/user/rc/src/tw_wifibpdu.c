@@ -1,0 +1,165 @@
+/*
+ * padavan-tw：Wi-Fi BPDU 擋法（第二層保險）與觸發紀錄
+ *
+ * 背景：2026-11-18 D3 的 2.4G 被 STP 封鎖約 50 秒（「卡住再恢復」）。根因是硬體 NAT 的殘留標記，
+ * 讓有線埠送出的 BPDU 變成「ra0 收到」（核心 d333736 已修，見 docs/WIFI-STABILITY.md）。
+ * 這裡保留 Wi-Fi 介面的 BPDU 擋法當第二層保險，並把每一次攔截的原因與當下狀態記下來；
+ * 目標是收集到足夠資料、把剩下的原因都修掉之後，拿掉這個擋法。
+ *
+ * nvram tw_wifi_bpdu（STP 開著才有作用；WDS、ApCli 不在範圍內）：
+ *   0＝不擋（標準 STP）
+ *   1＝只擋收進來的並記錄（BPDU 照常從 Wi-Fi 送出，可以觀察 Wi-Fi 送出後被送回的情況）
+ *   2＝收送都擋，收進來的記錄（預設）
+ *
+ * 觸發來源（watchdog 約每 30 秒檢查一次，只讀計數，不常駐抓封包）：
+ *   1. Wi-Fi 介面收到 BPDU：ebtables INPUT 規則的計數增加；核心日誌有 TW-BPDU 前綴（含來源 MAC）
+ *   2. 硬體 NAT 保險：/sys/module/hw_nat/parameters/tw_bogus_pingpong 增加（核心日誌 HNAT: drop non-IP）
+ * 有增加就執行 /sbin/tw-bpdu-snap，收集資訊寫進 /etc/storage/tw-diag/bpdu-events.log
+ * 一次檢查收到 10 個以上（可能有橋接裝置一直送、或真的迴圈）：照樣擋，但暫停逐筆記錄 1 小時，避免洗版
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
+#include "rc.h"
+
+#define TWB_BGA		"01:80:c2:00:00:00"
+#define TWB_LOG_OPT	"--log-level notice --log-prefix TW-BPDU "
+#define TWB_NOLOG_FLAG	"/tmp/tw-bpdu-nolog"
+#define TWB_GUARD_FILE	"/sys/module/hw_nat/parameters/tw_bogus_pingpong"
+#define TWB_CHECK_TICKS	3	/* watchdog 約 10 秒一輪 → 約 30 秒檢查一次 */
+#define TWB_FLOOD	10	/* 一次檢查收到這麼多就暫停逐筆記錄 */
+#define TWB_MUTE_CHECKS	120	/* 120 次 × 30 秒＝約 1 小時 */
+
+static int twb_tick = 0;
+static int twb_mute = 0;
+static unsigned long twb_prev_in = 0;
+static unsigned long twb_prev_guard = 0;
+
+int
+tw_wifi_bpdu_mode(void)
+{
+	char *v = nvram_safe_get("tw_wifi_bpdu");
+	int m;
+
+	if (!*v)
+		return 2;
+	m = atoi(v);
+	return (m < 0 || m > 2) ? 2 : m;
+}
+
+/* restart_guest_lan_isolation() 清空 ebtables 後呼叫 */
+void
+tw_wifi_bpdu_rules(void)
+{
+	int with_log = (access(TWB_NOLOG_FLAG, F_OK) != 0);
+
+	if (with_log)
+		module_smart_load("ebt_log", NULL);
+	doSystem("ebtables -A INPUT -i ra+ -d %s %s-j DROP", TWB_BGA, with_log ? TWB_LOG_OPT : "");
+	if (tw_wifi_bpdu_mode() == 2)
+		doSystem("ebtables -A OUTPUT -o ra+ -d %s -j DROP", TWB_BGA);
+}
+
+/* 讀 INPUT 規則的封包計數；logged＝規則有沒有帶記錄 */
+static int
+twb_read_input(unsigned long *pcnt, int *logged)
+{
+	FILE *fp;
+	char line[256];
+	int found = 0;
+
+	fp = popen("ebtables -L INPUT --Lc 2>/dev/null", "r");
+	if (!fp)
+		return 0;
+	while (fgets(line, sizeof(line), fp)) {
+		char *p;
+
+		if (!strstr(line, "-i ra+"))
+			continue;
+		p = strstr(line, "pcnt = ");
+		if (!p)
+			continue;
+		*pcnt = strtoul(p + 7, NULL, 10);
+		*logged = (strstr(line, "--log-prefix") != NULL);
+		found = 1;
+		break;
+	}
+	pclose(fp);
+	return found;
+}
+
+static unsigned long
+twb_read_guard(void)
+{
+	FILE *fp = fopen(TWB_GUARD_FILE, "r");
+	unsigned long v = 0;
+
+	if (fp) {
+		if (fscanf(fp, "%lu", &v) != 1)
+			v = 0;
+		fclose(fp);
+	}
+	return v;
+}
+
+/* 換成有記錄／沒記錄的 INPUT 規則（擋法不變） */
+static void
+twb_swap_input(int to_log)
+{
+	doSystem("ebtables -D INPUT -i ra+ -d %s %s-j DROP", TWB_BGA, to_log ? "" : TWB_LOG_OPT);
+	if (to_log)
+		module_smart_load("ebt_log", NULL);
+	doSystem("ebtables -I INPUT 1 -i ra+ -d %s %s-j DROP", TWB_BGA, to_log ? TWB_LOG_OPT : "");
+}
+
+void
+tw_wifi_bpdu_check(void)
+{
+	unsigned long in = 0, guard, d_in = 0, d_guard;
+	int has_in = 0, logged = 0;
+
+	if (++twb_tick < TWB_CHECK_TICKS)
+		return;
+	twb_tick = 0;
+
+	if (!nvram_match("lan_stp", "0") && tw_wifi_bpdu_mode() != 0 && is_module_loaded("ebtable_filter"))
+		has_in = twb_read_input(&in, &logged);
+
+	if (has_in) {
+		if (in < twb_prev_in)	/* 規則重建（Wi-Fi 重啟等），計數從 0 開始 */
+			twb_prev_in = 0;
+		d_in = in - twb_prev_in;
+		twb_prev_in = in;
+	} else
+		twb_prev_in = 0;
+
+	guard = twb_read_guard();
+	if (guard < twb_prev_guard)	/* hw_nat 重新載入 */
+		twb_prev_guard = 0;
+	d_guard = guard - twb_prev_guard;
+	twb_prev_guard = guard;
+
+	if (d_in || d_guard)
+		doSystem("/sbin/tw-bpdu-snap %lu %lu %lu %lu &", d_in, in, d_guard, guard);
+
+	/* 洗版保護 */
+	if (twb_mute > 0) {
+		if (--twb_mute == 0) {
+			unlink(TWB_NOLOG_FLAG);
+			if (has_in && !logged)
+				twb_swap_input(1);
+			logmessage("Wi-Fi BPDU", "恢復逐筆記錄 Wi-Fi 收到的 BPDU");
+		}
+	} else if (has_in && logged && d_in >= TWB_FLOOD) {
+		FILE *fp = fopen(TWB_NOLOG_FLAG, "w");
+
+		if (fp)
+			fclose(fp);
+		twb_swap_input(0);
+		twb_mute = TWB_MUTE_CHECKS;
+		logmessage("Wi-Fi BPDU", "30 秒內 Wi-Fi 收到 %lu 個 BPDU（可能有橋接裝置或真的迴圈），照樣擋，暫停逐筆記錄 1 小時", d_in);
+	}
+}

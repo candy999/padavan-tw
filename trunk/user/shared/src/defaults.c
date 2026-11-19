@@ -59,6 +59,7 @@ struct nvram_pair router_defaults[] = {
 	{ "lan_dns2", "" },				/* LAN DNS2 */
 	{ "lan_domain", "lan" },		/* LAN domain name */
 	{ "lan_stp", "1" },				/* LAN spanning tree protocol */
+	{ "tw_wifi_bpdu", "2" },			/* padavan-tw：Wi-Fi BPDU 擋法 0＝不擋 1＝只擋收進來的 2＝收送都擋（收進來的都記錄） */
 
 	/* WAN H/W parameters */
 	{ "wan_ifname", IFNAME_WAN },	/* WAN interface name */

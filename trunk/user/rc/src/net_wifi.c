@@ -1143,17 +1143,6 @@ ebtables_filter_guest_ap(const char *wifname, int is_aband, int i_need_dhcp)
 #endif
 }
 
-/* padavan-tw：STP 開著時，Wi-Fi AP 介面（ra0、ra1、rai0、rai1）不收也不送 BPDU。
- * D3 實測（2026-11-18）：2.4G 驅動偶爾把網橋送出的 BPDU 送回來，網橋以為有迴圈，把 2.4G 封鎖約 50 秒
- * （blocking 20 秒→listening 15 秒→learning 15 秒），當時 2.4G 上沒有任何裝置。無線很難形成迴圈；
- * 有線連接埠的 STP 照常運作，WDS、ApCli（AP 之間的無線連線，真的可能成環）不擋 */
-static void
-ebtables_filter_wifi_bpdu(void)
-{
-	doSystem("ebtables -A %s -i %s -d %s -j %s", "INPUT", "ra+", "01:80:c2:00:00:00", "DROP");
-	doSystem("ebtables -A %s -o %s -d %s -j %s", "OUTPUT", "ra+", "01:80:c2:00:00:00", "DROP");
-}
-
 void
 restart_guest_lan_isolation(void)
 {
@@ -1198,7 +1187,8 @@ restart_guest_lan_isolation(void)
 	if (!is_ap_mode)
 		is_need_ebtables = 0;
 
-	if (!nvram_match("lan_stp", "0"))
+	/* padavan-tw：Wi-Fi BPDU 擋法（tw_wifibpdu.c） */
+	if (!nvram_match("lan_stp", "0") && tw_wifi_bpdu_mode() != 0)
 		is_need_ebtables |= 0x100;
 
 	if (is_need_ebtables) {
@@ -1214,7 +1204,7 @@ restart_guest_lan_isolation(void)
 		if (is_need_ebtables & 0x01)
 			ebtables_filter_guest_ap(rt_ifname_guest, 0, i_need_dhcp);
 		if (is_need_ebtables & 0x100)
-			ebtables_filter_wifi_bpdu();
+			tw_wifi_bpdu_rules();
 	}
 	else if (is_module_loaded("ebtables")) {
 		doSystem("ebtables %s", "-F");

@@ -1,0 +1,78 @@
+#!/bin/sh
+# padavan-tw：Wi-Fi BPDU 擋法／硬體 NAT 保險觸發時收集資訊（由 watchdog 的 tw_wifi_bpdu_check 呼叫）
+# 用法：tw-bpdu-snap <Wi-Fi 收到增量> <累計> <硬體 NAT 保險增量> <累計>
+# 紀錄：/etc/storage/tw-diag/bpdu-events.log（上限 48 KB，超過留最新的一半），重開機也保留
+# 完整快照最多每 10 分鐘一份（其餘只記觸發）；存進 Flash 最多每小時一次
+# 判斷依據：來源 MAC 是本機任何介面的 MAC → D3 內部回送（還有沒修到的路徑）；不是 → 環境中有橋接裝置或真的迴圈
+
+D=/etc/storage/tw-diag
+F=$D/bpdu-events.log
+MAX=49152
+mkdir -p $D
+
+now=$(date +%s)
+last=$(cat /tmp/tw-bpdu-snap.last 2>/dev/null || echo 0)
+full=1
+[ $((now - last)) -lt 600 ] && full=0
+
+# 本機所有介面的 MAC（名稱 MAC）
+own=$(for n in /sys/class/net/*; do [ -f $n/address ] && echo "$(basename $n) $(cat $n/address)"; done)
+
+who() {
+	m=$(echo "$1" | tr 'A-F' 'a-f')
+	o=$(echo "$own" | awk -v m="$m" '$2 == m {printf "%s ", $1}')
+	if [ -n "$o" ]; then
+		echo "本機介面 ${o}的 MAC → D3 內部回送（還有沒修到的路徑）"
+	else
+		echo "不是本機的 MAC → 環境中有橋接裝置或真的迴圈"
+	fi
+}
+
+{
+	echo "=== $(date '+%Y-%m-%d %H:%M:%S')｜開機 $(cut -d. -f1 /proc/uptime) 秒｜韌體 $(nvram get firmver_sub)"
+	echo "觸發：Wi-Fi 收到 BPDU +$1（累計 $2）｜硬體 NAT 保險 +$3（累計 $4）｜模式 tw_wifi_bpdu=$(nvram get tw_wifi_bpdu)、STP=$(cat /sys/class/net/br0/bridge/stp_state 2>/dev/null)"
+	dmesg | grep -E "TW-BPDU|HNAT: drop non-IP" | tail -4 | while read -r l; do
+		echo "  $l"
+		src=$(echo "$l" | sed -n 's/.*MAC source = \([0-9a-fA-F:]*\).*/\1/p')
+		[ -z "$src" ] && src=$(echo "$l" | sed -n 's/.* src \([0-9a-fA-F:]*\),.*/\1/p')
+		[ -n "$src" ] && echo "    來源 $src：$(who $src)"
+		port=$(echo "$l" | sed -n 's/.* port 0x\([0-9a-fA-F]*\),.*/\1/p')
+		if [ -n "$port" ]; then
+			pn=$(( 0x$port & 0xff ))
+			for b in /sys/class/net/br0/brif/*; do
+				[ $(( $(cat $b/port_no) )) -eq $pn ] && echo "    BPDU 是從網橋第 $pn 埠（$(basename $b)）送出的"
+			done
+		fi
+	done
+	if [ $full = 1 ]; then
+		echo "網橋埠（0 停用 1 聆聽 2 學習 3 轉送 4 封鎖）：$(for b in /sys/class/net/br0/brif/*; do n=$(basename $b); printf '%s=%s ' $n $(cat $b/state); done)"
+		echo "STP 封鎖紀錄（系統日誌）：$(grep -c 'blocking state' /tmp/syslog.log 2>/dev/null) 次"
+		for w in ra0 rai0; do
+			[ -d /sys/class/net/$w ] || continue
+			iwpriv $w show stainfo >/dev/null 2>&1
+			macs=$(dmesg | awk '/^MAC +(MODE +)?AID/ {buf=""} {buf = buf "\n" $0} END {print buf}' | grep -oE '^[0-9A-F]{2}(:[0-9A-F]{2}){5}' | tr '\n' ' ')
+			echo "$w 連線裝置：${macs:-（沒有）}"
+		done
+		a=$(awk '/eth2.2:|rai0:|ra0:|eth2.1:/ {gsub(/:/, " "); print $1, $2, $10}' /proc/net/dev)
+		sleep 3
+		b=$(awk '/eth2.2:|rai0:|ra0:|eth2.1:/ {gsub(/:/, " "); print $1, $2, $10}' /proc/net/dev)
+		echo "流量（3 秒平均，硬體 NAT 卸載的不會算進來）：$(printf '%s\n%s\n' "$a" "$b" | awk '{ if ($1 in r) printf "%s 收 %.0f 送 %.0f Mbps  ", $1, ($2 - r[$1]) * 8 / 3e6, ($3 - t[$1]) * 8 / 3e6; else { r[$1] = $2; t[$1] = $3 } }')"
+		echo "負載：$(cat /proc/loadavg)｜$(top -bn1 | grep '^CPU' | head -1)"
+		echo "硬體 NAT：$(lsmod | grep -c '^hw_nat ') 個模組｜$(for p in /sys/module/hw_nat/parameters/*; do [ -f $p ] && printf '%s=%s ' $(basename $p) $(cat $p); done)"
+		echo "可用記憶體：$(grep MemAvailable /proc/meminfo | awk '{print $2}') KB"
+		echo "$now" > /tmp/tw-bpdu-snap.last
+	else
+		echo "（10 分鐘內已有完整快照，這次只記觸發）"
+	fi
+} >> $F 2>/dev/null
+
+[ $(wc -c < $F) -gt $MAX ] && tail -c $((MAX / 2)) $F > $F.tmp && mv $F.tmp $F
+
+logger -t "Wi-Fi BPDU" "攔截：Wi-Fi 收到 +$1、硬體 NAT 保險 +$3，詳情見 $F"
+
+# 存進 Flash：最多每小時一次
+saved=$(cat /tmp/tw-bpdu-save.last 2>/dev/null || echo 0)
+if [ $((now - saved)) -ge 3600 ]; then
+	echo $now > /tmp/tw-bpdu-save.last
+	/sbin/mtd_storage.sh save >/dev/null 2>&1
+fi

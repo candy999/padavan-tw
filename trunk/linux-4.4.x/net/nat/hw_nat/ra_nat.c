@@ -935,6 +935,11 @@ defined(CONFIG_MT7610_AP_MESH)
 #endif				/* CONFIG_RA_HW_NAT_WIFI || CONFIG_RA_HW_NAT_NIC_USB // */
 }
 
+/* padavan-tw：ping-pong 路徑丟掉非 IP 框的累計次數（見 ppe_extif_pingpong_handler），
+ * 唯讀參數給 watchdog（tw_wifi_bpdu_check）讀：/sys/module/hw_nat/parameters/tw_bogus_pingpong */
+static unsigned long tw_bogus_pingpong;
+module_param(tw_bogus_pingpong, ulong, 0444);
+
 uint32_t ppe_extif_pingpong_handler(struct sk_buff *skb)
 {
 #if defined(CONFIG_RA_HW_NAT_WIFI) || defined(CONFIG_RA_HW_NAT_NIC_USB)
@@ -960,12 +965,19 @@ uint32_t ppe_extif_pingpong_handler(struct sk_buff *skb)
 	 * 回來時 VLAN ID（LAN＝1）被當成介面編號而變成「ra0 收到」。丟掉，不要送進網橋觸發 STP 封鎖。
 	 * net/core/skbuff.c 已在配置時清標記，這裡是保險，有出現就記錄。 */
 	if (ntohs(eth->h_proto) < ETH_P_802_3_MIN) {
-		static unsigned long tw_bogus_pingpong;
+		const unsigned char *p = (const unsigned char *)eth;
 
 		tw_bogus_pingpong++;
-		if (net_ratelimit())
-			pr_info("HNAT: drop non-IP frame in ping-pong path (dev %s, dst %pM, total %lu)\n",
-				skb->dev->name, eth->h_dest, tw_bogus_pingpong);
+		if (net_ratelimit()) {
+			/* STP BPDU（LLC 42 42 03）：bridge-id 的 MAC 在第 36～41 位元組、port-id 在 42～43，
+			 * port-id 就是當初送出的連接埠，可以直接看出是哪個埠的封包被轉錯 */
+			if (p + 44 <= skb_tail_pointer(skb) && p[14] == 0x42 && p[15] == 0x42)
+				pr_info("HNAT: drop non-IP frame in ping-pong path (dev %s, src %pM, dst %pM, bpdu bridge %pM port 0x%02x%02x, total %lu)\n",
+					skb->dev->name, eth->h_source, eth->h_dest, p + 36, p[42], p[43], tw_bogus_pingpong);
+			else
+				pr_info("HNAT: drop non-IP frame in ping-pong path (dev %s, src %pM, dst %pM, len 0x%04x, total %lu)\n",
+					skb->dev->name, eth->h_source, eth->h_dest, ntohs(eth->h_proto), tw_bogus_pingpong);
+		}
 		dev_kfree_skb_any(skb);
 		return 0;
 	}
