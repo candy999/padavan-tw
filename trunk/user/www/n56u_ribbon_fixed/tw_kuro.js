@@ -908,9 +908,18 @@ var KURO = (function () {
 		var detail = [].concat(api.listenersDetail || []);
 		if (detail.length) h += K.card('加密監聽', listenerTable(detail), { id: 'kuroshio-listeners' });
 
+		/* 3.4.0 串接：前面有另一台黑潮（例如主路由器）時自動串接，共用它的評測結果與 CDN 節點 */
+		var ch = api.chain;
+		if (ch && (ch.state !== 'none' || (ch.serving && (ch.serving.downstreams || []).length))) {
+			var sv = ch.serving || {}, ds = sv.downstreams || [];
+			h += K.card('串接', '<p>' + K.badge({ chained: '串接中', backup: '上游暫停，改用自己的上游', none: '沒有串接' }[ch.state] || ch.state, ch.state === 'chained' ? 'ok' : 'info') + ' ' + esc(ch.text || '') + '</p>' +
+				(ch.upstream ? '<p class="tw-small tw-muted">上游 ' + esc(ch.upstream.address || '-') + (ch.upstream.fingerprint ? ' · 指紋 <code>' + esc(ch.upstream.fingerprint) + '</code>' : '') + '</p>' : '') +
+				(ch.reason ? K.note(esc(ch.reason), 'warn') : '') +
+				(sv.text ? '<p class="tw-small tw-muted">' + esc(sv.text) + (ds.length ? '：' + ds.map(function (d) { return esc(d.address || d.ip || d.nodeId || ''); }).join('、') : '') + '</p>' : ''), { id: 'kuroshio-chain' });
+		}
 		h += K.card('上游', '<p class="tw-small tw-muted">' + (api.autoUpstreams ? '自動上游來自 ' + esc(api.autoUpstreams.generatedAt) + ' 的評測' : '還沒有每日評測結果，暫時使用固定上游與備援。') + '</p>' +
 			K.table(['上游', '角色', '成功', '失敗', '平均延遲', ''], (api.upstreams || []).map(function (u) {
-				return ['<span class="kr-break">' + esc(u.id) + '</span>', esc({ pinned: '固定', auto: '自動', fallback: '備援' }[u.role] || u.role), K.fmtNum(u.ok), K.fmtNum(u.fail), u.avgMs != null ? u.avgMs + ' ms' : '-', u.paused ? K.badge('暫停中', 'warn') : ''];
+				return ['<span class="kr-break">' + esc(u.id) + '</span>', esc({ pinned: '固定', auto: '自動', fallback: '備援', chain: '串接（上游黑潮）' }[u.role] || u.role), K.fmtNum(u.ok), K.fmtNum(u.fail), u.avgMs != null ? u.avgMs + ' ms' : '-', u.paused ? K.badge('暫停中', 'warn') : ''];
 			}), '沒有上游', [2, 3, 4]));
 
 		var jobs = api.jobs || {};

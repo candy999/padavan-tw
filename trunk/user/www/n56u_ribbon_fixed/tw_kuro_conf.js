@@ -675,7 +675,9 @@
 				{ k: 'upstream.bootstrap', t: 'list', l: 'Bootstrap', v: 'ip', d: '解析 DoH / DoT 上游主機名稱用，只能填 IP。' },
 				{ k: 'upstream.last_resort', t: 'list', l: '最後手段', d: '所有上游都沒回應時。' },
 				num('upstream', 'auto_max', '自動上游最多幾台', 'upstream.autoMax'),
-				{ k: 'upstream.auto_type', t: 'multi', l: '自動上游可用協定', def: K.def('upstream.autoTypes') || ['udp', 'doh', 'dot'], opts: [['udp', 'UDP'], ['doh', 'DoH'], ['dot', 'DoT']] }
+				{ k: 'upstream.auto_type', t: 'multi', l: '自動上游可用協定', def: K.def('upstream.autoTypes') || ['udp', 'doh', 'dot'], opts: [['udp', 'UDP'], ['doh', 'DoH'], ['dot', 'DoT']] },
+				flag('upstream', 'chain', '自動串接上游的黑潮', 'upstream.chain', '前面的路由器也跑黑潮（3.4.0 起）時，直接問它並共用它的評測結果、CDN 節點與清單副本，這台不用再自己跑評測與 CDN 掃描。關閉 = 自己重做，重複使用網路。'),
+				flag('upstream', 'allow_downstream', '提供資料給下游的黑潮', 'upstream.allowDownstream', '後面接的路由器也跑黑潮時，提供評測結果與 CDN 節點給它。關閉 = 下游自己重做評測與掃描。有啟用「繞過防護」清單時建議關閉。')
 			]));
 			h += K.card('解析行為', K.fields([
 				num('resolver', 'timeout_ms', '上游逾時（毫秒）', 'resolver.timeoutMs'),
@@ -699,7 +701,8 @@
 				num('iprank', 'ok_ttl_sec', '成功結果保留（秒）', 'iprank.okTtlSec'), num('iprank', 'fail_ttl_sec', '失敗結果保留（秒）', 'iprank.failTtlSec'),
 				num('iprank', 'concurrency', '同時測速數', 'iprank.concurrency')
 			]));
-			h += K.card('排程工作（台北時間）', '<p class="tw-lead">到時間以獨立程序在背景執行，不影響 DNS 回應。路由器在排定時間沒開機，下次啟動會自動補跑。</p>' + K.grid({
+			h += K.card('排程工作（台北時間）', '<p class="tw-lead">到時間以獨立程序在背景執行，不影響 DNS 回應。路由器在排定時間沒開機，下次啟動會自動補跑。</p>' +
+				K.fields([{ k: 'main.catchup_window', t: 'text', l: '補跑時段', ph: '01:00-06:00', d: '剛刷機、學習資料不見或很久沒跑時的補跑（DNS 評測、CDN 掃描等）只在這段時間進行，期間先用預設上游；排定時間與手動執行不受影響。空白 = 開機後幾分鐘就補跑。（黑潮 3.4.0 起）' }]) + K.grid({
 				type: 'job', quick: 'enabled', empty: '設定檔裡沒有排程工作',
 				title: function (s) { return JOBN[s.id] || s.id; },
 				summary: function (s) {
