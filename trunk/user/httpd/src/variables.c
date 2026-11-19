@@ -466,6 +466,7 @@
 			{"ip6_lan_sflt", "", NULL, EVM_RESTART_DHCPD},
 			{"ip6_lan_sfps", "", NULL, EVM_RESTART_DHCPD},
 			{"ip6_lan_sfpe", "", NULL, EVM_RESTART_DHCPD},
+			{"ip6_nat66_auto", "", NULL, 0},	/* padavan-tw：watchdog 下一輪就照新值，不必重啟 */
 #endif
 			{0,0,0,0}
 		};

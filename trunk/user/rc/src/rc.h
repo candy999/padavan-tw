@@ -177,6 +177,9 @@ int tw_roamd_main(int argc, char **argv);
 
 /* tw_stats.c */
 int tw_stats_main(int argc, char **argv);
+
+/* tw_nat66.c */
+void tw_nat66_check(void);
 int rand_seed_by_time(void);
 void set_pagecache_reclaim(void);
 void restart_all_sysctl(void);

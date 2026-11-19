@@ -656,6 +656,7 @@ watchdog_on_timer(void)
 	tw_roamd_check();
 	tw_stats_check();
 	tw_igmpproxy_check();
+	tw_nat66_check();
 
 	/* update kernel timezone daylight */
 	setkernel_tz();

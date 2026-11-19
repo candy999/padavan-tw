@@ -457,6 +457,7 @@ struct nvram_pair router_defaults[] = {
 	{ "ip6_dns3", "" },
 
 	{ "ip6_lan_auto", "1" },
+	{ "ip6_nat66_auto", "1" },	/* padavan-tw：WAN 有 IPv6 但拿不到可分配的前綴時，區網自動改用 NAT66（ULA） */
 	{ "ip6_lan_addr", "fc00:101:101::1" },
 	{ "ip6_lan_size", "64" },
 	{ "ip6_lan_radv", "1" },

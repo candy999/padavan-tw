@@ -195,8 +195,24 @@ function in_dns_apply() {
 /* ---------- IPv6、MOD ---------- */
 function in_more_card() {
 	var U = TW;
-	var b = '<dl class="tw-kv"><dt>IPv6</dt><dd>' + (NV.ipv6 ? '開啟（' + U.esc(NV.ipv6) + '）' : '關閉') + ' · <a href="Advanced_IPv6_Content.asp">設定</a></dd>' +
+	var V6 = { dhcp6: '原生（自動取得）', static: '原生（固定位址）', '6in4': '6in4 通道', '6to4': '6to4 通道', '6rd': '6rd 通道' };
+	var nat66 = NV.nat66_auto != '0', auto = NV.ipv6 == 'dhcp6' && NV.ip6_lan_auto == '1';
+	var b = '<dl class="tw-kv"><dt>IPv6</dt><dd>' + (NV.ipv6 ? '開啟（' + U.esc(V6[NV.ipv6] || NV.ipv6) + '）' : '關閉') + ' · <a href="Advanced_IPv6_Content.asp">設定</a></dd>';
+	if (auto) {
+		b += '<dt>區網 IPv6</dt><dd>' + (NV.nat66_state ? '上一層沒有給可分配的前綴，目前用 NAT66（' + U.esc(NV.nat66_state) + '）' : '使用上一層分配的前綴（或還在等待）') + '</dd></dl>' +
+			'<label class="tw-switch"><input type="checkbox" id="in-nat66"' + (nat66 ? ' checked' : '') + '><span class="tw-track"></span>拿不到前綴時自動改用 NAT66</label>' +
+			'<div class="tw-help">這台接在另一台路由器後面、上一層只有一段 /64 時，區網裝置拿不到 IPv6；開啟後約 1 分鐘內自動改用 NAT66（區網用 fd 開頭的位址）。' +
+			'手機、電腦這時通常仍優先走 IPv4，NAT66 主要讓只有 IPv6 的服務也連得到。拿到真正的前綴後會自動停用。</div>' +
+			'<div class="tw-actions">' + U.button('套用', { small: true, onclick: 'in_nat66_apply()' }) + '</div><dl class="tw-kv">';
+	}
+	b +=
 		'<dt>MOD</dt><dd>中華電信 MOD 機上盒接在指定的 LAN 孔，並設定 IPTV 連接埠 · <a href="Advanced_IPTV_Content.asp">MOD／IPTV 設定</a></dd>' +
 		'<dt>MAC 位址</dt><dd>業者綁定網卡位址時，可以在 <a href="Advanced_WAN_Content.asp">原始 WAN 設定</a> 複製電腦的 MAC</dd></dl>';
 	return U.card({ title: 'IPv6 與 MOD', body: b });
+}
+function in_nat66_apply() {
+	var U = TW, v = U.$('in-nat66').checked ? '1' : '0';
+	if (v == (NV.nat66_auto == '0' ? '0' : '1')) { U.toast('沒有變更'); return; }
+	U.apply({ sid: 'IP6Connection;', fields: { ip6_nat66_auto: v }, title: v == '1' ? '開啟自動 NAT66？' : '關閉自動 NAT66？',
+		impacts: v == '1' ? ['拿不到前綴時，約 1 分鐘內區網裝置會拿到 fd 開頭的 IPv6 位址', '不影響 IPv4'] : ['如果目前正在用 NAT66，區網裝置的 IPv6 會在約 10 秒內停止', '不影響 IPv4'] });
 }
