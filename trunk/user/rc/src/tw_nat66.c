@@ -21,6 +21,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <net/ethernet.h>
+#include <net/if.h>
 
 #include "rc.h"
 
