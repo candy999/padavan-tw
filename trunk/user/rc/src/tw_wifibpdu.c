@@ -56,8 +56,7 @@ twb_write_int(const char *path, int val)
 	FILE *fp = fopen(path, "w");
 
 	if (fp) {
-		fprintf(fp, "%d
-", val);
+		fprintf(fp, "%d\n", val);
 		fclose(fp);
 	}
 }
