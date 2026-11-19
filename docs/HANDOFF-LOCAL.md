@@ -118,6 +118,7 @@ git pull
 |---|---|
 | D3 長時間穩定性測試（第 5.1 節） | 雲端提議、使用者還沒同意；使用者想確認「4.4 長期是否跟 3.4 一樣穩」 |
 | D3 交換器 bug 回報上游 TurBoTse | 2026-11-18 使用者同意後已發 [TurBoTse/padavan#32](https://github.com/TurBoTse/padavan/issues/32)（繁體中文；連同無法重開機） |
+| 硬體 NAT 殘留標記（STP 誤判根因）回報上游 | 2026-11-19 使用者同意後已發 [TurBoTse/padavan#33](https://github.com/TurBoTse/padavan/issues/33)、[hanwckf/padavan-4.4#73](https://github.com/hanwckf/padavan-4.4/issues/73)（繁體中文；3.4 的 `__alloc_skb` 有 `DO_FAST_CLEAR_FOE`，4.4 漏掉；雙 GMAC 機型的影響是推論、沒實測，請社群幫忙確認） |
 | 第一個正式 Release | D3 長時間測試通過後，由使用者決定合併 main 與打標籤 |
 | MI-MINI | 暫緩（第 5.9 節） |
 
