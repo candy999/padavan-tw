@@ -79,6 +79,28 @@
 
 #include <net/ra_nat.h>
 
+/*
+ * padavan-tw：新配置的 skb 清掉頭尾的硬體 NAT 標記區（FOE info）。
+ * 緩衝區記憶體會重複使用（例如 raeth 收包用過的 page frag），舊的 TAG_PROTECT＋FOE_MAGIC_PPE
+ * 留在 headroom／tailroom，本機送出的封包（例如網橋的 BPDU）就會被 raeth 當成 Wi-Fi 卸載的
+ * ping-pong 封包送進 PPE；回到 CPU 時 VLAN ID 被當成介面編號，D3 的 LAN 是 VLAN 1＝dst_port[1]＝ra0，
+ * 結果變成「ra0 收到自己從有線埠送出的 BPDU」，2.4G 被 STP 封鎖約 50 秒（Wi-Fi↔WAN 大流量時才會發生）。
+ * 只在剛配置、還沒寫入資料時清；build_skb() 不清（那時緩衝區可能已經有收到的資料）。
+ */
+#if defined(CONFIG_RA_HW_NAT) || defined(CONFIG_RA_HW_NAT_MODULE)
+static inline void skb_foe_info_clear(struct sk_buff *skb)
+{
+	if (skb_end_offset(skb) >= 2 * FOE_INFO_LEN) {
+		memset(FOE_INFO_START_ADDR_HEAD(skb), 0, FOE_INFO_LEN);
+		memset(FOE_INFO_START_ADDR_TAIL(skb), 0, FOE_INFO_LEN);
+	}
+}
+#else
+static inline void skb_foe_info_clear(struct sk_buff *skb)
+{
+}
+#endif
+
 struct kmem_cache *skbuff_head_cache __read_mostly;
 static struct kmem_cache *skbuff_fclone_cache __read_mostly;
 int sysctl_max_skb_frags __read_mostly = MAX_SKB_FRAGS;
@@ -260,6 +282,7 @@ struct sk_buff *__alloc_skb(unsigned int size, gfp_t gfp_mask,
 	skb->end = skb->tail + size;
 	skb->mac_header = (typeof(skb->mac_header))~0U;
 	skb->transport_header = (typeof(skb->transport_header))~0U;
+	skb_foe_info_clear(skb);
 
 	/* make sure we initialize shinfo sequentially */
 	shinfo = skb_shinfo(skb);
@@ -461,6 +484,7 @@ struct sk_buff *__netdev_alloc_skb(struct net_device *dev, unsigned int len,
 	if (pfmemalloc)
 		skb->pfmemalloc = 1;
 	skb->head_frag = 1;
+	skb_foe_info_clear(skb);	/* padavan-tw：page frag 會重複使用，見檔頭說明 */
 
 skb_success:
 	skb_reserve(skb, NET_SKB_PAD);
@@ -521,6 +545,7 @@ struct sk_buff *__napi_alloc_skb(struct napi_struct *napi, unsigned int len,
 	if (nc->pfmemalloc)
 		skb->pfmemalloc = 1;
 	skb->head_frag = 1;
+	skb_foe_info_clear(skb);	/* padavan-tw：page frag 會重複使用，見檔頭說明 */
 
 skb_success:
 	skb_reserve(skb, NET_SKB_PAD + NET_IP_ALIGN);

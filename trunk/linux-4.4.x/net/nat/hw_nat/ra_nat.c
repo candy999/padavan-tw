@@ -955,6 +955,21 @@ uint32_t ppe_extif_pingpong_handler(struct sk_buff *skb)
 
 	eth = (struct ethhdr *)skb_mac_header(skb);
 
+	/* padavan-tw：真正的 ping-pong 封包只會是 IPv4／IPv6／PPP（ppe_extif_rx_handler 只轉這些），
+	 * 802.3／LLC 框（例如 STP BPDU）不可能是；會出現代表本機送出的封包帶著殘留的 FOE 標記被送進 PPE，
+	 * 回來時 VLAN ID（LAN＝1）被當成介面編號而變成「ra0 收到」。丟掉，不要送進網橋觸發 STP 封鎖。
+	 * net/core/skbuff.c 已在配置時清標記，這裡是保險，有出現就記錄。 */
+	if (ntohs(eth->h_proto) < ETH_P_802_3_MIN) {
+		static unsigned long tw_bogus_pingpong;
+
+		tw_bogus_pingpong++;
+		if (net_ratelimit())
+			pr_info("HNAT: drop non-IP frame in ping-pong path (dev %s, dst %pM, total %lu)\n",
+				skb->dev->name, eth->h_dest, tw_bogus_pingpong);
+		dev_kfree_skb_any(skb);
+		return 0;
+	}
+
 	if (eth->h_dest[0] & 1) {
 		if (skb->dev != NULL) {
 			if (memcmp(eth->h_dest, skb->dev->broadcast, ETH_ALEN) == 0) {
