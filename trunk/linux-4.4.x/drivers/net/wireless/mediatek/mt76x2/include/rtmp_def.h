@@ -1044,6 +1044,9 @@ enum WIFI_MODE{
 #define CATEGORY_WNM 10
 #define CATEGORY_VSP			126	/* Vendor-specific Protected defined in IEEE 802.11w */
 #endif // DOT11W_PMF_SUPPORT //
+#ifndef CATEGORY_WNM
+#define CATEGORY_WNM 10	/* padavan-tw: 802.11v WNM without 802.11w (PMF) */
+#endif
 #ifdef DOT11Z_TDLS_SUPPORT
 #define CATEGORY_TDLS		12
 #endif /* DOT11Z_TDLS_SUPPORT */

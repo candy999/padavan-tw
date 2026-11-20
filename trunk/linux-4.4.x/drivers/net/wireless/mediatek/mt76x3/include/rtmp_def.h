@@ -1177,6 +1177,9 @@ enum nl_msg_id {
 #define CATEGORY_WNM 10
 #define CATEGORY_VSP			126	/* Vendor-specific Protected defined in IEEE 802.11w */
 #endif // DOT11W_PMF_SUPPORT //
+#ifndef CATEGORY_WNM
+#define CATEGORY_WNM 10	/* padavan-tw: 802.11v WNM without 802.11w (PMF) */
+#endif
 //#ifdef WFD_SUPPORT
 #define CATEGORY_VENDOR_SPECIFIC_WFD	127 //CFG_TODO CATEGORY_VENDOR, WHY ONLY WFD ?
 //#endif /* WFD_SUPPORT */
