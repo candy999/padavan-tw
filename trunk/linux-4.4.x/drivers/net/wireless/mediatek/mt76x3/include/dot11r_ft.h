@@ -149,9 +149,7 @@ typedef enum _FT_SUB_ELEMENT_ID
 	FT_R1KH_ID = 1,
 	FT_GTK,
 	FT_R0KH_ID,
-#ifdef DOT11W_PMF_SUPPORT
-	FT_IGTK_ID,	
-#endif /* DOT11W_PMF_SUPPORT */
+	FT_IGTK_ID,	/* padavan-tw: always defined (802.11r subelement 4); ft_tlv.c uses it without PMF */
 	FT_RESERVED_ID
 } FT_SUB_ELEMENT_ID, *PFT_SUB_ELEMENT_ID;
 
