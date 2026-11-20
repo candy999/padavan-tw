@@ -1,0 +1,3 @@
+#!/bin/sh
+echo "radio2_restart" >> "$ACS_T/calls"
+exit 0

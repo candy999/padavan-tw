@@ -1,0 +1,4 @@
+#!/bin/sh
+# 假的 dmesg：案例的 $DMESG
+[ -n "$DMESG" ] && printf '%s\n' "$DMESG"
+exit 0

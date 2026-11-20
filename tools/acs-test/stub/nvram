@@ -1,0 +1,12 @@
+#!/bin/sh
+# 假的 nvram：$ACS_T/nvram 一行一個「名稱=值」
+f="$ACS_T/nvram"
+case "$1" in
+get)
+	sed -n "s/^$2=//p" "$f" | tail -n 1
+	;;
+set)
+	echo "$2" >> "$f"
+	;;
+esac
+exit 0

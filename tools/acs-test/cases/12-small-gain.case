@@ -1,0 +1,9 @@
+DESC="WiCandy 在 144，36–48 有一台 -78 dBm 的同頻鄰居：分數只少 6 分（不到 10），不值得多斷線一次，維持 149"
+BW=2
+PICK5=149
+EXPECT5=149
+EXPECT_LOG="次佳 36–48"
+SCAN='
+144|WiCandy|3C:52:A1:11:22:30|WPA2PSK/AES|100|11a/n/ac|BELOW
+44|Weak44|00:90:4C:00:00:44|WPA2PSK/AES|30|11a/n/ac|ABOVE
+'

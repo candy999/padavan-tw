@@ -1,0 +1,5 @@
+#!/bin/sh
+# 假的 logger：只留訊息內容
+[ "$1" = "-t" ] && shift 2
+echo "$*" >> "$ACS_T/log"
+exit 0

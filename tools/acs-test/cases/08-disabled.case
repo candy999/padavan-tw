@@ -1,0 +1,9 @@
+DESC="同 01，但 tw_acs_adj=0（關閉）：完全照驅動，也不掃描"
+BW=2
+PICK5=149
+EXPECT5=149
+ADJ=0
+EXPECT_NOSCAN=1
+SCAN='
+144|WiCandy|3C:52:A1:11:22:30|WPA2PSK/AES|100|11a/n/ac|BELOW
+'

@@ -1,0 +1,41 @@
+#!/bin/sh
+# 假的 iwpriv：模擬 MT7612 驅動的 SiteSurvey／get_site_survey／CountryRegionABand／Channel
+# 狀態放在 $ACS_T，掃描結果來自測試案例的 $SCAN（頻道|SSID|BSSID|加密|訊號%|模式|ExtCH）
+ifn=$1; shift
+echo "$ifn $*" >> "$ACS_T/calls"
+case "$1 $2" in
+"set CountryRegionABand="*)
+	r=${2#CountryRegionABand=}
+	if [ "$r" = "0" ]; then
+		[ "$REGION_RESTORE_FAIL" = "1" ] && exit 1
+	else
+		[ "$REGION_OK" = "0" ] && exit 1
+	fi
+	echo "$r" > "$ACS_T/region"
+	;;
+"set SiteSurvey=")
+	[ "$SURVEY_FAIL" = "1" ] && exit 1
+	: > "$ACS_T/surveyed"
+	;;
+"set Channel="*)
+	echo "${2#Channel=}" > "$ACS_T/ch.$ifn"
+	;;
+"get_site_survey ")
+	[ -f "$ACS_T/surveyed" ] || exit 1
+	region=$(cat "$ACS_T/region" 2>/dev/null)
+	printf '%-10sget_site_survey:\n' "$ifn"
+	printf '%-4s%-33s%-20s%-23s%-9s%-12s%-7s%-3s\n' Ch SSID BSSID Security 'Signal(%)' W-Mode ' ExtCH' ' NT'
+	printf '%s\n' "$SCAN" | while IFS='|' read -r ch ssid bssid sec pct mode ext; do
+		[ -n "$ch" ] || continue
+		# 驅動只掃頻道表裡的頻道：Region 0 是 36–64、149–165，Region 13 再加 100–144
+		if [ "$region" != "13" ] && [ "$ch" -ge 100 ] && [ "$ch" -le 144 ]; then
+			continue
+		fi
+		printf '%-4d%-33s%-20s%-23s%-9d%-12s%-7s%-3s\n' "$ch" "$ssid" "$bssid" "$sec" "$pct" "$mode" " $ext" " In"
+	done
+	;;
+*)
+	exit 1
+	;;
+esac
+exit 0

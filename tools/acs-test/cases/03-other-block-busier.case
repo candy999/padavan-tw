@@ -1,0 +1,9 @@
+DESC="WiCandy 在 144，但 36–48 有一台 -60 dBm 的同頻鄰居，換過去更糟：維持 149 並記錄原因"
+BW=2
+PICK5=149
+EXPECT5=149
+EXPECT_LOG="沒有明顯更乾淨"
+SCAN='
+144|WiCandy|3C:52:A1:11:22:30|WPA2PSK/AES|100|11a/n/ac|BELOW
+40|ASUS_5G|04:D9:F5:01:02:03|WPA2PSK/AES|76|11a/n/ac|BELOW
+'

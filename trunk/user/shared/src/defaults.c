@@ -1095,6 +1095,7 @@ struct nvram_pair router_defaults[] = {
 	{ "tw_roam_enable", "1" },
 	{ "tw_roam_weak", "-75" },	/* 弱訊號門檻（dBm） */
 	{ "tw_acs_hour", "4" },
+	{ "tw_acs_adj", "0" },	/* padavan-tw：5G 選頻後避開強的緊鄰頻道（I13）；要在運作中暫換頻道表掃描，實機驗證前先關 */
 #if defined(USE_SFE)
 	{ "sfe_enable", "2" },		/* Software Offload Routing IPv4/IPv6 */
 #endif

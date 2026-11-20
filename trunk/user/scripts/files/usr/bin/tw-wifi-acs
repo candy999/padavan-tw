@@ -11,12 +11,30 @@
 # 重選的方式跟在後台按「套用」一樣（radio2_restart／radio5_restart 重新啟動 Wi-Fi），
 # 驅動啟動時會掃描並選擇最乾淨的頻道；裝置會斷線幾秒後自動重連。
 # 完成後寫入 tw_acs_day（暫存，不寫 Flash），當天不再執行。
+#
+# 5 GHz 鄰頻檢查（ROADMAP I13）：驅動只看「同一個頻道」的鄰居，看不到緊鄰頻段溢出的干擾
+# （例：鄰居在 144（132–144），我們用 80 MHz 的 149–161，兩段緊貼著）。
+# 驅動選好之後再被動掃描一次，連同 DFS 頻段（只聽不發），用下面的分數檢查：
+#   每個鄰居的強度分＝訊號 dBm＋100（-50 dBm 以上算 50，-90 dBm 算 10）
+#   和我們的頻段（依頻寬 20／40／80 MHz）重疊：扣 2 倍強度分
+#   緊貼在頻段旁邊（頻道號差 4～5）且強於 -70 dBm：扣 1 倍強度分（溢出的干擾比同頻弱，但會抬高雜訊）
+# 只有驅動選的頻道「有強的緊鄰鄰居」、而且另一個頻段的分數少 10 分以上時，才改用那個頻段
+# （同分選頻道號小的），其餘情況都照驅動的選擇。可選的頻道跟驅動一樣只有 36–48、149–165
+# （40／80 MHz 不選 165），DFS 頻道永遠不會選；驅動量到干擾（False CCA 超過 100）的頻段也不選。
+# 改頻道只在執行當下生效（iwpriv set Channel），不寫設定；下次重啟 Wi-Fi 由驅動重新選、隔天再檢查。
+# 2.4 GHz 不做：驅動已經會把鄰居左右各 4 個頻道算進干擾（1／6／11 的重疊）。
+# DBDC 機型（MT7915）的掃描與換頻道指令還沒在實機驗證，先不做。
+# nvram tw_acs_adj=0 可關閉這項檢查（回到只用驅動選頻道）。出廠預設 0（實機驗證前先關），驗證後改成 1。
 
 TAG="Wi-Fi 頻道"
 LOCK=${TW_LOCK:-/var/run/tw-wifi-acs.pid}
+TMP=${TW_TMP:-/tmp}/tw-wifi-acs.$$
 IDLE_SEC=60
 IDLE_BYTES=2000000
 SYS=${TW_SYS:-/sys/class/net}
+ADJ_DBM=-70	# 緊鄰頻段的鄰居要強於這個才算
+ADJ_MARGIN=10	# 分數至少要少這麼多才換，避免為了一點差距多斷線一次
+WIDE_REGION=13	# 掃描時暫用的 5G 頻道表：36–64、100–144、149–165（驅動 Region 13）
 
 log() {
 	logger -t "$TAG" "$*"
@@ -43,7 +61,7 @@ if [ -f "$LOCK" ] && kill -0 "$(cat "$LOCK")" 2>/dev/null; then
 	exit 0
 fi
 echo $$ > "$LOCK"
-trap 'rm -f "$LOCK"' EXIT INT TERM
+trap 'rm -f "$LOCK" "$TMP".*' EXIT INT TERM
 
 # $1 = rt（2.4G）或 wl（5G）
 band_auto() {
@@ -71,6 +89,205 @@ channel_of() {
 	if_up "$1" || { echo "關閉"; return; }
 	c=$(iwconfig "$1" 2>/dev/null | sed -n 's/.*Channel[=: ]*\([0-9][0-9]*\).*/\1/p' | head -n1)
 	echo "${c:-?}"
+}
+
+# 5G 頻寬（MHz）：wl_HT_BW 0＝20、1＝40、2 以上＝80
+bw5() {
+	case "$(nvram get wl_HT_BW)" in
+	0) echo 20 ;;
+	1) echo 40 ;;
+	*) echo 80 ;;
+	esac
+}
+
+# 被動掃描 5G（只聽 Beacon，不發 Probe），結果寫到 $TMP.scan
+# 自動選頻時驅動的頻道表只有 36–64、149–165，看不到 DFS 頻段的鄰居；
+# 國家碼台灣時，掃描期間暫時換成含 100–144 的頻道表，掃完馬上換回 0（自動選頻用的表）
+survey5() {
+	wide=0
+	if [ "$(nvram get wl_country_code)" = "TW" ] &&
+	   iwpriv "$if5" set CountryRegionABand=$WIDE_REGION >/dev/null 2>&1; then
+		wide=1
+	fi
+	ok=0
+	if iwpriv "$if5" set SiteSurvey= >/dev/null 2>&1; then
+		sleep 5
+		# 驅動會等掃描結束才回傳；結果依訊號由強到弱排列，太長時只截掉弱的
+		iwpriv "$if5" get_site_survey > "$TMP.scan" 2>/dev/null && ok=1
+	fi
+	if [ $wide = 1 ] && ! iwpriv "$if5" set CountryRegionABand=0 >/dev/null 2>&1; then
+		log "5 GHz 掃描後頻道表沒有換回來，重新啟動 5 GHz 讓驅動重新載入設定"
+		radio5_restart
+		sleep 20
+		return 1
+	fi
+	[ $ok = 1 ] && grep -q ':..:..:..:..:' "$TMP.scan"
+}
+
+# 驅動這次自動選頻量到的 False CCA（核心訊息「Channel N : Dirty = …, False CCA = …」，取最後一次）
+cca5() {
+	dmesg 2>/dev/null | awk '{
+		for (i = 1; i <= NF; i++)
+			if ($i == "Channel" && $(i + 2) == ":" && $(i + 3) == "Dirty")
+				for (j = i; j < NF - 1; j++)
+					if ($j == "CCA" && $(j + 1) == "=") {
+						v = $(j + 2); sub(/,.*/, "", v)
+						if ($(i + 1) + 0 > 14) cca[$(i + 1) + 0] = v + 0
+					}
+	} END { for (c in cca) print c, cca[c] }' > "$TMP.cca"
+}
+
+# 評分：$1＝頻寬 MHz、$2＝驅動選的頻道；讀 $TMP.cca 與 $TMP.scan
+# 輸出一行「動作<Tab>頻道<Tab>原因」，動作是 switch（換）、keep（維持）或 none（不用處理）；
+# 以「表 」開頭的是各頻段分數（手動執行時顯示）
+pick5() {
+	awk -v bw="$1" -v cur="$2" -v adj="$ADJ_DBM" -v margin="$ADJ_MARGIN" -v ccaf="$TMP.cca" '
+	# 頻道所在頻段的最低、最高頻道（20 MHz 頻道號）
+	function blo(c, w,   base, i) {
+		if (c == 165 || w == 20) return c
+		base = (c >= 149) ? 149 : ((c >= 100) ? 100 : 36)
+		i = int((c - base) / 4)
+		if (w == 40) return base + int(i / 2) * 8
+		return base + int(i / 4) * 16
+	}
+	function bhi(c, w) {
+		if (c == 165 || w == 20) return c
+		return blo(c, w) + ((w == 40) ? 4 : 12)
+	}
+	function lbl(c, w) {
+		return (blo(c, w) == bhi(c, w)) ? c "" : blo(c, w) "–" bhi(c, w)
+	}
+	# 頻道加上它的頻段，例：149（149–161）；20 MHz 只寫頻道
+	function chb(c, w) {
+		return (blo(c, w) == bhi(c, w)) ? c "" : c "（" lbl(c, w) "）"
+	}
+	# 驅動的訊號百分比換回 dBm（cmm_info.c 的公式反推；100% 代表 -50 dBm 以上）
+	function dbm(p) {
+		if (p >= 100) return -50
+		if (p >= 24) return int((p - 24) * 10 / 26) - 80
+		return int(p * 10 / 26) - 90
+	}
+	function dtxt(k) {
+		return (pct[k] >= 100) ? "-50 dBm 以上" : dbm(pct[k]) " dBm"
+	}
+	# 頻道 c 的頻段被所有鄰居扣的分數；同時記下重疊、緊鄰的數量與緊鄰的鄰居
+	function score(c,   lo, hi, k, w, d, s) {
+		lo = blo(c, bw); hi = bhi(c, bw)
+		s = 0; nov = 0; nadj = 0; adjs = ""
+		for (k = 1; k <= n; k++) {
+			w = dbm(pct[k]) + 100
+			if (w < 1) w = 1
+			if (nlo[k] <= hi && nhi[k] >= lo) {
+				s += 2 * w; nov++
+				continue
+			}
+			d = (nhi[k] < lo) ? lo - nhi[k] : nlo[k] - hi
+			if (d <= 5 && dbm(pct[k]) >= adj) {
+				s += w; nadj++
+				if (nadj <= 2)
+					adjs = adjs (adjs == "" ? "" : "、") ssid[k] " " ch[k] "（" dtxt(k) "）"
+			}
+		}
+		return s
+	}
+	function hot(c,   x) {
+		for (x = blo(c, bw); x <= bhi(c, bw); x += 4)
+			if ((x in cca) && cca[x] > 100) return 1
+		return 0
+	}
+	BEGIN {
+		h = "[0-9A-Fa-f][0-9A-Fa-f]"
+		mac = "^" h ":" h ":" h ":" h ":" h ":" h "$"
+		n = 0; hdrno = 0
+	}
+	FILENAME == ccaf { cca[$1 + 0] = $2 + 0; next }
+	/BSSID/ { hdrno = ($1 == "No"); next }
+	{
+		b = 0
+		for (i = 2; i <= NF; i++) if ($i ~ mac) { b = i; break }
+		if (!b || b + 4 > NF) next
+		c = (hdrno ? $2 : $1) + 0
+		p = $(b + 2) + 0
+		if (c <= 14 || $(b + 2) !~ /^[0-9]+$/) next
+		s = ""
+		for (i = (hdrno ? 3 : 2); i < b; i++) s = s (s == "" ? "" : " ") $i
+		if (s == "") s = "（隱藏）"
+		# 同一台 AP 的多個 SSID（主網、訪客…）BSSID 只差頭尾，只算最強的一個
+		key = c "-" substr($b, 4, 11)
+		if (key in seen) {
+			k = seen[key]
+			if (p <= pct[k]) next
+		} else {
+			k = ++n; seen[key] = k
+		}
+		ch[k] = c; pct[k] = p; ssid[k] = s
+		ext = $(b + 4)
+		if (ext ~ /ABOVE/) { nlo[k] = c; nhi[k] = c + 4 }
+		else if (ext ~ /BELOW/) { nlo[k] = c - 4; nhi[k] = c }
+		else { nlo[k] = c; nhi[k] = c }
+		# 11ac 以上又開了 40 MHz 的，當作用 80 MHz（大多數 AP 的預設）
+		if (nlo[k] != nhi[k] && $(b + 3) ~ /ac|ax/ && c != 165) { nlo[k] = blo(c, 80); nhi[k] = bhi(c, 80) }
+	}
+	END {
+		if (cur !~ /^[0-9]+$/ || cur + 0 <= 14) { print "none"; exit }
+		cur += 0
+		cands = "36 40 44 48 149 153 157 161" (bw == 20 ? " 165" : "")
+		m = split(cands, cl, " ")
+		scur = score(cur); acur = nadj; why = adjs
+		best = 0; sbest = 0
+		for (i = 1; i <= m; i++) {
+			c = cl[i] + 0
+			# 同一個頻段只算一次，用頻段裡最小的頻道代表
+			if (i > 1 && blo(c, bw) == blo(cl[i - 1] + 0, bw)) continue
+			s = score(c)
+			t = "表 " lbl(c, bw) "：分數 " s "（重疊 " nov "、緊鄰 " nadj "）"
+			mine = (blo(c, bw) == blo(cur, bw))
+			if (hot(c)) { print t "，驅動量到干擾，不選"; continue }
+			print t (mine ? "，驅動選的" : "")
+			# 分數最低的；同分時維持驅動的選擇，其次選頻道號小的
+			if (!best || s < sbest || (s == sbest && mine)) { best = c; sbest = s }
+		}
+		if (acur == 0) { print "keep\t" cur "\t"; exit }
+		if (acur > 2) why = why " 等 " acur " 個"
+		head = "驅動選的 " chb(cur, bw) (blo(cur, bw) == bhi(cur, bw) ? " " : "") "緊鄰 " why
+		if (!best || blo(best, bw) == blo(cur, bw) || scur - sbest < margin) {
+			r = head "；沒有明顯更乾淨的頻段"
+			if (best && blo(best, bw) != blo(cur, bw)) r = r "（次佳 " lbl(best, bw) "，分數 " sbest " 對 " scur "）"
+			print "keep\t" cur "\t" r "，維持"
+			exit
+		}
+		print "switch\t" best "\t" head "；改用 " chb(best, bw) "，分數 " sbest " 對 " scur
+	}' "$TMP.cca" "$TMP.scan"
+}
+
+# 驅動選好 5G 頻道後的鄰頻檢查（說明見檔頭）
+adj5() {
+	[ "$(nvram get tw_acs_adj)" = "0" ] && return
+	[ "$dbdc" = "1" ] && return
+	cur=$(channel_of "$if5")
+	case "$cur" in ''|*[!0-9]*) return ;; esac
+	if ! survey5; then
+		log "5 GHz 鄰頻檢查：掃描失敗，維持驅動的選擇"
+		return
+	fi
+	cca5
+	pick5 "$(bw5)" "$cur" > "$TMP.pick"
+	[ -t 1 ] && sed -n 's/^表 /  /p' "$TMP.pick"
+	line=$(grep -v '^表 ' "$TMP.pick" | head -n 1)
+	act=${line%%	*}
+	rest=${line#*	}
+	ch=${rest%%	*}
+	why=${rest#*	}
+	case "$act" in
+	switch)
+		log "5 GHz 避開緊鄰的強訊號：$why"
+		iwpriv "$if5" set Channel="$ch" >/dev/null 2>&1
+		sleep 5
+		;;
+	keep)
+		[ -n "$why" ] && log "5 GHz 鄰頻檢查：$why"
+		;;
+	esac
 }
 
 todo2=0
@@ -116,6 +333,8 @@ fi
 
 # 等驅動掃描、選好頻道（5G 掃描較久）
 sleep 20
+
+[ $todo5 = 1 ] && adj5
 
 msg=""
 [ $todo2 = 1 ] && msg="2.4 GHz $old2 → $(channel_of "$if2")"

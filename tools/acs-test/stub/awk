@@ -1,0 +1,3 @@
+#!/bin/sh
+# 用 gawk --posix 執行，抓出 busybox awk 可能不支援的 GNU 擴充
+exec "${ACS_AWK:-gawk}" --posix "$@"

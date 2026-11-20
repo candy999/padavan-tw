@@ -1,0 +1,5 @@
+#!/bin/sh
+# 假的 iwconfig：頻道來自 $ACS_T/ch.介面
+echo "$1      RTWIFI SoftAP  ESSID:\"padavan-tw\""
+echo "          Mode:Managed  Channel=$(cat "$ACS_T/ch.$1" 2>/dev/null)  Access Point: 20:76:93:00:00:01"
+exit 0

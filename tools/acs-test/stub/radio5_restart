@@ -1,0 +1,6 @@
+#!/bin/sh
+# 假的 5G 重啟：驅動自動選到案例指定的 $PICK5，頻道表回到 Region 0
+echo "radio5_restart" >> "$ACS_T/calls"
+echo "$PICK5" > "$ACS_T/ch.rai0"
+echo 0 > "$ACS_T/region"
+exit 0

@@ -1,0 +1,4 @@
+#!/bin/sh
+# 假的 ip：介面一律是 UP
+[ "$1 $2" = "link show" ] && echo "9: $3: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq master br0"
+exit 0

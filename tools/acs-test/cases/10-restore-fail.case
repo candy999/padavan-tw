@@ -1,0 +1,9 @@
+DESC="掃描後換回頻道表失敗：重新啟動 5 GHz（讓驅動從設定重新載入），不換頻道"
+BW=2
+PICK5=149
+EXPECT5=149
+REGION_RESTORE_FAIL=1
+EXPECT_LOG="沒有換回來"
+SCAN='
+144|WiCandy|3C:52:A1:11:22:30|WPA2PSK/AES|100|11a/n/ac|BELOW
+'
