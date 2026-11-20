@@ -171,6 +171,24 @@ long uptime(void);
 
 /* tw_mtu.c */
 int tw_mtu_probe_main(int argc, char **argv);
+
+/* tw_roamd.c */
+int tw_roamd_main(int argc, char **argv);
+
+/* tw_stats.c */
+int tw_stats_main(int argc, char **argv);
+
+/* tw_nat66.c */
+void tw_nat66_check(void);
+
+/* tw_wifibpdu.c */
+int  tw_wifi_bpdu_mode(void);
+void tw_wifi_bpdu_rules(void);
+void tw_wifi_bpdu_check(void);
+
+/* tw_mod.c */
+void tw_mod_check(void);
+void tw_stp_timers(void);
 int rand_seed_by_time(void);
 void set_pagecache_reclaim(void);
 void restart_all_sysctl(void);
@@ -217,6 +235,7 @@ void start_xupnpd(char *wan_ifname);
 void stop_udpxy(void);
 void start_udpxy(char *wan_ifname);
 void stop_igmpproxy(char *wan_ifname);
+#define IGMPPROXY_WANT	"/var/run/igmpproxy.want"
 void start_igmpproxy(char *wan_ifname);
 void restart_iptv(int is_ap_mode);
 void flush_conntrack_table(char *ip);
@@ -603,6 +622,11 @@ void restart_sqm(void);
 void stop_wireguard(void);
 void start_wireguard(void);
 void restart_wireguard(void);
+#endif
+#if defined(APP_KUROSHIO)
+void stop_kuroshio(void);
+void start_kuroshio(void);
+void restart_kuroshio(void);
 #endif
 #if defined(APP_SMARTDNS)
 void stop_smartdns(void);

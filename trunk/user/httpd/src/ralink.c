@@ -1647,45 +1647,174 @@ ej_wl_auth_list(int eid, webs_t wp, int argc, char **argv)
 }
 
 
-#define SSURV_LINE_LEN		(4+33+20+23+9+12+7+3)		// Channel+SSID+Bssid+Security+Signal+WiressMode+ExtCh+NetworkType
-#define SSURV_LINE_LEN_WPS	(4+33+20+23+9+7+7+3+4+5)	// Channel+SSID+Bssid+Security+Signal+WiressMode+ExtCh+NetworkType+WPS+PIN
+/*
+ * padavan-tw：鄰近 AP 掃描結果（驅動 GSITESURVEY 的文字表）改成「逐行解析、欄位位置從表頭找」。
+ * 原本用固定行長切，但各驅動與編譯選項的欄位不同：開了 802.11k 會多「BcnRept」欄，
+ * 而且表頭與資料列的欄寬不一樣（表頭 10、資料 7），WPS、MWDS 也會加欄位；
+ * 行長一不同就整個錯位，連換行都切進輸出的字串，頁面無法解析。
+ */
 
-#if BOARD_HAS_5G_RADIO
-int
-ej_wl_scan_5g(int eid, webs_t wp, int argc, char **argv)
+/* 在表頭找完整的欄名（前後是行首／空白），回傳起始位置；找不到回傳 -1。prefix=1 時只比對開頭 */
+static int
+ssurv_col(const char *hdr, const char *name, int prefix)
 {
-	int retval = 0;
-	int apCount = 0;
-	char data[8192];
-	char ssid_str[128];
-#if defined (USE_WSC_WPS)
-	char site_line[SSURV_LINE_LEN_WPS+1];
-#else
-	char site_line[SSURV_LINE_LEN+1];
-#endif
-	char site_chnl[4];
-	char site_ssid[34];
-	char site_bssid[24];
-	char site_signal[10];
-	struct iwreq wrq;
-	char *sp, *op, *empty;
-	int len, line_len;
+	const char *p = hdr;
+	size_t n = strlen(name);
 
-	empty = "[\"\", \"\", \"\", \"\"]";
+	while ((p = strstr(p, name)) != NULL) {
+		if ((p == hdr || p[-1] == ' ') &&
+		    (prefix || p[n] == ' ' || p[n] == '\0' || p[n] == '\r'))
+			return (int)(p - hdr);
+		p += n;
+	}
+	return -1;
+}
+
+/* 表頭中位置 pos 之後的下一欄起點（找不到回傳 -1） */
+static int
+ssurv_next_col(const char *hdr, int pos)
+{
+	const char *p = hdr + pos;
+
+	while (*p && *p != ' ')
+		p++;
+	while (*p == ' ')
+		p++;
+	return (*p && *p != '\r') ? (int)(p - hdr) : -1;
+}
+
+/* 取出 line[from, to) 並去掉前後空白；to < 0 表示到行尾 */
+static void
+ssurv_field(const char *line, int len, int from, int to, char *out, size_t outlen)
+{
+	int i, j;
+
+	out[0] = '\0';
+	if (from < 0 || from >= len)
+		return;
+	if (to < 0 || to > len)
+		to = len;
+	while (from < to && line[from] == ' ')
+		from++;
+	while (to > from && (line[to - 1] == ' ' || line[to - 1] == '\r'))
+		to--;
+	for (i = from, j = 0; i < to && j < (int)outlen - 1; i++, j++)
+		out[j] = line[i];
+	out[j] = '\0';
+}
+
+static int
+ssurv_is_mac(const char *s)
+{
+	int i;
+
+	if (strlen(s) != 17)
+		return 0;
+	for (i = 0; i < 17; i++) {
+		if ((i % 3) == 2) {
+			if (s[i] != ':')
+				return 0;
+		} else if (!isxdigit((unsigned char)s[i]))
+			return 0;
+	}
+	return 1;
+}
+
+/* 把驅動的掃描表輸出成 [["SSID","BSSID","頻道","訊號"], ...]（跟原本的格式相同） */
+static int
+ssurv_print(webs_t wp, char *buf, int buflen)
+{
+	const char *empty = "[\"\", \"\", \"\", \"\"]";
+	char *line, *nl, *end;
+	char hdr[512];
+	char f_ssid[80], f_bssid[24], f_ch[8], f_sig[16], ssid_str[256];
+	int col_ch = -1, col_ssid = -1, col_ssid_end = -1, col_bssid = -1, col_bssid_end = -1;
+	int col_sig = -1, have_hdr = 0, count = 0, ret = 0, len, ch;
+
+	if (buflen < 0)
+		buflen = 0;
+	buf[buflen] = '\0';
+	end = buf + buflen;
+
+	ret += websWrite(wp, "[");
+	for (line = buf; line < end && *line; line = nl ? nl + 1 : end) {
+		nl = strchr(line, '\n');
+		len = nl ? (int)(nl - line) : (int)strlen(line);
+		if (len <= 0)
+			continue;
+
+		if (!have_hdr) {
+			if (len >= (int)sizeof(hdr))
+				continue;
+			memcpy(hdr, line, len);
+			hdr[len] = '\0';
+			col_bssid = ssurv_col(hdr, "BSSID", 0);
+			col_ssid = ssurv_col(hdr, "SSID", 0);
+			col_ch = ssurv_col(hdr, "Ch", 0);
+			col_sig = ssurv_col(hdr, "Sig", 1);	/* Signal(%)，有些驅動拼成 Siganl(%) */
+			if (col_bssid < 0 || col_ssid < 0 || col_ch < 0)
+				continue;
+			col_ssid_end = ssurv_next_col(hdr, col_ssid);
+			col_bssid_end = ssurv_next_col(hdr, col_bssid);
+			have_hdr = 1;
+			continue;
+		}
+
+		/* BSSID 一定是 17 個字元的 MAC；不是就跳過這行（避免錯位的資料進到頁面） */
+		ssurv_field(line, len, col_bssid, col_bssid_end, f_bssid, sizeof(f_bssid));
+		if (!ssurv_is_mac(f_bssid))
+			continue;
+		ssurv_field(line, len, col_ch, col_ssid, f_ch, sizeof(f_ch));
+		ch = atoi(f_ch);
+		if (ch <= 0 || ch > 233)
+			continue;
+		/* SSID 欄寬固定（33），可能含空白；只去掉尾端空白 */
+		ssurv_field(line, len, col_ssid, col_ssid_end, f_ssid, sizeof(f_ssid));
+		/* 訊號只取數字：表頭的「Signal(%)」與下一欄「W-Mode」之間沒有空白，不能用欄界切 */
+		f_sig[0] = '\0';
+		if (col_sig >= 0 && col_sig < len) {
+			int i = col_sig, j = 0;
+			while (i < len && line[i] == ' ')
+				i++;
+			if (i < len && line[i] == '-')
+				f_sig[j++] = line[i++];
+			while (i < len && isdigit((unsigned char)line[i]) && j < (int)sizeof(f_sig) - 1)
+				f_sig[j++] = line[i++];
+			f_sig[j] = '\0';
+		}
+
+		memset(ssid_str, 0, sizeof(ssid_str));
+		char_to_ascii(ssid_str, f_ssid);
+		if (!ssid_str[0])
+			strcpy(ssid_str, "???");
+
+		ret += websWrite(wp, "%s[\"%s\", \"%s\", \"%d\", \"%s\"]",
+			count ? ", " : "", ssid_str, f_bssid, ch, f_sig);
+		count++;
+	}
+
+	if (count < 1)
+		ret += websWrite(wp, "%s", empty);
+	ret += websWrite(wp, "]");
+	return ret;
+}
+
+/* 請驅動掃描並取回結果；失敗回傳 -1 */
+static int
+ssurv_get(const char *ifname, char *data, int datalen)
+{
+	struct iwreq wrq;
 
 #if defined (BOARD_MT7615_DBDC)
 	memset(data, 0, 32);
 	strcpy(data, "ClearSiteSurvey=1");
-	wrq.u.data.length = strlen(data)+1; 
+	wrq.u.data.length = strlen(data)+1;
 	wrq.u.data.pointer = data;
 	wrq.u.data.flags = 0;
-
-	if (wl_ioctl(IFNAME_5G_MAIN, RTPRIV_IOCTL_SET, &wrq) < 0)
-	{
+	if (wl_ioctl(ifname, RTPRIV_IOCTL_SET, &wrq) < 0) {
 		dbg("Clean Site Survey fails\n");
-		return websWrite(wp, "[%s]", empty);
+		return -1;
 	}
-
 	sleep(1);
 #endif
 
@@ -1694,194 +1823,47 @@ ej_wl_scan_5g(int eid, webs_t wp, int argc, char **argv)
 	wrq.u.data.length = strlen(data)+1;
 	wrq.u.data.pointer = data;
 	wrq.u.data.flags = 0;
-
-	if (wl_ioctl(IFNAME_5G_MAIN, RTPRIV_IOCTL_SET, &wrq) < 0)
-	{
+	if (wl_ioctl(ifname, RTPRIV_IOCTL_SET, &wrq) < 0) {
 		dbg("Site Survey fails\n");
-		return websWrite(wp, "[%s]", empty);
+		return -1;
 	}
 
 	sleep(5);
 
-	memset(data, 0, sizeof(data));
-	wrq.u.data.length = sizeof(data);
+	memset(data, 0, datalen);
+	wrq.u.data.length = datalen - 1;	/* 留一個位置放結尾 '\0' */
 	wrq.u.data.pointer = data;
 	wrq.u.data.flags = 0;
-	if (wl_ioctl(IFNAME_5G_MAIN, RTPRIV_IOCTL_GSITESURVEY, &wrq) < 0)
-	{
+	if (wl_ioctl(ifname, RTPRIV_IOCTL_GSITESURVEY, &wrq) < 0) {
 		dbg("errors in getting site survey result\n");
-		return websWrite(wp, "[%s]", empty);
+		return -1;
 	}
 
-#if defined (USE_WSC_WPS)
-	line_len = SSURV_LINE_LEN_WPS;
-#else
-	line_len = SSURV_LINE_LEN;
-#endif
+	return (wrq.u.data.length < datalen) ? wrq.u.data.length : datalen - 1;
+}
 
-	retval += websWrite(wp, "[");
-	if (wrq.u.data.length > 0)
-	{
-		op = sp = wrq.u.data.pointer+line_len+2; // skip \n+\n
-		len = strlen(op);
+#if BOARD_HAS_5G_RADIO
+int
+ej_wl_scan_5g(int eid, webs_t wp, int argc, char **argv)
+{
+	char data[8192];
+	int len = ssurv_get(IFNAME_5G_MAIN, data, sizeof(data));
 
-		while (*sp && ((len - (sp-op)) >= 0))
-		{
-			memcpy(site_line, sp, line_len);
-
-			memcpy(site_chnl, sp, 3);
-			memcpy(site_ssid, sp+4, 33);
-			memcpy(site_bssid, sp+37, 20);
-			memcpy(site_signal, sp+80, 9);
-
-			site_line[line_len] = '\0';
-			site_chnl[3] = '\0';
-			site_ssid[33] = '\0';
-			site_bssid[20] = '\0';
-			site_signal[9] = '\0';
-
-			memset(ssid_str, 0, sizeof(ssid_str));
-			char_to_ascii(ssid_str, trim_r(site_ssid));
-
-			if (!strlen(ssid_str))
-				strcpy(ssid_str, "???");
-
-			if (apCount)
-				retval += websWrite(wp, "%s ", ",");
-
-			retval += websWrite(wp, "[\"%s\", \"%s\", \"%s\", \"%s\"]", ssid_str, trim_r(site_bssid), trim_r(site_chnl), trim_r(site_signal));
-
-//			dbg("%s\n", site_line);
-
-			sp+=line_len+1; // skip \n
-			apCount++;
-		}
-	}
-
-	if (apCount < 1)
-	{
-		retval += websWrite(wp, empty);
-	}
-
-	retval += websWrite(wp, "]");
-
-	return retval;
+	if (len < 0)
+		return websWrite(wp, "[[\"\", \"\", \"\", \"\"]]");
+	return ssurv_print(wp, data, len);
 }
 #endif
 
-int 
+int
 ej_wl_scan_2g(int eid, webs_t wp, int argc, char **argv)
 {
-	int retval = 0, apCount = 0;
 	char data[8192];
-	char ssid_str[128];
-#if (defined (USE_WSC_WPS) || defined(USE_RT3352_MII))
-	char site_line[SSURV_LINE_LEN_WPS+1];
-#else
-	char site_line[SSURV_LINE_LEN+1];
-#endif
-	char site_chnl[4];
-	char site_ssid[34];
-	char site_bssid[24];
-	char site_signal[10];
-	struct iwreq wrq;
-	char *sp, *op, *empty;
-	int len, line_len;
+	int len = ssurv_get(IFNAME_2G_MAIN, data, sizeof(data));
 
-	empty = "[\"\", \"\", \"\", \"\"]";
-
-#if defined (BOARD_MT7615_DBDC)
-	memset(data, 0, 32);
-	strcpy(data, "ClearSiteSurvey=1");
-	wrq.u.data.length = strlen(data)+1; 
-	wrq.u.data.pointer = data;
-	wrq.u.data.flags = 0;
-
-	if (wl_ioctl(IFNAME_2G_MAIN, RTPRIV_IOCTL_SET, &wrq) < 0)
-	{
-		dbg("Clean Site Survey fails\n");
-		return websWrite(wp, "[%s]", empty);
-	}
-
-	sleep(1);
-#endif
-
-	memset(data, 0, 32);
-	strcpy(data, "SiteSurvey=1"); 
-	wrq.u.data.length = strlen(data)+1; 
-	wrq.u.data.pointer = data;
-	wrq.u.data.flags = 0;
-
-	if (wl_ioctl(IFNAME_2G_MAIN, RTPRIV_IOCTL_SET, &wrq) < 0)
-	{
-		dbg("Site Survey fails\n");
-		return websWrite(wp, "[%s]", empty);
-	}
-
-	sleep(5);
-
-	memset(data, 0, sizeof(data));
-	wrq.u.data.length = sizeof(data);
-	wrq.u.data.pointer = data;
-	wrq.u.data.flags = 0;
-	if (wl_ioctl(IFNAME_2G_MAIN, RTPRIV_IOCTL_GSITESURVEY, &wrq) < 0)
-	{
-		dbg("errors in getting site survey result\n");
-		return websWrite(wp, "[%s]",empty);
-	}
-
-#if (defined (USE_WSC_WPS) || defined(USE_RT3352_MII))
-	line_len = SSURV_LINE_LEN_WPS;
-#else
-	line_len = SSURV_LINE_LEN;
-#endif
-	retval += websWrite(wp, "[");
-	if (wrq.u.data.length > 0)
-	{
-		op = sp = wrq.u.data.pointer+line_len+2; // skip \n+\n
-		len = strlen(op);
-		
-		while (*sp && ((len - (sp-op)) >= 0))
-		{
-			memcpy(site_line, sp, line_len);
-
-			memcpy(site_chnl, sp, 3);
-			memcpy(site_ssid, sp+4, 33);
-			memcpy(site_bssid, sp+37, 20);
-			memcpy(site_signal, sp+80, 9);
-
-			site_line[line_len] = '\0';
-			site_chnl[3] = '\0';
-			site_ssid[33] = '\0';
-			site_bssid[20] = '\0';
-			site_signal[9] = '\0';
-			
-			memset(ssid_str, 0, sizeof(ssid_str));
-			char_to_ascii(ssid_str, trim_r(site_ssid));
-			
-			if (!strlen(ssid_str))
-				strcpy(ssid_str, "???");
-			
-			if (apCount)
-				retval += websWrite(wp, "%s ", ",");
-			
-			retval += websWrite(wp, "[\"%s\", \"%s\", \"%s\", \"%s\"]", ssid_str, trim_r(site_bssid), trim_r(site_chnl), trim_r(site_signal));
-			
-//			dbg("%s\n", site_line);
-			
-			sp+=line_len+1; // skip \n
-			apCount++;
-		}
-	}
-
-	if (apCount < 1)
-	{
-		retval += websWrite(wp, empty);
-	}
-
-	retval += websWrite(wp, "]");
-
-	return retval;
+	if (len < 0)
+		return websWrite(wp, "[[\"\", \"\", \"\", \"\"]]");
+	return ssurv_print(wp, data, len);
 }
 
 #if BOARD_HAS_5G_RADIO

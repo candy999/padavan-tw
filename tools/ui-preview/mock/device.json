@@ -1,0 +1,77 @@
+{
+ "mac": "7C:1E:52:00:00:A4",
+ "signal": {
+  "step": 900,
+  "start": -85500,
+  "values": {
+   "$gen": "wave",
+   "n": 96,
+   "step": 900,
+   "base": -75,
+   "amp": -6,
+   "peak_hour": 14.2,
+   "width": 1.6,
+   "noise": -4,
+   "seed": 31
+  }
+ },
+ "rate": {
+  "step": 900,
+  "start": -85500,
+  "values": {
+   "$gen": "wave",
+   "n": 96,
+   "step": 900,
+   "base": 150,
+   "amp": -60,
+   "peak_hour": 14.2,
+   "width": 1.6,
+   "noise": 40,
+   "seed": 32
+  }
+ },
+ "disconnects": [
+  {
+   "ts": -36000,
+   "reason": "訊號太弱（-83 dBm）"
+  },
+  {
+   "ts": -35100,
+   "reason": "訊號太弱（-81 dBm）"
+  },
+  {
+   "ts": -33300,
+   "reason": "裝置自己離線"
+  }
+ ],
+ "roams": [
+  {
+   "ts": -50400,
+   "from": "客廳 CR6608",
+   "to": "NEWIFI3",
+   "rssi_from": -58,
+   "rssi_to": -77
+  }
+ ],
+ "usage_today_bytes": 7301444403,
+ "advice": [
+  {
+   "title": "改用網路線",
+   "detail": "電視背後有網路孔的話最穩定；可以用 MOD 旁的線再接一台小交換器",
+   "action": "",
+   "href": ""
+  },
+  {
+   "title": "讓電視連客廳那台 AP",
+   "detail": "客廳 CR6608 離電視比較近；開啟漫遊引導後會自動換過去",
+   "action": "多台 AP 設定",
+   "href": "tw_wifi.asp#roam"
+  },
+  {
+   "title": "讓電視改連 2.4 GHz",
+   "detail": "2.4 GHz 穿牆較好，預估 -62 dBm；但速度上限較低",
+   "action": "",
+   "href": ""
+  }
+ ]
+}

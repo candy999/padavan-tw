@@ -5,3 +5,5 @@ toolchain/mipsel-linux-*/
 
 # MacOS
 .DS_Store
+# padavan-tw：黑潮 DNS 下載快取
+trunk/user/kuroshio/dl/

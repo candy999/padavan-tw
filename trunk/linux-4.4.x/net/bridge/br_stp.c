@@ -414,6 +414,17 @@ static void br_make_blocking(struct net_bridge_port *p)
 }
 
 /* called under bridge lock */
+/* padavan-tw：急速連線。網橋開了 tw_wifi_fast 時，Wi-Fi AP 介面（名稱 ra 開頭：ra0、ra1、rai0、rai1…；
+ * 不含 WDS、ApCli）一啟用就直接轉送，不經過聆聽／學習（原本 2 × forward_delay）。
+ * 前提是 Wi-Fi 介面的 BPDU 已由 ebtables 擋掉（rc 的 tw_wifibpdu.c 只在這時才開），
+ * Wi-Fi 介面本來就不參與 STP，等待沒有意義；Wi-Fi 重啟後裝置在等待期間連上會拿不到 DHCP。
+ * 有線埠照常走 STP。rc 偵測到某個 Wi-Fi 介面收到外部裝置的 BPDU（環境可能有橋接裝置）時，
+ * 只把那個介面設成 tw_slow（改回標準 STP），其他介面照樣急速。 */
+static inline bool br_tw_fast_port(const struct net_bridge_port *p)
+{
+	return p->br->tw_wifi_fast && !p->tw_slow && !strncmp(p->dev->name, "ra", 2);
+}
+
 static void br_make_forwarding(struct net_bridge_port *p)
 {
 	struct net_bridge *br = p->br;
@@ -421,7 +432,7 @@ static void br_make_forwarding(struct net_bridge_port *p)
 	if (p->state != BR_STATE_BLOCKING)
 		return;
 
-	if (br->stp_enabled == BR_NO_STP || br->forward_delay == 0) {
+	if (br->stp_enabled == BR_NO_STP || br->forward_delay == 0 || br_tw_fast_port(p)) {
 		br_set_state(p, BR_STATE_FORWARDING);
 		br_topology_change_detection(br);
 		del_timer(&p->forward_delay_timer);
@@ -433,7 +444,7 @@ static void br_make_forwarding(struct net_bridge_port *p)
 	br_log_state(p);
 	br_ifinfo_notify(RTM_NEWLINK, p);
 
-	if (br->forward_delay != 0)
+	if (br->forward_delay != 0 && p->state != BR_STATE_FORWARDING)	/* padavan-tw：急速連線已經在轉送 */
 		mod_timer(&p->forward_delay_timer, jiffies + br->forward_delay);
 }
 

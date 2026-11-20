@@ -1,0 +1,26 @@
+padavan-tw：核心要求啟用路由時，來源在下游介面（區網，含路由器自己）就略過
+
+rc 產生的上游設定有 altnet 0.0.0.0/0（MOD 節目來源可能在任何網段，要保留），
+原本「來源不在上游合法網段才檢查是不是下游」的判斷因此永遠走不到下游那支：
+區網送出的群播（tw-roamd 的 239.255.77.77、電腦的 SSDP 等）被當成上游來源，建出
+入口介面錯誤的路由（VIF -1）。改成先檢查下游。getIfByAddress() 取最精確的網段，
+網際網路上的節目來源對不到下游介面，照原本流程處理。
+
+--- a/src/igmp.c
++++ b/src/igmp.c
+@@ -139,6 +139,15 @@
+         }
+         else {
+             struct IfDesc *checkVIF;
++            struct IfDesc *srcVIF = getIfByAddress(src);
++
++            // Source on a downstream interface (or this router itself on it): not upstream traffic.
++            // Checked first, because an upstream "altnet 0.0.0.0/0" makes the check below never reach it.
++            if (srcVIF && (srcVIF->state & IF_STATE_DOWNSTREAM)) {
++                my_log(LOG_DEBUG, 0, "Route activation request from %s for %s is from downstream VIF[%d]. Ignoring.",
++                    inetFmt(src, s1), inetFmt(dst, s2), srcVIF->index);
++                return;
++            }
+ 
+             for(i=0; i<MAX_UPS_VIFS; i++)
+             {

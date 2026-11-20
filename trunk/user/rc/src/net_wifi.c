@@ -1183,8 +1183,13 @@ restart_guest_lan_isolation(void)
 
 	brport_set_param_int(rt_ifname_guest, "isolate_mode", bp_isolate);
 
+	/* 訪客隔離的 ebtables 規則只在 AP 模式需要（路由器模式用 isolate_mode） */
 	if (!is_ap_mode)
-		return;
+		is_need_ebtables = 0;
+
+	/* padavan-tw：Wi-Fi BPDU 擋法（tw_wifibpdu.c） */
+	if (!nvram_match("lan_stp", "0") && tw_wifi_bpdu_mode() != 0)
+		is_need_ebtables |= 0x100;
 
 	if (is_need_ebtables) {
 		int i_need_dhcp = is_dhcpd_enabled(1);
@@ -1198,6 +1203,8 @@ restart_guest_lan_isolation(void)
 #endif
 		if (is_need_ebtables & 0x01)
 			ebtables_filter_guest_ap(rt_ifname_guest, 0, i_need_dhcp);
+		if (is_need_ebtables & 0x100)
+			tw_wifi_bpdu_rules();
 	}
 	else if (is_module_loaded("ebtables")) {
 		doSystem("ebtables %s", "-F");

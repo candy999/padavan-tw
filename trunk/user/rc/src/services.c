@@ -528,6 +528,29 @@ void update_adb(void){
 }
 #endif
 
+#if defined(APP_KUROSHIO)
+void stop_kuroshio(void){
+	eval("/usr/bin/kuroshio.sh","stop");
+}
+
+void start_kuroshio(void){
+	if (nvram_get_int("kuroshio_enable") == 1)
+		eval("/usr/bin/kuroshio.sh","start");
+}
+
+void restart_kuroshio(void){
+	/* padavan-tw：還在執行、也還是啟用 → 先試 kuroshio.sh reload（SIGHUP 在同一個行程裡重新載入，
+	 * 不必停掉改用業者 DNS）。結束碼 0＝已經套用；非 0（例如改了日誌等級，要重新啟動才會生效）才完整重新啟動 */
+	if (nvram_get_int("kuroshio_enable") == 1 && pids("kuroshio") &&
+	    eval("/usr/bin/kuroshio.sh", "reload") == 0)
+		return;
+	stop_kuroshio();
+	start_kuroshio();
+	/* no-resolv 是否加上要看開關，所以重寫 dnsmasq 設定 */
+	restart_dhcpd();
+}
+#endif
+
 #if defined(APP_SMARTDNS)
 void stop_smartdns(void){
 	eval("/usr/bin/smartdns.sh","stop");
@@ -770,7 +793,7 @@ start_services_once(int is_ap_mode)
 		
 		if (!nvram_match("lan_stp", "0")) {
 			br_set_stp(IFNAME_BR, 1);
-			br_set_fd(IFNAME_BR, 15);
+			tw_stp_timers();	/* padavan-tw：8 秒計時＋急速連線（tw_wifibpdu.c） */
 		}
 	} else {
 		start_udpxy(IFNAME_BR);
@@ -865,6 +888,10 @@ stop_services(int stopall)
 #endif
 #if defined(APP_SMARTDNS)
 	stop_smartdns();
+#endif
+#if defined(APP_KUROSHIO)
+	/* 先停黑潮 DNS（會把學習資料寫出），之後才儲存 /etc/storage */
+	stop_kuroshio();
 #endif
 #if defined(APP_ALIDDNS)
 	stop_aliddns();

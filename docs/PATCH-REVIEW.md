@@ -43,9 +43,9 @@ TurBoTse 沒有的 571 個 commit 分類：其他機型 184、套件版本 167�
 | DNS 進階選項（強制區網用路由器 DNS、DNSSEC、Rebind 防護、strict-order、all-servers、過濾 AAAA）、NTP 立即同步、iperf3 服務、DNSv6 第二組、WAN 變動執行腳本、緩衝區溢位修正 | 已在 TurBoTse | 兩邊都從 padavan-ng 移植 |
 | uClibc-ng 升級 | 不需要 | 我們用 musl |
 | Rainbow UI、formlogin（表單登入） | ⏸ 暫不收 | 外觀／使用習慣，非穩定性 |
-| miniupnpd 2.3.7 | ⏸ **待辦** | TurBoTse 仍是 2.0，有 CVE-2019-12107~12111、CallStranger（CVE-2020-12695）。vb1980 的版本綁 iptables 1.8.10，需要另外移植與測試 |
+| miniupnpd 2.3.7 | ✅ **已收**（2026-11-18，`4750c57`） | 原始碼用 vb1980 的（padavan-ng 移植，含 2.3.7 之後的 PCP nonce 修正、設定檔維持 /etc/miniupnpd.conf）；接 TurBoTse 的 package.mk，libiptc 用暫存區的 `-lip4tc`，**iptables 不用升級**。D3 實測 SSDP、AddPortMapping（DNAT＋ACCEPT＋lease 檔）、DeletePortMapping 都正常 |
 | 套件版本（openssl、curl、dnsmasq、dropbear、zlib…） | 不收 | TurBoTse 普遍較新（openssl 3.0.21 對 1.1.1w、curl 8.21 對 8.15） |
-| igmpproxy 0.4 | 不收 | TurBoTse 刻意降回 0.3，MOD 先維持原狀 |
+| igmpproxy 0.4 | 不收 | TurBoTse 刻意降回 0.3，維持 0.3；改成在 0.3 上加兩個修補：上游 PR #98 的 `internAgeRoute()` use-after-free 修法（67fc7d8，還沒實際觸發驗證）、核心要求啟用路由時來源在下游介面就略過（e78619e，已實測）。中華電信 MOD 走交換器橋接，不經過 igmpproxy |
 
 ## simonchen/padavan-4.4
 
@@ -62,12 +62,25 @@ TurBoTse 沒有的 571 個 commit 分類：其他機型 184、套件版本 167�
 | 項目 | 處理 |
 |---|---|
 | IPv6 fullcone、brcm fullcone、MT7612 TxBF、MT7603+MT7615 TxBF 修正、預設 TCP MSS | 已在 TurBoTse |
-| SQM／cake、SFE 與 SQM 相容、SmartDNS、超頻選項 | 已在 TurBoTse |
+| SQM／cake、SFE 與 SQM 相容、SmartDNS、超頻選項 | 已在 TurBoTse（本專案之後移除了 SQM 與 SmartDNS） |
 | 新版 HNAT／QDMA／HQoS、ext-to-ext | ❌ 不收（同上） |
 | 多 WAN（mwan） | ❌ 不收（不需要） |
 
+## 2026-11-18 再檢視（vb1980/padavan-4.4 到 2025-09、MeIsReallyBa、CleanPadavan-Newifi3）
+
+| 項目 | 處理 | 理由 |
+|---|---|---|
+| dropbear 2025.88（610139590） | ✅ 已收（`4750c57`） | CVE-2025-47203（dbclient 多跳主機名稱交給 shell）。**注意**：D3、CR6608 開的是 OpenSSH，dropbear 沒有編進這兩台的韌體，只影響其他機型 |
+| networkmap 裝置名稱 32 字元（69cc341a6） | ✅ 改寫後收（`4750c57`、`f826b34`） | TurBoTse 已收一半。另外修：中文名稱被 `is_valid_hostname()`（只收 ASCII）丟掉、有號 char 把 UTF-8 清掉、使用者取的名稱排在 DNS 反查之後；長度改 72 bytes 並在完整的字截斷；反查名稱也過濾（會直接放進 JS 字串） |
+| 解析主機名稱（553c625c0） | 已在 TurBoTse | `lookup_dhcp_list()` |
+| 新機型、套件版本升級 | 不收 | 不是我們的機型；TurBoTse 的套件普遍較新 |
+| CleanPadavan-Newifi3 | 不收 | 只有編譯腳本：3.4 用 hanwckf；4.4 用 MeIsReallyBa 的 `NEWIFI` 機型（雙 GMAC、WAN 走 GMAC2／RGMII2，D3 不拆 C48 時不通）。「注入 KVR」找不到對應的資料夾，什麼都沒換 |
+| KVR（802.11k/v/r） | 不需要 | vb1980 的「支援 KVR」實際只對 MT7615、MT7915 有效；`CONFIG_FIRMWARE_INCLUDE_WIFI_KVR` 在它的編譯腳本裡沒有處理。D3 的 MT7603 在 vb1980 3.4／4.4、hanwckf、MeIsReallyBa、TurBoTse 都是 11k/v/r 全關，padavan-tw 已經開了 11k（11v／11r 維護者決定不開：2.4G 主要給 IoT 裝置）；CR6608（MT7915）兩邊設定相同（11k、11r、11v 開） |
+| CR6608 `CONFIG_KVRH_SUPPORT`（查手機的 11k/v/r 能力） | ⏸ 之後 | 漫遊中控在 CR6608 用 11k／11v 引導時再開 |
+
 ## 本專案自己的修正
 
-- `rc/src/ralink.c`：802.11k/v 開關無效（驅動只讀第一個 `RRMEnable`／`WNMEnable`），以及 MT7915 DBDC 的 `FtSupport` 少一個參數。預設仍關閉。
+- `rc/src/ralink.c`：802.11k/v 開關無效（驅動只讀第一個 `RRMEnable`／`WNMEnable`），以及 MT7915 DBDC 的 `FtSupport` 少一個參數。之後 802.11k/v 改成預設開、802.11r 預設關。
 - 台灣化：繁體中文（台灣）介面、時區、NTP、斷線偵測主機。
-- 機型設定：放在 `trunk/configs/tw/`，編譯時接在上游的機型設定後面（上游設定檔保持不改）。關閉科學上網／校園網等外掛；開啟 SQM（含必要的 QoS、IFB 模組）、SFE、WireGuard、msd_lite；不超頻。
+- 機型設定：放在 `trunk/configs/tw/`，編譯時接在上游的機型設定後面（上游設定檔保持不改）。關閉科學上網／校園網等外掛；開啟 SFE、WireGuard、msd_lite；不超頻（另外編 `-oc1000` 版）。軟體 SQM（連同 QoS 排程、IFB 核心選項）已從韌體移除，原本規劃的硬體 QoS（QDMA）也在 2026-11-18 捨棄。
+- 其他本專案修正（細節見 ROADMAP、WIFI-STABILITY）：D3 單一 GMAC、D3 重開機、硬體 NAT 殘留標記（STP 誤判 2.4G 迴圈，已回報 TurBoTse/padavan#33、hanwckf/padavan-4.4#73）、Wi-Fi BPDU 擋法、STP 8 秒＋急速連線、自動 NAT66、刷機重開、busybox dhcp6c 洗日誌、中華電信 MOD 自動偵測。

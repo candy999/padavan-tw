@@ -1,0 +1,18 @@
+#!/bin/sh
+# padavan-tw：診斷頁「Wi-Fi 迴圈保護」卡片用的狀態（只讀，不改任何設定）
+# 輸出 key=value，最後是 EVENTS 之後的最近 5 次觸發（tw-bpdu-snap 寫的紀錄）
+L=/etc/storage/tw-diag/bpdu-events.log
+B=/sys/class/net/br0/bridge
+cnt() { ebtables -L --Lc 2>/dev/null | grep -- "-d BGA $1 " | sed -n 's/.*pcnt = \([0-9]*\).*/\1/p' | awk '{s+=$1} END {print s+0}'; }
+echo "MODE=$(nvram get tw_wifi_bpdu)"
+echo "STP=$(cat $B/stp_state 2>/dev/null)"
+echo "FAST=$(cat $B/tw_wifi_fast 2>/dev/null)"
+echo "IN=$(cnt -i)"
+echo "OUT=$(cnt -o)"
+echo "HWNAT=$(cat /sys/module/hw_nat/parameters/tw_bogus_pingpong 2>/dev/null)"
+echo "SLOW=$(awk '{printf "%s ", $1}' /tmp/tw-bpdu-conflict 2>/dev/null)"
+echo "UPTIME=$(cut -d. -f1 /proc/uptime)"
+echo "LOGN=$(grep -c '^===' $L 2>/dev/null || echo 0)"
+echo "EVENTS"
+[ -f $L ] && awk '/^===/ {n++} {b[n] = b[n] $0 "\n"} END {for (i = (n > 5 ? n - 4 : 1); i <= n; i++) printf "%s", b[i]}' $L | grep -E '^===|^觸發|來源|改回標準|從網橋' | cut -c1-200
+exit 0

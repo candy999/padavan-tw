@@ -59,6 +59,9 @@ struct nvram_pair router_defaults[] = {
 	{ "lan_dns2", "" },				/* LAN DNS2 */
 	{ "lan_domain", "lan" },		/* LAN domain name */
 	{ "lan_stp", "1" },				/* LAN spanning tree protocol */
+	{ "tw_wifi_bpdu", "2" },			/* padavan-tw：Wi-Fi BPDU 擋法 0＝不擋 1＝只擋收進來的 2＝收送都擋（收進來的都記錄） */
+	{ "tw_mod_auto", "1" },				/* padavan-tw：自動偵測中華電信 MOD 機上盒接的 LAN 孔，設成 MOD 專用孔（tw_mod.c） */
+	{ "tw_wifi_fast", "1" },			/* padavan-tw：急速連線（Wi-Fi 介面一啟用就轉送；Wi-Fi 收到 BPDU 時自動退回 8 秒） */
 
 	/* WAN H/W parameters */
 	{ "wan_ifname", IFNAME_WAN },	/* WAN interface name */
@@ -203,7 +206,7 @@ struct nvram_pair router_defaults[] = {
 	{ "wl_TxBurst", "1" },
 	{ "wl_PktAggregate", "1" },
 	{ "wl_APSDCapable", "0" },
-	{ "wl_HT_OpMode", "1" },
+	{ "wl_HT_OpMode", "0" },	/* padavan-tw：5G 預設混合模式（不用 Greenfield）；D3 實測 5 輪 0 斷線，Greenfield 5 輪 1 次斷線 */
 	{ "wl_pmf", "0" },
 	{ "wl_pmfsha256", "0" },
 #if BOARD_HAS_5G_11AC
@@ -457,6 +460,7 @@ struct nvram_pair router_defaults[] = {
 	{ "ip6_dns3", "" },
 
 	{ "ip6_lan_auto", "1" },
+	{ "ip6_nat66_auto", "1" },	/* padavan-tw：WAN 有 IPv6 但拿不到可分配的前綴時，區網自動改用 NAT66（ULA） */
 	{ "ip6_lan_addr", "fc00:101:101::1" },
 	{ "ip6_lan_size", "64" },
 	{ "ip6_lan_radv", "1" },
@@ -851,6 +855,23 @@ struct nvram_pair router_defaults[] = {
 	{ "reboot_schedule_enable", "0" },
 	{ "reboot_schedule", "00000000000" },
 
+#if defined(APP_KUROSHIO)
+	/* padavan-tw：黑潮 DNS（設定檔 /etc/storage/kuroshio/kuroshio.uci；這些是後台表單的欄位，啟動時寫進設定檔） */
+	{ "kuroshio_enable", "1" },
+	{ "kuroshio_domain", "" },		/* 綁定網域（DDNS、憑證、加密 DNS、公開頁） */
+	{ "kuroshio_cf_token", "" },		/* Cloudflare API Token（DDNS 與憑證共用） */
+	{ "kuroshio_acme_email", "" },
+	{ "kuroshio_ddns", "0" },
+	{ "kuroshio_dot", "0" },
+	{ "kuroshio_doq", "0" },
+	{ "kuroshio_doh", "0" },
+	{ "kuroshio_doh_port", "8443" },	/* DoH 在路由器上的埠 */
+	{ "kuroshio_doh_wan_port", "443" },	/* 外面連進來的埠（防火牆轉到 kuroshio_doh_port） */
+	{ "kuroshio_wan", "0" },		/* 加密 DNS 開放外網（只有台灣 IP 能連，由黑潮 DNS 判斷） */
+	{ "kuroshio_access", "taiwan" },	/* taiwan／open */
+	{ "kuroshio_log", "warn" },
+#endif
+
 #if defined(APP_WIREGUARD)
 	/*WIREGUARD*/
 	{ "wireguard_enable", "0" },
@@ -1068,17 +1089,12 @@ struct nvram_pair router_defaults[] = {
 #endif
 	{ "hw_nat_mode", "1" },
 	{ "sw_nat_mode", "0" },
-	/* padavan-tw：硬體 QoS（QDMA） */
 	/* padavan-tw：每天自動重選頻道（只在頻道設為自動、Wi-Fi 閒置時；預設凌晨 4 點） */
 	{ "tw_acs_daily", "1" },
+	/* padavan-tw：輕量漫遊中控（觀察模式：只記錄、不引導） */
+	{ "tw_roam_enable", "1" },
+	{ "tw_roam_weak", "-75" },	/* 弱訊號門檻（dBm） */
 	{ "tw_acs_hour", "4" },
-	{ "hw_qos_mode", "0" },		/* 0=關閉 1=固定限速 2=自動 */
-	{ "hw_qos_wlan", "1" },		/* 開啟時 Wi-Fi 方向也經過 QDMA 排程 */
-	{ "hw_qos_down", "0" },		/* 申裝下載頻寬（Mbps），0=未設定 */
-	{ "hw_qos_up", "0" },		/* 申裝上傳頻寬（Mbps），0=未設定 */
-	{ "hw_qos_tech", "ftth" },	/* 最後一里：ftth、vdsl、cable、mobile、other */
-	{ "hw_qos_over", "15" },	/* 上浮 %：上限＝申裝 ×(100+over)% */
-	{ "hw_qos_under", "20" },	/* 下探 %：下限＝申裝 ×(100-under)% */
 #if defined(USE_SFE)
 	{ "sfe_enable", "2" },		/* Software Offload Routing IPv4/IPv6 */
 #endif

@@ -779,12 +779,23 @@ static void usage(void)
 
 static void do_reboot(void)
 {
+	int i;
+
 	fprintf(stderr, "Rebooting ...\n");
 	fflush(stderr);
+	sync();
 
-	/* try regular reboot method first */
-	system("/sbin/reboot");
-	sleep(2);
+	/* try regular reboot method first
+	 * padavan-tw：直接通知 init（等同 /sbin/reboot 的 sys_exit），不執行任何程式。
+	 * - 寫完韌體後舊的 squashfs 已被覆蓋，以前的 system("/sbin/reboot") 要載入 /bin/sh 與 /sbin/reboot，
+	 *   可能讀不出來而永遠卡住（D3 實測：4.4 刷 3.4）
+	 * - 不可以自己搶著重開：init 的關機流程會存設定進 Flash，中途重開會讓 Flash 停在錯誤狀態，
+	 *   Breed 讀不到韌體、要拔電才恢復（D3 實測：b273be5 的「等 10 秒＋2 秒就重開」兩次都卡住）
+	 * init 收到 SIGTERM 後停服務、存設定、kill(-1)（也會結束本程式）再 reboot()；60 秒內沒重開才自己重開 */
+	kill(1, SIGTERM);
+	for (i = 0; i < 60; i++)
+		sleep(1);
+	sync();
 
 	/* if we're still alive at this point, force the kernel to reboot */
 	syscall(SYS_reboot,LINUX_REBOOT_MAGIC1,LINUX_REBOOT_MAGIC2,LINUX_REBOOT_CMD_RESTART,NULL);

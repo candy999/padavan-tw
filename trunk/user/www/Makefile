@@ -30,6 +30,10 @@ romfs:
 	rm -f $(ROMFS_DIR)/www/httpd_check.htm
 	echo "ASUSTeK" > $(ROMFS_DIR)/www/httpd_check.htm
 	cd $(ROMFS_DIR)/www && ln -sf /opt/share/www/custom custom
+	# padavan-tw：黑潮 DNS 儀表板（tw_kuroshio.asp#dashboard）直接用韌體裡黑潮 DNS 附帶的 dashboard.js／css，不另外複製一份
+	cd $(ROMFS_DIR)/www && ln -sf /usr/share/kuroshio/dashboard kuroshio
+	# 黑潮 3.3.0 起的介面共用純函式 ui-core.js（KuroshioUiCore；3.2.x 沒有這個資料夾，頁面會用自己的一份）
+	cd $(ROMFS_DIR)/www && ln -sf /usr/share/kuroshio/shared kuroshio-shared
 	cp dict/EN.header $(ROMFS_DIR)/www
 ifeq ($(CONFIG_FIRMWARE_INCLUDE_LANG_BR),y)
 	echo "LANG_BR=Brazil" >> $(ROMFS_DIR)/www/EN.header
@@ -196,6 +200,9 @@ ifneq ($(CONFIG_FIRMWARE_INCLUDE_SQM),y)
 endif
 ifneq ($(CONFIG_FIRMWARE_INCLUDE_SMARTDNS),y)
 	rm -f $(INSTALLDIR)/www/Advanced_smartdns.asp
+endif
+ifneq ($(CONFIG_FIRMWARE_INCLUDE_KUROSHIO),y)
+	rm -f $(INSTALLDIR)/www/Advanced_kuroshio.asp
 endif
 ifneq ($(CONFIG_FIRMWARE_INCLUDE_SOFTETHERVPN_SERVER),y)
 	rm -f $(INSTALLDIR)/www/vpnsrv.asp

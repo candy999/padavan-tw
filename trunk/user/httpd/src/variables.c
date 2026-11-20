@@ -370,6 +370,8 @@
 			{"wan_stb_x", "", NULL, EVM_RESTART_SWITCH_VLAN},
 			{"wan_src_phy", "", NULL, FALSE},
 			{"wan_stb_iso", "", NULL, EVM_RESTART_SWITCH_VLAN},
+			{"tw_mod_auto", "", NULL, 0},
+			{"tw_mod_mac", "", NULL, 0},	/* padavan-tw：記得的 MOD 機上盒 MAC（tw_mod.c；後台改成「沒有接 MOD」時清空） */	/* padavan-tw：MOD 機上盒自動偵測（tw_mod.c，看門狗每 10 秒檢查） */
 			{"vlan_filter", "", NULL, EVM_RESTART_WAN},
 			{"vlan_vid_cpu", "", NULL, EVM_RESTART_WAN},
 			{"vlan_pri_cpu", "", NULL, EVM_RESTART_WAN},
@@ -409,13 +411,6 @@
 			{"gw_arp_ping", "", NULL, EVM_RESTART_WAN},
 			{"hw_nat_mode", "", NULL, EVM_RESTART_FIREWALL},
 			{"sw_nat_mode", "", NULL, EVM_RESTART_FIREWALL},
-			{"hw_qos_mode", "", NULL, EVM_RESTART_FIREWALL},
-			{"hw_qos_wlan", "", NULL, EVM_RESTART_FIREWALL},
-			{"hw_qos_down", "", NULL, EVM_RESTART_FIREWALL},
-			{"hw_qos_up", "", NULL, EVM_RESTART_FIREWALL},
-			{"hw_qos_tech", "", NULL, EVM_RESTART_FIREWALL},
-			{"hw_qos_over", "", NULL, EVM_RESTART_FIREWALL},
-			{"hw_qos_under", "", NULL, EVM_RESTART_FIREWALL},
 			{"sfe_enable", "", NULL, EVM_RESTART_FIREWALL},
 			{"wan_ipaddr", "", NULL, EVM_RESTART_WAN},
 			{"wan_netmask", "", NULL, EVM_RESTART_WAN},
@@ -473,6 +468,7 @@
 			{"ip6_lan_sflt", "", NULL, EVM_RESTART_DHCPD},
 			{"ip6_lan_sfps", "", NULL, EVM_RESTART_DHCPD},
 			{"ip6_lan_sfpe", "", NULL, EVM_RESTART_DHCPD},
+			{"ip6_nat66_auto", "", NULL, 0},	/* padavan-tw：watchdog 下一輪就照新值，不必重啟 */
 #endif
 			{0,0,0,0}
 		};
@@ -592,6 +588,8 @@
 			{"lan_dns1", "", NULL, EVM_RESTART_LAN},
 			{"lan_dns2", "", NULL, EVM_RESTART_LAN},
 			{"lan_stp", "", NULL, EVM_RESTART_LAN},
+			{"tw_wifi_bpdu", "", NULL, EVM_RESTART_LAN},	/* padavan-tw：Wi-Fi BPDU 擋法（tw_wifibpdu.c） */
+			{"tw_wifi_fast", "", NULL, EVM_RESTART_LAN},	/* padavan-tw：急速連線（tw_wifibpdu.c） */
 			{"lan_domain", "", NULL, EVM_RESTART_DHCPD},
 			{"force_igmp", "", NULL, EVM_RESTART_SYSCTL},
 #if defined (USE_IPV6)
@@ -831,6 +829,8 @@
 			{"wl_mode_x", "", NULL, EVM_RESTART_WIFI5},
 			{"wl_channel", "", NULL, EVM_RESTART_WIFI5},
 			{"tw_acs_daily", "", NULL, 0},	/* padavan-tw：每天自動重選頻道（watchdog 每次讀取，不用重啟） */
+			{"tw_roam_enable", "", NULL, 0},
+			{"tw_roam_weak", "", NULL, 0},
 			{"tw_acs_hour", "", NULL, 0},
 			{"wl_wdsapply_x", "", NULL, EVM_RESTART_WIFI5},
 			{"wl_wdsnum_x", "", NULL, EVM_RESTART_WIFI5},
@@ -1203,6 +1203,34 @@
 		};
 #endif
 
+#if defined(APP_KUROSHIO)
+	struct variable variables_KuroshioConf[] = {
+			{"kuroshio_enable", "", NULL, EVM_RESTART_KUROSHIO|EVM_RESTART_DHCPD|EVM_RESTART_FIREWALL},
+			{"kuroshio_domain", "", NULL, EVM_RESTART_KUROSHIO},
+			{"kuroshio_cf_token", "", NULL, EVM_RESTART_KUROSHIO},
+			{"kuroshio_acme_email", "", NULL, EVM_RESTART_KUROSHIO},
+			{"kuroshio_ddns", "", NULL, EVM_RESTART_KUROSHIO},
+			{"kuroshio_dot", "", NULL, EVM_RESTART_KUROSHIO|EVM_RESTART_FIREWALL},
+			{"kuroshio_doq", "", NULL, EVM_RESTART_KUROSHIO|EVM_RESTART_FIREWALL},
+			{"kuroshio_doh", "", NULL, EVM_RESTART_KUROSHIO|EVM_RESTART_FIREWALL},
+			{"kuroshio_doh_port", "", NULL, EVM_RESTART_KUROSHIO|EVM_RESTART_FIREWALL},
+			{"kuroshio_doh_wan_port", "", NULL, EVM_RESTART_KUROSHIO|EVM_RESTART_FIREWALL},
+			{"kuroshio_wan", "", NULL, EVM_RESTART_KUROSHIO|EVM_RESTART_FIREWALL},
+			{"kuroshio_access", "", NULL, EVM_RESTART_KUROSHIO},
+			{"kuroshio_log", "", NULL, EVM_RESTART_KUROSHIO},
+			{"kuroshio.kuroshio.uci", "File", NULL, EVM_RESTART_KUROSHIO},
+			/* 自訂規則：黑潮 DNS 3 秒內自己重新載入；評測名單：下次評測時讀。都不用重新啟動 */
+			{"kuroshio.custom-rules.txt", "File", NULL, 0},
+			{"kuroshio.benchmark/iplist.txt", "File", NULL, 0},
+			{"kuroshio.benchmark/dohlist.txt", "File", NULL, 0},
+			{"kuroshio.benchmark/dotlist.txt", "File", NULL, 0},
+			{"kuroshio.benchmark/doqlist.txt", "File", NULL, 0},
+			{"kuroshio.benchmark/web.txt", "File", NULL, 0},
+			{"kuroshio.benchmark/blacklist.txt", "File", NULL, 0},
+			{0,0,0,0}
+		};
+#endif
+
 #if defined(APP_SMARTDNS)
     struct variable variables_SmartdnsConf[] = {
 			{"sdns_enable", "", NULL, EVM_RESTART_SMARTDNS},
@@ -1268,6 +1296,8 @@
 			{"rt_channel", "", NULL, EVM_RESTART_WIFI2},
 			{"tw_acs_daily", "", NULL, 0},	/* padavan-tw：每天自動重選頻道（watchdog 每次讀取，不用重啟） */
 			{"tw_acs_hour", "", NULL, 0},
+			{"tw_roam_enable", "", NULL, 0},
+			{"tw_roam_weak", "", NULL, 0},
 			{"rt_bcn", "", NULL, EVM_RESTART_WIFI2},
 			{"rt_dtim", "", NULL, EVM_RESTART_WIFI2},
 			{"rt_gmode", "", NULL, EVM_RESTART_WIFI2},
@@ -1412,6 +1442,9 @@
 #if defined(APP_SMARTDNS)
 		{"SmartdnsConf",		variables_SmartdnsConf},
 #endif
+#if defined(APP_KUROSHIO)
+		{"KuroshioConf",		variables_KuroshioConf},
+#endif
 #if defined(APP_SHADOWSOCKS)
 		{"ShadowsocksConf",		variables_ShadowsocksConf},
 #endif
@@ -1525,6 +1558,9 @@
 #endif
 #if defined(APP_SMARTDNS)
 		{EVM_RESTART_SMARTDNS,		EVT_RESTART_SMARTDNS,		RCN_RESTART_SMARTDNS,	0},
+#endif
+#if defined(APP_KUROSHIO)
+		{EVM_RESTART_KUROSHIO,		EVT_RESTART_KUROSHIO,		RCN_RESTART_KUROSHIO,	0},
 #endif
 #if defined(APP_ADBYBY)
 		{EVM_RESTART_ADBYBY,		EVT_RESTART_ADBYBY,		RCN_RESTART_ADBYBY,	0},

@@ -196,6 +196,8 @@ struct net_bridge_port
 	u16				port_no;
 	unsigned char			topology_change_ack;
 	unsigned char			config_pending;
+	/* padavan-tw：這個連接埠不用急速連線（/sys/class/net/<if>/brport/tw_slow），見 br_stp.c 的 br_tw_fast_port() */
+	bool				tw_slow;
 	port_id				port_id;
 	port_id				designated_port;
 	bridge_id			designated_root;
@@ -286,6 +288,8 @@ struct net_bridge
 
 	u8				group_addr[ETH_ALEN];
 	bool				group_addr_set;
+	/* padavan-tw：急速連線（/sys/class/net/<br>/bridge/tw_wifi_fast），見 br_stp.c 的 br_tw_fast_port() */
+	bool				tw_wifi_fast;
 	u16				root_port;
 
 	enum {

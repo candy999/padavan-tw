@@ -750,7 +750,31 @@ static ssize_t default_pvid_store(struct device *d,
 static DEVICE_ATTR_RW(default_pvid);
 #endif
 
+/* padavan-tw：急速連線（Wi-Fi AP 介面一啟用就轉送，見 br_stp.c 的 br_tw_fast_port()） */
+static ssize_t tw_wifi_fast_show(struct device *d,
+				 struct device_attribute *attr, char *buf)
+{
+	struct net_bridge *br = to_bridge(d);
+
+	return sprintf(buf, "%d\n", br->tw_wifi_fast ? 1 : 0);
+}
+
+static int set_tw_wifi_fast(struct net_bridge *br, unsigned long val)
+{
+	br->tw_wifi_fast = val ? true : false;
+	return 0;
+}
+
+static ssize_t tw_wifi_fast_store(struct device *d,
+				  struct device_attribute *attr,
+				  const char *buf, size_t len)
+{
+	return store_bridge_parm(d, buf, len, set_tw_wifi_fast);
+}
+static DEVICE_ATTR_RW(tw_wifi_fast);
+
 static struct attribute *bridge_attrs[] = {
+	&dev_attr_tw_wifi_fast.attr,
 	&dev_attr_forward_delay.attr,
 	&dev_attr_hello_time.attr,
 	&dev_attr_max_age.attr,

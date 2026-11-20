@@ -1,0 +1,74 @@
+{
+ "headline": "找到 2 件會影響網路的事",
+ "level": "warn",
+ "duration_s": 38,
+ "segments": [
+  {
+   "id": "wifi",
+   "label": "Wi-Fi",
+   "state": "warn",
+   "summary": "2.4 GHz 頻道 6 擁擠",
+   "evidence": "附近 14 個 AP 也在頻道 6，空中忙碌 64 %；5 GHz 正常",
+   "metric": "64 % 忙碌",
+   "actions": [
+    {
+     "label": "改用頻道 11",
+     "cost": "2.4G 裝置會重新連線，約 10 秒",
+     "href": "tw_wifi.asp#channel"
+    }
+   ]
+  },
+  {
+   "id": "router",
+   "label": "路由器",
+   "state": "ok",
+   "summary": "CPU、記憶體、連線追蹤表都有餘裕",
+   "evidence": "CPU 18 %、記憶體 36 %、連線 3,412 / 16,384",
+   "metric": "CPU 18 %",
+   "actions": []
+  },
+  {
+   "id": "isp",
+   "label": "業者",
+   "state": "ok",
+   "summary": "中華電信 PPPoE 已連線 23 天",
+   "evidence": "到業者閘道 3 ms，沒有掉包",
+   "metric": "3 ms",
+   "actions": []
+  },
+  {
+   "id": "load",
+   "label": "滿載時的延遲",
+   "state": "warn",
+   "summary": "有人下載時延遲升高 45 ms",
+   "evidence": "閒置 7 ms → 下載滿載 52 ms（緩衝膨脹）",
+   "metric": "+45 ms",
+   "actions": [
+    {
+     "label": "開啟頻寬管理（自動）",
+     "cost": "只在延遲升高時限速，最高速度約少 10 %",
+     "href": "tw_qos.asp"
+    }
+   ]
+  },
+  {
+   "id": "dns",
+   "label": "DNS",
+   "state": "ok",
+   "summary": "回應正常",
+   "evidence": "黑潮 DNS 平均 9 ms，沒有逾時",
+   "metric": "9 ms",
+   "actions": []
+  },
+  {
+   "id": "web",
+   "label": "網站",
+   "state": "ok",
+   "summary": "常用網站都連得到",
+   "evidence": "Google、YouTube、Facebook、PChome：都在 200 ms 內回應",
+   "metric": "4 / 4",
+   "actions": []
+  }
+ ],
+ "report": "padavan-tw 診斷報告（預覽用模擬資料）\n結論：找到 2 件會影響網路的事\n..."
+}

@@ -248,6 +248,45 @@ tw_acs_daily_check(void)
 	doSystem("/usr/bin/tw-wifi-acs %s %s %s %d >/dev/null 2>&1 &", today, IFNAME_2G_MAIN, TW_ACS_IF5, TW_ACS_DBDC);
 }
 
+/* padavan-tw：依 nvram tw_roam_enable 啟停漫遊中控（程式結束也會自動重新啟動） */
+static void
+tw_roamd_check(void)
+{
+	int on = nvram_get_int("tw_roam_enable");
+	int running = pids("tw-roamd");
+
+	if (on && !running)
+		eval("/sbin/tw-roamd");
+	else if (!on && running)
+		doSystem("killall %s", "tw-roamd");
+}
+
+/* padavan-tw：igmpproxy 0.3 會當掉（D3 實測開機約 1 分鐘 SIGSEGV），應該在跑卻不在時重新啟動 */
+static void
+tw_igmpproxy_check(void)
+{
+	static int restarts = 0;
+
+	if (!check_if_file_exist(IGMPPROXY_WANT) || pids("igmpproxy"))
+		return;
+	if (++restarts <= 5)
+		logmessage("igmpproxy", "沒有在執行（可能當掉了），重新啟動");
+	eval("/bin/igmpproxy", "/etc/igmpproxy.conf");
+}
+
+/* padavan-tw：監測取樣器（延遲與掉包）；nvram tw_stats_enable 預設開，設 0 才關（程式結束也會自動重新啟動） */
+static void
+tw_stats_check(void)
+{
+	int on = !nvram_match("tw_stats_enable", "0");
+	int running = pids("tw-stats");
+
+	if (on && !running)
+		eval("/sbin/tw-stats");
+	else if (!on && running)
+		doSystem("killall %s", "tw-stats");
+}
+
 static void
 ntpc_handler(void)
 {
@@ -614,6 +653,12 @@ watchdog_on_timer(void)
 	inet_handler(is_ap_mode);
 
 	tw_acs_daily_check();
+	tw_roamd_check();
+	tw_stats_check();
+	tw_igmpproxy_check();
+	tw_nat66_check();
+	tw_wifi_bpdu_check();
+	tw_mod_check();
 
 	/* update kernel timezone daylight */
 	setkernel_tz();

@@ -42,6 +42,8 @@ romfs:
 	$(LN) rc $(ROMFSDIR)/sbin/detect_internet
 	$(LN) rc $(ROMFSDIR)/sbin/detect_wan
 	$(LN) rc $(ROMFSDIR)/sbin/tw-mtu-probe
+	$(LN) rc $(ROMFSDIR)/sbin/tw-roamd
+	$(LN) rc $(ROMFSDIR)/sbin/tw-stats
 	$(LN) rc $(ROMFSDIR)/sbin/reset_to_defaults
 	$(LN) rc $(ROMFSDIR)/sbin/lan_eeprom_mac
 	$(LN) rc $(ROMFSDIR)/sbin/wan_eeprom_mac

@@ -441,6 +441,19 @@ function validate_wlphrase(s, v, obj){
                                                 <div class="tw-hint">頻道設為「自動」時，每天在這個時間起的 3 小時內，趁 Wi-Fi 閒置（1 分鐘內流量低於 2 MB）重新掃描並換到最乾淨的頻道；裝置會斷線幾秒後自動重連。2.4 GHz 與 5 GHz 共用這個設定。</div>
                                             </td>
                                         </tr>
+                                        <tr>
+                                            <th>漫遊中控（多台 AP）</th>
+                                            <td>
+                                                <select name="tw_roam_enable" class="input" style="width:auto;">
+                                                    <option value="1" <% nvram_match_x("", "tw_roam_enable", "1", "selected"); %>>觀察模式 (*)</option>
+                                                    <option value="0" <% nvram_match_x("", "tw_roam_enable", "0", "selected"); %>>關閉</option>
+                                                </select>
+                                                弱訊號門檻 <input type="text" maxlength="3" size="4" class="input" name="tw_roam_weak" style="width:60px;" value="<% nvram_get_x("", "tw_roam_weak"); %>" /> dBm
+                                                <div class="tw-hint">家裡有多台 padavan-tw AP（同一個 SSID）時，會互相交換「哪台裝置連在哪、訊號多強」，記錄裝置什麼時候換 AP、換之前訊號弱了多久，並提出建議。觀察模式只記錄，不會把裝置斷線。</div>
+                                                <div style="margin-top:6px;"><input class="btn" type="button" value="查看漫遊紀錄" onclick="tw_roam_show(this);" /></div>
+                                                <pre id="tw_roam_out" style="display:none;margin-top:6px;white-space:pre-wrap;max-height:420px;overflow:auto;"></pre>
+                                            </td>
+                                        </tr>
                                         <tr id="row_HT_EXTCHA">
                                             <th><a class="help_tooltip" href="javascript:void(0);" onmouseover="openTooltip(this, 0, 15);"><#WLANConfig11b_EChannel_itemname#></a></th>
                                             <td>

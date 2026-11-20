@@ -329,6 +329,12 @@ do_upgrade_fw_post(const char *url, FILE *stream, int clen, char *boundary)
 	/* copy mtd_write to RAM */
 	doSystem("cp -f %s %s", "/bin/mtd_write", "/tmp");
 
+#if defined(APP_KUROSHIO)
+	/* padavan-tw：映像檔寫進 /tmp（tmpfs，佔記憶體）之前，請黑潮 DNS 先讓出快取（10 分鐘內不再長大）；
+	 * 核心 4.4 沒有 PSI，突然的大量配置黑潮來不及讓，被 OOM 結束的會是別的程式（黑潮的 oom_score_adj 是 -500） */
+	doSystem("/usr/bin/kuroshio.sh %s %s %s", "notify", "trim", "600");
+#endif
+
 	/* reclaim RAM from caches */
 	fput_int("/proc/sys/vm/drop_caches", 1);
 
@@ -339,6 +345,40 @@ do_upgrade_fw_post(const char *url, FILE *stream, int clen, char *boundary)
 			unlink(upload_file);
 	}
 }
+
+#if defined(APP_KUROSHIO)
+/* padavan-tw：黑潮 DNS 的學習資料備份（.kuroshio）是 zstd 壓縮檔，開頭是 28 B5 2F FD */
+static int
+check_header_zstd(const char *buf, long *file_len)
+{
+	const unsigned char zst[4] = { 0x28, 0xb5, 0x2f, 0xfd };
+
+	if (memcmp(buf, zst, 4) == 0)
+		return 0;
+
+	httpd_log("%s: Incorrect %s header!", "Kuroshio import", "zstd");
+
+	return -1;
+}
+
+void
+do_kuroshio_import_post(const char *url, FILE *stream, int clen, char *boundary)
+{
+	char bndr[128];
+
+	unlink(KUROSHIO_IMPORT_FILE);
+	/* 放在 /tmp（佔記憶體）：太大的不收；黑潮 DNS 自己的上限是 64 MB 與可用記憶體的 1/4 */
+	if (!boundary || clen > KUROSHIO_IMPORT_MAX) {
+		while (clen-- > 0 && fgetc(stream) != EOF);
+		return;
+	}
+	mkdir("/tmp/kuroshio", 0700);
+	/* zstd 沒有在開頭記長度：跟 Storage 還原一樣，看 multipart 的分界線 */
+	snprintf(bndr, sizeof(bndr), "\r\n--%s", boundary);
+	if (do_upload_file(stream, clen, bndr, KUROSHIO_IMPORT_FILE, "file", check_header_zstd, 4) == 0)
+		chmod(KUROSHIO_IMPORT_FILE, 0600);
+}
+#endif
 
 void
 do_restore_nv_post(const char *url, FILE *stream, int clen, char *boundary)

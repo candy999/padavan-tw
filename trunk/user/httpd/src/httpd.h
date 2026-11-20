@@ -99,6 +99,13 @@ typedef FILE * webs_t;
 #define websDone(wp, code) fflush(wp)
 #define websGetVar(wp, var, default) (get_cgi(var) ? : default)
 
+/* padavan-tw：這次請求的 Host、Origin、Referer（httpd.c 解析標頭時填入） */
+extern char req_host[128];
+extern char req_origin[256];
+extern char req_referer[256];
+extern char req_fetch_site[16];
+extern int req_tw_header;
+
 /* Regular file handler */
 extern void do_file(const char *url, FILE *stream);
 extern void do_ej(const char *url, FILE *stream);
@@ -203,6 +210,12 @@ extern int fill_eth_status(int port_id_uapi, webs_t wp);
 extern void do_upgrade_fw_post(const char *url, FILE *stream, int clen, char *boundary);
 extern void do_restore_nv_post(const char *url, FILE *stream, int clen, char *boundary);
 extern void do_restore_st_post(const char *url, FILE *stream, int clen, char *boundary);
+#if defined(APP_KUROSHIO)
+/* padavan-tw：後台上傳的黑潮 DNS 學習資料備份，交給 kuroshio.sh import-upload */
+#define KUROSHIO_IMPORT_FILE	"/tmp/kuroshio/import.kuroshio"
+#define KUROSHIO_IMPORT_MAX	(16 * 1024 * 1024)
+extern void do_kuroshio_import_post(const char *url, FILE *stream, int clen, char *boundary);
+#endif
 
 // web_ex.c
 extern void nvram_commit_safe(void);

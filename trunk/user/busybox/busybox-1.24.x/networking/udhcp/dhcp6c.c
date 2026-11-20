@@ -1055,6 +1055,47 @@ static int client6_recvadvert(const struct dhcp6_if *ifp, struct dhcp6_event *ev
 	return 0;
 }
 
+/*
+ * padavan-tw：回覆裡有沒有我們要的 IA 的位址或前綴（同 client6_recvadvert 的判斷）。
+ * 沒有要求 IA_NA / IA_PD 時算有
+ */
+static int reply_has_ia(struct dhcp6_event *ev, struct dhcp6_optinfo *optinfo)
+{
+	struct dhcp6_eventdata *evd;
+	int asked = 0;
+
+	TAILQ_FOREACH(evd, &ev->data_list, link) {
+		struct dhcp6_listval *lv, *slv;
+		dhcp6_listval_type_t lvtype;
+
+		switch (evd->type) {
+		case D6_OPT_IA_PD:
+			lvtype = DHCP6_LISTVAL_PREFIX6;
+			break;
+		case D6_OPT_IA_NA:
+			lvtype = DHCP6_LISTVAL_STATEFULADDR6;
+			break;
+		default:
+			continue;
+		}
+		if (TAILQ_EMPTY((struct dhcp6_list *)evd->data))
+			continue;
+		asked = 1;
+		TAILQ_FOREACH(lv, (struct dhcp6_list *)evd->data, link) {
+			slv = dhcp6_find_listval(&optinfo->ia_list,
+			    evd->type, &lv->val_ia, MATCHLIST_DH6OPTYPE);
+			if (slv == NULL)
+				continue;
+			TAILQ_FOREACH(slv, &slv->sublist, link) {
+				if (slv->lvtype == lvtype)
+					return 1;
+			}
+		}
+	}
+
+	return !asked;
+}
+
 static int client6_recvreply(struct dhcp6_if *ifp, struct dhcp6_event *ev,
 				struct dhcp6_optinfo *optinfo)
 {
@@ -1083,6 +1124,18 @@ static int client6_recvreply(struct dhcp6_if *ifp, struct dhcp6_event *ev,
 	if (state == DHCP6S_SOLICIT &&
 	    (ifp->send_flags & DHCIFF_RAPID_COMMIT) && !optinfo->rapidcommit) {
 		bb_info_msg("no rapid commit");
+		return -1;
+	}
+
+	/*
+	 * padavan-tw：Solicit 帶 rapid commit 時，Reply 裡要的 IA 一個位址或前綴都沒有
+	 * （例如業者沒開 IPv6 前綴委派，IA_PD 回 NoPrefixAvail）：當成沒拿到，跟 Advertise 一樣忽略，
+	 * 讓 Solicit 照重送間隔（逐次加倍到 SOL_MAX_RT）繼續問。
+	 * 原本會 update_ia → remove_ia → client6_start 立刻重來：每秒送好幾次 Solicit、系統日誌整個被洗掉。
+	 * [RFC3315 17.1.3 / RFC3633 11.1 對 Advertise 的規定；RFC8415 18.2.10.1]
+	 */
+	if (state == DHCP6S_SOLICIT && !reply_has_ia(ev, optinfo)) {
+		bb_info_msg("reply contains no address/prefix, keep soliciting");
 		return -1;
 	}
 

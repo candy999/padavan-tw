@@ -5,7 +5,7 @@
 
 #EXT_TABLES+=filter nat broute
 
-EXT_FUNC+=standard ip pkttype ip6
+EXT_FUNC+=standard ip pkttype ip6 log
 EXT_TABLES+=filter broute
 
 EXT_OBJS+=$(foreach T,$(EXT_FUNC), extensions/ebt_$(T).o)

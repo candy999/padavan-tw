@@ -98,6 +98,7 @@ typedef uint8_t u8;
 #define EVM_RESTART_ALIDDNS		(1ULL << 52)
 #define EVM_RESTART_FRP		    (1ULL << 53)
 #define EVM_RESTART_SMARTDNS	(1ULL << 57)
+#define EVM_RESTART_KUROSHIO	(1ULL << 54)	/* padavan-tw：黑潮 DNS */
 #define EVM_RESTART_ADGUARDHOME	(1ULL << 58)
 #define EVM_RESTART_ZEROTIER	(1ULL << 59)
 #define EVM_RESTART_DDNSTO		(1ULL << 60)
@@ -159,6 +160,7 @@ typedef uint8_t u8;
 #define EVT_RESTART_SCUT		1
 #define EVT_RESTART_TTYD		1
 #define EVT_RESTART_SMARTDNS    1
+#define EVT_RESTART_KUROSHIO    2
 #define EVT_RESTART_VLMCSD		1
 #define EVT_RESTART_IPERF3		1
 #define EVT_RESTART_SHADOWSOCKS	2

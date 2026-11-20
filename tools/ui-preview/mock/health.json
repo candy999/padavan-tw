@@ -1,0 +1,82 @@
+{
+ "headline": "網路正常，有 2 件事值得注意",
+ "level": "warn",
+ "segments": [
+  {
+   "id": "device",
+   "label": "裝置",
+   "state": "warn",
+   "summary": "1 台訊號弱",
+   "evidence": "客廳電視 -78 dBm，今天斷線 3 次",
+   "actions": [
+    {
+     "label": "查看客廳電視",
+     "cost": "",
+     "href": "tw_devices.asp?mac=7C:1E:52:00:00:A4"
+    }
+   ]
+  },
+  {
+   "id": "wifi",
+   "label": "Wi-Fi",
+   "state": "warn",
+   "summary": "2.4G 頻道 6 擁擠",
+   "evidence": "附近 14 個 AP 也在頻道 6，空中忙碌 64 %",
+   "actions": [
+    {
+     "label": "改用頻道 11",
+     "cost": "2.4G 裝置會重新連線，約 10 秒",
+     "href": "tw_wifi.asp#channel"
+    }
+   ]
+  },
+  {
+   "id": "router",
+   "label": "路由器",
+   "state": "ok",
+   "summary": "CPU 18 %、記憶體 36 %",
+   "evidence": "連線追蹤表 3,412 / 16,384",
+   "actions": []
+  },
+  {
+   "id": "isp",
+   "label": "業者",
+   "state": "ok",
+   "summary": "中華電信 PPPoE 已連線 23 天",
+   "evidence": "到業者閘道 3 ms，沒有掉包",
+   "actions": []
+  },
+  {
+   "id": "internet",
+   "label": "網際網路",
+   "state": "ok",
+   "summary": "延遲 8 ms（平常 7 ms）",
+   "evidence": "HiNet DNS 7 ms、Cloudflare 9 ms",
+   "actions": []
+  },
+  {
+   "id": "dns",
+   "label": "DNS",
+   "state": "ok",
+   "summary": "黑潮 DNS 運作中",
+   "evidence": "平均 9 ms，今天擋了 2,210 筆廣告",
+   "actions": []
+  }
+ ],
+ "notices": [
+  {
+   "level": "warn",
+   "title": "客廳電視訊號弱，今天斷線 3 次",
+   "evidence": "5 GHz 平均 -78 dBm（建議 -65 dBm 以上）",
+   "href": "tw_devices.asp?mac=7C:1E:52:00:00:A4",
+   "action": "查看"
+  },
+  {
+   "level": "warn",
+   "title": "2.4 GHz 頻道 6 太擁擠",
+   "evidence": "附近 14 個 AP，頻道 11 只有 3 個",
+   "href": "tw_wifi.asp#channel",
+   "action": "換頻道"
+  }
+ ]
+}

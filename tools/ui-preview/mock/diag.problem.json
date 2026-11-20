@@ -1,0 +1,73 @@
+{
+ "headline": "問題在業者那段",
+ "level": "bad",
+ "duration_s": 41,
+ "segments": [
+  {
+   "id": "wifi",
+   "label": "Wi-Fi",
+   "state": "ok",
+   "summary": "訊號與頻道都正常",
+   "evidence": "2.4G 頻道 11 忙碌 22 %、5G 頻道 149 忙碌 9 %",
+   "metric": "正常",
+   "actions": []
+  },
+  {
+   "id": "router",
+   "label": "路由器",
+   "state": "ok",
+   "summary": "負載正常",
+   "evidence": "CPU 24 %、記憶體 38 %",
+   "metric": "CPU 24 %",
+   "actions": []
+  },
+  {
+   "id": "isp",
+   "label": "業者",
+   "state": "bad",
+   "summary": "到業者閘道延遲 86 ms、掉包 4 %",
+   "evidence": "平常 3 ms；家裡沒有人在大量下載，問題不在家裡",
+   "metric": "86 ms",
+   "actions": [
+    {
+     "label": "重新連線網際網路",
+     "cost": "網路會中斷約 15 秒",
+     "href": "#reconnect"
+    },
+    {
+     "label": "打給業者（中華電信 0800-080-123）",
+     "cost": "",
+     "href": "tel:0800080123"
+    }
+   ]
+  },
+  {
+   "id": "load",
+   "label": "滿載時的延遲",
+   "state": "unknown",
+   "summary": "業者那段有問題時無法判斷",
+   "evidence": "",
+   "metric": "--",
+   "actions": []
+  },
+  {
+   "id": "dns",
+   "label": "DNS",
+   "state": "warn",
+   "summary": "加密 DNS 上游逾時，暫時用業者 DNS",
+   "evidence": "TWNIC DoT、Cloudflare DoH 逾時",
+   "metric": "逾時",
+   "actions": []
+  },
+  {
+   "id": "web",
+   "label": "網站",
+   "state": "warn",
+   "summary": "網站開得慢",
+   "evidence": "4 個網站平均 1.8 秒",
+   "metric": "1.8 秒",
+   "actions": []
+  }
+ ],
+ "report": "padavan-tw 診斷報告（預覽用模擬資料）\n結論：問題在業者那段\n..."
+}

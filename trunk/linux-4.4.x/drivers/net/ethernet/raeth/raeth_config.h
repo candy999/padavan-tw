@@ -20,7 +20,10 @@
 
 #define CONFIG_RAETH_RW_PDMAPTR_FROM_VAR
 /*#define CONFIG_QDMA_QOS_WEB*/
+/* padavan-tw：CONFIG_RAETH_PDMA_TX（核心設定）＝不用 QDMA、改用 PDMA 送出，跟 2024-06 以前的上游相同 */
+#if !defined(CONFIG_RAETH_PDMA_TX)
 #define CONFIG_QDMA_QOS_MARK
+#endif
 
 #if !defined(CONFIG_SOC_MT7621)
 #define CONFIG_RAETH_NAPI
@@ -47,7 +50,9 @@
 #define CONFIG_RAETH_HW_VLAN_RX
 #define CONFIG_RAETH_TSO
 /*#define CONFIG_RAETH_ETHTOOL*/
+#if !defined(CONFIG_RAETH_PDMA_TX)
 #define CONFIG_RAETH_QDMA
+#endif
 /*CONFIG_RAETH_QDMATX_QDMARX*/
 /*CONFIG_HW_SFQ*/
 #define CONFIG_RAETH_HW_IOCOHERENT

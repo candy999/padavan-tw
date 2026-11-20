@@ -222,6 +222,50 @@ fill_static_ethers(const char *lan_ip, const char *lan_mask)
 	}
 }
 
+#if defined (APP_KUROSHIO)
+/* padavan-tw：黑潮 DNS 開啟時 dnsmasq 用 no-resolv，上游只看 servers-file。
+ * /tmp/kuroshio/use 由 kuroshio.sh 的保護程式維護：kuroshio＝轉給黑潮 DNS；
+ * 其他（還沒啟動、沒有回應）＝業者 DNS（resolv.conf 裡的，都沒有時用 HiNet、TWNIC） */
+static int
+is_kuroshio_on(void)
+{
+	return (nvram_get_int("kuroshio_enable") == 1 && !get_ap_mode()) ? 1 : 0;
+}
+
+static void
+write_kuroshio_servers(FILE *fp)
+{
+	char line[128], ns[64];
+	int use_k = 0, n = 0;
+	FILE *f;
+
+	f = fopen("/tmp/kuroshio/use", "r");
+	if (f) {
+		if (fgets(line, sizeof(line), f) && strncmp(line, "kuroshio", 8) == 0)
+			use_k = 1;
+		fclose(f);
+	}
+	if (use_k) {
+		fprintf(fp, "server=127.0.0.1#%d\n", 5335);
+		return;
+	}
+	f = fopen(DNS_RESOLV_CONF, "r");
+	if (f) {
+		while (fgets(line, sizeof(line), f)) {
+			if (sscanf(line, "nameserver %63s", ns) != 1)
+				continue;
+			if (strncmp(ns, "127.", 4) == 0 || strcmp(ns, "::1") == 0)
+				continue;
+			fprintf(fp, "server=%s\n", ns);
+			n++;
+		}
+		fclose(f);
+	}
+	if (!n)
+		fprintf(fp, "server=%s\nserver=%s\n", "168.95.1.1", "101.101.101.101");
+}
+#endif
+
 int
 fill_dnsmasq_servers(void)
 {
@@ -262,6 +306,11 @@ fill_dnsmasq_servers(void)
 
 	/* fill from user dnsmasq.servers */
 	load_user_config(fp, storage_dir, "dnsmasq.servers", NULL);
+
+#if defined (APP_KUROSHIO)
+	if (is_kuroshio_on())
+		write_kuroshio_servers(fp);
+#endif
 
 	fclose(fp);
 
@@ -362,6 +411,13 @@ start_dns_dhcpd(int is_ap_mode)
 	if (!is_ap_mode) {
 		is_dns_used = 1;
 		fprintf(fp, "min-port=%d\n", 4096);
+#if defined (APP_KUROSHIO)
+		if (is_kuroshio_on()) {
+			/* 快取與預取交給黑潮 DNS；上游只看 servers-file（見 write_kuroshio_servers） */
+			fprintf(fp, "cache-size=%d\n", 0);
+			fprintf(fp, "no-resolv\n");
+		} else
+#endif
 		fprintf(fp, "cache-size=%d\n", DNS_RELAY_CACHE_MAX);
 		//remove it for overwrite // simonchen - 2023-2-16
 		//fprintf(fp, "dns-forward-max=%d\n", DNS_RELAY_QUERIES_MAX);
@@ -532,6 +588,11 @@ start_dns_dhcpd(int is_ap_mode)
 	fprintf(fp, "tftp-no-fail\n");
 #endif
 
+#if defined (APP_KUROSHIO)
+	/* DDR（網域指向路由器）、DNR（DHCP 選項 162），由 kuroshio.sh 產生 */
+	if (is_kuroshio_on() && check_if_file_exist("/tmp/kuroshio/dnsmasq.conf"))
+		fprintf(fp, "conf-file=%s\n", "/tmp/kuroshio/dnsmasq.conf");
+#endif
 	fprintf(fp, "conf-file=%s/dnsmasq.conf\n", storage_dir);
 	fclose(fp);
 	if (is_dns_used)
@@ -565,6 +626,9 @@ restart_dns(void)
 {
 	if (!is_dns_dhcpd_run())
 		return -1;
+
+	/* padavan-tw：先重寫 servers-file（黑潮 DNS 切換上游時用），SIGHUP 時 dnsmasq 會重新讀 */
+	fill_dnsmasq_servers();
 
 	return doSystem("killall %s %s", "-SIGHUP", "dnsmasq");
 }

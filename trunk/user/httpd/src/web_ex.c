@@ -297,7 +297,7 @@ write_file_dos2unix(const char* value, const char* file_path)
 }
 
 static int
-write_textarea_to_file(const char* value, const char* dir_name, const char* file_name)
+write_textarea_to_file0(const char* value, const char* dir_name, const char* file_name)
 {
 	int file_type, ret;
 	char *extensions;
@@ -367,6 +367,35 @@ write_textarea_to_file(const char* value, const char* dir_name, const char* file
 	unlink(temp_path);
 
 	return ret;
+}
+
+/* padavan-tw：檔案欄位（腳本、dnsmasq、crontab、憑證、OpenVPN、黑潮 DNS 的設定檔）都在 /etc/storage，
+ * 平常只在正常重開機時寫進 Flash，斷電就回到上次重開機前的樣子。改了就記下來，套用完再存一次（在背景、內容沒變不寫） */
+static int storage_files_dirty = 0;
+
+static int
+write_textarea_to_file(const char* value, const char* dir_name, const char* file_name)
+{
+	int changed = write_textarea_to_file0(value, dir_name, file_name);
+
+	if (changed)
+		storage_files_dirty = 1;
+
+	return changed;
+}
+
+static void
+storage_save_if_dirty(void)
+{
+	if (!storage_files_dirty)
+		return;
+	storage_files_dirty = 0;
+#if defined(APP_KUROSHIO)
+	/* 背景執行、2 秒內合併、跟黑潮 DNS 自己觸發的存檔共用同一個鎖 */
+	doSystem("/usr/bin/kuroshio.sh %s", "storage-save");
+#else
+	doSystem("/sbin/mtd_storage.sh %s >/dev/null 2>&1 &", "save");
+#endif
 }
 
 static void
@@ -721,6 +750,10 @@ ej_dump(int eid, webs_t wp, int argc, char **argv)
 		snprintf(filename, sizeof(filename), "%s/%s", STORAGE_SCRIPTS_DIR, file+8);
 	else if (strncmp(file, "crontab.", 8)==0)
 		snprintf(filename, sizeof(filename), "%s/%s", STORAGE_CRONTAB_DIR, nvram_safe_get("http_username"));
+#if defined (APP_KUROSHIO)
+	else if (strncmp(file, "kuroshio.", 9)==0)
+		snprintf(filename, sizeof(filename), "%s/%s", "/etc/storage/kuroshio", file+9);
+#endif
 	else
 		snprintf(filename, sizeof(filename), "%s/%s", "/tmp", file);
 
@@ -913,6 +946,24 @@ validate_asp_apply(webs_t wp, int sid)
 			else if (!strncmp(v->name, "httpssl.", 8)) {
 				if (write_textarea_to_file(value, STORAGE_HTTPSSL_DIR, file_name))
 					restart_needed_bits |= event_mask;
+			}
+#endif
+#if defined(APP_KUROSHIO)
+			/* padavan-tw：黑潮 DNS 的設定檔（/etc/storage/kuroshio/ 底下的 kuroshio.uci、custom-rules.txt、benchmark/*.txt） */
+			else if (!strncmp(v->name, "kuroshio.", 9)) {
+				char kpath[128];
+				mkdir("/etc/storage/kuroshio", 0700);
+				if (!strncmp(v->name+9, "benchmark/", 10)) {
+					/* write_textarea_to_file 先寫到 /tmp/.<檔名> 比對，子資料夾兩邊都要先有 */
+					mkdir("/etc/storage/kuroshio/benchmark", 0700);
+					mkdir("/tmp/.benchmark", 0700);
+				}
+				if (write_textarea_to_file(value, "/etc/storage/kuroshio", v->name+9)) {
+					restart_needed_bits |= event_mask;
+					snprintf(kpath, sizeof(kpath), "%s/%s", "/etc/storage/kuroshio", v->name+9);
+					chmod(kpath, 0600);
+					/* 存進 Flash：套用完由 storage_save_if_dirty() 一起做 */
+				}
 			}
 #endif
 #if defined(APP_OPENVPN)
@@ -1258,6 +1309,8 @@ update_variables_ex(int eid, webs_t wp, int argc, char **argv)
 		
 		sid_list = sid_list+strlen(serviceId)+1;
 	}
+
+	storage_save_if_dirty();
 
 	if (strlen(script) > 0) {
 		if (!strcmp(script, "networkmap_refresh")) {
@@ -2323,6 +2376,28 @@ static int aliyundrive_status_hook(int eid, webs_t wp, int argc, char **argv)
 }
 #endif
 
+#if defined (APP_KUROSHIO)
+/* padavan-tw：黑潮 DNS 狀態（0＝沒有執行、1＝執行中但暫時用業者 DNS、2＝接管 DNS） */
+static int kuroshio_status_hook(int eid, webs_t wp, int argc, char **argv)
+{
+	int st = 0;
+	char buf[16] = {0};
+	FILE *fp;
+
+	if (pids("kuroshio")) {
+		st = 1;
+		fp = fopen("/tmp/kuroshio/use", "r");
+		if (fp) {
+			if (fgets(buf, sizeof(buf), fp) && strncmp(buf, "kuroshio", 8) == 0)
+				st = 2;
+			fclose(fp);
+		}
+	}
+	websWrite(wp, "function kuroshio_status() { return %d;}\n", st);
+	return 0;
+}
+#endif
+
 #if defined (APP_SMARTDNS)
 static int smartdns_status_hook(int eid, webs_t wp, int argc, char **argv)
 {
@@ -2576,6 +2651,11 @@ ej_firmware_caps_hook(int eid, webs_t wp, int argc, char **argv)
 #else
 	int found_app_smartdns = 0;
 #endif
+#if defined(APP_KUROSHIO)
+	int found_app_kuroshio = 1;
+#else
+	int found_app_kuroshio = 0;
+#endif
 #if defined(APP_ADBYBY)
 	int found_app_adbyby = 1;
 #else
@@ -2718,6 +2798,10 @@ ej_firmware_caps_hook(int eid, webs_t wp, int argc, char **argv)
 	int has_5g_txbf = 0;
 	int has_5g_160mhz = 0;
 #endif
+	/* padavan-tw：5G TxBF 要原廠校正資料（rc 開機時讀 Factory 判斷，nvram wl_txbf_en）；
+	 * 沒有校正（例如 Newifi D3）時 rc 一律寫 ITxBfEn=0，設定了也不會生效，介面就不顯示這個選項 */
+	if (has_5g_txbf && nvram_get_int("wl_txbf_en") != 1)
+		has_5g_txbf = 0;
 #if defined (USE_WID_2G) && (USE_WID_2G==7615 || USE_WID_2G==7915)
 	int has_2g_band_steering = 1;
 	int has_2g_turbo_qam = 1;
@@ -2792,6 +2876,7 @@ ej_firmware_caps_hook(int eid, webs_t wp, int argc, char **argv)
 		"function found_app_vpnsvr() { return %d;}\n"
 		"function found_app_vpncli() { return %d;}\n"
 		"function found_app_smartdns() { return %d;}\n"
+		"function found_app_kuroshio() { return %d;}\n"
 		"function found_app_adguardhome() { return %d;}\n",
 		found_utl_hdparm,
 		found_app_ovpn,
@@ -2826,6 +2911,7 @@ ej_firmware_caps_hook(int eid, webs_t wp, int argc, char **argv)
 		found_app_vpnsvr,
 		found_app_vpncli,
 		found_app_smartdns,
+		found_app_kuroshio,
 		found_app_adguardhome
 	);
 
@@ -4205,6 +4291,222 @@ static char mentohust_log_txt[] =
 
 #endif
 
+#if defined(APP_KUROSHIO)
+/*
+ * padavan-tw：黑潮 DNS 管理 API 轉接（給後台頁面用，等同 OpenWrt 版的 rpcd.sh）
+ *
+ *   GET/POST /kuroshio_api.cgi?op=<操作>&path=<API 路徑>&q=<查詢字串>&n=<行數>
+ *
+ * 黑潮 DNS 的管理 API 只聽 127.0.0.1:8054，瀏覽器連不到；這裡驗證參數後交給
+ * /usr/bin/kuroshio.sh（路徑白名單在那裡，跟 OpenWrt 版相同），原樣回傳 JSON。
+ * - 查看類（GET 即可）：status、api、defaults、about、dnr、log、acme-log（acme-log 要 login_safe）
+ * - 會改變狀態的（只接受 POST，而且要 login_safe）：action、backup-export、notify、flush、acme
+ * - 參數只允許固定字元集，並用單引號傳給 shell（字元集不含引號與空白）
+ */
+static int kuroshio_api_is_post = 0;
+
+static void
+kuroshio_api_post(const char *url, FILE *stream, int clen, char *boundary)
+{
+	do_html_apply_post(url, stream, clen, boundary);
+	kuroshio_api_is_post = 1;
+}
+
+static int
+kuroshio_arg_ok(const char *s, const char *extra, size_t maxlen)
+{
+	if (strlen(s) > maxlen)
+		return 0;
+	for (; *s; s++) {
+		if (isalnum((unsigned char)*s) || (*s && strchr(extra, *s)))
+			continue;
+		return 0;
+	}
+	return 1;
+}
+
+/*
+ * 送出請求的網頁跟這台路由器是同一個來源：Origin（沒有就看 Referer）的 主機[:埠] 等於這次請求的 Host。
+ * 瀏覽器的跨站 POST 一定帶 Origin；兩個都沒有（不是瀏覽器、或擴充套件拿掉了來源）時不放行。
+ * Origin 是 "null"（沙箱 iframe、本機檔案）也不放行
+ */
+static int
+kuroshio_same_origin(void)
+{
+	const char *src = req_origin[0] ? req_origin : req_referer;
+	const char *h;
+	size_t n;
+
+	if (!src[0] || !req_host[0])
+		return 0;
+	h = strstr(src, "://");
+	if (!h)
+		return 0;
+	h += 3;
+	n = strcspn(h, "/?#");
+	return n == strlen(req_host) && strncasecmp(h, req_host, n) == 0;
+}
+
+/*
+ * 不是後台自己的頁面發的請求，查看類的 GET 也不接受：別的網頁可以用 <img>、<script>、表單叫已登入的瀏覽器
+ * 打 GET（例如 /api/trace 會對所有上游發查詢），讀不到回應但動作會發生，還會卡住單執行緒的 httpd。
+ * - 後台頁面的 fetch 都帶 X-TW-Request 標頭；別的網站加不了自訂標頭（跨來源的 fetch 帶自訂標頭要先 OPTIONS 預檢，httpd 不支援就失敗）
+ * - Sec-Fetch-Site: cross-site 也擋（瀏覽器只在 HTTPS 才送，HTTP 後台靠上面那一條）
+ */
+static int
+kuroshio_cross_site(void)
+{
+	return !req_tw_header || strcasecmp(req_fetch_site, "cross-site") == 0;
+}
+
+/* 下載匯出檔是 <a> 連結（帶不了自訂標頭）：只看 Sec-Fetch-Site。拿到檔的是自己的瀏覽器，別的網站讀不到 */
+static int
+kuroshio_cross_site_nav(void)
+{
+	return strcasecmp(req_fetch_site, "cross-site") == 0;
+}
+
+/* 會對外發查詢、或內容等同密碼的查看：只給區網／VPN 登入的人（從外網登入的看不到） */
+static int
+kuroshio_view_needs_safe(const char *path)
+{
+	static const char *const paths[] = {
+		"/api/trace", "/api/community/invite", "/api/paths", "/api/interfaces", NULL
+	};
+	int i;
+
+	for (i = 0; paths[i]; i++)
+		if (!strcmp(path, paths[i]))
+			return 1;
+	return 0;
+}
+
+static void
+kuroshio_api_out(const char *url, FILE *stream)
+{
+	char cmd[1024], buf[1024];
+	const char *op, *path, *q, *n;
+	int is_post = kuroshio_api_is_post;
+	FILE *fp;
+	size_t len;
+
+	kuroshio_api_is_post = 0;
+	cmd[0] = '\0';
+
+	op = get_cgi("op");
+	path = get_cgi("path");
+	q = get_cgi("q");
+	n = get_cgi("n");
+	if (!op) op = "";
+	if (!path) path = "";
+	if (!q) q = "";
+	if (!n) n = "";
+
+	if (!kuroshio_arg_ok(op, "-", 32) || !kuroshio_arg_ok(path, "/_-", 64) ||
+	    !kuroshio_arg_ok(q, "._=&%:,~-", 1024) || !kuroshio_arg_ok(n, "", 5)) {
+		fputs("{\"ok\":false,\"error\":\"參數格式錯誤\"}", stream);
+		goto out;
+	}
+
+	if (kuroshio_cross_site()) {
+		fputs("{\"ok\":false,\"error\":\"請從路由器後台的頁面操作（不是後台頁面送的請求；剛更新韌體的話請重新整理頁面）\"}", stream);
+		goto out;
+	}
+
+	if (!strcmp(op, "api") && kuroshio_view_needs_safe(path) && !get_login_safe()) {
+		fputs("{\"ok\":false,\"error\":\"這個資訊只能從區網或 VPN 登入後查看\"}", stream);
+		goto out;
+	}
+
+	if (!strcmp(op, "status"))
+		snprintf(cmd, sizeof(cmd), "/usr/bin/kuroshio.sh status-json");
+	else if (!strcmp(op, "api"))
+		snprintf(cmd, sizeof(cmd), "/usr/bin/kuroshio.sh api '%s' '%s'", path, q);
+	else if (!strcmp(op, "defaults") || !strcmp(op, "about") || !strcmp(op, "dnr"))
+		snprintf(cmd, sizeof(cmd), "/usr/bin/kuroshio.sh %s", op);
+	else if (!strcmp(op, "log"))
+		snprintf(cmd, sizeof(cmd), "/usr/bin/kuroshio.sh log '%s'", n);
+	/* 憑證申請進度（acme.sh 的輸出，有網域與信箱）：只給區網／VPN 登入的人。以前前端借 SystemCmd 讀 */
+	else if (!strcmp(op, "acme-log") && get_login_safe())
+		snprintf(cmd, sizeof(cmd), "/usr/bin/kuroshio.sh acme-log-json");
+	else if (is_post && get_login_safe()) {
+		/* 跨站請求（CSRF）：別的網站的網頁可以叫已登入的瀏覽器送 POST 過來，要確認是後台自己的頁面 */
+		if (!kuroshio_same_origin()) {
+			fputs("{\"ok\":false,\"error\":\"請從路由器後台的頁面操作（來源網頁不符）\"}", stream);
+			goto out;
+		}
+		if (!strcmp(op, "action"))
+			snprintf(cmd, sizeof(cmd), "/usr/bin/kuroshio.sh action '%s' '%s'", path, q);
+		else if (!strcmp(op, "backup-export"))
+			snprintf(cmd, sizeof(cmd), "/usr/bin/kuroshio.sh backup-export%s",
+				strcmp(q, "share") == 0 ? " share" : "");
+		else if (!strcmp(op, "notify"))
+			snprintf(cmd, sizeof(cmd), "/usr/bin/kuroshio.sh notify wan-changed >/dev/null 2>&1; echo '{\"ok\":true}'");
+		else if (!strcmp(op, "flush"))
+			snprintf(cmd, sizeof(cmd), "/usr/bin/kuroshio.sh flush >/dev/null 2>&1; echo '{\"ok\":true}'");
+		else if (!strcmp(op, "acme"))
+			snprintf(cmd, sizeof(cmd), "/usr/bin/kuroshio.sh acme-bg%s >/dev/null 2>&1; echo '{\"ok\":true}'",
+				strcmp(q, "force") == 0 ? " force" : "");
+	}
+
+	if (!cmd[0]) {
+		fputs("{\"ok\":false,\"error\":\"不支援的操作，或這個操作需要用 POST\"}", stream);
+		goto out;
+	}
+
+	fp = popen(cmd, "r");
+	if (!fp) {
+		fputs("{\"ok\":false,\"error\":\"無法執行\"}", stream);
+		goto out;
+	}
+	while ((len = fread(buf, 1, sizeof(buf), fp)) > 0)
+		fwrite(buf, 1, len, stream);
+	pclose(fp);
+
+out:
+	/* 清掉這次的參數，下一個沒有查詢字串的請求才不會讀到舊值 */
+	init_cgi(NULL);
+}
+
+/* 上傳的學習資料備份（do_kuroshio_import_post 收下、檢查過開頭）：交給黑潮 DNS 合併，之後刪除 */
+static void
+do_kuroshio_import_cgi(const char *url, FILE *stream)
+{
+	char buf[1024];
+	FILE *fp;
+	size_t len;
+
+	if (kuroshio_cross_site())
+		fputs("{\"ok\":false,\"error\":\"請從路由器後台的頁面操作（不是後台頁面送的請求；剛更新韌體的話請重新整理頁面）\"}", stream);
+	else if (!f_exists(KUROSHIO_IMPORT_FILE))
+		fputs("{\"ok\":false,\"error\":\"沒有收到檔案，或不是黑潮 DNS 的備份檔（.kuroshio，最大 16 MB）\"}", stream);
+	else if (!get_login_safe())
+		fputs("{\"ok\":false,\"error\":\"這個操作只能從區網或 VPN 登入後使用\"}", stream);
+	else if (!kuroshio_same_origin())
+		fputs("{\"ok\":false,\"error\":\"請從路由器後台的頁面操作（來源網頁不符）\"}", stream);
+	else if ((fp = popen("/usr/bin/kuroshio.sh import-upload", "r")) != NULL) {
+		while ((len = fread(buf, 1, sizeof(buf), fp)) > 0)
+			fwrite(buf, 1, len, stream);
+		pclose(fp);
+	} else
+		fputs("{\"ok\":false,\"error\":\"無法執行\"}", stream);
+	unlink(KUROSHIO_IMPORT_FILE);
+}
+
+/* 匯出的學習資料（kuroshio_api.cgi 的 backup-export 產生），下載後刪除 */
+static void
+do_kuroshio_backup_file(const char *url, FILE *stream)
+{
+	const char *f = "/tmp/kuroshio/export.kuroshio";
+
+	/* 沒有權限、或別的網站發起的請求，不能拿到也不能順手刪掉管理員剛匯出的檔 */
+	if (get_login_safe() && !kuroshio_cross_site_nav()) {
+		do_file(f, stream);
+		unlink(f);
+	}
+}
+#endif
+
 struct mime_handler mime_handlers[] = {
 	/* cached javascript files w/o translations */
 	{ "jquery.js", "text/javascript", NULL, NULL, do_file, 0 }, // 2012.06 Eagle23
@@ -4234,6 +4536,13 @@ struct mime_handler mime_handlers[] = {
 	{ "**.jpg", "image/jpeg", NULL, NULL, do_file, 0 }, // 2012.06 Eagle23
 	{ "**.ico", "image/x-icon", NULL, NULL, do_file, 0 }, // 2013.04 Eagle23
 	{ "**.svg", "image/svg+xml", NULL, NULL, do_file, 0 }, // 2016.04 Volt1
+
+#if defined(APP_KUROSHIO)
+	/* padavan-tw：黑潮 DNS 管理 API 轉接與學習資料下載 */
+	{ "kuroshio_api.cgi*", "application/json", no_cache_IE, kuroshio_api_post, kuroshio_api_out, 1 },
+	{ "kuroshio_backup.kuroshio", "application/force-download", NULL, NULL, do_kuroshio_backup_file, 1 },
+	{ "kuroshio_import.cgi*", "application/json", no_cache_IE, do_kuroshio_import_post, do_kuroshio_import_cgi, 1 },
+#endif
 
 	/* no-cached html/asp files with translations */
 	{ "**.htm*", "text/html", no_cache_IE, do_html_apply_post, do_ej, 1 },
@@ -4472,8 +4781,38 @@ ej_available_disk_names_and_sizes(int eid, webs_t wp, int argc, char **argv)
 }
 #endif
 
+/* padavan-tw：新後台的資料介面 /tw_api.asp?q=<名稱>（格式見 docs/HANDOFF-UI.md 第 6 節）
+ * 有實作的名稱回 JSON；還沒實作的回 {"_fallback":true}，前端就改用現有資料組 */
+static int
+ej_tw_api(int eid, webs_t wp, int argc, char **argv)
+{
+	const char *q = websGetVar(wp, "q", "");
+	char buf[2048];
+	size_t n;
+	FILE *fp;
+
+	if (strcmp(q, "latency") == 0) {
+		if (nvram_match("tw_stats_enable", "0")) {
+			websWrite(wp, "{\"ok\":true,\"available\":false,\"reason\":\"disabled\"}");
+			return 0;
+		}
+		fp = fopen("/tmp/twstats/latency.json", "r");
+		if (!fp) {
+			websWrite(wp, "{\"ok\":true,\"available\":true,\"warming_up\":true}");
+			return 0;
+		}
+		while ((n = fread(buf, 1, sizeof(buf), fp)) > 0)
+			fwrite(buf, 1, n, wp);
+		fclose(fp);
+		return 0;
+	}
+	websWrite(wp, "{\"_fallback\":true}");
+	return 0;
+}
+
 struct ej_handler ej_handlers[] =
 {
+	{ "tw_api", ej_tw_api},
 	{ "nvram_get_x", ej_nvram_get_x},
 	{ "nvram_get_list_x", ej_nvram_get_list_x},
 	{ "nvram_get_buf_x", ej_nvram_get_buf_x},
@@ -4576,6 +4915,9 @@ struct ej_handler ej_handlers[] =
 #endif
 #if defined (APP_SMARTDNS)
 	{ "smartdns_status", smartdns_status_hook},
+#endif
+#if defined (APP_KUROSHIO)
+	{ "kuroshio_status", kuroshio_status_hook},
 #endif
 #if defined (APP_FRP)
 	{ "frpc_status", frpc_status_hook},

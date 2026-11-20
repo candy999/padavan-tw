@@ -315,6 +315,42 @@ lookup_client(unsigned int ip_addr)
 	return item;
 }
 
+/*
+ * padavan-tw：裝置名稱可以是中文（後台取的名稱），is_valid_hostname() 只收 ASCII 主機名稱字元，中文名稱整個被丟掉。
+ * 這裡接受 UTF-8，但擋掉會弄壞 /tmp/static_ip.inf（逗號分隔）與後台輸出的字元：
+ * httpd 的 ej_get_static_client 把名稱直接放進 JS 字串，所以引號、反斜線、角括號、控制字元都不收
+ */
+static int
+is_valid_device_name(const char *name)
+{
+	const unsigned char *p = (const unsigned char *)name;
+
+	if (!*p)
+		return 0;
+	for (; *p; p++) {
+		if (*p < 0x20 || *p == 0x7f || *p == '"' || *p == '\'' || *p == '\\' ||
+		    *p == ',' || *p == '<' || *p == '>')
+			return 0;
+	}
+	return 1;
+}
+
+/* 複製名稱，最多 DEVICE_NAME_MAX bytes；太長時退到完整的 UTF-8 字元為止（不切在一個中文字的中間） */
+static void
+copy_device_name(char *dst, const char *src)
+{
+	size_t n = strlen(src);
+
+	if (n > DEVICE_NAME_MAX) {
+		n = DEVICE_NAME_MAX;
+		/* src[n] 是被切掉的第一個 byte：是後續位元組（10xxxxxx）就表示切在字中間，往前退到字的開頭 */
+		while (n > 0 && ((unsigned char)src[n] & 0xC0) == 0x80)
+			n--;
+	}
+	memcpy(dst, src, n);
+	dst[n] = '\0';
+}
+
 static void
 lookup_dhcp_list(struct in_addr *dst_ip, NET_CLIENT* pnet_client){
 	FILE *fp = NULL;
@@ -328,7 +364,7 @@ lookup_dhcp_list(struct in_addr *dst_ip, NET_CLIENT* pnet_client){
 	struct in_addr src_ip;
 
 	if (!(fp = fopen("/tmp/dnsmasq.leases", "r")))
-		return ret;
+		return;
 
 	while (fgets(buff, sizeof(buff), fp)) {
 		if (sscanf(buff, "%31s %63s %63s %63s %*s", dh_lease, dh_mac, dh_ip, dh_host) != 4)
@@ -347,8 +383,8 @@ lookup_dhcp_list(struct in_addr *dst_ip, NET_CLIENT* pnet_client){
                         continue;
 		
 		if (src_ip.s_addr == dst_ip->s_addr && is_valid_hostname(dh_host)) {
-			strncpy(pnet_client->device_name, dh_host, 18);
-			pnet_client->device_name[18] = 0;
+			/* 以前只留 18 個字元（DHCP 主機名稱是 ASCII，最長 63） */
+			copy_device_name(pnet_client->device_name, dh_host);
 			break;
 		}
 	}
@@ -375,9 +411,9 @@ lookup_static_dhcp_list(struct in_addr *dst_ip, NET_CLIENT* pnet_client)
 		
 		sprintf(nvram_name, "dhcp_staticname_x%d", i);
 		sname = nvram_safe_get(nvram_name);
-		if (src_ip.s_addr == dst_ip->s_addr && is_valid_hostname(sname)) {
-			strncpy(pnet_client->device_name, sname, 32);
-			pnet_client->device_name[32] = 0;
+		/* 後台取的名稱可能是中文：用 is_valid_device_name，不用只收 ASCII 的 is_valid_hostname */
+		if (src_ip.s_addr == dst_ip->s_addr && is_valid_device_name(sname)) {
+			copy_device_name(pnet_client->device_name, sname);
 			break;
 		}
 	}
@@ -388,15 +424,16 @@ fixup_hostname(NET_CLIENT* pnet_client)
 {
 	int i;
 	char *hname = (char *)pnet_client->device_name;
-	char *p = hname;
+	unsigned char *p = (unsigned char *)hname;
 
-	for (i = 0; i < 32; i++) {
+	/* 用 unsigned 比較：MIPS 的 char 是有號的，UTF-8 的位元組（0x80 以上）以前會被當成控制字元清掉 */
+	for (i = 0; i < DEVICE_NAME_MAX; i++) {
 		if (*p < 0x20)
 			*p = 0x0;
 		p++;
 	}
 
-	hname[32] = '\0';
+	hname[DEVICE_NAME_MAX] = '\0';
 	trim_r(hname);
 }
 
@@ -415,7 +452,10 @@ resolve_hostname(struct in_addr *dst_ip, NET_CLIENT *pnet_client)
 			 hname, sizeof(hname), NULL, 0, NI_NAMEREQD|NI_NOFQDN) != 0)
 		return -1;
 
-	strncpy(pnet_client->device_name, hname, 32);
+	/* 反查得到的名稱也要過濾：會直接放進後台的 JS 字串（以前沒有檢查） */
+	if (!is_valid_device_name(hname))
+		return -1;
+	copy_device_name(pnet_client->device_name, hname);
 	fixup_hostname(pnet_client);
 
 	if (!pnet_client->device_name[0])
@@ -637,10 +677,11 @@ nmap_receive_arp(void)
 				// Find all application
 				find_all_app(&my_ipaddr, &src_addr, item);
 				fixup_hostname(item);
-				if (!item->device_name[0]) {
+				if (!item->device_name[0])
 					lookup_dhcp_list(&src_addr, item);
-					lookup_static_dhcp_list(&src_addr, item);
-				}
+				/* padavan-tw：使用者在後台「取名並固定 IP」取的名稱優先。以前只有反查、應用程式偵測都沒拿到名稱
+				 * 才查固定 IP 清單，DNS 反查幾乎都有答案（例如 DESKTOP-XXXX.lan），取的名稱就一直用不到 */
+				lookup_static_dhcp_list(&src_addr, item);
 				
 				need_update_file |= 1;
 			}
