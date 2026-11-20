@@ -62,7 +62,7 @@ TurBoTse 沒有的 571 個 commit 分類：其他機型 184、套件版本 167�
 | 項目 | 處理 |
 |---|---|
 | IPv6 fullcone、brcm fullcone、MT7612 TxBF、MT7603+MT7615 TxBF 修正、預設 TCP MSS | 已在 TurBoTse |
-| SQM／cake、SFE 與 SQM 相容、SmartDNS、超頻選項 | 已在 TurBoTse |
+| SQM／cake、SFE 與 SQM 相容、SmartDNS、超頻選項 | 已在 TurBoTse（本專案之後移除了 SQM 與 SmartDNS） |
 | 新版 HNAT／QDMA／HQoS、ext-to-ext | ❌ 不收（同上） |
 | 多 WAN（mwan） | ❌ 不收（不需要） |
 

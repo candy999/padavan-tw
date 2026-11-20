@@ -219,12 +219,11 @@
 
 ## 長遠計畫
 
-- **802.11v（D3）**：2.4G（MT7603）驅動有程式碼、改設定即可開；5G（MT7612）需要移植驅動功能（與 Hotspot 2.0 綁在一起），風險較高。等三台 D3 的觀察模式資料顯示手機真的會黏住弱訊號再評估
-- 漫遊中控實際引導：CR6608 用 11k Beacon Report＋11v（不踢除）
+- **AP 互助漫遊**（設計見 `docs/ROAM-COOP.md`）：D3 驅動補編 11k/v（2.4G 改設定、5G 接上 wnm.c 並移出 HOTSPOT_R2）、tw-roamd 建議模式；CR6608 走 mt7915 的 OID ioctl＋rtnetlink 事件（`SendBTMReq` 會踢人，不用）
 
 ## 不做（暫時）
 
-- Rust 版 SQM＋cFosSpeed 類套件整合：未來另外評估
+- SQM（含 Rust 版 SQM、cFosSpeed 類套件）：不做（2026-11-20 維護者確認）
 - 軟體 SQM 作為主線：CPU 負擔太大（程式碼保留）；後來規劃的硬體 QoS 也在 2026-11-18 捨棄（E 章）
 - 雙硬體 NAT 驅動可切換：保持穩定，只用原本的 hw_nat
 - OpenWrt 版（含 4.4 核心的 SDK 版、移植閉源驅動到新核心）：維護者決定放棄，專注 Padavan
