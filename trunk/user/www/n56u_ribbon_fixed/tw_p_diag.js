@@ -13,6 +13,7 @@ function page_init() {
 		U.button('路由表', { small: true, href: 'Main_RouteStatus_Content.asp' }) + U.button('即時流量', { small: true, href: 'Main_TrafficMonitor_realtime.asp' }) + U.button('網路地圖', { small: true, href: 'Main_NetMap.asp' }) + '</div>' });
 	h += dg_loop_card();
 	U.mount(h);
+	dg_bpdu_load();
 	if (TW.qs('run') == '1') dg_run();
 	U.poll(function () { return Promise.all([U.api('latency').then(function (r) { DG.lat = r; dg_lat(); }), U.api('events').then(dg_events)]); }, 30000);
 	U.api('speedtest').then(dg_speed);
@@ -26,8 +27,38 @@ function dg_loop_card() {
 		'<label class="tw-switch"><input type="checkbox" id="dg-fast"' + (fast ? ' checked' : '') + '><span class="tw-track"></span>急速連線（Wi-Fi 重新啟動後立刻恢復，不等 8 秒）</label>' +
 		'<p class="tw-small tw-muted">' + (stp ? '平常不用調整。某個 Wi-Fi 頻段收到其他裝置的 STP 封包（家裡可能有橋接器或中繼器）時，那個頻段會自動改回標準保護並記錄在系統記錄，重開機後恢復。急速連線要在「擋掉 Wi-Fi 上的 STP 封包」開著時才有作用。'
 			: '目前 STP 是關閉的（區網設定），這兩個設定不會作用。') + '</p>' +
-		'<div class="tw-actions">' + U.button('套用', { small: true, onclick: 'dg_loop_apply()' }) + '</div>';
+		'<div class="tw-actions">' + U.button('套用', { small: true, onclick: 'dg_loop_apply()' }) + '</div>' +
+		'<div id="dg-bpdu-log" class="tw-small tw-muted" style="margin-top:12px">讀取攔截紀錄…</div>';
 	return U.card({ title: 'Wi-Fi 迴圈保護', body: b });
+}
+/* 攔截紀錄：路由器上的 tw-bpdu-status（只讀）——收到的 STP 封包數、自己擋下的數量、改回標準 STP 的頻段、最近 5 次觸發的原因 */
+function dg_bpdu_load() {
+	var U = TW, el = U.$('dg-bpdu-log');
+	if (!el) return;
+	if (typeof login_safe == 'function' && !login_safe()) { el.textContent = '攔截紀錄只能在區域網路登入時查看。'; return; }
+	var body = 'action_mode=+SystemCmd+&current_page=console_response.asp&next_page=console_response.asp&SystemCmd=tw-bpdu-status';
+	fetch('/apply.cgi', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: body })
+		.then(function () { return fetch('/console_response.asp', { cache: 'no-store', credentials: 'same-origin' }); })
+		.then(function (x) { return x.text(); })
+		.then(function (t) {
+			t = t.replace(/<[^>]*>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+			var kv = {}, ev = [], inEv = false;
+			t.split(/\r?\n/).forEach(function (l) {
+				if (/^EVENTS\s*$/.test(l)) { inEv = true; return; }
+				if (inEv) { if (l.trim()) ev.push(l); return; }
+				var m = /^([A-Z]+)=(.*)$/.exec(l.trim()); if (m) kv[m[1]] = m[2].trim();
+			});
+			if (kv.IN == null) { el.textContent = '讀不到攔截紀錄（韌體太舊或路由器沒有回應）。'; return; }
+			var inN = +kv.IN || 0, outN = +kv.OUT || 0, logN = +kv.LOGN || 0, hw = +kv.HWNAT || 0;
+			var h = '<div class="tw-inline">' + U.dot(inN || logN ? 'warn' : 'ok') + '<b>' + (inN ? '開機後 Wi-Fi 收到 ' + Number(inN).toLocaleString() + ' 個 STP 封包（已擋下）' : '開機後 Wi-Fi 沒有收到任何 STP 封包') + '</b></div>' +
+				'<ul style="margin:6px 0 0;padding-left:18px">' +
+				'<li>自己送往 Wi-Fi 的 STP 封包擋下 ' + Number(outN).toLocaleString() + ' 個（正常，每 2 秒一個）</li>' +
+				(kv.SLOW ? '<li>改回標準 STP 的頻段：' + U.esc(kv.SLOW) + '（收過其他裝置的 STP 封包，重開機後恢復）</li>' : '') +
+				(hw ? '<li>硬體 NAT 保險擋下 ' + Number(hw).toLocaleString() + ' 次（應該是 0，非 0 請回報）</li>' : '') +
+				'<li>記錄過的觸發：' + (logN ? logN + ' 次（存在路由器的 /etc/storage/tw-diag/）' : '沒有') + '</li></ul>';
+			if (ev.length) h += '<details style="margin-top:6px"><summary>最近幾次觸發的原因</summary><pre style="white-space:pre-wrap;background:var(--surface-2);color:var(--text);border:0;border-radius:8px;padding:10px;font-size:12px;max-height:240px;overflow:auto">' + U.esc(ev.join('\n')) + '</pre></details>';
+			el.className = 'tw-small'; el.innerHTML = h;
+		}, function () { el.textContent = '讀不到攔截紀錄（登入逾時？請重新整理）。'; });
 }
 function dg_loop_apply() {
 	var U = TW, b = U.$('dg-bpdu').checked, f = U.$('dg-fast').checked;
