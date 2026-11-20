@@ -117,8 +117,8 @@ function wf_guest_card() {
 		'<div class="tw-field"><label for="wf-g-psk">密碼</label><div class="tw-pwd"><input type="password" id="wf-g-psk" maxlength="63" autocomplete="new-password" value="' + U.esc(NV.rt_g_auth == 'open' ? '' : NV.rt_g_psk) + '">' +
 		'<button type="button" class="tw-btn tw-btn-sm" onclick="wf_peek(\'wf-g-psk\', this)">顯示</button></div><div class="tw-help">留空就是不用密碼（不建議）。</div></div></div>';
 	b += '<div class="tw-field"><span class="tw-field-label">開放多久</span><div class="tw-seg" role="group" aria-label="開放多久">' +
-		'<button type="button" disabled title="需要更新韌體">2 小時</button><button type="button" disabled title="需要更新韌體">到今天結束</button><button type="button" aria-pressed="true">一直開著</button></div>' +
-		'<div class="tw-help">到時間自動關閉需要更新韌體後才能使用；目前可以在原始訪客網路頁設定每天開放的時段。</div></div>';
+		'<button type="button" disabled title="之後的版本才有">2 小時</button><button type="button" disabled title="之後的版本才有">到今天結束</button><button type="button" aria-pressed="true">一直開著</button></div>' +
+		'<div class="tw-help">到時間自動關閉之後的版本才能使用；目前可以在原始訪客網路頁設定每天開放的時段。</div></div>';
 	b += '<label class="tw-switch"><input type="checkbox" id="wf-g-lan"' + (NV.rt_g_iso == '1' ? '' : ' checked') + '><span class="tw-track"></span>允許連到家裡的裝置（印表機、電視投影）</label>';
 	b += '<div class="tw-help" style="margin-top:-8px">關閉時，訪客只能上網，看不到家裡的電腦、NAS 和攝影機（建議）。</div>';
 	b += '</div><div id="wf-g-err" class="tw-small" style="color:var(--bad)"></div><div class="tw-actions">' + U.button('套用', { primary: true, onclick: 'wf_guest_apply()' }) +
@@ -196,7 +196,7 @@ function wf_neighbors(id, ab) {
 	var U = TW, s = WF.scan[id];
 	if (ab && ab.neighbors) return wf_nb_chart(id, ab.neighbors.by_channel, ab.neighbors.strongest, ab.channel, '鄰近 AP（每 30 秒更新）');
 	if (s && s.loading) return U.stateBox('loading', '掃描中，約 5 秒…');
-	if (s && s.broken) return U.stateBox('unavailable', '這個韌體的掃描結果無法正確讀取，鄰近 AP 需要更新韌體後才看得到');
+	if (s && s.broken) return U.stateBox('unavailable', '這個韌體的掃描結果無法正確讀取，鄰近 AP 之後的版本才看得到');
 	if (s && s.list) {
 		var by = {};
 		s.list.forEach(function (a) { by[a.ch] = (by[a.ch] || 0) + 1; });
@@ -270,7 +270,7 @@ function wf_roam_render(r) {
 				text: e.type == 'sticky' ? e.name + ' 停在比較遠的 ' + e.to + '（' + e.rssi_to + ' dBm）' : e.name + ' 從 ' + e.from + ' 換到 ' + e.to + '（' + e.rssi_from + ' → ' + e.rssi_to + ' dBm）' };
 		}), '最近沒有漫遊');
 	} else {
-		var why = r && r.warming_up ? '資料收集中' : 'AP 清單與漫遊事件的圖表需要更新韌體後才有';
+		var why = r && r.warming_up ? '資料收集中' : 'AP 清單與漫遊事件的圖表之後的版本才有';
 		h += '<div class="tw-inline">' + U.dot(NV.roam_on == '1' ? 'ok' : 'off') + '<b>漫遊中控：' + (NV.roam_on == '1' ? '觀察模式（只記錄，不引導）' : '關閉') + '</b></div>';
 		h += '<div class="tw-partial">' + U.icon('info', 14) + '<span>' + why + '。現在可以先看文字紀錄：</span></div>';
 		h += '<div class="tw-actions"><button type="button" class="tw-btn tw-btn-sm" onclick="tw_roam_show(this)">查看漫遊紀錄</button></div>' +
@@ -278,8 +278,8 @@ function wf_roam_render(r) {
 	}
 	h += '<hr class="tw-sep"><div class="tw-field"><span class="tw-field-label">引導裝置換到比較近的 AP</span><div class="tw-seg" role="group" aria-label="漫遊模式">' +
 		'<button type="button" aria-pressed="' + (NV.roam_on != '1') + '" disabled>關閉</button><button type="button" aria-pressed="' + (NV.roam_on == '1') + '" disabled>觀察</button>' +
-		'<button type="button" disabled title="需要更新韌體">引導（11k＋11v）</button></div>' +
-		'<div class="tw-help">「引導」會建議裝置換到訊號比較好的 AP，不會強制踢除；需要更新韌體，而且每台 AP 都要是 padavan-tw（CR6608 支援）。觀察模式的開關與弱訊號門檻在 ' +
+		'<button type="button" disabled title="之後的版本才有">引導（11k＋11v）</button></div>' +
+		'<div class="tw-help">「引導」會建議裝置換到訊號比較好的 AP，不會強制踢除；之後的版本才有，而且每台 AP 都要是 padavan-tw（CR6608 支援）。觀察模式的開關與弱訊號門檻在 ' +
 		'<a href="Advanced_Wireless_Content.asp">原始 5 GHz 設定頁</a>。</div></div>';
 	U.set('wf-roam', h);
 }

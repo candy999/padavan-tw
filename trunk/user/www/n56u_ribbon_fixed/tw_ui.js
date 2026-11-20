@@ -314,7 +314,7 @@ var TW = (function () {
 			loading: '讀取中…',
 			empty: '沒有資料',
 			error: '讀取失敗，稍後會自動重試',
-			unavailable: '這個功能需要更新韌體後才能使用',
+			unavailable: '這個功能之後的版本才能使用',
 			warming: '資料收集中，約需 10 分鐘'
 		};
 		var ic = { loading: 'clock', empty: 'info', error: 'alert', unavailable: 'info', warming: 'clock' }[kind] || 'info';
@@ -792,7 +792,7 @@ var TW = (function () {
 		var radioOn = wifi.radio['2.4'] || wifi.radio['5'];
 		seg.push({ id: 'wifi', label: 'Wi-Fi', state: radioOn ? 'ok' : 'warn',
 			summary: radioOn ? wl.length + ' 台連線中' : 'Wi-Fi 已關閉',
-			evidence: '頻道：2.4G ' + (wifi.channel['2.4'] == '0' ? '自動' : wifi.channel['2.4']) + '、5G ' + (wifi.channel['5'] == '0' ? '自動' : wifi.channel['5']) + '（鄰近干擾需要更新韌體後才看得到）',
+			evidence: '頻道：2.4G ' + (wifi.channel['2.4'] == '0' ? '自動' : wifi.channel['2.4']) + '、5G ' + (wifi.channel['5'] == '0' ? '自動' : wifi.channel['5']) + '（鄰近干擾之後的版本才看得到）',
 			actions: [{ label: 'Wi-Fi 設定', href: 'tw_wifi.asp' }] });
 		var rs = 'ok', rsum = (router.cpu_pct == null ? '' : 'CPU ' + router.cpu_pct + ' %、') + '記憶體 ' + (router.mem_used_pct == null ? '--' : router.mem_used_pct) + ' %';
 		if (router.cpu_pct > 90 || router.mem_used_pct > 90) rs = 'warn';
@@ -805,7 +805,7 @@ var TW = (function () {
 			actions: wan.connected ? [] : [{ label: '檢查網際網路設定', href: 'tw_internet.asp' }] });
 		seg.push({ id: 'internet', label: '網際網路', state: wan.connected ? wan.internet : 'bad',
 			summary: wan.internet == 'ok' ? '連得到外面' : (wan.internet == 'warn' ? '偵測中或不穩定' : '連不到外面'),
-			evidence: '延遲與掉包紀錄需要更新韌體後才有', actions: [] });
+			evidence: '延遲與掉包紀錄之後的版本才有', actions: [] });
 		if (dns && dns.available !== false) {
 			var ds = !dns.enabled ? 'off' : (dns.healthy ? 'ok' : (dns.running ? 'warn' : 'bad'));
 			seg.push({ id: 'dns', label: 'DNS', state: ds,

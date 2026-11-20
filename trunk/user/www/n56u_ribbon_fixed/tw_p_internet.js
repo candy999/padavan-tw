@@ -69,7 +69,7 @@ function in_cgnat(r) {
 		h += '<div class="tw-note tw-s-bad">外面的人連不到你家：<b>連接埠轉送、WireGuard 從外面連回家都不會通</b>。要向業者申請「公網 IP」（中華電信動態 IP 本來就是公網；有線電視業者常需要另外申請）。</div>';
 	}
 	if (r.public_ip && r.public_ip != r.wan_ip) h += '<div class="tw-small tw-muted">對外看到的位址：' + U.esc(r.public_ip) + '</div>';
-	if (r.method == 'wan_ip') h += '<div class="tw-partial">' + U.icon('info', 14) + '<span>依路由器拿到的位址判斷；更準確的檢查（比對對外位址）需要更新韌體後才有。</span></div>';
+	if (r.method == 'wan_ip') h += '<div class="tw-partial">' + U.icon('info', 14) + '<span>依路由器拿到的位址判斷；更準確的檢查（比對對外位址）之後的版本才有。</span></div>';
 	U.set('in-cgnat', h);
 }
 
@@ -184,7 +184,7 @@ function in_dns(r) {
 		var days = Math.round((r.cert_expiry_ts - Date.now() / 1000) / 86400);
 		h += '<div class="tw-small ' + (days < 14 ? '' : 'tw-muted') + '"' + (days < 14 ? ' style="color:var(--warn)"' : '') + '>憑證 ' + days + ' 天後到期' + (days < 14 ? '（會自動更新；如果一直沒更新，檢查 Cloudflare Token）' : '') + '</div>';
 	}
-	if (r.partial) h += '<div class="tw-partial">' + U.icon('info', 14) + '<span>查詢數、擋下數、上游狀態需要更新韌體後才有。</span></div>';
+	if (r.partial) h += '<div class="tw-partial">' + U.icon('info', 14) + '<span>查詢數、擋下數、上游狀態之後的版本才有。</span></div>';
 	h += '<div class="tw-actions">' + U.button('套用', { primary: true, onclick: 'in_dns_apply()' }) + U.button('黑潮 DNS 完整設定', { small: true, ghost: true, href: 'tw_kuroshio.asp' }) + '</div>';
 	U.set('in-dns', h);
 }

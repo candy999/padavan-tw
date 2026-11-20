@@ -1007,3 +1007,20 @@ textarea.kr-mono, textarea.kr-rules { width: 100%; max-width: none; box-sizing: 
   .kr-savebar { bottom: calc(var(--tab-h) + 8px); }
 }
 .kr-row-sum .kr-ellip { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1 1 0; }
+
+/* ---------- 2026-11-20 介面整理（B6 發布前） ---------- */
+/* 舊版浮動系統記錄面板（頂部中間的「Log」標籤）：新版面裡位置不對，一律隱藏；系統記錄在「診斷 → 系統記錄」 */
+.syslog_panel { display: none !important; }
+/* 表單欄位接連排列時的間距（原本黏在一起） */
+.tw-field + .tw-field, .tw-fields + .tw-field, .tw-field + .tw-fields, .tw-fields + .tw-fields,
+.tw-help + .tw-field, .tw-help + .tw-fields, .tw-note + .tw-field, .tw-note + .tw-fields { margin-top: 16px; }
+.tw-field + .tw-note, .tw-fields + .tw-note, .tw-fields + .tw-help { margin-top: 12px; }
+/* 健康路徑的卡片同一排等高 */
+.tw-path li { display: flex; }
+.tw-path-btn { height: 100%; }
+/* 手機版頂部狀態列可以左右滑：右邊淡出，提示還有內容（不像被切掉） */
+@media (max-width: 900px) {
+  .tw-stats { -webkit-mask-image: linear-gradient(to right, #000 85%, transparent); mask-image: linear-gradient(to right, #000 85%, transparent); }
+}
+/* 同一排並列（.tw-fields 格狀）的欄位不加上下間距，避免錯開 */
+.tw-fields > .tw-field + .tw-field { margin-top: 0; }

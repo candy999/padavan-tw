@@ -101,7 +101,7 @@ function dv_render() {
 	U.set('dv-list', U.table({ cols: [{ key: 'dev', label: '裝置', cls: 'tw-cell-main' }, { key: 'conn', label: '連線方式' }, { key: 'signal', label: '訊號' },
 		{ key: 'ip', label: 'IP 位址' }, { key: 'since', label: '這次上線' }, { key: 'act', label: '動作', cls: 'tw-right' }], rows: rows,
 		empty: DV.q ? '找不到符合的裝置' : '這個分類沒有裝置' }));
-	U.set('dv-note', r.partial ? '<div class="tw-partial">' + U.icon('info', 14) + '<span>頻段、連到哪台 AP、上線時間與斷線紀錄需要更新韌體後才有。目前的資料分不出「有線」和「剛離開 Wi-Fi」，所以沒有 Wi-Fi 訊號的裝置都標成「有線，或剛離開 Wi-Fi」。</span></div>' : '');
+	U.set('dv-note', r.partial ? '<div class="tw-partial">' + U.icon('info', 14) + '<span>頻段、連到哪台 AP、上線時間與斷線紀錄之後的版本才有。目前的資料分不出「有線」和「剛離開 Wi-Fi」，所以沒有 Wi-Fi 訊號的裝置都標成「有線，或剛離開 Wi-Fi」。</span></div>' : '');
 }
 
 /* ---------- 詳情 ---------- */
@@ -136,9 +136,9 @@ function dv_detail_render(d, r) {
 	h += U.metric({ label: '訊號強度', value: d.signal_dbm != null ? d.signal_dbm : '--', unit: d.signal_dbm != null ? 'dBm' : '', state: d.signal_dbm != null ? sg.state : '',
 		ref: d.signal_dbm != null ? '建議 -65 dBm 以上' : (d.conn == 'wired' ? '有線連線' : '') });
 	h += U.metric({ label: '連線速率（下行／上行）', value: d.tx_rate_mbps != null ? d.tx_rate_mbps + ' / ' + (d.rx_rate_mbps == null ? '--' : d.rx_rate_mbps) : '--', unit: d.tx_rate_mbps != null ? 'Mbps' : '',
-		ref: d.tx_rate_mbps == null ? '需要更新韌體後才有' : 'Wi-Fi 協商速率，不是實際流量' });
+		ref: d.tx_rate_mbps == null ? '之後的版本才有' : 'Wi-Fi 協商速率，不是實際流量' });
 	h += U.metric({ label: '今天斷線', value: d.disconnects_today != null ? d.disconnects_today : '--', unit: d.disconnects_today != null ? '次' : '', state: d.disconnects_today > 2 ? 'bad' : (d.disconnects_today ? 'warn' : ''),
-		ref: d.disconnects_today == null ? '需要更新韌體後才有' : '' });
+		ref: d.disconnects_today == null ? '之後的版本才有' : '' });
 	h += U.metric({ label: '今天用量', value: d.usage_today_bytes != null ? U.fmtBytes(d.usage_today_bytes) : '--',
 		ref: d.usage_today_bytes == null ? '硬體 NAT 會繞過計數，只有 Wi-Fi 驅動統計得到' : 'Wi-Fi 驅動統計' });
 	h += '</div>';
@@ -150,7 +150,7 @@ function dv_detail_render(d, r) {
 	U.mount(h);
 }
 function dv_history(r) {
-	var U = TW, g = U.guard(r, { unavailable: '訊號歷史、斷線與漫遊紀錄需要更新韌體後才有' });
+	var U = TW, g = U.guard(r, { unavailable: '訊號歷史、斷線與漫遊紀錄之後的版本才有' });
 	if (g) { ['dv-signal', 'dv-advice', 'dv-events'].forEach(function (id) { U.set(id, g); }); return; }
 	var d = DV.dev;
 	if (r.signal && r.signal.values) {
@@ -231,8 +231,8 @@ function dv_pause(mac) {
 	if (MFLIST.length >= 64) { U.toast('封鎖清單已滿（64 筆）', 'bad'); return; }
 	var body = '<p><b>' + U.esc(dv_name(d)) + '</b> 會立刻不能上網，也連不到家裡其他裝置；隨時可以恢復。</p>' +
 		'<div class="tw-field"><span class="tw-field-label">暫停多久</span><div class="tw-seg"><button type="button" aria-pressed="true">直到我恢復</button>' +
-		'<button type="button" disabled title="需要更新韌體">1 小時</button><button type="button" disabled title="需要更新韌體">到今晚 10 點</button></div>' +
-		'<div class="tw-help">定時自動恢復需要更新韌體後才能使用。</div></div>';
+		'<button type="button" disabled title="之後的版本才有">1 小時</button><button type="button" disabled title="之後的版本才有">到今晚 10 點</button></div>' +
+		'<div class="tw-help">定時自動恢復之後的版本才能使用。</div></div>';
 	var extra = { macfilter_num_x_0: MFLIST.length };
 	if (NV.mf_mode != '2') extra.macfilter_enable_x = '2';
 	U.listAdd({ sid: 'FirewallConfig;', group: 'MFList', title: '暫停上網？', body: body, ok: '暫停上網', danger: true,

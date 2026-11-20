@@ -88,7 +88,7 @@ function dg_run() {
 }
 function dg_render(r) {
 	var U = TW;
-	var h = U.conclusion({ state: r.level, title: r.headline, sub: '剛剛檢查完成' + (r._source == 'api' ? ' · 耗時 ' + r.duration_s + ' 秒' : '') + (r.partial ? ' · 依路由器目前能取得的資料判斷，延遲、掉包、干擾、網站回應等細項需要更新韌體後才有' : '') });
+	var h = U.conclusion({ state: r.level, title: r.headline, sub: '剛剛檢查完成' + (r._source == 'api' ? ' · 耗時 ' + r.duration_s + ' 秒' : '') + (r.partial ? ' · 依路由器目前能取得的資料判斷，延遲、掉包、干擾、網站回應等細項之後的版本才有' : '') });
 	h += '<ol class="tw-timeline" aria-label="逐段檢查結果">' + (r.segments || []).map(function (s, i) {
 		var acts = (s.actions || []).map(function (a) {
 			var btn = a.href == '#reconnect' ? U.button(a.label, { small: true, onclick: 'TW.wanReconnect()' }) : U.button(a.label, { small: true, href: a.href });
@@ -145,7 +145,7 @@ function dg_download() {
 /* ---------- 延遲與掉包 ---------- */
 function dg_lat_pick(id) { DG.target = id; dg_lat(); }
 function dg_lat() {
-	var U = TW, r = DG.lat, g = U.guard(r, { unavailable: '延遲與掉包紀錄需要更新韌體後才有（路由器每 10 秒量一次業者閘道、HiNet DNS、TWNIC、Cloudflare）' });
+	var U = TW, r = DG.lat, g = U.guard(r, { unavailable: '延遲與掉包紀錄之後的版本才有（路由器每 10 秒量一次業者閘道、HiNet DNS、TWNIC、Cloudflare）' });
 	if (g) { U.set('dg-lat', g); return; }
 	var ts = r.targets || [];
 	U.set('dg-lat-pick', '<div class="tw-seg" role="group" aria-label="目標"><button type="button" aria-pressed="' + (DG.target == 'all') + '" onclick="dg_lat_pick(\'all\')">全部</button>' +
@@ -175,7 +175,7 @@ function dg_lat() {
 
 /* ---------- 事件、測速 ---------- */
 function dg_events(r) {
-	var U = TW, g = U.guard(r, { unavailable: '事件紀錄需要更新韌體後才有；現在可以先看系統記錄' });
+	var U = TW, g = U.guard(r, { unavailable: '事件紀錄之後的版本才有；現在可以先看系統記錄' });
 	if (g) { U.set('dg-events', g + '<div class="tw-actions">' + U.button('系統記錄', { small: true, href: 'Main_LogStatus_Content.asp' }) + '</div>'); return; }
 	DG.events = r.events || [];
 	U.set('dg-events', U.timeline(DG.events.slice(0, 20), '最近沒有事件'));
@@ -183,7 +183,7 @@ function dg_events(r) {
 function dg_speed(r) {
 	var U = TW;
 	if (!r || r.available === false) {
-		U.set('dg-speed', U.stateBox('unavailable', '路由器端測速需要更新韌體後才能使用') +
+		U.set('dg-speed', U.stateBox('unavailable', '路由器端測速之後的版本才能使用') +
 			'<p class="tw-small">現在可以在電腦用 <b>Speedtest.net</b> 或中華電信的測速網站，用網路線接路由器測，結果最準。</p>');
 		return;
 	}

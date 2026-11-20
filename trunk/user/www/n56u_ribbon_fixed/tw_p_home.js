@@ -35,7 +35,7 @@ function hm_health(r) {
 	var U = TW, g = U.guard(r);
 	if (g) { U.set('hm-health', g); return; }
 	HM.health = r;
-	var h = U.conclusion({ state: r.level, title: r.headline, sub: r.partial ? '依路由器目前能取得的資料判斷；延遲、掉包、干擾等細項需要更新韌體後才有' : '' });
+	var h = U.conclusion({ state: r.level, title: r.headline, sub: r.partial ? '依路由器目前能取得的資料判斷；延遲、掉包、干擾等細項之後的版本才有' : '' });
 	h += '<ol class="tw-path" aria-label="從裝置到網際網路的每一段">';
 	(r.segments || []).forEach(function (s) {
 		h += '<li><button type="button" class="tw-path-btn" aria-expanded="' + (HM.open == s.id ? 'true' : 'false') + '" aria-controls="hm-detail" onclick="hm_toggle(\'' + s.id + '\')">' +
@@ -99,7 +99,7 @@ function hm_wan_now(r) {
 		var st = L.current_ms > L.baseline_ms * 3 + 20 ? 'bad' : (L.current_ms > L.baseline_ms * 1.8 + 10 ? 'warn' : '');
 		h += U.metric({ label: '延遲', value: U.num(L.current_ms), unit: 'ms', state: st, ref: '平常 ' + U.num(L.baseline_ms) + ' ms' + (L.loss_pct ? '、掉包 ' + L.loss_pct + ' %' : '') });
 	} else {
-		h += U.metric({ label: '延遲', value: '--', ref: L && L.warming_up ? '資料收集中' : '需要更新韌體後才有' });
+		h += U.metric({ label: '延遲', value: '--', ref: L && L.warming_up ? '資料收集中' : '之後的版本才有' });
 	}
 	h += '</div>';
 	if (r.series && r.series.down_kbps) {
@@ -153,7 +153,7 @@ function hm_wifi(r) {
 		var row = function (id, name) {
 			var on = r.radio[id], ch = r.channel[id];
 			return { band: '<b>' + name + '</b><span class="tw-dev-sub">' + U.esc(id == '5' ? NV.wl_ssid : NV.rt_ssid) + '</span>',
-				ch: on ? (ch == '0' ? '自動' : ch) : '關閉', busy: '<span class="tw-muted">需要更新韌體</span>' };
+				ch: on ? (ch == '0' ? '自動' : ch) : '關閉', busy: '<span class="tw-muted">之後的版本</span>' };
 		};
 		h += U.table({ cols: [{ key: 'band', label: '頻段', cls: 'tw-cell-main' }, { key: 'ch', label: '頻道' }, { key: 'busy', label: '忙碌程度' }],
 			rows: [row('2.4', '2.4 GHz'), row('5', '5 GHz')] });
@@ -206,7 +206,7 @@ function hm_dns(r) {
 			U.metric({ label: '擋下的廣告與追蹤', value: U.num(r.blocked), ref: r.queries ? '佔 ' + Math.round(r.blocked / r.queries * 100) + ' %' : '' }) +
 			U.metric({ label: '換到台灣 CDN', value: U.num(r.cdn_rewrites), ref: '影音、更新下載更快' }) + '</div>';
 	} else if (r.enabled) {
-		h += '<div class="tw-partial">' + U.icon('info', 14) + '<span>查詢、過濾與 CDN 統計需要更新韌體後才有</span></div>';
+		h += '<div class="tw-partial">' + U.icon('info', 14) + '<span>查詢、過濾與 CDN 統計之後的版本才有</span></div>';
 	}
 	U.set('hm-dns', h);
 }
