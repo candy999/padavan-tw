@@ -24,7 +24,8 @@
 # 改頻道只在執行當下生效（iwpriv set Channel），不寫設定；下次重啟 Wi-Fi 由驅動重新選、隔天再檢查。
 # 2.4 GHz 不做：驅動已經會把鄰居左右各 4 個頻道算進干擾（1／6／11 的重疊）。
 # DBDC 機型（MT7915）的掃描與換頻道指令還沒在實機驗證，先不做。
-# nvram tw_acs_adj=0 可關閉這項檢查（回到只用驅動選頻道）。出廠預設 0（實機驗證前先關），驗證後改成 1。
+# nvram tw_acs_adj=0 可關閉這項檢查（回到只用驅動選頻道）。出廠預設 1（2026-11-21 D3 實機驗證：掃描期間換頻道表 13 次都正常換回、
+# 整夜 11 次掃描的判斷都沒有來回換、80 MHz 下 iwpriv set Channel 換頻道正常）。
 
 TAG="Wi-Fi 頻道"
 LOCK=${TW_LOCK:-/var/run/tw-wifi-acs.pid}
@@ -39,6 +40,12 @@ WIDE_REGION=13	# 掃描時暫用的 5G 頻道表：36–64、100–144、149–1
 log() {
 	logger -t "$TAG" "$*"
 	[ -t 1 ] && echo "$*"
+}
+
+# 重新啟動 Wi-Fi：會順便重啟 ralinkiappd 等常駐程式，不讓它們接著這個腳本的輸出
+# （手動經 ssh 或管線執行時，呼叫者會一直等不到結束）；指令不存在或失敗要留紀錄
+restart_radio() {
+	"$1" </dev/null >/dev/null 2>&1 || log "$1 執行失敗（$?），這次沒有重新啟動"
 }
 
 force=0
@@ -117,7 +124,7 @@ survey5() {
 	fi
 	if [ $wide = 1 ] && ! iwpriv "$if5" set CountryRegionABand=0 >/dev/null 2>&1; then
 		log "5 GHz 掃描後頻道表沒有換回來，重新啟動 5 GHz 讓驅動重新載入設定"
-		radio5_restart
+		restart_radio radio5_restart
 		sleep 20
 		return 1
 	fi
@@ -140,6 +147,8 @@ cca5() {
 # 評分：$1＝頻寬 MHz、$2＝驅動選的頻道；讀 $TMP.cca 與 $TMP.scan
 # 輸出一行「動作<Tab>頻道<Tab>原因」，動作是 switch（換）、keep（維持）或 none（不用處理）；
 # 以「表 」開頭的是各頻段分數（手動執行時顯示）
+# 注意：BusyBox awk 會把「變數 空格 (」當成呼叫函式（Call to undefined function），
+# 字串接括號時中間要夾 ""，例：s = s "" (x ? "a" : "b")
 pick5() {
 	awk -v bw="$1" -v cur="$2" -v adj="$ADJ_DBM" -v margin="$ADJ_MARGIN" -v ccaf="$TMP.cca" '
 	# 頻道所在頻段的最低、最高頻道（20 MHz 頻道號）
@@ -185,7 +194,7 @@ pick5() {
 			if (d <= 5 && dbm(pct[k]) >= adj) {
 				s += w; nadj++
 				if (nadj <= 2)
-					adjs = adjs (adjs == "" ? "" : "、") ssid[k] " " ch[k] "（" dtxt(k) "）"
+					adjs = adjs "" ((adjs == "") ? "" : "、") ssid[k] " " ch[k] "（" dtxt(k) "）"
 			}
 		}
 		return s
@@ -210,13 +219,14 @@ pick5() {
 		p = $(b + 2) + 0
 		if (c <= 14 || $(b + 2) !~ /^[0-9]+$/) next
 		s = ""
-		for (i = (hdrno ? 3 : 2); i < b; i++) s = s (s == "" ? "" : " ") $i
+		for (i = (hdrno ? 3 : 2); i < b; i++) s = s "" ((s == "") ? "" : " ") $i
 		if (s == "") s = "（隱藏）"
 		# 同一台 AP 的多個 SSID（主網、訪客…）BSSID 只差頭尾，只算最強的一個
 		key = c "-" substr($b, 4, 11)
 		if (key in seen) {
 			k = seen[key]
-			if (p <= pct[k]) next
+			# 一樣強時，有名稱的取代隱藏的（紀錄才看得出是哪一台）
+			if (p < pct[k] || (p == pct[k] && !(ssid[k] == "（隱藏）" && s != "（隱藏）"))) next
 		} else {
 			k = ++n; seen[key] = k
 		}
@@ -243,7 +253,7 @@ pick5() {
 			t = "表 " lbl(c, bw) "：分數 " s "（重疊 " nov "、緊鄰 " nadj "）"
 			mine = (blo(c, bw) == blo(cur, bw))
 			if (hot(c)) { print t "，驅動量到干擾，不選"; continue }
-			print t (mine ? "，驅動選的" : "")
+			print t "" ((mine) ? "，驅動選的" : "")
 			# 分數最低的；同分時維持驅動的選擇，其次選頻道號小的
 			if (!best || s < sbest || (s == sbest && mine)) { best = c; sbest = s }
 		}
@@ -325,10 +335,10 @@ old2=$(channel_of "$if2")
 [ "$if5" != "-" ] && old5=$(channel_of "$if5")
 
 if [ "$dbdc" = "1" ]; then
-	radio5_restart	# DBDC：5G 重新載入設定時兩個頻段一起重啟
+	restart_radio radio5_restart	# DBDC：5G 重新載入設定時兩個頻段一起重啟
 else
-	[ $todo2 = 1 ] && radio2_restart
-	[ $todo5 = 1 ] && radio5_restart
+	[ $todo2 = 1 ] && restart_radio radio2_restart
+	[ $todo5 = 1 ] && restart_radio radio5_restart
 fi
 
 # 等驅動掃描、選好頻道（5G 掃描較久）

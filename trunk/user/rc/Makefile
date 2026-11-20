@@ -58,7 +58,10 @@ romfs:
 	$(LN) rc $(ROMFSDIR)/sbin/radio2_guest_enable
 	$(LN) rc $(ROMFSDIR)/sbin/radio2_guest_disable
 	$(LN) rc $(ROMFSDIR)/sbin/radio2_eeprom_mac
-ifeq ($(BOARD_HAS_5G_RADIO),1)
+# padavan-tw：這個 Makefile 沒有引用 user/boards.mk，BOARD_HAS_5G_RADIO 在這裡是空的，原本的
+# ifeq ($(BOARD_HAS_5G_RADIO),1) 永遠不成立 → radio5_restart 等指令從來沒裝進韌體（每日自動選頻的 5G、
+# tw-wifi-acs 都呼叫不到）。改用跟 boards.mk 相同的條件：沒有 CONFIG_FIRST_IF_NONE 就有 5G
+ifndef CONFIG_FIRST_IF_NONE
 	$(LN) rc $(ROMFSDIR)/sbin/radio5_restart
 	$(LN) rc $(ROMFSDIR)/sbin/radio5_toggle
 	$(LN) rc $(ROMFSDIR)/sbin/radio5_toggle_off

@@ -28,7 +28,8 @@ struct twr_drv_ev {
 	unsigned char sta[6];
 	unsigned char bssid[6];		/* Beacon Report：量到的 BSS；BTM Response：裝置要去的 BSS */
 	int ch;
-	int dbm;			/* Beacon Report 的訊號（已換成 dBm） */
+	int dbm;			/* Beacon Report 的訊號（標準 RCPI 換成 dBm；超出範圍時 0） */
+	int rcpi;			/* Beacon Report 的原始 RCPI 欄位（0～254；有些裝置填的是有號數 dBm，由決定層判斷） */
 	int status;			/* BTM Response 的狀態碼（0＝接受） */
 };
 

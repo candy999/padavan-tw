@@ -420,9 +420,9 @@ oid_custom(int band, unsigned int flags, const unsigned char *d, int len, struct
 		if (rlen != 26 || len < 5 + 15 + 26)
 			return 0;	/* 3＝裝置拒絕或沒東西報、0＝逾時 */
 		r = body + 15;
+		if (r[13] == 255)
+			return 0;	/* 255＝量不到 */
 		dbm = rcpi_dbm(r[13]);
-		if (!dbm)
-			return 0;
 		ev->type = TWR_EV_BCN_REPORT;
 		b = band_of_ifindex(get32(body + 1));
 		ev->band = b ? b : band;
@@ -430,6 +430,7 @@ oid_custom(int band, unsigned int flags, const unsigned char *d, int len, struct
 		memcpy(ev->bssid, r + 15, 6);
 		ev->ch = r[1];
 		ev->dbm = dbm;
+		ev->rcpi = r[13];
 		return 1;
 	}
 	if (flags == MT_EV_RRM && len >= 5 + 14 + 1 && d[0] == 2) {
@@ -633,7 +634,7 @@ d3_custom(int band, unsigned int flags, const unsigned char *d, int len, struct 
 {
 	if (flags == MT_EV_BCN_7612 && len >= 16) {
 		int dbm = rcpi_dbm(d[14]);
-		if (!dbm)
+		if (d[14] == 255)
 			return 0;
 		ev->type = TWR_EV_BCN_REPORT;
 		ev->band = band ? band : 5;
@@ -641,6 +642,7 @@ d3_custom(int band, unsigned int flags, const unsigned char *d, int len, struct 
 		memcpy(ev->bssid, d + 6, 6);
 		ev->ch = d[13];
 		ev->dbm = dbm;
+		ev->rcpi = d[14];
 		return 1;
 	}
 	return oid_custom(band, flags, d, len, ev);

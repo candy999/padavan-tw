@@ -886,6 +886,7 @@ struct twr_hist {
 	long last;
 	int k, v;			/* 支援 11k／11v：1 是、0 否、-1 不知道 */
 	int k_noreply;			/* 連續幾次問了沒回報 */
+	int rcpi_signed;		/* 這台把 RSSI（有號數 dBm）填在 RCPI 欄位 */
 	long ask_at;			/* 上次送 Beacon Request */
 	int ask_rssi, ask_ch, ask_band, ask_seq, ask_counted;
 	long rep_at;			/* 上次收到回報 */
@@ -1279,10 +1280,22 @@ static void
 on_bcn_report(const struct twr_drv_ev *ev, long now)
 {
 	struct twr_hist *h = hist_find(ev->sta, 0, now);
-	int i, slot = -1, oldest = 0;
+	int i, slot = -1, oldest = 0, dbm = ev->dbm;
 	char name[96], b[18];
 
-	if (!h || ev->dbm >= 0 || ev->dbm < -110)
+	if (!h)
+		return;
+	/* 有些裝置把 RSSI（有號數 dBm）直接填進 RCPI 欄位（實測 Mi 10T：貼近 AP 時報 218，照標準是 -1 dBm，
+	 * 當有號數是 -38 dBm，跟它在 2.4G 的訊號相符）。照標準換出 -10 dBm 以上（RCPI 200 以上）只有貼著天線
+	 * 才可能，看到一次就記住這台、之後一律當有號數；判斷錯時只會把訊號看得比較弱（少建議），不會亂建議。
+	 * 不這樣做的話，這種裝置量到 -80 dBm（176）會被當成 -22 dBm，建議它去收不好的 5G */
+	if (!h->rcpi_signed && ev->rcpi >= 200 && ev->rcpi < 255) {
+		h->rcpi_signed = 1;
+		event(0, "%s 回報的 RCPI 是有號數 dBm（收到 %d），之後照這個換算", client_name(ev->sta, name, sizeof(name)), ev->rcpi);
+	}
+	if (h->rcpi_signed)
+		dbm = (ev->rcpi >= 128 && ev->rcpi < 255) ? ev->rcpi - 256 : 0;
+	if (dbm >= 0 || dbm < -110)
 		return;
 	for (i = 0; i < h->nrep; i++) {
 		if (memcmp(h->rep[i].bssid, ev->bssid, 6) == 0)
@@ -1294,7 +1307,7 @@ on_bcn_report(const struct twr_drv_ev *ev, long now)
 		slot = h->nrep < TWR_MAX_REP ? h->nrep++ : oldest;
 	memcpy(h->rep[slot].bssid, ev->bssid, 6);
 	h->rep[slot].ch = ev->ch;
-	h->rep[slot].dbm = ev->dbm;
+	h->rep[slot].dbm = dbm;
 	h->rep[slot].at = now;
 	h->rep_at = now;
 	h->rep_new = 1;
@@ -1307,7 +1320,7 @@ on_bcn_report(const struct twr_drv_ev *ev, long now)
 	}
 	g_st.rep++;
 	mac2str(ev->bssid, b);
-	event(0, "回報：%s 量到 %s 頻道 %d %d dBm", client_name(ev->sta, name, sizeof(name)), b, ev->ch, ev->dbm);
+	event(0, "回報：%s 量到 %s 頻道 %d %d dBm", client_name(ev->sta, name, sizeof(name)), b, ev->ch, dbm);
 }
 
 static void

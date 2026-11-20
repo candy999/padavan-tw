@@ -1,18 +1,19 @@
 #!/bin/sh
 
 
+# padavan-tw：常駐程式不能接著呼叫者的輸出（tw-wifi-acs 經 ssh／管線執行時，會讓呼叫者一直等不到結束）
 start() {   if grep -q 'mt76x3_ap' /proc/modules ; then
 	    # padavan-tw：MT7603（2.4G，ra0）也編了 11r，金鑰交換要一起帶上
-	    ralinkiappd -wi rai0 -wi ra0 -d 0  &
+	    ralinkiappd -wi rai0 -wi ra0 -d 0 </dev/null >/dev/null 2>&1 &
 	    sysctl -wq net.ipv4.neigh.rai0.base_reachable_time_ms=10000
 	    sysctl -wq net.ipv4.neigh.rai0.delay_first_probe_time=1
             else
 	    if grep -q 'rai0' /proc/interrupts; then
-	    ralinkiappd -wi rai0 -wi ra0 -d 0   &
+	    ralinkiappd -wi rai0 -wi ra0 -d 0 </dev/null >/dev/null 2>&1 &
 	    sysctl -wq net.ipv4.neigh.rai0.base_reachable_time_ms=10000
 	    sysctl -wq net.ipv4.neigh.rai0.delay_first_probe_time=1
 	    else
-	    ralinkiappd -wi rax0 -wi ra0 -d 0   &
+	    ralinkiappd -wi rax0 -wi ra0 -d 0 </dev/null >/dev/null 2>&1 &
 	    sysctl -wq net.ipv4.neigh.rax0.base_reachable_time_ms=10000
 	    sysctl -wq net.ipv4.neigh.rax0.delay_first_probe_time=1	    
 	    fi
