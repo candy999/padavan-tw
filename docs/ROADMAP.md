@@ -227,6 +227,6 @@
 - 軟體 SQM 作為主線：CPU 負擔太大（程式碼保留）；後來規劃的硬體 QoS 也在 2026-11-18 捨棄（E 章）
 - 雙硬體 NAT 驅動可切換：保持穩定，只用原本的 hw_nat
 - OpenWrt 版（含 4.4 核心的 SDK 版、移植閉源驅動到新核心）：維護者決定放棄，專注 Padavan
-- 小米 MI-MINI：需要另外維護 3.4 核心的專案
+- 小米 MI-MINI：需要另外維護 3.4 核心的專案（2026-11-20 查證：pexcn/padavan、恩山「小米MINI Padavan」討論串用的 hanwckf／chongshengB／immortalwrt 都是 3.4；hanwckf、MeIsReallyBa、TurBoTse 的 4.4 分支都沒有 MT7620 機型；LoveCodeSea/MI-MINI 試 4.4 的那次其實是編 K2P，當天就改回 3.4。4.4 樹裡只有主線的 MT7620 平台，沒有 MT7620 內建 2.4G 的私有驅動）
 - 新版硬體 NAT 驅動 mtk_hnat（padavanonly 的實驗性移植）：穩定性證據不足
 - 每台裝置流量排行：硬體 NAT 下數字不準
