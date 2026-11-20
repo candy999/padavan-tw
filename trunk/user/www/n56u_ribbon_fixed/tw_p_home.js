@@ -128,12 +128,12 @@ function hm_router(r) {
 	h += U.metric({ label: 'CPU', value: r.cpu_pct == null ? '--' : r.cpu_pct, unit: r.cpu_pct == null ? '' : '%', state: cpuSt, ref: r.load ? '負載 ' + r.load.join(' / ') : '', spark: r.cpu_series ? r.cpu_series.values : null });
 	h += U.metric({ label: '記憶體', value: r.mem_used_pct == null ? '--' : r.mem_used_pct, unit: '%', state: memSt, ref: r.mem_total_kb ? '共 ' + U.fmtBytes(r.mem_total_kb * 1024) : '' });
 	h += U.metric({ label: '連線追蹤表', value: ct == null ? '--' : U.num(ct), state: ctp > 90 ? 'bad' : (ctp > 75 ? 'warn' : ''), ref: cm ? '上限 ' + U.num(cm) + (ctp != null ? '（' + ctp + ' %）' : '') : '' });
-	h += U.metric({ label: '已運作', value: U.fmtDur(r.uptime_s), ref: '' });
+	h += U.metric({ label: '已運作', value: U.fmtUp(r.uptime_s), ref: '' });
 	if (r.temp_c != null) h += U.metric({ label: '溫度', value: U.num(r.temp_c), unit: '°C', state: r.temp_c > 85 ? 'bad' : (r.temp_c > 75 ? 'warn' : '') });
 	h += '</div>';
 	U.set('hm-router', h);
 	var sub = TW.$('hm-sub');
-	if (sub) sub.textContent = U.unent(NV.productid) + ' · 已運作 ' + U.fmtDur(r.uptime_s) + ' · 韌體 ' + U.unent(NV.firmver);
+	if (sub) sub.textContent = U.unent(NV.productid) + ' · 已運作 ' + U.fmtUp(r.uptime_s) + ' · 韌體 ' + U.unent(NV.firmver);
 }
 
 /* ---------- Wi-Fi ---------- */

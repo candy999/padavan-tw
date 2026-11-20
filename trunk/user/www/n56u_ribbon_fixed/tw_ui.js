@@ -50,6 +50,11 @@ var TW = (function () {
 		if (m) return m + ' 分鐘';
 		return sec + ' 秒';
 	}
+	/* 路由器運作時間：來源只精確到分鐘，開機頭一分鐘會是 0 */
+	function fmtUp(sec) {
+		if (sec != null && !isNaN(sec) && sec >= 0 && sec < 60) return '不到 1 分鐘';
+		return fmtDur(sec);
+	}
 	function pad2(n) { return (n < 10 ? '0' : '') + n; }
 	function fmtTime(ts, withDate) {
 		if (!ts) return '--';
@@ -798,7 +803,7 @@ var TW = (function () {
 		if (router.cpu_pct > 90 || router.mem_used_pct > 90) rs = 'warn';
 		var ct = router.conntrack_count && router.conntrack_max ? router.conntrack_count / router.conntrack_max : 0;
 		if (ct > 0.9) { rs = 'bad'; rsum += '、連線追蹤表快滿了'; }
-		seg.push({ id: 'router', label: '路由器', state: rs, summary: rsum, evidence: '已運作 ' + fmtDur(router.uptime_s), actions: [] });
+		seg.push({ id: 'router', label: '路由器', state: rs, summary: rsum, evidence: '已運作 ' + fmtUp(router.uptime_s), actions: [] });
 		seg.push({ id: 'isp', label: '業者', state: wan.connected ? 'ok' : 'bad',
 			summary: wan.connected ? '已連線 ' + fmtDur(wan.uptime_s) : '沒有連線',
 			evidence: (wan.proto_label || '') + (wan.ip4 ? ' · ' + wan.ip4 : '') + (wan.ether ? ' · 網路線 ' + wan.ether : ''),
@@ -914,7 +919,7 @@ var TW = (function () {
 	function set(id, html) { var el = $id(id); if (el) el.innerHTML = html; return el; }
 
 	return {
-		esc: esc, unent: unent, $: $id, num: num, fmtRate: fmtRate, rateText: rateText, fmtBytes: fmtBytes, fmtDur: fmtDur,
+		esc: esc, unent: unent, $: $id, num: num, fmtRate: fmtRate, rateText: rateText, fmtBytes: fmtBytes, fmtDur: fmtDur, fmtUp: fmtUp,
 		fmtTime: fmtTime, fmtAgo: fmtAgo, signal: signal, maskMac: maskMac, isPrivateIp: isPrivateIp, isCgnatIp: isCgnatIp, qs: qs,
 		icon: icon, dot: dot, chip: chip, worst: worst, STATE_LABEL: STATE_LABEL,
 		pageHead: pageHead, card: card, conclusion: conclusion, metric: metric, spark: spark, chart: chart, timeline: timeline,

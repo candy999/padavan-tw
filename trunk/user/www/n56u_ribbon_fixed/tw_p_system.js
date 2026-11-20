@@ -13,7 +13,7 @@ function page_init() {
 	sy_fw_show(null);
 	U.api('router').then(function (r) {
 		var e = U.$('sy-uptime');
-		if (e && r && r.uptime_s != null) e.textContent = U.fmtDur(r.uptime_s);
+		if (e && r && r.uptime_s != null) e.textContent = U.fmtUp(r.uptime_s);
 	});
 }
 
