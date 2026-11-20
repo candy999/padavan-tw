@@ -138,7 +138,7 @@ ROAM 結果 mac=.. 6秒後到 AP2-5G   ｜或｜ 不理會(第1次)→10分鐘�
 
 | 機種／頻段 | 晶片（驅動） | 11k 鄰居報告 | 11k Beacon Request／Report | 11v BTM | 要修的地方 |
 |---|---|---|---|---|---|
-| D3 2.4G | MT7603E（mt76x3） | 有，可由程式餵清單 | 有；回報寫進掃描表，另有事件路徑待確認 | 有（`OID_802_11_WNM_COMMAND`），不需 Hotspot | NEWIFI3 kernel config 打開 `CONFIG_MT7603E_DOT11K_RRM_SUPPORT`、`CONFIG_MT7603E_WNM_SUPPORT`、`CONFIG_MT7603E_DOT11R_FT_SUPPORT` |
+| D3 2.4G | MT7603E（mt76x3） | 有，可由程式餵清單 | 有；回報寫進掃描表，另有事件路徑待確認 | 有（`OID_802_11_WNM_COMMAND`），不需 Hotspot | 11k 台灣版已開（`configs/tw/kernel-NEWIFI3.config`）；再打開 `CONFIG_MT7603E_WNM_SUPPORT`（11v），11r 要的話加 `CONFIG_MT7603E_DOT11R_FT_SUPPORT` |
 | D3 5G | MT7612E（mt76x2） | 有，從自己的掃描表組 | 能送；回報只寫掃描表、不記是哪台裝置回的 | 程式在（`wnm.c`），但沒接進編譯，ioctl 包在 `CONFIG_HOTSPOT_R2` 裡 | 補 Kconfig／Makefile 接上 `wnm.o`、`wnm_tlv.o`；BTM ioctl 移出 `HOTSPOT_R2`；回報加約 10 行送出「裝置 MAC、BSSID、頻道、RCPI」 |
 | CR6608 2.4G／5G | MT7905／MT7975（mt7915 7.3.0.1，2.4G＝rax0、5G＝ra0） | 有，但要用 ioctl 設，不能用 iwpriv | 有；回報以事件送出，**含手機 MAC** | 有；`SendBTMReq` **不能用**（會踢人），要用 ioctl | 核心設定不用改，要寫一支小工具發 ioctl、收事件（見 8.1） |
 

@@ -15,6 +15,8 @@
 | `docs/ROADMAP.md` | 所有計畫的總表（A～J 章、H 測試、長遠計畫、不做的事） | 選下一件工作時 |
 | `docs/HANDOFF-UI.md` | 後台介面：UX 設計、資訊架構、資料介面約定（第 6 節）、進度（第 11 節）、實機發現（第 12 節）、黑潮 DNS 整合紀錄（第 13 節） | 動後台介面或資料 API 時 |
 | `docs/LOCAL-NEXT.md` | 2026-11-13 那一批工作（驗證、頻寬管理接後端、黑潮移植）——**已全部完成或捨棄，只當存檔** | 不用讀 |
+| `docs/ROAM-COOP.md` | AP 互助漫遊：交換協定、決策規則、回 5G、D3／CR6608 驅動狀況、OpenWrt 對照 | 動漫遊、11k／v、tw-roamd 前 |
+| `docs/COMPAT.md` | 社群機型相容度預測（`tools/compat/predict.py` 產生）與移植指南 | 有人問其他機型、改了跟硬體有關的程式後 |
 | `docs/WIFI-STABILITY.md` | Wi-Fi 穩定性調查、STP 根因、5G／2.4G 參數測試、夜間長測 | 動 Wi-Fi、網橋、hw_nat 前 |
 | `docs/RELEASE-NOTES-v2026.11.20.md` | 第一個正式版的發布說明 | 發布時 |
 | `docs/VERIFY-*.md` | 每一版的實機驗證單與結果 | 寫新的驗證單時當範本 |
