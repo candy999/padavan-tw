@@ -138,8 +138,8 @@ ROAM 結果 mac=.. 6秒後到 AP2-5G   ｜或｜ 不理會(第1次)→10分鐘�
 
 | 機種／頻段 | 晶片（驅動） | 11k 鄰居報告 | 11k Beacon Request／Report | 11v BTM | 要修的地方 |
 |---|---|---|---|---|---|
-| D3 2.4G | MT7603E（mt76x3） | 有，可由程式餵清單 | 有；回報寫進掃描表，另有事件路徑待確認 | 有（`OID_802_11_WNM_COMMAND`），不需 Hotspot | 11k 台灣版已開（`configs/tw/kernel-NEWIFI3.config`）；再打開 `CONFIG_MT7603E_WNM_SUPPORT`（11v），11r 要的話加 `CONFIG_MT7603E_DOT11R_FT_SUPPORT` |
-| D3 5G | MT7612E（mt76x2） | 有，從自己的掃描表組 | 能送；回報只寫掃描表、不記是哪台裝置回的 | 程式在（`wnm.c`），但沒接進編譯，ioctl 包在 `CONFIG_HOTSPOT_R2` 裡 | 補 Kconfig／Makefile 接上 `wnm.o`、`wnm_tlv.o`；BTM ioctl 移出 `HOTSPOT_R2`；回報加約 10 行送出「裝置 MAC、BSSID、頻道、RCPI」 |
+| D3 2.4G | MT7603E（mt76x3） | 有，可由程式餵清單 | 有；回報寫進掃描表，另有事件路徑待確認 | 有（`OID_802_11_WNM_COMMAND`），不需 Hotspot | **2026-11-20 已處理**：11k 原本就開；`configs/tw/kernel-NEWIFI3.config` 再開 `CONFIG_MT7603E_WNM_SUPPORT`（11v）、`CONFIG_MT7603E_DOT11R_FT_SUPPORT`（11r，預設仍關）；`rtmp_def.h` 補沒有 PMF 時的 `CATEGORY_WNM` |
+| D3 5G | MT7612E（mt76x2） | 有，從自己的掃描表組 | 能送；回報只寫掃描表、不記是哪台裝置回的（**還沒補**） | **2026-11-20 已接上**：新增 Kconfig `RT_DOT11V_WNM`，Makefile 接 `wnm.o`；`OID_802_11_WNM_BTM_REQ` 加了不需 Hotspot 的版本；beacon／探測回應／連線回應宣告 BSS Transition（跟 11k 同一個開關） | Beacon Report 上報（含裝置 MAC）還要補 |
 | CR6608 2.4G／5G | MT7905／MT7975（mt7915 7.3.0.1，2.4G＝rax0、5G＝ra0） | 有，但要用 ioctl 設，不能用 iwpriv | 有；回報以事件送出，**含手機 MAC** | 有；`SendBTMReq` **不能用**（會踢人），要用 ioctl | 核心設定不用改，要寫一支小工具發 ioctl、收事件（見 8.1） |
 
 ### 8.1 CR6608（mt7915）細節
@@ -261,7 +261,16 @@ OpenWrt 用 hostapd，11k／11v 都是標準功能，而且有 ubus 介面，移
 7. **晶片**：D3 2.4G（MT7603）沒編 11r，5G 有；CR6608 兩個頻段都有。
 8. **效益有限**：WPA2-PSK 家用環境，11r 省的是換 AP 時的四次交握，大約幾十到一百多毫秒，主要是視訊、語音通話換 AP 時比較不會頓一下；一般上網幾乎感覺不到。11k／11v（第 6 節的互助漫遊）不需要 11r。
 
-### 13.2 做法：頻段分工＋偵測到問題自動退回（只動設定與 rc，不動驅動）
+### 13.2 定案：IoT 網路（2026-11-20，使用者提議）
+
+用原本的「訪客網路」那一格（每個頻段的第二個 SSID）當 **IoT 網路**：
+
+- dat 的 `RRMEnable`、`WNMEnable`、`FtSupport` 第二格固定寫 0（`rc/src/ralink.c`），IoT 網路的 beacon 不宣告 11k／v／r；兩顆驅動都是逐個 SSID 讀這些值（mt76x2 `common/ft.c:2929`、`common/rrm.c:119`），驅動不用改
+- 名稱預設「家用名稱＋`_IoT`」，2.4G／5G 分別開關（5G 預設不開）、可選兩個頻段同名、密碼預設跟家用網路相同、可選能否連到家裡的裝置（`guest_lan_isolate`）、IoT 裝置之間能否互連（`guest_ap_isolate`）
+- 結果：主網路可以放心開 11k／v／r（含 11r），不相容的舊裝置（例如出單機）改連 `_IoT`；**不需要再做自適應 11r**
+- 代價：沒有訪客網路了；舊裝置要重新設定連到新名稱；多一組 beacon（很少的空中時間）
+
+### 13.2.1 原本的備案：頻段分工＋偵測到問題自動退回（不做，留作紀錄）
 
 1. **頻段分工**：開 11r 時只開 5G、2.4G 保持關。只有 2.4G 的裝置（大部分 IoT、ESP8266、舊印表機）看不到 5G，完全不受影響；只有 11r 的手機、筆電大多在 5G。現有的 nvram 就做得到（`wl_HT_80211R=1`、`rt_HT_80211R=0`），驅動不用動。
 2. **5G 的保護：自動退回**（雙頻但驅動很舊的裝置，例如舊筆電網卡、舊 Android、舊電視盒）
