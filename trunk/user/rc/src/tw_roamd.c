@@ -98,12 +98,25 @@ struct twr_peer_cli {
 	int rssi;
 };
 
+/* 一個頻段（一個 BSS）：TWR2 的 R 行 */
+struct twr_radio {
+	int band;			/* 2 或 5 */
+	unsigned char bssid[6];
+	int ch, bw;			/* 頻道、頻寬（MHz） */
+	int ncli;			/* 主網路的裝置數（第一版只記錄） */
+	unsigned int ssid_hash;		/* SSID 的 CRC32：相同才算漫遊候選 */
+	char cap[4];			/* k／v／r，沒有就是 "-" */
+};
+
 struct twr_peer {
 	unsigned char node[6];
 	char ip[16];
 	char name[33];
+	int ver;			/* 1＝TWR1（沒有 R 行）、2＝TWR2 */
 	int ch2, ch5;
 	long last_seen;
+	int nradio;
+	struct twr_radio radio[2];
 	int ncli;
 	struct twr_peer_cli cli[TWR_MAX_PEER_CLI];
 	/* 最近離開這台的裝置（給漫遊判斷用） */
@@ -114,6 +127,12 @@ struct twr_peer {
 
 static struct twr_local g_local[TWR_MAX_LOCAL];
 static struct twr_peer g_peer[TWR_MAX_PEERS];
+/* 最近 24 小時連過 5G 的裝置（本機或別台 AP 的 C 行都算）：暫時掉到 2.4G 時用來建議回 5G */
+#define TWR_SEEN5_MAX		128
+#define TWR_SEEN5_KEEP		86400
+static struct { unsigned char mac[6]; long at; } g_seen5[TWR_SEEN5_MAX];
+static struct twr_radio g_radio[2];	/* 這台自己的頻段 */
+static int g_nradio;
 static char g_events[TWR_MAX_EVENTS][192];
 static int g_ev_head, g_ev_count;
 static unsigned char g_node[6];
@@ -151,6 +170,64 @@ str2mac(const char *s, unsigned char *m)
 	for (i = 0; i < 6; i++)
 		m[i] = (unsigned char)b[i];
 	return 0;
+}
+
+static int
+read_if_mac(const char *ifname, unsigned char *mac)
+{
+	char path[64], s[32];
+	FILE *fp;
+	snprintf(path, sizeof(path), "/sys/class/net/%s/address", ifname);
+	fp = fopen(path, "r");
+	if (!fp)
+		return -1;
+	if (!fgets(s, sizeof(s), fp)) {
+		fclose(fp);
+		return -1;
+	}
+	fclose(fp);
+	return str2mac(s, mac);
+}
+
+/* SSID 只送雜湊（CRC32，IEEE 802.3），不在網路上送明文 */
+static unsigned int
+ssid_crc32(const char *s)
+{
+	unsigned int crc = 0xFFFFFFFFu;
+	int k;
+	while (*s) {
+		crc ^= (unsigned char)*s++;
+		for (k = 0; k < 8; k++)
+			crc = (crc >> 1) ^ (0xEDB88320u & (0u - (crc & 1u)));
+	}
+	return ~crc;
+}
+
+static void
+seen5_note(const unsigned char *mac, long now)
+{
+	int i, oldest = 0;
+	for (i = 0; i < TWR_SEEN5_MAX; i++) {
+		if (g_seen5[i].at && memcmp(g_seen5[i].mac, mac, 6) == 0) {
+			g_seen5[i].at = now;
+			return;
+		}
+		if (g_seen5[i].at < g_seen5[oldest].at)
+			oldest = i;
+	}
+	memcpy(g_seen5[oldest].mac, mac, 6);
+	g_seen5[oldest].at = now;
+}
+
+/* 這台裝置最近 24 小時有沒有連過 5G？回傳距今幾秒，沒有就回傳 -1 */
+static long
+seen5_ago(const unsigned char *mac, long now)
+{
+	int i;
+	for (i = 0; i < TWR_SEEN5_MAX; i++)
+		if (g_seen5[i].at && memcmp(g_seen5[i].mac, mac, 6) == 0 && now - g_seen5[i].at <= TWR_SEEN5_KEEP)
+			return now - g_seen5[i].at;
+	return -1;
 }
 
 /* DHCP 租約裡的裝置名稱（找不到就回傳 MAC） */
@@ -378,6 +455,8 @@ on_entry(const struct twr_mac_entry *e, int band, int guest, long now)
 	c->conn = e->ConnectedTime;
 	c->last_seen = now;
 	c->missing = 0;
+	if (band == 5 && !guest)
+		seen5_note(e->Addr, now);
 }
 
 static void
@@ -476,6 +555,63 @@ if_channel(const char *ifname)
 	return 0;
 }
 
+/* 這台自己的頻段（每 5 秒報告前更新）：BSSID、頻道、頻寬、裝置數、SSID 雜湊、k/v/r */
+static void
+fill_radio(struct twr_radio *r, int band, const char *ifname, int is_aband)
+{
+	int i, bw, n = 0;
+	char *p = r->cap;
+
+	memset(r, 0, sizeof(*r));
+	r->band = band;
+	r->ch = if_channel(ifname);
+#ifdef TWR_TEST
+	{
+		char key[32];
+		snprintf(key, sizeof(key), "TWR_BSSID_%d", band);
+		if (getenv(key))
+			str2mac(getenv(key), r->bssid);
+		if (!r->ch)
+			r->ch = band == 5 ? 36 : 1;
+	}
+#else
+	read_if_mac(ifname, r->bssid);
+#endif
+	bw = nvram_wlan_get_int(is_aband, "HT_BW");
+	r->bw = bw >= 3 ? 160 : bw == 2 ? 80 : bw == 1 ? 40 : 20;
+	if (band == 2 && r->bw > 40)
+		r->bw = 40;
+	r->ssid_hash = ssid_crc32(nvram_wlan_get(is_aband, "ssid"));
+	for (i = 0; i < TWR_MAX_LOCAL; i++)
+		if (g_local[i].used && !g_local[i].missing && !g_local[i].guest && g_local[i].band == band)
+			n++;
+	r->ncli = n;
+	/* k／v 是同一個開關（HT_80211KV）；驅動有沒有編進去看機型（見 docs/ROAM-COOP.md 第 8 節） */
+	if (nvram_wlan_get_int(is_aband, "HT_80211KV")) {
+		*p++ = 'k';
+		*p++ = 'v';
+	}
+	if (nvram_wlan_get_int(is_aband, "HT_80211R"))
+		*p++ = 'r';
+	if (p == r->cap)
+		*p++ = '-';
+	*p = 0;
+}
+
+static void
+update_radios(void)
+{
+	g_nradio = 0;
+	fill_radio(&g_radio[g_nradio], 2, IFNAME_2G_MAIN, 0);
+	if (g_radio[g_nradio].ch > 0)
+		g_nradio++;
+#if BOARD_HAS_5G_RADIO
+	fill_radio(&g_radio[g_nradio], 5, IFNAME_5G_MAIN, 1);
+	if (g_radio[g_nradio].ch > 0)
+		g_nradio++;
+#endif
+}
+
 static int
 make_socket(void)
 {
@@ -514,11 +650,13 @@ make_socket(void)
 	return s;
 }
 
-/* 報告格式（文字，一行一筆）：
- *   TWR1 <節點 MAC> <IP> <2.4G 頻道> <5G 頻道>
+/* 報告格式（文字，一行一筆；docs/ROAM-COOP.md 第 4 節）：
+ *   TWR2 <節點 MAC> <IP> <2.4G 頻道> <5G 頻道>
  *   N <名稱>
+ *   R <頻段> <BSSID> <頻道> <頻寬> <裝置數> <SSID 雜湊> <能力>    每個頻段一行（TWR2 新增）
  *   C <裝置 MAC> <頻段> <訊號>
  *   G <裝置 MAC> <頻段> <訊號> <幾秒前離開>      （最近 30 秒內離開的裝置）
+ * 收的時候 TWR1、TWR2 都接受（TWR1 沒有 R 行）。
  */
 static struct { unsigned char mac[6]; int band, rssi; long at; } g_recent_gone[32];
 static int g_recent_n;
@@ -545,7 +683,12 @@ send_report(int s, long now)
 	ch5 = if_channel(IFNAME_5G_MAIN);
 #endif
 	mac2str(g_node, m);
-	len = snprintf(buf, sizeof(buf), "TWR1 %s %s %d %d\nN %s\n", m, g_ip, ch2, ch5, g_name);
+	len = snprintf(buf, sizeof(buf), "TWR2 %s %s %d %d\nN %s\n", m, g_ip, ch2, ch5, g_name);
+	for (i = 0; i < g_nradio; i++) {
+		mac2str(g_radio[i].bssid, m);
+		len += snprintf(buf + len, sizeof(buf) - len, "R %d %s %d %d %d %08x %s\n", g_radio[i].band, m,
+				g_radio[i].ch, g_radio[i].bw, g_radio[i].ncli, g_radio[i].ssid_hash, g_radio[i].cap);
+	}
 	for (i = 0; i < TWR_MAX_LOCAL && len < (int)sizeof(buf) - 40; i++) {
 		if (!g_local[i].used || g_local[i].missing)
 			continue;
@@ -574,13 +717,15 @@ recv_report(int s, long now)
 	char m[24], ip[24];
 	unsigned char node[6];
 	struct twr_peer *p = NULL;
-	int n, i, ch2, ch5, free_i = -1;
+	int n, i, ch2, ch5, ver, free_i = -1;
+	struct twr_radio prev[2];
+	int nprev;
 
 	n = recv(s, buf, sizeof(buf) - 1, MSG_DONTWAIT);
 	if (n <= 0)
 		return;
 	buf[n] = 0;
-	if (sscanf(buf, "TWR1 %23s %23s %d %d", m, ip, &ch2, &ch5) != 4 || str2mac(m, node) != 0)
+	if (sscanf(buf, "TWR%d %23s %23s %d %d", &ver, m, ip, &ch2, &ch5) != 5 || ver < 1 || str2mac(m, node) != 0)
 		return;
 	if (memcmp(node, g_node, 6) == 0)
 		return;
@@ -607,17 +752,42 @@ recv_report(int s, long now)
 	p->ch2 = ch2;
 	p->ch5 = ch5;
 	p->last_seen = now;
+	nprev = p->nradio;
+	memcpy(prev, p->radio, sizeof(prev));
+	p->ver = ver;
 	p->ncli = 0;
+	p->nradio = 0;
 
 	line = strtok_r(buf, "\n", &save);
 	while ((line = strtok_r(NULL, "\n", &save)) != NULL) {
-		char cm[24];
-		int band, rssi;
+		char cm[24], cap[8];
+		int band, rssi, rch, rbw, rn;
+		unsigned int rh;
 		long ago;
 		unsigned char cmac[6];
 
 		if (line[0] == 'N' && line[1] == ' ') {
 			snprintf(p->name, sizeof(p->name), "%s", line + 2);
+		} else if (sscanf(line, "R %d %23s %d %d %d %x %7s", &band, cm, &rch, &rbw, &rn, &rh, cap) == 7 &&
+			   str2mac(cm, cmac) == 0 && (band == 2 || band == 5)) {
+			if (p->nradio < 2) {
+				struct twr_radio *r = &p->radio[p->nradio++];
+				int changed = 0, k;
+				for (k = 0; k < nprev; k++)
+					if (prev[k].band == band &&
+					    (prev[k].ch != rch || memcmp(prev[k].bssid, cmac, 6) != 0))
+						changed = 1;
+				memset(r, 0, sizeof(*r));
+				r->band = band;
+				memcpy(r->bssid, cmac, 6);
+				r->ch = rch;
+				r->bw = rbw;
+				r->ncli = rn;
+				r->ssid_hash = rh;
+				snprintf(r->cap, sizeof(r->cap), "%.3s", cap);
+				if (changed)
+					event(0, "%s 的 %s 換到頻道 %d", p->name, band_str(band), rch);
+			}
 		} else if (sscanf(line, "C %23s %d %d", cm, &band, &rssi) == 3 && str2mac(cm, cmac) == 0) {
 			if (p->ncli < TWR_MAX_PEER_CLI) {
 				memcpy(p->cli[p->ncli].mac, cmac, 6);
@@ -625,6 +795,8 @@ recv_report(int s, long now)
 				p->cli[p->ncli].rssi = rssi;
 				p->ncli++;
 			}
+			if (band == 5)
+				seen5_note(cmac, now);
 		} else if (sscanf(line, "G %23s %d %d %ld", cm, &band, &rssi, &ago) == 4 && str2mac(cm, cmac) == 0) {
 			int k, found = 0;
 			for (k = 0; k < p->ngone; k++) {
@@ -646,6 +818,57 @@ recv_report(int s, long now)
 
 /* ---------- 狀態檔 ---------- */
 
+#ifndef TWR_TEST
+#define TWR_NEIGHBORS_FILE	"/tmp/tw-roamd.neighbors"
+#else
+#define TWR_NEIGHBORS_FILE	"tw-roamd.neighbors"
+#endif
+
+static void
+radio_line(FILE *fp, const char *indent, const struct twr_radio *r)
+{
+	char m[18];
+	mac2str(r->bssid, m);
+	fprintf(fp, "%s%-4s %s  頻道 %3d  %3d MHz  %2d 台  SSID %08x  能力 %s\n",
+		indent, band_str(r->band), m, r->ch, r->bw, r->ncli, r->ssid_hash, r->cap);
+}
+
+/* 11k 鄰居清單（docs/ROAM-COOP.md 第 5 節）：每個自己的頻段，列出同一個 SSID 的其他頻段與別台 AP。
+ * 格式：<這台的頻段> <候選 BSSID> <頻道> <候選頻段> <頻寬> <來源>；之後由驅動的鄰居報告使用 */
+static void
+write_neighbors(long now)
+{
+	FILE *fp = fopen(TWR_NEIGHBORS_FILE ".tmp", "w");
+	char m[18];
+	int i, j, k;
+
+	if (!fp)
+		return;
+	for (i = 0; i < g_nradio; i++) {
+		const struct twr_radio *me = &g_radio[i];
+		for (j = 0; j < g_nradio; j++) {
+			if (j == i || g_radio[j].ssid_hash != me->ssid_hash)
+				continue;
+			mac2str(g_radio[j].bssid, m);
+			fprintf(fp, "%d %s %d %d %d 本機\n", me->band, m, g_radio[j].ch, g_radio[j].band, g_radio[j].bw);
+		}
+		for (j = 0; j < TWR_MAX_PEERS; j++) {
+			const struct twr_peer *p = &g_peer[j];
+			if (!p->used || now - p->last_seen > TWR_PEER_EXPIRE)
+				continue;
+			for (k = 0; k < p->nradio; k++) {
+				if (p->radio[k].ssid_hash != me->ssid_hash)
+					continue;
+				mac2str(p->radio[k].bssid, m);
+				fprintf(fp, "%d %s %d %d %d %s\n", me->band, m, p->radio[k].ch, p->radio[k].band,
+					p->radio[k].bw, p->ip);
+			}
+		}
+	}
+	fclose(fp);
+	rename(TWR_NEIGHBORS_FILE ".tmp", TWR_NEIGHBORS_FILE);
+}
+
 static void
 write_status(long now)
 {
@@ -657,16 +880,20 @@ write_status(long now)
 		return;
 	mac2str(g_node, m);
 	fprintf(fp, "這台 AP：%s（%s，%s）\n", g_name, g_ip, m);
-	fprintf(fp, "觀察模式：只記錄，不引導裝置。弱訊號門檻 %d dBm\n\n", g_weak_dbm);
+	fprintf(fp, "觀察模式：只記錄，不引導裝置。弱訊號門檻 %d dBm\n", g_weak_dbm);
+	for (i = 0; i < g_nradio; i++)
+		radio_line(fp, "  ", &g_radio[i]);
+	fprintf(fp, "\n");
 	fprintf(fp, "連在這台的裝置：\n");
 	for (i = 0; i < TWR_MAX_LOCAL; i++) {
 		struct twr_local *c = &g_local[i];
 		if (!c->used || c->missing)
 			continue;
 		n++;
-		fprintf(fp, "  %-40s %-4s%s  %4d dBm  已連線 %u 秒%s\n",
+		fprintf(fp, "  %-40s %-4s%s  %4d dBm  已連線 %u 秒%s%s\n",
 			client_name(c->mac, name, sizeof(name)), band_str(c->band), c->guest ? "（訪客）" : "",
-			c->ema, c->conn, c->weak_since ? "  ⚠ 訊號弱" : "");
+			c->ema, c->conn, c->weak_since ? "  ⚠ 訊號弱" : "",
+			(c->band == 2 && seen5_ago(c->mac, now) >= 0) ? "  24 小時內連過 5G" : "");
 	}
 	if (!n)
 		fprintf(fp, "  （無）\n");
@@ -678,15 +905,25 @@ write_status(long now)
 		if (!p->used || now - p->last_seen > TWR_PEER_EXPIRE)
 			continue;
 		n++;
-		fprintf(fp, "  %s（%s）2.4G 頻道 %d、5G 頻道 %d，%d 台裝置\n", p->name, p->ip, p->ch2, p->ch5, p->ncli);
+		fprintf(fp, "  %s（%s）2.4G 頻道 %d、5G 頻道 %d，%d 台裝置%s\n", p->name, p->ip, p->ch2, p->ch5, p->ncli,
+			p->ver < 2 ? "（舊版，沒有頻段資料）" : "");
+		for (j = 0; j < p->nradio; j++)
+			radio_line(fp, "    ", &p->radio[j]);
 		for (j = 0; j < p->ncli; j++)
 			fprintf(fp, "    %-38s %-4s  %4d dBm\n",
 				client_name(p->cli[j].mac, name, sizeof(name)), band_str(p->cli[j].band), p->cli[j].rssi);
 	}
 	if (!n)
 		fprintf(fp, "  （沒有找到；其他 AP 也要是 padavan-tw 並開啟漫遊中控）\n");
+
+	n = 0;
+	for (i = 0; i < TWR_SEEN5_MAX; i++)
+		if (g_seen5[i].at && now - g_seen5[i].at <= TWR_SEEN5_KEEP)
+			n++;
+	fprintf(fp, "\n最近 24 小時連過 5G 的裝置：%d 台\n", n);
 	fclose(fp);
 	rename(TWR_STATUS_FILE ".tmp", TWR_STATUS_FILE);
+	write_neighbors(now);
 }
 
 /* ---------- 主程式 ---------- */
@@ -700,18 +937,7 @@ on_term(int sig)
 static int
 read_br_mac(unsigned char *mac)
 {
-	char path[64], s[32];
-	FILE *fp;
-	snprintf(path, sizeof(path), "/sys/class/net/%s/address", IFNAME_BR);
-	fp = fopen(path, "r");
-	if (!fp)
-		return -1;
-	if (!fgets(s, sizeof(s), fp)) {
-		fclose(fp);
-		return -1;
-	}
-	fclose(fp);
-	return str2mac(s, mac);
+	return read_if_mac(IFNAME_BR, mac);
 }
 
 static void
@@ -785,6 +1011,7 @@ tw_roamd_main(int argc, char **argv)
 			next_poll = now + TWR_POLL_SEC;
 		}
 		if (s >= 0 && now >= next_report) {
+			update_radios();
 			send_report(s, now);
 			next_report = now + TWR_REPORT_SEC;
 		}
