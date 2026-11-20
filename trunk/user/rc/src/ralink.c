@@ -1325,22 +1325,15 @@ gen_ralink_config(int is_soc_ap, int is_aband, int disable_autoscan)
 	fprintf(fp, "HT_BAWinSize=%d\n", i_val);
 
 	//802.11KVR
+	/* padavan-tw：第二個 SSID 是 IoT 網路（原訪客網路），固定不宣告 11k／v／r，
+	 * 舊的 IoT、印表機、出單機看不懂這些能力時也連得上（docs/ROAM-COOP.md 第 13 節） */
 	i_val = nvram_wlan_get_int(is_aband, "HT_80211KV");
-	fprintf(fp, "RRMEnable=%d;%d\n", i_val,i_val);
-	fprintf(fp, "WNMEnable=%d;%d\n", i_val,i_val);
+	fprintf(fp, "RRMEnable=%d;0\n", i_val);
+	fprintf(fp, "WNMEnable=%d;0\n", i_val);
 	i_val = nvram_wlan_get_int(is_aband, "HT_80211R");
-	#if defined (BOARD_MT7915_DBDC)
-	if (is_aband)
-	{fprintf(fp, "FtSupport=%d;%d\n", i_val, i_val);}
-	else
-	{fprintf(fp, "FtSupport=%d;%d\n", i_val, i_val);}
+	fprintf(fp, "FtSupport=%d;0\n", i_val);
 	fprintf(fp, "FtOtd=0;0\n");
 	fprintf(fp, "FtRic=1;1\n");
-	#else
-	fprintf(fp, "FtSupport=%d\n",i_val);
-	fprintf(fp, "FtOtd=0\n");
-	fprintf(fp, "FtRic=1\n");
-	#endif
 
 	//HT_GI
 	fprintf(fp, "HT_GI=%d;%d\n", 1, 1);

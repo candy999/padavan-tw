@@ -2,7 +2,7 @@
 var DV = { list: null, src: null, filter: 'all', q: '', mac: '' };
 var DV_TYPE = { phone: ['phone', '手機／平板'], computer: ['computer', '電腦'], tv: ['tv', '電視'], game: ['game', '遊戲機'], iot: ['iot', '智慧家電'],
 	nas: ['nas', 'NAS'], camera: ['camera', '監視器'], router: ['router', '路由器／AP'], other: ['other', '其他'] };
-var DV_FILTERS = [['all', '全部'], ['wifi', 'Wi-Fi'], ['wired', '有線'], ['guest', '訪客'], ['weak', '訊號弱'], ['offline', '離線／暫停']];
+var DV_FILTERS = [['all', '全部'], ['wifi', 'Wi-Fi'], ['wired', '有線'], ['guest', 'IoT'], ['weak', '訊號弱'], ['offline', '離線／暫停']];
 
 function page_init() {
 	DV.mac = TW.macColon(TW.qs('mac'));
@@ -27,7 +27,7 @@ function dv_conn_text(d) {
 	if (!d.online) return d.paused ? '已暫停上網' : '離線' + (d.last_seen_ts ? '（' + TW.fmtAgo(d.last_seen_ts) + '）' : '');
 	if (d.conn == 'wired') return '有線';
 	if (d.conn == 'wired_guess') return '有線，或剛離開 Wi-Fi';
-	var s = d.conn == 'guest' ? '訪客 Wi-Fi' : 'Wi-Fi';
+	var s = d.conn == 'guest' ? 'IoT Wi-Fi' : 'Wi-Fi';
 	if (d.band) s += ' ' + d.band + ' GHz';
 	if (d.ap) s += ' · ' + d.ap;
 	return s;

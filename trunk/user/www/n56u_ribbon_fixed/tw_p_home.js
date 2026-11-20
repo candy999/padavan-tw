@@ -148,7 +148,7 @@ function hm_wifi(r) {
 				return { band: '<b>' + (b.id == '5' ? '5 GHz' : '2.4 GHz') + '</b><span class="tw-dev-sub">' + U.esc(b.ssid) + '</span>',
 					ch: b.enabled ? b.channel + (b.auto_channel ? '（自動）' : '') : '關閉', n: b.enabled ? b.clients : '--', busy: busy };
 			}) });
-		if (r.guest) h += '<div class="tw-small tw-muted">訪客網路：' + (r.guest.enabled ? '開啟（' + U.esc(r.guest.ssid) + '）' : '關閉') + '</div>';
+		if (r.guest) h += '<div class="tw-small tw-muted">IoT 網路：' + (r.guest.enabled ? '開啟（' + U.esc(r.guest.ssid) + '）' : '關閉') + '</div>';
 	} else {
 		var row = function (id, name) {
 			var on = r.radio[id], ch = r.channel[id];
@@ -157,7 +157,7 @@ function hm_wifi(r) {
 		};
 		h += U.table({ cols: [{ key: 'band', label: '頻段', cls: 'tw-cell-main' }, { key: 'ch', label: '頻道' }, { key: 'busy', label: '忙碌程度' }],
 			rows: [row('2.4', '2.4 GHz'), row('5', '5 GHz')] });
-		h += '<div class="tw-small tw-muted">Wi-Fi 裝置共 ' + r.clients_total + ' 台；訪客網路：' + (r.guest['2.4'] || r.guest['5'] ? '開啟' : '關閉') + '</div>';
+		h += '<div class="tw-small tw-muted">Wi-Fi 裝置共 ' + r.clients_total + ' 台；IoT 網路：' + (r.guest['2.4'] || r.guest['5'] ? '開啟' : '關閉') + '</div>';
 	}
 	h += '<div class="tw-actions">' + U.button('分享 Wi-Fi', { small: true, icon: 'qr', onclick: 'hm_share()' }) + U.button('頻道與干擾', { small: true, href: 'tw_wifi.asp#channel' }) + '</div>';
 	U.set('hm-wifi', h);
@@ -183,7 +183,7 @@ function hm_dev_row(d) {
 	var U = TW, sg = U.signal(d.signal_dbm), sub = [];
 	if (d.conn == 'wired') sub.push('有線');
 	else if (d.conn == 'wired_guess') sub.push('有線或剛離開 Wi-Fi');
-	else if (d.conn == 'guest') sub.push('訪客 Wi-Fi');
+	else if (d.conn == 'guest') sub.push('IoT Wi-Fi');
 	else sub.push(d.band ? d.band + ' GHz' : 'Wi-Fi');
 	if (d.signal_dbm != null) sub.push(d.signal_dbm + ' dBm');
 	if (d.ip) sub.push(d.ip);
@@ -218,6 +218,6 @@ function hm_share() {
 	var body = '<div class="tw-share">' + U.qrSvg(U.wifiQrText(ssid, psk, auth)) +
 		'<div class="tw-share-info"><div class="tw-small tw-muted">用手機相機掃描 QR 碼就能連線</div>' +
 		U.copyField(ssid, '名稱') + (psk && auth != 'open' ? U.copyField(psk, '密碼', true) : '<div class="tw-small">這個網路沒有密碼</div>') +
-		'<a class="tw-small" href="tw_wifi.asp#guest">給客人用？開訪客網路</a></div></div>';
+		'<a class="tw-small" href="tw_wifi.asp#guest">舊裝置連不上？開 IoT 網路</a></div></div>';
 	U.dialog({ title: '分享 Wi-Fi', body: body, ok: '完成', cancel: false });
 }

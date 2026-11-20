@@ -26,7 +26,7 @@ function wf_sub() {
 	var on = [];
 	if (NV.rt_radio == '1') on.push('2.4 GHz');
 	if (wf_has5() && NV.wl_radio == '1') on.push('5 GHz');
-	return on.length ? '開啟中：' + on.join('、') + (NV.rt_g_on == '1' || NV.wl_g_on == '1' ? ' · 訪客網路開啟' : '') : 'Wi-Fi 目前關閉';
+	return on.length ? '開啟中：' + on.join('、') + (NV.rt_g_on == '1' || NV.wl_g_on == '1' ? ' · IoT 網路開啟' : '') : 'Wi-Fi 目前關閉';
 }
 
 /* ---------- 名稱與密碼 ---------- */
@@ -81,7 +81,7 @@ function wf_name_apply() {
 /* ---------- 分享 ---------- */
 function wf_share_card() {
 	var b = '<div class="tw-seg" role="group" aria-label="要分享哪個網路"><button type="button" id="wf-sh-main" aria-pressed="true" onclick="wf_share_pick(\'main\')">家用網路</button>' +
-		'<button type="button" id="wf-sh-guest" aria-pressed="false" onclick="wf_share_pick(\'guest\')">訪客網路</button></div><div id="wf-share"></div>';
+		'<button type="button" id="wf-sh-guest" aria-pressed="false" onclick="wf_share_pick(\'guest\')">IoT 網路</button></div><div id="wf-share"></div>';
 	return TW.card({ title: '分享 Wi-Fi', lead: '手機相機掃描 QR 碼就能連線，不用唸密碼', body: b });
 }
 function wf_share_pick(w) {
@@ -94,7 +94,7 @@ function wf_share_render() {
 	var U = TW, ssid, psk, auth;
 	if (WF.share == 'guest') {
 		if (NV.rt_g_on != '1' && NV.wl_g_on != '1') {
-			U.set('wf-share', U.stateBox('empty', '訪客網路還沒開啟') + '<div class="tw-actions">' + U.button('設定訪客網路', { small: true, href: '#guest' }) + '</div>');
+			U.set('wf-share', U.stateBox('empty', 'IoT 網路還沒開啟') + '<div class="tw-actions">' + U.button('設定 IoT 網路', { small: true, href: '#guest' }) + '</div>');
 			return;
 		}
 		var useRt = NV.rt_g_on == '1';
@@ -108,49 +108,78 @@ function wf_share_render() {
 		U.button('列印', { small: true, icon: 'download', onclick: 'window.print()' }) + '</div></div></div>');
 }
 
-/* ---------- 訪客網路 ---------- */
+/* ---------- IoT 網路（用原本的訪客網路那一格） ---------- */
+/* 給智慧家電、印表機、出單機等舊裝置：這個 SSID 固定不宣告 802.11k／v／r（rc 的 ralink.c 寫 dat 時處理） */
+function wf_iot_default_name(main) {
+	return (main || '').replace(/_IoT$/, '') + '_IoT';
+}
 function wf_guest_card() {
-	var U = TW, on = NV.rt_g_on == '1' || NV.wl_g_on == '1';
-	var b = '<label class="tw-switch"><input type="checkbox" id="wf-g-on"' + (on ? ' checked' : '') + ' onchange="TW.$(\'wf-g-form\').hidden=!this.checked"><span class="tw-track"></span>開啟訪客網路</label>';
-	b += '<div id="wf-g-form"' + (on ? '' : ' hidden') + ' style="display:flex;flex-direction:column;gap:14px">';
-	b += '<div class="tw-fields"><div class="tw-field"><label for="wf-g-ssid">名稱</label><input type="text" id="wf-g-ssid" maxlength="32" value="' + U.esc(NV.rt_g_ssid || (NV.rt_ssid + '_Guest')) + '"></div>' +
-		'<div class="tw-field"><label for="wf-g-psk">密碼</label><div class="tw-pwd"><input type="password" id="wf-g-psk" maxlength="63" autocomplete="new-password" value="' + U.esc(NV.rt_g_auth == 'open' ? '' : NV.rt_g_psk) + '">' +
-		'<button type="button" class="tw-btn tw-btn-sm" onclick="wf_peek(\'wf-g-psk\', this)">顯示</button></div><div class="tw-help">留空就是不用密碼（不建議）。</div></div></div>';
-	b += '<div class="tw-field"><span class="tw-field-label">開放多久</span><div class="tw-seg" role="group" aria-label="開放多久">' +
-		'<button type="button" disabled title="之後的版本才有">2 小時</button><button type="button" disabled title="之後的版本才有">到今天結束</button><button type="button" aria-pressed="true">一直開著</button></div>' +
-		'<div class="tw-help">到時間自動關閉之後的版本才能使用；目前可以在原始訪客網路頁設定每天開放的時段。</div></div>';
-	b += '<label class="tw-switch"><input type="checkbox" id="wf-g-lan"' + (NV.rt_g_iso == '1' ? '' : ' checked') + '><span class="tw-track"></span>允許連到家裡的裝置（印表機、電視投影）</label>';
-	b += '<div class="tw-help" style="margin-top:-8px">關閉時，訪客只能上網，看不到家裡的電腦、NAS 和攝影機（建議）。</div>';
+	var U = TW, on2 = NV.rt_g_on == '1', on5 = NV.wl_g_on == '1', has5 = wf_has5(), any = on2 || on5;
+	/* 還沒開過（或是原本訪客網路的名稱）就預設「家用名稱＋_IoT」 */
+	var name2 = on2 && NV.rt_g_ssid ? NV.rt_g_ssid : wf_iot_default_name(NV.rt_ssid);
+	var name5 = on5 && NV.wl_g_ssid ? NV.wl_g_ssid : name2;
+	var same = !has5 || name5 == name2;
+	var psk = (NV.rt_g_auth != 'open' && NV.rt_g_psk) ? NV.rt_g_psk : (NV.rt_auth != 'open' ? NV.rt_psk : '');
+	var lan = any ? NV.rt_g_iso != '1' : true, peer = any ? NV.rt_g_apiso != '1' : true;
+	var sw = function (id, checked, text, extra) {
+		return '<label class="tw-switch"><input type="checkbox" id="' + id + '"' + (checked ? ' checked' : '') + (extra || '') + '><span class="tw-track"></span>' + text + '</label>';
+	};
+	var b = sw('wf-g-on2', on2, '2.4G 開啟 IoT 網路', ' onchange="wf_iot_sync()"');
+	if (has5) b += sw('wf-g-on5', on5, '5G 也開啟（大多數 IoT 只有 2.4G）', ' onchange="wf_iot_sync()"');
+	b += '<div id="wf-g-form"' + (any ? '' : ' hidden') + ' style="display:flex;flex-direction:column;gap:14px">';
+	b += '<div class="tw-fields"><div class="tw-field"><label for="wf-g-ssid">名稱</label><input type="text" id="wf-g-ssid" maxlength="32" value="' + U.esc(name2) + '"></div>' +
+		'<div class="tw-field"><label for="wf-g-psk">密碼</label><div class="tw-pwd"><input type="password" id="wf-g-psk" maxlength="63" autocomplete="new-password" value="' + U.esc(psk) + '">' +
+		'<button type="button" class="tw-btn tw-btn-sm" onclick="wf_peek(\'wf-g-psk\', this)">顯示</button></div><div class="tw-help">預設跟家用網路相同，舊裝置改連新名稱時密碼照舊。留空就是不用密碼（不建議）。</div></div></div>';
+	if (has5) {
+		b += sw('wf-g-same', same, '2.4G 和 5G 用同一個名稱', ' onchange="wf_iot_sync()"').replace('<label class="tw-switch">', '<label class="tw-switch"' + (on2 && on5 ? '' : ' hidden') + '>');
+		b += '<div class="tw-field" id="wf-g-f5"' + (same || !on5 ? ' hidden' : '') + '><label for="wf-g-ssid5">5G 的名稱</label><input type="text" id="wf-g-ssid5" maxlength="32" value="' + U.esc(same ? name2 + '_5G' : name5) + '"></div>';
+	}
+	b += sw('wf-g-lan', lan, '可以連到家裡的裝置（手機 App 控制、印表機、出單機）');
+	b += '<div class="tw-help" style="margin-top:-8px">關閉時，IoT 裝置只能上網，看不到家裡的電腦、NAS 和攝影機；手機 App 要在家裡直接控制的裝置要打開。</div>';
+	b += sw('wf-g-peer', peer, 'IoT 裝置之間可以互相連線');
+	b += '<div class="tw-help" style="margin-top:-8px">例如出單機和收銀平板都連 IoT 網路時要打開。</div>';
+	b += '<div class="tw-note">這個網路固定不宣告 802.11k／v／r（快速漫遊），看不懂這些新功能的舊裝置也連得上。手機、電腦請連家用網路，才有漫遊加速。</div>';
 	b += '</div><div id="wf-g-err" class="tw-small" style="color:var(--bad)"></div><div class="tw-actions">' + U.button('套用', { primary: true, onclick: 'wf_guest_apply()' }) +
 		U.button('每天開放時段、更多設定', { small: true, ghost: true, href: 'Advanced_WGuest2g_Content.asp' }) + '</div>';
-	return U.card({ id: 'guest', title: '訪客網路', lead: '給客人用的 Wi-Fi：和家裡的網路分開，不用給家裡的密碼', body: b });
+	return U.card({ id: 'guest', title: 'IoT 網路', lead: '給智慧家電、印表機、出單機等舊裝置用的 Wi-Fi：名稱加上 _IoT，不宣告快速漫遊功能', body: b });
+}
+function wf_iot_sync() {
+	var U = TW, on5 = U.$('wf-g-on5'), same = U.$('wf-g-same');
+	U.$('wf-g-form').hidden = !(U.$('wf-g-on2').checked || (on5 && on5.checked));
+	if (same) {
+		same.parentNode.hidden = !(on5 && on5.checked && U.$('wf-g-on2').checked);
+		U.$('wf-g-f5').hidden = same.checked || !(on5 && on5.checked);
+	}
 }
 function wf_guest_apply() {
-	var U = TW, err = U.$('wf-g-err'), on = U.$('wf-g-on').checked;
-	var ssid = U.$('wf-g-ssid').value, psk = U.$('wf-g-psk').value, iso = U.$('wf-g-lan').checked ? '0' : '1';
+	var U = TW, err = U.$('wf-g-err'), has5 = wf_has5();
+	var on2 = U.$('wf-g-on2').checked, on5 = has5 && U.$('wf-g-on5').checked;
+	var ssid = U.$('wf-g-ssid').value, psk = U.$('wf-g-psk').value;
+	var same = !has5 || !on2 || U.$('wf-g-same').checked, ssid5 = same ? ssid : U.$('wf-g-ssid5').value;
+	var iso = U.$('wf-g-lan').checked ? '0' : '1', apiso = U.$('wf-g-peer').checked ? '0' : '1';
 	err.textContent = '';
-	if (on) {
-		if (!ssid.trim()) { err.textContent = '名稱不能空白'; return; }
-		if (wf_bytes(ssid) > 32) { err.textContent = '名稱太長'; return; }
-		if (psk && (psk.length < 8 || psk.length > 63)) { err.textContent = '密碼要 8～63 個字元'; return; }
+	var names = [];
+	if (on2 || (on5 && same)) names.push(ssid);
+	if (on5 && !same) names.push(ssid5);
+	for (var k = 0; k < names.length; k++) {
+		if (!names[k].trim()) { err.textContent = '名稱不能空白'; return; }
+		if (wf_bytes(names[k]) > 32) { err.textContent = '名稱太長'; return; }
+		if (names[k] == NV.rt_ssid || names[k] == NV.wl_ssid) { err.textContent = '名稱不能跟家用網路一樣'; return; }
 	}
-	var f = { rt_guest_enable: on ? '1' : '0' };
-	if (on) {
-		f.rt_guest_ssid = ssid; f.rt_guest_lan_isolate = iso;
-		if (psk) { f.rt_guest_auth_mode = 'psk'; f.rt_guest_wpa_mode = '2'; f.rt_guest_crypto = 'aes'; f.rt_guest_wpa_psk = psk; }
-		else f.rt_guest_auth_mode = 'open';
-	}
-	var sid = 'WLANConfig11b;';
-	if (wf_has5()) {
-		sid += 'WLANConfig11a;';
-		f.wl_guest_enable = f.rt_guest_enable;
-		if (on) {
-			f.wl_guest_ssid = ssid; f.wl_guest_lan_isolate = iso; f.wl_guest_auth_mode = f.rt_guest_auth_mode;
-			if (psk) { f.wl_guest_wpa_mode = '2'; f.wl_guest_crypto = 'aes'; f.wl_guest_wpa_psk = psk; }
-		}
-	}
-	U.apply({ sid: sid, fields: f, title: on ? '開啟訪客網路？' : '關閉訪客網路？',
-		impacts: ['Wi-Fi 重新啟動約 10 秒，所有 Wi-Fi 裝置會短暫斷線'].concat(on ? (psk ? [] : ['沒有設密碼：附近任何人都能連上訪客網路（建議設定密碼）']) : ['正在用訪客網路的裝置會斷線']) });
+	if ((on2 || on5) && psk && (psk.length < 8 || psk.length > 63)) { err.textContent = '密碼要 8～63 個字元'; return; }
+	var f = {}, sid = 'WLANConfig11b;';
+	var fill = function (p, on, name) {
+		f[p + '_guest_enable'] = on ? '1' : '0';
+		if (!on) return;
+		f[p + '_guest_ssid'] = name; f[p + '_guest_lan_isolate'] = iso; f[p + '_guest_ap_isolate'] = apiso;
+		if (psk) { f[p + '_guest_auth_mode'] = 'psk'; f[p + '_guest_wpa_mode'] = '2'; f[p + '_guest_crypto'] = 'aes'; f[p + '_guest_wpa_psk'] = psk; }
+		else f[p + '_guest_auth_mode'] = 'open';
+	};
+	fill('rt', on2, ssid);
+	if (has5) { sid += 'WLANConfig11a;'; fill('wl', on5, ssid5); }
+	var any = on2 || on5;
+	U.apply({ sid: sid, fields: f, title: any ? '套用 IoT 網路？' : '關閉 IoT 網路？',
+		impacts: ['Wi-Fi 重新啟動約 10 秒，所有 Wi-Fi 裝置會短暫斷線'].concat(any ? (psk ? [] : ['沒有設密碼：附近任何人都能連上 IoT 網路（建議設定密碼）']).concat(['原本連家用網路的舊裝置要改連「' + names.join('」「') + '」']) : ['正在用 IoT 網路的裝置會斷線']) });
 }
 
 /* ---------- 頻道與干擾 ---------- */

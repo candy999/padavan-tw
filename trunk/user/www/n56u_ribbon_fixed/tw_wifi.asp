@@ -48,6 +48,8 @@ var NV = {
 	wl_g_auth: "<% nvram_get_x("", "wl_guest_auth_mode"); %>",
 	rt_g_iso: "<% nvram_get_x("", "rt_guest_lan_isolate"); %>",
 	wl_g_iso: "<% nvram_get_x("", "wl_guest_lan_isolate"); %>",
+	rt_g_apiso: "<% nvram_get_x("", "rt_guest_ap_isolate"); %>",
+	wl_g_apiso: "<% nvram_get_x("", "wl_guest_ap_isolate"); %>",
 	roam_on: "<% nvram_get_x("", "tw_roam_enable"); %>",
 	roam_weak: "<% nvram_get_x("", "tw_roam_weak"); %>",
 	productid: "<% nvram_get_x("", "productid"); %>",
