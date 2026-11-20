@@ -62,8 +62,8 @@ git pull
 - 台灣版設定的套用方式：頂層 `Makefile` 把 `configs/templates/<機型>.config` 複製成 `.config`，再接上 `configs/tw/common.config` 與 `configs/tw/<機型>.config`（後面覆蓋前面）；核心設定由 `trunk/configure` 套用 `configs/tw/kernel-<機型>.config`（機型設定裡沒有的選項會補上）
 
 ### 1.5 實機
-- 測試機：**Newifi D3**，後台 `http://192.168.2.1/`，SSH 開啟（帳號 admin），Breed 可以救磚（拔電、按住 Reset 插電、`http://192.168.1.1`）
-- 刷機：這幾版重開機正常，可以用後台「韌體更新」，或 SSH 走同一條路（`/tmp/linux.trx`＋rc 的 `flash_firmware`，見 HANDOFF-UI 第 13.10 節）。刷之前核對 SHA256
+- 測試機：**Newifi D3**，後台目前在 `http://192.168.1.1/`（預設是 192.168.2.1，這台被改過；跟 ONU 的 192.168.1.x 同網段，開機日誌會出現 MAN 位址衝突的錯誤，PPPoE 不受影響），SSH 開啟（帳號 admin），Breed 可以救磚（拔電、按住 Reset 插電、`http://192.168.1.1`）
+- 刷機：這幾版重開機正常，可以用後台「韌體更新」，或 SSH 走同一條路（`/tmp/linux.trx`＋rc 的 `flash_firmware`，見 HANDOFF-UI 第 13.10 節）。刷之前核對 SHA256。2026-11-20 刷 aa56cfc 時寫入成功但沒自己重開起來（偶發，拔電重插後正常），刷完 5 分鐘沒回來就請使用者重插
 - **小米 CR6608 是使用者正在用的主路由器，不能動**；要等 D3 能接手後才刷（第 5.4 節）
 - 使用者的網路：上游路由器發私有 IPv4（10.0.0.x），有部分 IPv6
 - 改到網路、Wi-Fi、管理密碼、LAN IP、刷機之前要先問使用者；輸入密碼的動作由使用者自己做
