@@ -60,6 +60,7 @@ struct nvram_pair router_defaults[] = {
 	{ "lan_domain", "lan" },		/* LAN domain name */
 	{ "lan_stp", "1" },				/* LAN spanning tree protocol */
 	{ "tw_wifi_bpdu", "2" },			/* padavan-tw：Wi-Fi BPDU 擋法 0＝不擋 1＝只擋收進來的 2＝收送都擋（收進來的都記錄） */
+	{ "tw_mod_auto", "1" },				/* padavan-tw：自動偵測中華電信 MOD 機上盒接的 LAN 孔，設成 MOD 專用孔（tw_mod.c） */
 	{ "tw_wifi_fast", "1" },			/* padavan-tw：急速連線（Wi-Fi 介面一啟用就轉送；Wi-Fi 收到 BPDU 時自動退回 8 秒） */
 
 	/* WAN H/W parameters */

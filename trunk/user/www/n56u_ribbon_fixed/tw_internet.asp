@@ -45,6 +45,19 @@ var NV = {
 	kuro_doq: "<% nvram_get_x("", "kuroshio_doq"); %>",
 	kuro_wan: "<% nvram_get_x("", "kuroshio_wan"); %>",
 	sw_mode: "<% nvram_get_x("", "sw_mode"); %>",
+	/* MOD／IPTV（中華電信 MOD 機上盒孔、VLAN、群播） */
+	stb: "<% nvram_get_x("", "wan_stb_x"); %>",
+	stb_iso: "<% nvram_get_x("", "wan_stb_iso"); %>",
+	vlan_on: "<% nvram_get_x("", "vlan_filter"); %>",
+	vlan_cpu: "<% nvram_get_x("", "vlan_vid_cpu"); %>",
+	vlan_lan1: "<% nvram_get_x("", "vlan_vid_lan1"); %>",
+	vlan_lan2: "<% nvram_get_x("", "vlan_vid_lan2"); %>",
+	vlan_lan3: "<% nvram_get_x("", "vlan_vid_lan3"); %>",
+	vlan_lan4: "<% nvram_get_x("", "vlan_vid_lan4"); %>",
+	mr_on: "<% nvram_get_x("", "mr_enable_x"); %>",
+	udpxy: "<% nvram_get_x("", "udpxy_enable_x"); %>",
+	mod_auto: "<% nvram_get_x("", "tw_mod_auto"); %>",
+	mod_auto_last: "<% nvram_get_x("", "tw_mod_auto_last"); %>",
 	lan_ip: "<% nvram_get_x("", "lan_ipaddr"); %>"
 };
 </script>

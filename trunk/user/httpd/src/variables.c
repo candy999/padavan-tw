@@ -370,6 +370,7 @@
 			{"wan_stb_x", "", NULL, EVM_RESTART_SWITCH_VLAN},
 			{"wan_src_phy", "", NULL, FALSE},
 			{"wan_stb_iso", "", NULL, EVM_RESTART_SWITCH_VLAN},
+			{"tw_mod_auto", "", NULL, 0},	/* padavan-tw：MOD 機上盒自動偵測（tw_mod.c，看門狗每 10 秒檢查） */
 			{"vlan_filter", "", NULL, EVM_RESTART_WAN},
 			{"vlan_vid_cpu", "", NULL, EVM_RESTART_WAN},
 			{"vlan_pri_cpu", "", NULL, EVM_RESTART_WAN},

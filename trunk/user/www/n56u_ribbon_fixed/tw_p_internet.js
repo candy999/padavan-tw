@@ -17,9 +17,12 @@ function page_init() {
 	h += '<section class="tw-card" id="in-status">' + U.stateBox('loading') + '</section>';
 	h += U.card({ id: 'cgnat', title: '外面連得進來嗎？', bodyId: 'in-cgnat', body: U.stateBox('loading') });
 	h += U.card({ id: 'isp', title: '連線方式', lead: '選你的業者，只會顯示需要填的欄位', body: in_isp_body() });
+	h += U.card({ id: 'mod', title: 'MOD／IPTV 接法', lead: '中華電信 MOD 機上盒接在這台路由器後面時，指定它用哪個 LAN 孔', body: in_mod_body() });
 	h += '<div class="tw-grid-2">' + U.card({ id: 'dns', title: 'DNS', bodyId: 'in-dns', body: U.stateBox('loading') }) + in_more_card() + '</div>';
 	U.mount(h);
 	in_isp_pick(IN.isp || 'cable', true);
+	in_mod_pick(IN.mod, true);
+	in_mod_link();
 	U.api('cgnat').then(in_cgnat);
 	U.poll(function () { return Promise.all([U.api('wan').then(in_status), U.api('dns').then(in_dns)]); }, 10000);
 	if (location.hash) { var t = U.$(location.hash.slice(1)); if (t) setTimeout(function () { t.scrollIntoView(); }, 50); }
@@ -206,9 +209,139 @@ function in_more_card() {
 			'<div class="tw-actions">' + U.button('套用', { small: true, onclick: 'in_nat66_apply()' }) + '</div><dl class="tw-kv">';
 	}
 	b +=
-		'<dt>MOD</dt><dd>中華電信 MOD 機上盒接在指定的 LAN 孔，並設定 IPTV 連接埠 · <a href="Advanced_IPTV_Content.asp">MOD／IPTV 設定</a></dd>' +
 		'<dt>MAC 位址</dt><dd>業者綁定網卡位址時，可以在 <a href="Advanced_WAN_Content.asp">原始 WAN 設定</a> 複製電腦的 MAC</dd></dl>';
-	return U.card({ title: 'IPv6 與 MOD', body: b });
+	return U.card({ title: 'IPv6 與其他', body: b });
+}
+
+/* ---------- MOD／IPTV 接法 ----------
+ * 中華電信光世代：上網（PPPoE）和 MOD 走同一條線、不加 VLAN；MOD 機上盒要直接向中華電信取得位址，
+ * 所以把一個 LAN 孔在交換器上直接橋接到 WAN（wan_stb_x），並跟區網隔離（wan_stb_iso=1）。華碩的「HiNet MOD」設定檔也是這樣做。
+ * 線路要求 VLAN 時（少數 ONU 設定），上網用 vlan_vid_cpu、MOD 孔用 vlan_vid_lanN（送到機上盒不加標籤）。
+ * IGMP 代理（mr_enable_x）與 udpxy 是給「群播經過路由器」的其他業者 IPTV；中華電信 MOD 橋接時用不到，但照預設不動。 */
+var IN_MOD = [
+	{ id: 'none', title: '沒有接 MOD', desc: '機上盒直接接數據機／ONU，或沒有 MOD' },
+	{ id: 'hinet', title: '中華電信 MOD（建議）', desc: '機上盒接這台的 LAN 孔，直接向中華電信取得位址' },
+	{ id: 'hinet_vlan', title: '中華電信 MOD＋VLAN', desc: '只有客服或 ONU 設定要求 VLAN 時才用' }
+];
+function in_mod_ports() {
+	var n = typeof support_num_ephy == 'function' ? support_num_ephy() - 1 : 4;
+	n = Math.max(1, Math.min(4, n || 4));
+	var a = []; for (var i = 1; i <= n; i++) a.push(i);
+	return a;
+}
+function in_mod_cur() {
+	var stb = parseInt(NV.stb, 10) || 0;
+	if (stb >= 5) return 'custom';		/* 原始頁面設了兩個以上的孔 */
+	if (!stb) return NV.vlan_on == '1' ? 'vlan_only' : 'none';
+	return NV.vlan_on == '1' ? 'hinet_vlan' : 'hinet';
+}
+function in_mod_body() {
+	var U = TW, cur = in_mod_cur();
+	IN.mod = cur == 'hinet_vlan' || cur == 'hinet' ? cur : 'none';
+	IN.modPort = (parseInt(NV.stb, 10) >= 1 && parseInt(NV.stb, 10) <= 4) ? parseInt(NV.stb, 10) : in_mod_ports().slice(-1)[0];
+	var h = '<div id="in-mod-state"></div>';
+	if (cur == 'custom') h += '<div class="tw-note tw-s-warn">目前在原始 WAN 設定裡把兩個以上的 LAN 孔橋接給機上盒，這裡無法完整顯示；在這裡套用會改成只用一個孔。</div>';
+	if (cur == 'vlan_only') h += '<div class="tw-note tw-s-info">上網目前有設定 VLAN（原始 WAN 設定的「VLAN 過濾」）。選「沒有接 MOD」不會動到它。</div>';
+	h += '<label class="tw-switch"><input type="checkbox" id="in-mod-auto"' + (NV.mod_auto != '0' ? ' checked' : '') + ' onchange="in_mod_auto_apply()"><span class="tw-track"></span>自動偵測 MOD 機上盒（建議）</label>' +
+		'<div class="tw-help">機上盒插在任何一個 LAN 孔、開機要位址時，路由器會認出它（中華電信機上盒的識別碼）並自動把那個孔設成 MOD 專用，約 3 分鐘內完成。不用知道孔的編號。</div>' +
+		(NV.mod_auto_last ? '<div class="tw-small tw-muted">上次自動設定：' + U.esc(NV.mod_auto_last) + '</div>' : '');
+	h += '<div class="tw-options" role="group" aria-label="MOD 接法">' + IN_MOD.map(function (o) {
+		return '<button type="button" class="tw-option" id="in-mod-' + o.id + '" aria-pressed="false" onclick="in_mod_pick(\'' + o.id + '\')">' +
+			'<span class="tw-option-title">' + U.esc(o.title) + (o.id == IN.mod && cur != 'custom' ? ' ' + U.chip('info', '目前') : '') + '</span><span class="tw-option-desc">' + U.esc(o.desc) + '</span></button>';
+	}).join('') + '</div><div id="in-mod-form"></div>';
+	/* 群播：其他業者的 IPTV（中華電信 MOD 用不到） */
+	h += '<details style="margin-top:12px"><summary class="tw-small">群播設定（其他業者的 IPTV、在電腦或手機上看群播頻道）</summary>' +
+		'<label class="tw-switch" style="margin-top:8px"><input type="checkbox" id="in-mr"' + (NV.mr_on == '1' ? ' checked' : '') + '><span class="tw-track"></span>IGMP 代理（把業者的群播送到區網）</label>' +
+		'<div class="tw-field"><label for="in-udpxy">udpxy 連接埠（群播轉成 HTTP，給手機或電腦播放器用；0 = 關閉）</label><input type="number" id="in-udpxy" min="0" max="65535" style="width:120px" value="' + U.esc(NV.udpxy || '0') + '"></div>' +
+		'<div class="tw-help">中華電信 MOD 用上面的「接 LAN 孔」就好，不需要這兩項。</div>' +
+		'<div class="tw-actions">' + U.button('套用群播設定', { small: true, onclick: 'in_mr_apply()' }) + U.button('原始 IPTV 設定', { small: true, ghost: true, href: 'Advanced_IPTV_Content.asp' }) + '</div></details>';
+	return h;
+}
+function in_mod_pick(id, init) {
+	var U = TW;
+	IN.modPick = id;
+	IN_MOD.forEach(function (x) { var b = U.$('in-mod-' + x.id); if (b) b.setAttribute('aria-pressed', x.id == id ? 'true' : 'false'); });
+	var h = '';
+	if (id != 'none') {
+		h += '<div class="tw-field"><label>機上盒接哪個 LAN 孔</label><div class="tw-seg" role="group" aria-label="LAN 孔">' + in_mod_ports().map(function (p) {
+			return '<button type="button" id="in-mod-p' + p + '" aria-pressed="' + (p == IN.modPort) + '" onclick="in_mod_port(' + p + ')">LAN' + p + '</button>';
+		}).join('') + '</div><div class="tw-help">這個孔會變成 MOD 專用：插在這裡的裝置直接向中華電信要位址，<b>不能再接電腦或交換器</b>（拿不到這台路由器的網路）。其他 LAN 孔與 Wi-Fi 照常。</div></div>';
+	}
+	if (id == 'hinet_vlan') {
+		var vp = NV['vlan_lan' + IN.modPort] || '';
+		h += '<div class="tw-fields"><div class="tw-field"><label for="in-vmod">MOD 的 VLAN ID</label><input type="number" id="in-vmod" min="2" max="4094" style="width:120px" value="' + U.esc(vp) + '"><div class="tw-help">送到機上盒時會拿掉標籤。</div></div>' +
+			'<div class="tw-field"><label for="in-vnet">上網的 VLAN ID（選填）</label><input type="number" id="in-vnet" min="2" max="4094" style="width:120px" value="' + U.esc(NV.vlan_on == '1' ? NV.vlan_cpu : '') + '"><div class="tw-help">空白 = 上網不加 VLAN 標籤。</div></div></div>' +
+			'<div class="tw-note tw-s-warn">一般光世代<b>不需要</b> VLAN。數值要向中華電信客服確認，填錯 MOD 和上網都可能不通（可以再改回「中華電信 MOD（建議）」）。</div>';
+	}
+	h += '<div id="in-mod-err" class="tw-small" style="color:var(--bad)"></div><div class="tw-actions">' + U.button('套用', { primary: true, onclick: 'in_mod_apply()' }) +
+		'<span class="tw-cost">' + (id == 'hinet_vlan' || in_mod_cur() == 'hinet_vlan' ? '有線網路中斷約 5～10 秒，網際網路重新連線約 15～30 秒' : '有線網路中斷約 5～10 秒') + '</span></div>';
+	U.set('in-mod-form', h);
+}
+function in_mod_port(p) {
+	var U = TW;
+	IN.modPort = p;
+	in_mod_ports().forEach(function (x) { var b = U.$('in-mod-p' + x); if (b) b.setAttribute('aria-pressed', x == p ? 'true' : 'false'); });
+	var v = U.$('in-vmod'); if (v && !v.value) v.value = NV['vlan_lan' + p] || '';
+}
+/* MOD 孔的連線狀態：用現有的 status_lanlink.asp（ether_link_status(idx)，idx 0 = WAN、1～ = LAN） */
+function in_mod_link() {
+	var U = TW, stb = parseInt(NV.stb, 10) || 0, el = U.$('in-mod-state');
+	if (!el) return;
+	var cur = in_mod_cur();
+	if (cur == 'none' || cur == 'vlan_only') { el.innerHTML = U.conclusion({ state: 'off', title: '沒有指定 MOD 孔', sub: '所有 LAN 孔都是一般的區網' }); return; }
+	if (stb >= 5) { el.innerHTML = U.conclusion({ state: 'info', title: '原始設定：多個 LAN 孔橋接給機上盒', sub: '' }); return; }
+	fetch('/status_lanlink.asp', { cache: 'no-store', credentials: 'same-origin' }).then(function (x) { return x.text(); }).then(function (t) {
+		var m = new RegExp('if\\(idx==' + stb + '\\) return \'([^\']*)\'').exec(t), s = m ? m[1] : '';
+		var up = s && !/no link/i.test(s);
+		el.innerHTML = U.conclusion({ state: up ? 'ok' : 'warn', title: 'LAN' + stb + ' 是 MOD 專用孔' + (cur == 'hinet_vlan' ? '（VLAN ' + U.esc(NV['vlan_lan' + stb] || '-') + '）' : ''),
+			sub: up ? '機上盒有接上（' + U.esc(s) + '）' : '這個孔現在沒有接東西：機上盒的網路線要插在 LAN' + stb });
+	}, function () { el.innerHTML = U.conclusion({ state: 'info', title: 'LAN' + stb + ' 是 MOD 專用孔', sub: '讀不到連接埠狀態' }); });
+}
+function in_mod_apply() {
+	var U = TW, id = IN.modPick, p = IN.modPort, err = U.$('in-mod-err'), f = {}, imp = [];
+	err.textContent = '';
+	if (id == 'none') {
+		f.wan_stb_x = '0';
+		if (in_mod_cur() == 'hinet_vlan') f.vlan_filter = '0';	/* 只關掉這裡設的；上網自己的 VLAN（vlan_only）不動 */
+		imp.push('所有 LAN 孔恢復成一般區網，有線網路中斷約 5～10 秒');
+	} else {
+		f.wan_stb_x = String(p); f.wan_stb_iso = '1';
+		f['vlan_tag_lan' + p] = '0'; f['vlan_pri_lan' + p] = '0';
+		if (id == 'hinet_vlan') {
+			var vm = parseInt(U.$('in-vmod').value, 10), vnRaw = U.$('in-vnet').value.trim(), vn = parseInt(vnRaw, 10);
+			if (!(vm >= 2 && vm <= 4094)) { err.textContent = 'MOD 的 VLAN ID 要在 2～4094 之間'; U.$('in-vmod').focus(); return; }
+			if (vnRaw && !(vn >= 2 && vn <= 4094)) { err.textContent = '上網的 VLAN ID 要在 2～4094 之間，或留空'; U.$('in-vnet').focus(); return; }
+			if (vnRaw && vn == vm) { err.textContent = '上網和 MOD 的 VLAN ID 不能一樣'; return; }
+			f.vlan_filter = '1'; f.vlan_vid_cpu = vnRaw ? String(vn) : ''; f.vlan_pri_cpu = '0'; f['vlan_vid_lan' + p] = String(vm);
+			imp.push('上網' + (vnRaw ? '改用 VLAN ' + vn : '不加 VLAN') + '、LAN' + p + ' 的 MOD 走 VLAN ' + vm + '，網際網路重新連線約 15～30 秒');
+		} else {
+			if (in_mod_cur() == 'hinet_vlan') f.vlan_filter = '0';
+			f['vlan_vid_lan' + p] = '';
+		}
+		imp.push('LAN' + p + ' 變成 MOD 專用，接在那裡的電腦會斷線（改插其他孔或用 Wi-Fi）');
+		imp.push('有線網路中斷約 5～10 秒，Wi-Fi 不受影響');
+	}
+	var same = Object.keys(f).every(function (k) {
+		var nv = { wan_stb_x: NV.stb, wan_stb_iso: NV.stb_iso, vlan_filter: NV.vlan_on, vlan_vid_cpu: NV.vlan_cpu }[k];
+		if (/^vlan_vid_lan/.test(k)) nv = NV[k.replace('vlan_vid_', 'vlan_')];
+		if (/^vlan_(tag|pri)_lan/.test(k)) return true;
+		return String(nv == null ? '' : nv) == String(f[k]);
+	});
+	if (same) { U.toast('沒有變更'); return; }
+	U.apply({ sid: 'Layer3Forwarding;', fields: f, title: id == 'none' ? '取消 MOD 專用孔？' : '把 LAN' + p + ' 設成 MOD 專用？', impacts: imp });
+}
+function in_mod_auto_apply() {
+	var U = TW, on = U.$('in-mod-auto').checked ? '1' : '0';
+	U.apply({ sid: 'Layer3Forwarding;', fields: { tw_mod_auto: on }, title: on == '1' ? '開啟 MOD 自動偵測？' : '關閉 MOD 自動偵測？',
+		impacts: on == '1' ? ['不會中斷網路；之後偵測到中華電信機上盒時，它接的孔會自動變成 MOD 專用（有線網路中斷約 5～10 秒）'] : ['不會中斷網路；已經設好的 MOD 專用孔不變'] })
+		.then(function (ok) { if (!ok) U.$('in-mod-auto').checked = !U.$('in-mod-auto').checked; });
+}
+function in_mr_apply() {
+	var U = TW, mr = U.$('in-mr').checked ? '1' : '0', ux = parseInt(U.$('in-udpxy').value, 10) || 0;
+	if (ux && (ux < 1024 || ux > 65535)) { TW.toast('udpxy 連接埠要在 1024～65535 之間，或填 0 關閉', 'bad'); return; }
+	if (mr == NV.mr_on && String(ux) == String(parseInt(NV.udpxy, 10) || 0)) { U.toast('沒有變更'); return; }
+	U.apply({ sid: 'RouterConfig;LANHostConfig;', fields: { mr_enable_x: mr, udpxy_enable_x: String(ux) }, title: '套用群播設定？',
+		impacts: ['群播服務重新啟動約 3 秒，正在看的群播頻道會停頓一下', mr == '1' ? 'IGMP 代理把業者的群播轉到區網' : 'IGMP 代理關閉：區網的裝置收不到業者的群播（中華電信 MOD 用專用孔，不受影響）'] });
 }
 function in_nat66_apply() {
 	var U = TW, v = U.$('in-nat66').checked ? '1' : '0';
