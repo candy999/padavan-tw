@@ -15,7 +15,7 @@ padavan-tw 以目前仍持續維護的 [TurBoTse/padavan](https://github.com/Tur
 | **真正的台灣中文** | 介面 2,037 條全部以英文原文重新翻譯成台灣網通用語，不是簡轉繁；同時修正簡中版本的大量錯譯（例如把「穿透」譯成「通道」、把「數據機」譯成「網卡」、單位與預設值寫錯等） |
 | **台灣預設值** | 時區臺北、NTP 用國家時間與頻率標準實驗室、斷線偵測改用 HiNet 與 TWNIC，不再依賴中國的 DNS 與網站 |
 | **乾淨** | 移除科學上網、廣告外掛、中國雲端服務、校園網認證、KMS 等與台灣網路無關的功能 |
-| **補安全漏洞** | OpenSSH 從 9.7p1 升到 9.9p2（修補 regreSSHion 等漏洞）；其餘套件跟著 TurBoTse 的版本（OpenSSL 3.0、curl 8.21、dnsmasq 2.90） |
+| **補安全漏洞** | OpenSSH 從 9.7p1 升到 9.9p2（修補 regreSSHion 等漏洞）、miniupnpd 從 2.0 升到 2.3.7（CVE-2019-12107～12111、CallStranger）；其餘套件跟著 TurBoTse 的版本（OpenSSL 3.0、curl 8.21、dnsmasq 2.90） |
 | **修好上游的 bug** | 修正 802.11k/v 開關在網頁上切了也沒作用、CR6608 的 802.11r 設定值錯誤 |
 | **自動編譯** | GitHub Actions 每次修改都自動編譯兩台的韌體；發布版附 SHA256 校驗 |
 | **修補有紀錄** | 收了什麼、沒收什麼、為什麼，都寫在 [docs/PATCH-REVIEW.md](docs/PATCH-REVIEW.md) |
@@ -24,7 +24,7 @@ padavan-tw 以目前仍持續維護的 [TurBoTse/padavan](https://github.com/Tur
 
 ### 正式維護
 
-每次修改都會自動編譯、有實機使用、發布 Release。
+每次修改都會自動編譯、發布 Release。Newifi D3 有實機驗證；**小米 CR6608 尚未實機測試**（維護者的 CR6608 是家裡正在用的主路由器，等 D3 接手後才會刷）。
 
 | 機型 | 編譯名稱 | 晶片 | 無線 |
 |---|---|---|---|
@@ -91,7 +91,7 @@ CR660x 的設定檔理論上也適用 CR6606、CR6609。
 | `ZTE-E8820V2` | 中興 E8820 V2 | |
 | `ZTT-RX6000` | 中天科技 RX6000（Wi-Fi 6 電信業者機） | 已實測 |
 
-上游對 `NEWIFI3` 的註記是「部分來自 GH-X/padavan-4.4，不需要拆 C48 電容，上游未實測」；本專案會以實機驗證。
+上游對 `NEWIFI3` 的註記是「部分來自 GH-X/padavan-4.4，不需要拆 C48 電容，上游未實測」；本專案已在 D3 實機驗證（有線網路與重開機另外修過，見 docs/ROADMAP.md A9、A10）。
 
 ### 請求支援
 
@@ -114,18 +114,19 @@ CR660x 的設定檔理論上也適用 CR6606、CR6609。
 **包含**
 - 有線：MT7621 硬體 NAT（HWNAT）、SFE 軟體加速、IPv6、fullcone NAT
 - **Wi-Fi 穩定性**：Wi-Fi 重新啟動後立刻恢復連線（急速連線；原本 STP 要等 30 秒，裝置在這段時間連上會拿不到 IP）；修正 4.4 核心硬體 NAT 殘留標記讓 2.4G 被 STP 誤判成迴圈、中斷約 50 秒的問題（已回報上游）
+- Wi-Fi 出廠預設（D3 實測後定案）：5G 80 MHz、自動選頻、TxBurst 開、混合模式（關閉 Greenfield）；2.4G 20 MHz、TxBurst 開；每天凌晨 4 點起、Wi-Fi 閒置時自動重選頻道
 - IPv6：接在另一台路由器後面、上一層沒有可分配的前綴時，區網自動改用 NAT66（可關閉）
 - Wi-Fi 國家碼預設台灣（NCC）：頻道與功率**只標示、不鎖定**，DFS 頻段、非台灣頻段在選單上標示；自動選頻只選台灣免雷達偵測的頻道
 - 無線：閉源驅動、Beamforming（TxBF，原廠有校正資料的機型才有）、802.11k/v（預設開）、802.11r（預設關，見下方說明）、AP 中繼自動重連
-- DNS：**[黑潮 DNS](https://github.com/candy999/kuroshio-dns)**（預設開啟：找出台灣 CDN 節點、每天挑最快且沒汙染的上游、過濾廣告與詐騙網站；選用：DoT／DoH／DoQ 加密 DNS、Cloudflare DDNS、Let's Encrypt 憑證）；沒有回應時自動改用業者 DNS
+- DNS：**[黑潮 DNS](https://github.com/candy999/kuroshio-dns) 3.4.0**（預設開啟；串接模式預設開，前面還有一台跑黑潮的路由器時共用它的結果；找出台灣 CDN 節點、每天挑最快且沒汙染的上游、過濾廣告與詐騙網站；選用：DoT／DoH／DoQ 加密 DNS、Cloudflare DDNS、Let's Encrypt 憑證）；沒有回應時自動改用業者 DNS
 - VPN：WireGuard（核心內建）、OpenVPN、L2TP／PPTP 伺服器
-- IPTV：msd_lite、xUPnPd、IGMP proxy（中華電信 MOD 相關設定；修正 igmpproxy 0.3 群組過期時當機）
+- IPTV：**中華電信 MOD 自動設定**（自動偵測機上盒接的 LAN 孔並設成 MOD 專用孔；網際網路頁的「MOD／IPTV 接法」卡片可手動選孔、設 VLAN 與群播）、msd_lite、xUPnPd、IGMP proxy（預設開；修正 igmpproxy 0.3 群組過期時當機）
 - 管理：OpenSSH（含 SFTP）、ttyd 網頁終端機
 - Newifi D3 另有 USB：Samba、FTP、NTFS／exFAT／ext4
 
 **刻意不包含**
 - 科學上網（Shadowsocks、Xray、V2Ray、Trojan、sing-box 等）
-- 廣告外掛（adbyby、AdGuardHome）：之後由黑潮 DNS 負責過濾
+- 廣告外掛（adbyby、AdGuardHome）：改由黑潮 DNS 負責過濾
 - 中國服務（阿里 DDNS、ddnsto、阿里雲盤）、校園網認證、KMS 模擬器
 - 預設超頻（另外提供 `-oc1000` 超頻版，自行選用）
 
@@ -148,6 +149,8 @@ CR660x 的設定檔理論上也適用 CR6606、CR6609。
 - **DFS 頻段（5 GHz 52–64、100–140）**：台灣規定要有雷達偵測，Padavan 沒有啟用。選單上會標示，自動選頻不會選到；手動選用請自行評估。
 - **802.11k/v** 預設開（只是提供鄰近 AP 清單、建議切換，不會踢掉裝置）；**802.11r** 預設關：有些裝置看到快速漫遊就連不上，要開請先在每台 AP 都開、實際測試漫遊。
 - **Wi-Fi 迴圈保護／急速連線**（診斷頁）：平常不用調整。某個 Wi-Fi 頻段收到其他裝置的 STP 封包（家裡有橋接器或中繼器）時，那個頻段會自動改回標準保護並寫進系統記錄。
+- **中華電信 MOD**：機上盒直接接路由器的 LAN 孔即可，自動偵測預設開。偵測要等機上盒重新要位址：只重開路由器、機上盒沒重開時偵測不到，請把機上盒重開一次（約 1～2 分鐘後系統記錄會寫出偵測到哪個孔）。偵測到之後不會自動取消，換孔或不用 MOD 時請到網際網路頁改。
+- **2.4G 40 MHz**：比 20 MHz 快，但共存偵測沒有開（鄰近 AP 多時不會自動退回 20 MHz），所以預設 20 MHz；要開請自行評估。
 - **Linux 4.4 核心已停止官方維護。** 本韌體選擇閉源驅動的穩定度，代價是核心不再有上游安全更新。不建議把管理頁面或 SSH 開放到 WAN。
 
 ## 自行編譯
@@ -186,13 +189,16 @@ make CR660x
 - [x] 台灣中文介面、台灣預設值、移除無關功能
 - [x] OpenSSH 安全更新、修正 KVR bug、自動編譯（標準版與 OC 1000 版）
 - [x] 新後台框架：全站 RWD、亮暗色、手機表格卡片化
-- [ ] 總覽儀表板、網路診斷、裝置詳情
+- [x] 總覽儀表板、網路診斷（裝置詳情的訊號歷史、斷線紀錄還沒做）
 - [x] 整合[黑潮 DNS](https://github.com/candy999/kuroshio-dns)（取代 SmartDNS，D3 實機驗證）
 - [x] Wi-Fi 國家碼改為台灣（只標示、不鎖定）
 - [x] Wi-Fi 穩定性：修正 2.4G 被 STP 誤判成迴圈（4.4 核心硬體 NAT 殘留標記）、Wi-Fi 重啟後急速連線、igmpproxy 當機、自動 NAT66
+- [x] 中華電信 MOD：自動偵測機上盒孔、網際網路頁 MOD／IPTV 設定
+- [x] miniupnpd 2.3.7、5G／2.4G 出廠預設值實測定案
+- [ ] 第一個正式版 v2026.11.20
+- [ ] 小米 CR6608 實機測試
 - [ ] 智慧漫遊（11k Beacon Report、11v、自適應 11r、經驗學習）
 - ~~硬體 QoS~~：實測沒有改善，已捨棄
-- [ ] miniupnpd 升級
 
 ## 致謝與授權
 

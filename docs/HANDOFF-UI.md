@@ -8,10 +8,12 @@
 
 ## 0. 分工與流程（先讀這段）
 
+> **2026-11-17 起前端、後端、實機測試、編譯發布全部由本機負責**（見 HANDOFF-LOCAL），下文提到「雲端」「B 階段交給雲端」的地方，現在都是本機自己做。硬體 QoS（頻寬管理）已在 2026-11-18 捨棄，頁面已移除。
+
 | 階段 | 在哪裡 | 做什麼 |
 |---|---|---|
 | **U：介面全面重做** | **本機**（就是你） | 依第 5 節的使用者目的重新設計後台，**連未來功能的介面一起做**；未來功能的資料先用模擬資料（第 6 節的資料介面約定），預覽工具與實機都要能跑 |
-| B：後端 | 雲端工作階段 | 依第 6 節的約定實作資料來源（`twstats` 取樣器、硬體 QoS 控制器、漫遊資料、黑潮狀態轉接等），把模擬資料換成真的 |
+| B：後端 | 本機（原本是雲端工作階段） | 依第 6 節的約定實作資料來源（`twstats` 取樣器、漫遊資料、黑潮狀態轉接等），把模擬資料換成真的 |
 | P：精修 | 本機 | 前後端接上後，回到本機在實機上精修 UI 細節（文案、間距、手機操作、錯誤狀態） |
 
 **原則：前後端只透過第 6 節的「資料介面約定」溝通。** 介面需要新資料時，先在第 6 節新增或修改約定（含欄位、單位、更新頻率、沒有資料時的表示法），再做模擬資料。不要直接改後端 C 程式去產生資料，那是 B 階段的工作。例外：純前端需要、而且只是把**現有** nvram 變數或現有 ej 函式包成 JSON 的小改動，可以做，但要在第 6 節註明。
@@ -30,7 +32,7 @@ cd padavan-tw
 git checkout claude/zealous-feynman-bhwrbf
 git pull
 ```
-- 開發分支：`claude/zealous-feynman-bhwrbf`（與雲端工作階段共用，**每次開工前先 `git pull`**，避免跟雲端的提交衝突）
+- 開發分支：`claude/zealous-feynman-bhwrbf`（**每次開工前先 `git pull`**；2026-11-17 起只有本機在用）
 - `main` 目前只合併到 PR #1；之後由使用者決定何時再開 PR 合併
 
 ### 1.2 參考專案（唯讀，需要時再拉）
@@ -84,8 +86,8 @@ scp -r trunk/user/www/n56u_ribbon_fixed/state.js admin@192.168.2.1:/www/
 實機上按「套用」會寫入 nvram 並重啟服務。改到網路、Wi-Fi、管理密碼、LAN IP 之前先跟使用者確認，避免把自己（和使用者）斷線。
 
 ### 2.4 編韌體與發布
-- 推送到 `claude/zealous-feynman-bhwrbf` 會觸發 GitHub Actions（`.github/workflows/build.yml`），編 NEWIFI3、CR660x 的標準版與 `-oc1000` 版，約 10～15 分鐘
-- **同一分支新的推送會取消正在跑的編譯**（concurrency 設定）。雲端工作階段在等編譯結果時，先跟使用者確認再推送
+- 推送到 `claude/zealous-feynman-bhwrbf` 會觸發 GitHub Actions（`.github/workflows/build.yml`），編 NEWIFI3、CR660x 的標準版與 `-oc1000` 版，約 8～12 分鐘
+- **同一分支新的推送會取消正在跑的編譯**（concurrency 設定）。正在等某次編譯結果時，先確認再推送
 - 只改 `*.md`、`docs/**` 不會觸發編譯
 - Commit 訊息用繁體中文，第一行「範圍: 摘要」（例如 `www: 總覽儀表板第一版`），內文寫為什麼這樣改
 
@@ -176,7 +178,7 @@ scp -r trunk/user/www/n56u_ribbon_fixed/state.js admin@192.168.2.1:/www/
 4. **第一次設定**：依業者（中華電信光世代 PPPoE、有線電視 DHCP…）帶入、MTU、管理密碼、Wi-Fi
 5. **外出連回家**：WireGuard 新增手機、看誰連著
 6. **讓外面連進來**：連接埠轉送（遊戲、NAS、監視器）、網域（黑潮 DNS DDNS）、**偵測 CGNAT**（業者沒給公網 IP 時轉送不會通，要明說）
-7. **網路順暢**：頻寬管理（硬體 QoS）——「視訊會議、遊戲不卡」
+7. ~~**網路順暢**：頻寬管理（硬體 QoS）——「視訊會議、遊戲不卡」~~（2026-11-18 捨棄：實測沒有改善）
 8. **維護**：韌體更新、設定備份與還原、定時重開機、匯出記錄給別人幫忙看
 9. **DNS 服務**：黑潮 DNS 的過濾、加密、CDN 台灣節點、統計
 
@@ -199,7 +201,7 @@ scp -r trunk/user/www/n56u_ribbon_fixed/state.js admin@192.168.2.1:/www/
 | **總覽** | 網路現在好不好？要注意什麼？ | 健康路徑（裝置 → Wi-Fi → 路由器 → 業者 → 網際網路 → DNS）、值得注意的事、網際網路速度、路由器負載、Wi-Fi 概況、線上裝置數、快速動作（重新連線、重開機、分享 Wi-Fi） | 取代 `index.asp`（網路地圖保留為子頁） |
 | **裝置** | 誰在用網路？某台怎麼了？ | 裝置清單（名稱、類型、連線方式、訊號、IP、上線時間）、取名、固定 IP、暫停上網、喚醒（WOL）；點進去看裝置詳情（訊號歷史、斷線紀錄、連過哪台 AP、建議） | lan_clients、DHCP 固定 IP、MAC 過濾 |
 | **Wi-Fi** | Wi-Fi 好不好？怎麼分享？ | 名稱密碼（2.4G／5G 同名）、分享 QR 碼、訪客網路（可設時效）、頻道與干擾（目前頻道、鄰近 AP、每日自動選頻的紀錄）、**多台 AP 與漫遊**（各 AP 狀態、漫遊事件、建議） | 無線 2.4G／5G、訪客、漫遊紀錄 |
-| **網際網路** | 連線方式對不對？ | 業者精靈（光世代 PPPoE、有線電視、固定 IP…）、MTU 自動偵測、IPv6、DNS（黑潮 DNS 的白話設定）、**CGNAT 偵測**、MOD 接法 | 廣域網路、IPv6、DNS 服務 |
+| **網際網路** | 連線方式對不對？ | 業者精靈（光世代 PPPoE、有線電視、固定 IP…）、MTU 自動偵測、IPv6、DNS（黑潮 DNS 的白話設定）、**CGNAT 偵測**、MOD 接法（✅ 2026-11-20「MOD／IPTV 接法」卡片，見 11.2） | 廣域網路、IPv6、DNS 服務、IPTV |
 | **遠端與分享** | 外出怎麼連回家？外面怎麼連進來？ | WireGuard 伺服器（裝置、QR、誰在線）、連接埠轉送（依用途：遊戲、NAS、監視器，自動帶入裝置）、UPnP 狀態、網域（黑潮 DDNS）與憑證 | WireGuard、虛擬伺服器、UPnP、DDNS |
 | ~~**頻寬管理**~~（2026-11-18 捨棄，頁面已移除） | 怎麼讓視訊、遊戲不卡？ | 硬體 QoS 模式（關閉／固定／自動）、申裝方案、目前狀態、最近介入紀錄與前後延遲 | （新） |
 | **診斷** | 哪裡出問題？怎麼辦？ | 一鍵檢查（逐段：Wi-Fi → 路由器 → 業者 → DNS → 網站）、延遲與丟包歷史、事件時間軸、測速、匯出診斷報告 | 系統記錄、網路工具 |
@@ -334,30 +336,30 @@ scp -r trunk/user/www/n56u_ribbon_fixed/state.js admin@192.168.2.1:/www/
 | U1 | 共用元件＋`twApi()`＋模擬資料機制（`serve.py` 的 mock 與情境切換） | 預覽工具三種情境都正常 |
 | U2 | 新選單與框架（`state.js`）：新的 9 個選單、手機底部分頁；舊頁面全部收進「進階設定」且可用 | 106 頁都能從選單到達；桌機／手機、亮／暗色截圖 |
 | U3 | 總覽、裝置、Wi-Fi（含分享、訪客、多台 AP） | 實機上用現有資料能顯示的部分要真的顯示；其餘顯示「功能未提供」 |
-| U4 | 網際網路（業者精靈、CGNAT 提示）、遠端與分享、頻寬管理、診斷、系統 | 同上；所有寫入都走 3.3 的表單機制 |
+| U4 | 網際網路（業者精靈、CGNAT 提示）、遠端與分享、~~頻寬管理~~（已移除）、診斷、系統 | 同上；所有寫入都走 3.3 的表單機制 |
 | U5 | 實機走一遍：套用、重開機、登出、語言切換、手機操作 | 使用者確認 |
 
 每一步都：截圖（桌機 1440／手機 390、亮／暗色）、`shoot.js` 沒有橫向溢出與 JS 錯誤、推送前 `git pull`。
 
 ---
 
-## 8. 回到雲端（B 階段）時的待辦（給雲端工作階段）
+## 8. B 階段（後端）的待辦（2026-11-17 起由本機做）
 
-1. 實作 `/tw_api.asp`（web_ex.c）或等效機制，依第 6 節逐一提供資料（格式照 `tools/ui-preview/mock/*.json`；還沒做的名稱維持回空白，前端會自動用後備資料）
-2. `twstats` 取樣器（ROADMAP D1～D5），資料只存記憶體
-3. 硬體 QoS 固定／自動模式（E4～E8）。設定名稱用後端既有的 `hw_qos_*`（`IPConnection` 群組），不另外登記 `tw_qos_*`
+1. ~~實作 `/tw_api.asp`~~：2026-11-18 完成（`d230446`）；還沒做的名稱回 `{"_fallback":true}`
+2. `twstats` 取樣器：D1、D2 完成；D3、D5、D6 不做，D4 併入 KVR R1（ROADMAP D 章）
+3. ~~硬體 QoS 固定／自動模式（E4～E8）~~：2026-11-18 捨棄，頻寬管理頁已移除
 4. `tw-roamd` 資料轉 JSON、WireGuard 狀態、CGNAT 偵測（比對對外位址）
-5. 黑潮 DNS 統計轉接（G9）
+5. ~~黑潮 DNS 統計轉接（G9）~~：完成（黑潮頁「儀表板」分頁）
 6. 本機在第 6 節新增的約定：`speedtest`、6.1 的排程功能（暫停上網時間、訪客時效、漫遊引導）
-7. 修 `ralink.c` 的 Wi-Fi 掃描解析（第 12 節），或在 `wifi` API 提供 `neighbors`
+7. ~~修 `ralink.c` 的 Wi-Fi 掃描解析~~：d8c9062 完成並實機確認
 8. ~~韌體版本檢查~~：已改由瀏覽器查 GitHub，不用做
 
-## 9. 目前硬體與韌體狀態（2026-11-13）
+## 9. 目前硬體與韌體狀態（2026-11-20）
 
-- Newifi D3：刷 `ff54088` 版，有線 LAN／WAN 正常（交換器單一 GMAC 修正已在實機確認）。這台就是實機測試機
-- 小米 CR6608：使用者正在使用中，**不能動**，等 D3 接手後才刷
+- Newifi D3：刷 `1f7ff9e` 前後的版本（黑潮 3.4.0、5G 混合模式、MOD 自動偵測），有線、重開機、黑潮資料區、Wi-Fi 掃描都已實機確認，夜間長測通過。這台就是實機測試機
+- 小米 CR6608：使用者正在使用中，**不能動**，等 D3 接手後才刷；尚未實機測試
 - 小米 MI-MINI：暫緩（若做，會用 3.4 核心另外處理）
-- 黑潮 DNS：整合完成待實機；Lite／核心版與黑潮專案討論中，**本機不用處理**
+- 黑潮 DNS：3.4.0 已整合並在 D3 實機驗證（HANDOFF-LOCAL 5.7）
 - 路線圖總表：`docs/ROADMAP.md`；舊的 UI 計畫：`docs/UI-PLAN.md`（本文件取代它的階段規劃）
 
 ## 10. 使用者確認的結果（2026-11-13，U0）
@@ -389,7 +391,7 @@ scp -r trunk/user/www/n56u_ribbon_fixed/state.js admin@192.168.2.1:/www/
 - 原本的「進階設定」網站地圖 `as.asp` 轉到 `tw_advanced.asp`（同一份選單資料），側欄不再重複列出
 
 ### 11.1 新增與修改的檔案
-- 新頁面：`index.asp`（總覽，取代原首頁）、`tw_devices.asp`、`tw_wifi.asp`、`tw_internet.asp`、`tw_remote.asp`、`tw_qos.asp`、`tw_diag.asp`、`tw_system.asp`、`tw_advanced.asp`；頁面邏輯在 `tw_p_<頁>.js`
+- 新頁面：`index.asp`（總覽，取代原首頁）、`tw_devices.asp`、`tw_wifi.asp`、`tw_internet.asp`、`tw_remote.asp`、~~`tw_qos.asp`~~（2026-11-18 移除）、`tw_diag.asp`、`tw_system.asp`、`tw_advanced.asp`；頁面邏輯在 `tw_p_<頁>.js`
 - 保留舊首頁：`Main_NetMap.asp`（原 `index.asp`，只改 `current_page`）
 - 共用：`tw_ui.js`、`bootstrap/css/tw.css`（後半段「新介面元件」）
 - 後備資料（純前端，把現有 ej 函式包成一次請求）：`tw_status.asp`（wanlink、nf_values、kuroshio_status、netdev、json_system_status、get_static_client、wl_auth_list、ManualDHCPList、MFList、幾個 nvram）、`tw_rstats.asp`（`bandwidth("speed")`）
@@ -411,7 +413,12 @@ scp -r trunk/user/www/n56u_ribbon_fixed/state.js admin@192.168.2.1:/www/
 | 連接埠轉送 | `IPConnection;` 清單 `VSList` | `vts_port_x_0` 等 7 欄，未開啟時 `vts_enable_x=1` |
 | UPnP | `IPConnection;` | `upnp_enable_x` |
 | 管理密碼、定時重開機、燈號 | `General;` | `http_passwd`；`reboot_schedule_enable`、`reboot_schedule`（7 碼星期＋HHMM）；`front_led_all` |
-| 頻寬管理 | `IPConnection;` | `hw_qos_mode`、`hw_qos_wlan`、`hw_qos_down`、`hw_qos_up`、`hw_qos_tech`、`hw_qos_over`、`hw_qos_under`、`hw_qos_method`（後端已登記；限速控制器 E4～E8 還沒做，見 `docs/LOCAL-NEXT.md`）。**2026-11-14 頁面已改用並實機驗證**（6f3e3df）：切到自動 → `hnat_qos=1`、`hnat_qos_wlan=1`，syslog「Hardware QoS: on (wired), on (wlan)」；進階區關掉「Wi-Fi 裝置也套用頻寬管理」→ `hnat_qos_wlan=0`、「on (wired), off (wlan)」；關閉 → 兩個都 0。頁面在模式不是關閉時明寫「限速功能尚未提供，只會經過排程、不限速」 |
+| MOD 專用孔（網際網路頁「MOD／IPTV 接法」，40a9205） | `Layer3Forwarding;` | `wan_stb_x`（MOD 孔，0＝沒有）、`wan_stb_iso=1`；MOD＋VLAN 時另送 `vlan_filter`、`vlan_vid_cpu`、`vlan_pri_cpu`、`vlan_vid_lan<孔>`（`vlan_tag_lan<孔>`、`vlan_pri_lan<孔>` 設 0）；取消時只關掉這張卡片設的 VLAN |
+| MOD 自動偵測 | `Layer3Forwarding;` | `tw_mod_auto`（預設 1） |
+| 群播（IGMP 代理、udpxy） | `RouterConfig;LANHostConfig;` | `mr_enable_x`（預設開）、`udpxy_enable_x`（連接埠，0＝關）。中華電信 MOD 走交換器橋接、用不到這兩個 |
+| 自動 NAT66 | `IP6Connection;` | `ip6_nat66_auto` |
+| Wi-Fi 迴圈保護（診斷頁，d29b6bf） | `LANHostConfig;` | `tw_wifi_bpdu`（勾選＝2，原本是 1 就保留；不勾＝0）、`tw_wifi_fast`； 攔截紀錄：頁面載入時以 SystemCmd 執行唯讀的 `tw-bpdu-status`（讀 ebtables 計數、`/tmp/tw-bpdu-conflict`、`/etc/storage/tw-diag/bpdu-events.log` 最近 5 次）|
+| ~~頻寬管理~~（2026-11-18 捨棄，頁面與 `hw_qos_*` 已移除，以下留作紀錄） | `IPConnection;` | `hw_qos_mode`、`hw_qos_wlan`、`hw_qos_down`、`hw_qos_up`、`hw_qos_tech`、`hw_qos_over`、`hw_qos_under`、`hw_qos_method`（後端已登記；限速控制器 E4～E8 還沒做，見 `docs/LOCAL-NEXT.md`）。**2026-11-14 頁面已改用並實機驗證**（6f3e3df）：切到自動 → `hnat_qos=1`、`hnat_qos_wlan=1`，syslog「Hardware QoS: on (wired), on (wlan)」；進階區關掉「Wi-Fi 裝置也套用頻寬管理」→ `hnat_qos_wlan=0`、「on (wired), off (wlan)」；關閉 → 兩個都 0。頁面在模式不是關閉時明寫「限速功能尚未提供，只會經過排程、不限速」 |
 
 清單類先送 `action_mode=" Add "`（或 `" Del "`），等 `start_apply.htm` 呼叫 `parent.done_validating()` 後再送 `" Restart "`，與舊頁面相同（`TW.listAdd()`）。
 
@@ -421,14 +428,14 @@ scp -r trunk/user/www/n56u_ribbon_fixed/state.js admin@192.168.2.1:/www/
 - `link_internet` nvram：1＝連得到外面、2＝偵測中或不穩定、0＝連不到
 - **httpd 啟動時就 chdir 到 `/www`**：bind mount 記憶體副本後要 `killall httpd; httpd` 才會讀到新檔案（`push.py` 會自動做）
 - **Wi-Fi 鄰近 AP 掃描壞掉**：`wds_aplist_2g.asp`（`ej_wl_scan_2g`）在 D3 回傳的 JS 字串裡有換行、欄位錯位（`ralink.c` 用固定欄寬解析驅動的掃描表，跟這版驅動的輸出不合）。原始的 WDS 頁應該也受影響。新 Wi-Fi 頁偵測到就顯示「需要更新韌體」。**B 階段**：修 `ralink.c` 的解析，或直接在 `wifi` API 提供 `neighbors`
-  - **2026-11-13 雲端已修（待新韌體實機確認）**：原因是台灣版替 MT7603 開了 802.11k，驅動掃描表多一欄「BcnRept」，而且表頭與資料列欄寬不同；`ralink.c` 改成逐行解析、欄位位置從表頭找，BSSID 不是 MAC 的行直接跳過。輸出格式不變（`[["SSID","BSSID","頻道","訊號"],…]`，SSID 一樣經過 `char_to_ascii`）。新 Wi-Fi 頁可以拿掉「需要更新韌體」的判斷，或保留給舊韌體
+  - **2026-11-13 雲端已修，d8c9062 實機確認**：原因是台灣版替 MT7603 開了 802.11k，驅動掃描表多一欄「BcnRept」，而且表頭與資料列欄寬不同；`ralink.c` 改成逐行解析、欄位位置從表頭找，BSSID 不是 MAC 的行直接跳過。輸出格式不變（`[["SSID","BSSID","頻道","訊號"],…]`，SSID 一樣經過 `char_to_ascii`）。新 Wi-Fi 頁可以拿掉「需要更新韌體」的判斷，或保留給舊韌體
 - 實機的 D3 前面還有一台路由器（WAN 拿到 10.0.0.x）：網際網路頁正確顯示「雙層 NAT」
 - `get_nvram_list` 的欄位順序就是 `variables.c` 的順序、不附索引；指定隱藏欄位會輸出 `"*"`；MAC 不含冒號
 - 新介面目前只有繁體中文（字串寫在 `tw_p_*.js`，跟現有的台灣版頁面一樣），切換語言只影響原始頁面
 - **【高優先，B 階段】D3 無法重開機**：後台（新舊介面都一樣）按重開機 → httpd `sys_reboot()` 走 `MTD_FLASH_32M_REBOOT_BUG` 路徑：`mtd_storage.sh save` 後執行 `/bin/mtd_write -r unlock mtd1`，回 `Could not open mtd device: mtd1`，所以不會重開。SSH 下 `reboot` 更糟：服務與區網全部關掉後停住（網路線有連線但不回 ARP），**要拔電源**。`/dev/mtd1` 存在；MTD 表有重複的項目（mtd7「ALL」、mtd8 第二個「Bootloader」、mtd9「Kuroshio」、mtd10 整顆晶片），黑潮 DNS 自己也記錄「資料區跟其他分割區重疊」。推測跟台灣版加的分割區有關，要查 `mtd_write` 怎麼找裝置名稱與 D3 的分割表
-  - **2026-11-13 雲端已修（待新韌體實機確認）**：跟分割區無關，是上游 4.4 在 D3 上本來就壞的。4.4 的 `mtd_write` 依「分割區名稱」找裝置，沒有叫 mtd1 的分割區 → 開啟失敗就結束、不重開（3.4 的 mtd_write 會忽略失敗照樣重開）。D3 改關掉 `CONFIG_32M_REBOOT_FIXUP`（`configs/tw/NEWIFI3.config`），走一般流程：後台 `kill(1, SIGTERM)` → init 停服務、存設定 → `reboot()`；4.4 的 SPI Flash 驅動關機時會把 Flash 切回 3-byte 模式並重置。MTD 的重複項目（ALL、第二個 Bootloader、整顆晶片）是上游 dtsi 與 dts 重複定義，本來就有，無害
+  - **2026-11-13 雲端已修，d8c9062 實機確認**：跟分割區無關，是上游 4.4 在 D3 上本來就壞的。4.4 的 `mtd_write` 依「分割區名稱」找裝置，沒有叫 mtd1 的分割區 → 開啟失敗就結束、不重開（3.4 的 mtd_write 會忽略失敗照樣重開）。D3 改關掉 `CONFIG_32M_REBOOT_FIXUP`（`configs/tw/NEWIFI3.config`），走一般流程：後台 `kill(1, SIGTERM)` → init 停服務、存設定 → `reboot()`；4.4 的 SPI Flash 驅動關機時會把 Flash 切回 3-byte 模式並重置。MTD 的重複項目（ALL、第二個 Bootloader、整顆晶片）是上游 dtsi 與 dts 重複定義，本來就有，無害
 - **黑潮 DNS 開機後長時間吃滿 CPU**（2026-11-13 實測，見下面「黑潮 DNS 用量」）：學習資料因為分割區重疊只放記憶體，每次開機都重跑 cdn-pool、cdn-scan、dns-benchmark，開機後 40 分鐘仍佔全機約 80～97% CPU
-  - **2026-11-13 雲端已修（待新韌體實機確認）**：「重疊」是誤判——分割區沒有重疊，是 `kuroshio.sh` 用 `find /proc/device-tree` 讀分割表，但那是捷徑，busybox find 預設不跟進，一個分割區都沒讀到。改成 `/proc/device-tree/`，並把「讀不到分割表」與「真的重疊」分開顯示。另外黑潮 DNS 改用 `nice -n 10` 執行。修好後學習資料存在 mtd9，只有第一次開機會跑重工作
+  - **2026-11-13 雲端已修，764938b 實機確認（另修了資料區掛載）**：「重疊」是誤判——分割區沒有重疊，是 `kuroshio.sh` 用 `find /proc/device-tree` 讀分割表，但那是捷徑，busybox find 預設不跟進，一個分割區都沒讀到。改成 `/proc/device-tree/`，並把「讀不到分割表」與「真的重疊」分開顯示。另外黑潮 DNS 改用 `nice -n 10` 執行。修好後學習資料存在 mtd9，只有第一次開機會跑重工作
 - 中等寬度（900～1240 px）頂部列放不下：已收起「釋放記憶體」「關機」圖示
 
 ### 12.1 黑潮 DNS 用量（2026-11-13，D3，韌體 4.4.198.9-100_ff54088，開機約 40 分鐘）
@@ -707,3 +714,15 @@ trim 把 CDN 冷資料移出記憶體（1.7 MB），RSS 只降 1 MB；評測後�
 | 開機日誌 | 沒有「分片不見了」洗版 |
 
 **之後（`8ca57dc`）**：憑證申請進度改走 `kuroshio_api.cgi` 的 `op=acme-log`（`kuroshio.sh acme-log-json`：`{ok, running, log}`，只給區網／VPN 登入的人），拿掉前端借 `apply.cgi` SystemCmd 的 `sysCmd()`；`kuroshio.sh reload` 依黑潮版本決定要等新的一輪跑滿幾秒（3.3.3 起 2 秒、以前 8 秒）。D3：`op=acme-log` 回 `{ok:true, running:false, log:""}`，沒帶 X-TW-Request 的被擋；3.3.2 的 reload 照舊約 12 秒（含重寫設定）
+
+### 13.14 黑潮 DNS 3.3.3～3.4.0（2026-11-18～20，摘要）
+- 韌體依序升到 3.3.3（25beed5）、3.3.6（e7588c5；路由器 IPv6 關閉時帶 `upstream.ipv6=0`）、3.3.7（6432347）、**3.4.0**（ace2df1）
+- 3.4.0 串接模式（預設開）：黑潮頁面適配串接狀態與設定（fdc4446）。D3 已驗證串接狀態、共用結果、重新載入不斷線（400 筆 0 失敗）、每秒 40 筆查詢 0 逾時；作者要的 ③④（要動主路由器）、⑥補跑時段 `catchup_window` 還沒做（HANDOFF-LOCAL 5.7）
+- 記憶體隨快取長大、閒置不回落（約 110 MB），已回報作者，不擋 B6
+
+### 13.15 網際網路頁「MOD／IPTV 接法」卡片（2026-11-20，40a9205、1f7ff9e，D3 實機）
+- 內容：自動偵測開關（`tw_mod_auto`）、沒有接 MOD／中華電信 MOD（選孔）／中華電信 MOD＋VLAN、MOD 孔連線狀態、群播（IGMP 代理、udpxy）設定；寫入的變數見 11.2
+- 後端 `tw_mod.c` 偵測到機上盒會自動設成 MOD 專用孔並寫系統記錄；有 MOD 孔時 WAN 設成交換器 IGMP 的固定上游孔（修正直播黑畫面）
+- D3 實測：機上盒重開後約 1～2 分鐘偵測到 LAN1；直播約 10 Mbps 只送到 LAN1，接電腦的 LAN2 沒有被灌群播；換台正常（實測多台）
+- 限制：機上盒沒重新要位址（例如只重開路由器）時偵測不到，要重開機上盒；偵測到不會自動取消（在這張卡片改回）
+- 頁面與文件不要顯示或記錄機上盒的 MAC、序號、位址

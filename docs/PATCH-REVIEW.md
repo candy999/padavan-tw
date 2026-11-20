@@ -45,7 +45,7 @@ TurBoTse 沒有的 571 個 commit 分類：其他機型 184、套件版本 167�
 | Rainbow UI、formlogin（表單登入） | ⏸ 暫不收 | 外觀／使用習慣，非穩定性 |
 | miniupnpd 2.3.7 | ✅ **已收**（2026-11-18，`4750c57`） | 原始碼用 vb1980 的（padavan-ng 移植，含 2.3.7 之後的 PCP nonce 修正、設定檔維持 /etc/miniupnpd.conf）；接 TurBoTse 的 package.mk，libiptc 用暫存區的 `-lip4tc`，**iptables 不用升級**。D3 實測 SSDP、AddPortMapping（DNAT＋ACCEPT＋lease 檔）、DeletePortMapping 都正常 |
 | 套件版本（openssl、curl、dnsmasq、dropbear、zlib…） | 不收 | TurBoTse 普遍較新（openssl 3.0.21 對 1.1.1w、curl 8.21 對 8.15） |
-| igmpproxy 0.4 | 不收 | TurBoTse 刻意降回 0.3，MOD 先維持原狀 |
+| igmpproxy 0.4 | 不收 | TurBoTse 刻意降回 0.3，維持 0.3；改成在 0.3 上加兩個修補：上游 PR #98 的 `internAgeRoute()` use-after-free 修法（67fc7d8，還沒實際觸發驗證）、核心要求啟用路由時來源在下游介面就略過（e78619e，已實測）。中華電信 MOD 走交換器橋接，不經過 igmpproxy |
 
 ## simonchen/padavan-4.4
 
@@ -80,6 +80,7 @@ TurBoTse 沒有的 571 個 commit 分類：其他機型 184、套件版本 167�
 
 ## 本專案自己的修正
 
-- `rc/src/ralink.c`：802.11k/v 開關無效（驅動只讀第一個 `RRMEnable`／`WNMEnable`），以及 MT7915 DBDC 的 `FtSupport` 少一個參數。預設仍關閉。
+- `rc/src/ralink.c`：802.11k/v 開關無效（驅動只讀第一個 `RRMEnable`／`WNMEnable`），以及 MT7915 DBDC 的 `FtSupport` 少一個參數。之後 802.11k/v 改成預設開、802.11r 預設關。
 - 台灣化：繁體中文（台灣）介面、時區、NTP、斷線偵測主機。
-- 機型設定：放在 `trunk/configs/tw/`，編譯時接在上游的機型設定後面（上游設定檔保持不改）。關閉科學上網／校園網等外掛；開啟 SQM（含必要的 QoS、IFB 模組）、SFE、WireGuard、msd_lite；不超頻。
+- 機型設定：放在 `trunk/configs/tw/`，編譯時接在上游的機型設定後面（上游設定檔保持不改）。關閉科學上網／校園網等外掛；開啟 SFE、WireGuard、msd_lite；不超頻（另外編 `-oc1000` 版）。軟體 SQM（連同 QoS 排程、IFB 核心選項）已從韌體移除，原本規劃的硬體 QoS（QDMA）也在 2026-11-18 捨棄。
+- 其他本專案修正（細節見 ROADMAP、WIFI-STABILITY）：D3 單一 GMAC、D3 重開機、硬體 NAT 殘留標記（STP 誤判 2.4G 迴圈，已回報 TurBoTse/padavan#33、hanwckf/padavan-4.4#73）、Wi-Fi BPDU 擋法、STP 8 秒＋急速連線、自動 NAT66、刷機重開、busybox dhcp6c 洗日誌、中華電信 MOD 自動偵測。
