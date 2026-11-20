@@ -316,6 +316,11 @@ config_bridge(int is_ap_mode)
 		if (get_wan_bridge_mode() != SWAPI_WAN_BRIDGE_DISABLE)
 			wired_ifname = "eth2.1";
 #endif
+		/* padavan-tw：有 IPTV 機上盒孔（中華電信 MOD）時，WAN 是機上盒的上游：設成交換器 IGMP 的固定上游孔，
+		 * 換台的 IGMP 加入才會送到業者（否則硬體窺探把它攔下，直播黑畫面；2026-11-20 D3 實測）。
+		 * 窺探照常開著，串流只送到要看的孔。跟 AP 模式把上行孔設成固定孔是同一個做法 */
+		if (get_wan_bridge_mode() != SWAPI_WAN_BRIDGE_DISABLE)
+			igmp_static_port = SWAPI_PORT_WAN;
 	} else {
 		igmp_static_port = nvram_get_int("ether_uport");
 		multicast_router = 0;   // bridge is not mcast router path
@@ -487,6 +492,8 @@ restart_switch_config_vlan(void)
 
 	notify_reset_detect_link();
 	switch_config_vlan(0);
+	/* padavan-tw：機上盒孔（wan_stb_x）變了，交換器 IGMP 的固定上游孔要跟著改（config_bridge） */
+	config_bridge(0);
 
 #if !defined (USE_GMAC2_TO_GPHY) && !defined (USE_GMAC2_TO_GSW)
 	if (phy_vlan_pvid_wan_get() != pvid_wan)
