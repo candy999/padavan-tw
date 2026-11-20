@@ -1334,6 +1334,16 @@ gen_ralink_config(int is_soc_ap, int is_aband, int disable_autoscan)
 	fprintf(fp, "FtSupport=%d;0\n", i_val);
 	fprintf(fp, "FtOtd=0;0\n");
 	fprintf(fp, "FtRic=1;1\n");
+	/* padavan-tw：802.11r 的 Mobility Domain 用 SSID 算，家裡每台 padavan-tw（以及同名的兩個頻段）自動一樣，
+	 * 手機才能在它們之間快速漫遊；不用驅動預設的 "RT"（附近別家聯發科的 AP 也是 RT） */
+	{
+		static const char md_tbl[] = "ABCDEFGHJKLMNPQSUVWXYZ23456789KM";
+		const char *md_ssid = nvram_wlan_get(is_aband, "ssid");
+		unsigned int md_h = 5381;
+		while (*md_ssid)
+			md_h = md_h * 33 + (unsigned char)*md_ssid++;
+		fprintf(fp, "FtMdId1=%c%c\n", md_tbl[md_h & 31], md_tbl[(md_h >> 5) & 31]);
+	}
 
 	//HT_GI
 	fprintf(fp, "HT_GI=%d;%d\n", 1, 1);

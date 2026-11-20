@@ -248,8 +248,8 @@ struct nvram_pair router_defaults[] = {
 	{ "wl_HT_AMSDU", "0" },
 	{ "wl_HT_BAWinSize", "64" },
 #endif
-	{ "wl_HT_80211KV", "1" },	/* padavan-tw：802.11k/v 預設開啟；802.11r 相容性較差，維持關閉 */
-	{ "wl_HT_80211R", "0" },
+	{ "wl_HT_80211KV", "1" },	/* padavan-tw：802.11k/v/r 預設開啟（2026-11-20 起 r 也開）；看到 r 就連不上的舊裝置改連 IoT 網路（第二個 SSID 不宣告 k/v/r） */
+	{ "wl_HT_80211R", "1" },
 	{ "wl_HT_MpduDensity", "5" },
 	{ "wl_HT_AutoBA", "1" },
 	{ "wl_VgaClamp", "0" },
@@ -349,7 +349,7 @@ struct nvram_pair router_defaults[] = {
 	{ "rt_HT_RDG", "0" },
 	{ "rt_HT_AMSDU", "1" },
 	{ "rt_HT_80211KV", "1" },
-	{ "rt_HT_80211R", "0" },
+	{ "rt_HT_80211R", "1" },
 	{ "rt_HT_MpduDensity", "5" },
 	{ "rt_band_steering", "0" },	/* band steering AP 2.4Ghz */
 #if defined (USE_WID_2G) && (USE_WID_2G==7615 || USE_WID_2G==7915)

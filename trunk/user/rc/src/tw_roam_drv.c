@@ -229,6 +229,8 @@ btm_body(unsigned char *p, int max, const struct twr_nbr *c, int n)
 		if (is_mine(c[i].bssid))
 			info |= 1 << 3;			/* 同一台（Key Scope） */
 		info |= (1 << 5) | (1 << 7) | (1 << 9);	/* QoS、RRM、Immediate BA */
+		if (c[i].ft)
+			info |= 1 << 10;		/* Mobility Domain：同一個，可以用 802.11r 快速漫遊 */
 		info |= 1 << 11;			/* HT */
 		if (c[i].band == 5)
 			info |= 1 << 12;		/* VHT */
@@ -265,7 +267,7 @@ nr_info(unsigned char *p, const struct twr_nbr *c)
 	p[14] = 3;					/* ap_reachability：可達 */
 	p[15] = 1;					/* security：加密方式相同 */
 	p[16] = is_mine(c->bssid) ? 1 : 2;		/* key_scope：同一台才是 1 */
-	p[17] = 2;					/* mobility：沒開 11r（2＝0） */
+	p[17] = c->ft ? 1 : 2;				/* mobility：有開 11r＝1（同一個 Mobility Domain），沒開填 2＝0 */
 }
 
 /* 開 rtnetlink（收驅動的 IWEVCUSTOM 事件） */

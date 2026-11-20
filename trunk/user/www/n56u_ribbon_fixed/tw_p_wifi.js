@@ -285,6 +285,13 @@ function wf_channel_apply() {
 }
 
 /* ---------- 多台 AP 與漫遊 ---------- */
+function wf_ft_apply(el) {
+	var on = el.checked, f = { rt_HT_80211R: on ? '1' : '0' }, sid = 'WLANConfig11b;';
+	if (wf_has5()) { f.wl_HT_80211R = on ? '1' : '0'; sid += 'WLANConfig11a;'; }
+	TW.apply({ sid: sid, fields: f, title: on ? '開啟快速漫遊（802.11r）？' : '關閉快速漫遊（802.11r）？',
+		impacts: ['Wi-Fi 重新啟動約 10 秒，所有 Wi-Fi 裝置會短暫斷線'].concat(on ? ['舊裝置連不上時，請改連 IoT 網路（Wi-Fi 頁「IoT 網路」）'] : []) })
+		.then(function (ok) { if (!ok) el.checked = !on; });
+}
 function wf_roam_mode(v) {
 	if (v == (NV.roam_on || '0')) return;
 	var f = { tw_roam_enable: v };
@@ -322,5 +329,9 @@ function wf_roam_render(r) {
 		'<div class="tw-help">「建議」會用 11k 請手機量附近的 AP，明顯比較好時用 11v 建議它換過去（也包括暫時掉到 2.4G、回來後建議回 5G）。' +
 		'<b>永遠不踢人</b>：手機不理會就退避，不支援 11k／11v 的裝置完全不碰；每台裝置每天最多 6 次，每台 AP 每小時超過 12 次會自動退回觀察。' +
 		'2.4G 與 5G 要同名同密碼才有效。IoT 網路不參與。弱訊號門檻在 <a href="Advanced_Wireless_Content.asp">原始 5 GHz 設定頁</a>。</div></div>';
+	var ft = NV.rt_ft == '1' || (wf_has5() && NV.wl_ft == '1');
+	h += '<div class="tw-field"><label class="tw-switch"><input type="checkbox" id="wf-ft"' + (ft ? ' checked' : '') + ' onchange="wf_ft_apply(this)"><span class="tw-track"></span>快速漫遊（802.11r）</label>' +
+		'<div class="tw-help">換 AP 或換頻段時省掉重新驗證，通話、視訊比較不會卡一下。家裡每台 padavan-tw 同名同密碼時自動在同一個漫遊群組。' +
+		'少數舊裝置（智慧家電、印表機、出單機）看到 802.11r 會連不上：請讓它們改連 <b>IoT 網路</b>（不宣告 802.11k/v/r）。切換會重新啟動 Wi-Fi。</div></div>';
 	U.set('wf-roam', h);
 }

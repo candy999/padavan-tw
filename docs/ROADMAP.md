@@ -150,11 +150,11 @@
 | I1 | 國家碼台灣（A7）：頻道與功率只標示不鎖定；自動選頻只選 36–48、149–165、1–11 | ✅ |
 | I2 | 每天自動重選頻道（`tw-wifi-acs`）：預設凌晨 4 點起 3 小時內、Wi-Fi 閒置才換；`tw-wifi-acs now` 手動 | ✅ |
 | I3 | 2.4G 預設 20 MHz | ✅ |
-| I4 | 2.4G／5G 預設同一個 SSID；802.11k/v 預設開、802.11r 預設關 | ✅ |
+| I4 | 2.4G／5G 預設同一個 SSID；802.11k/v 預設開；802.11r 原本預設關，2026-11-20 改成預設開（I15） | ✅ |
 | I5 | **AP 互助漫遊 `tw-roamd`**（`docs/ROAM-COOP.md`）：TWR2 交換（頻段 BSSID／頻道／頻寬／SSID 雜湊／k/v/r、裝置、剛離開的裝置）＋**決定層**（建議模式 `tw_roam_enable=2`）：11k Beacon Request 請裝置量 → 連續兩次明顯比較好 → 11v BTM 建議（不設斷線）→ 15 秒看結果；退避 10 分鐘／1 小時／24 小時、每台每天 6 次、每台 AP 每小時 12 次超過自動退回觀察；回 5G（第 6.3 節）與不回報裝置的備案；決定紀錄 `/etc/storage/tw-diag/roam.log`；驅動介面 `tw_roam_drv.c`；Wi-Fi 頁可切換關閉／觀察／建議 | ✅ 程式完成（2026-11-20），待實機（D3 一台＋手機，再 H4） |
 | I5a | 引導方式（維護者決定）：兩台都用 11k Beacon Report＋11v BTM 建議，手機拒絕或不理會就退避，**永遠不踢除**（D3 的 11v 已補編，所以 D3 也能建議） | ✅ 併入 I5 |
 | I5b | CR6608：DBDC 的 `WNMEnable` 只套用到 2.4G（驅動合併設定檔時漏掉），5G 要在執行中補開 | 🔬 要實機確認（`tw-roamd status` 的驅動欄、BTM 回覆事件） |
-| I5c | D3 KVR 驅動（2026-11-20）：2.4G（MT7603）開 11k＋11v（`CONFIG_MT7603E_WNM_SUPPORT`）＋11r（預設關）；5G（MT7612）新增 `RT_DOT11V_WNM`（wnm.o、不需 Hotspot 的 BTM OID）；MT7612 補 Beacon Report 事件（含裝置 MAC）、修 Beacon Report 漏記憶體與邊界；MT7603 修 `WNMEnable=0` 無效（IoT 網路也宣告 11v）；編譯修 `CATEGORY_WNM`、`FT_IGTK_ID` | ✅ 編譯通過，待實機 |
+| I5c | D3 KVR 驅動（2026-11-20）：2.4G（MT7603）開 11k＋11v（`CONFIG_MT7603E_WNM_SUPPORT`）＋11r；5G（MT7612）新增 `RT_DOT11V_WNM`（wnm.o、不需 Hotspot 的 BTM OID）；MT7612 補 Beacon Report 事件（含裝置 MAC）、修 Beacon Report 漏記憶體與邊界；MT7603 修 `WNMEnable=0` 無效（IoT 網路也宣告 11v）；編譯修 `CATEGORY_WNM`、`FT_IGTK_ID` | ✅ 編譯通過，待實機 |
 | I6 | 鄰居清單：D3 2.4G 由 tw-roamd 回答裝置的鄰居詢問（同 SSID 的本機另一頻段＋別台 AP）；D3 5G、CR6608 由驅動用掃描表回答（Beacon Report 會把鄰居寫進掃描表）。固定頻道的 AP 定期背景掃描：不做（會中斷服務） | ✅ 程式完成，待實機 |
 | I7 | D3 的 802.11r 金鑰交換程式（ralinkiappd）目前只聽 5G，確認 2.4G | 🔬 |
 | I8 | CR6608 頻段導引（MT7915 band steering）評估 | 🔬 |
@@ -163,6 +163,7 @@
 | I11 | STP 誤判 2.4G 迴圈的根因：新配置的 skb 清掉硬體 NAT 殘留標記（`d333736`）；Wi-Fi BPDU 擋法保留當保險，觸發時記錄原因與狀態（`/etc/storage/tw-diag/`） | ✅ D3 實機（修正前 30 分鐘 2 次、修正後 60 分鐘 0 次） |
 | I12 | 5G 預設值：TxBurst 開、HT 運作模式混合（`wl_HT_OpMode=0`，關閉 Greenfield）、80 MHz、自動頻道（兩晚 15 輪：Greenfield 關 5 輪 0 斷線、開著 5 輪 1 次斷線，TxBurst 關最差，推翻早期「TxBurst 關延遲較低」的候選結論）；TxBF 在 D3 無效（沒有原廠校正）。2.4G 維持 20 MHz、TxBurst 開（40 MHz 較快，但 `HT_BSSCoexistence=0` 共存偵測關閉，不預設開）；`rt_HT_OpMode` 維持 1，因為 2.4G 預設 b/g/n 混合，驅動實際套用的是 0（iNIC／RT2860 dat 都是 `0;0`），Greenfield 只在純 N 模式生效 | ✅ 1a9cbaf（D3 實機） |
 | I13 | 自動選頻考慮強的緊鄰頻道（同頻道之外，鄰頻溢出也會干擾） | 📋 |
+| I15 | **802.11r 預設開**（2026-11-20，IoT 網路收容舊裝置）：`FtMdId` 由 SSID 算（家裡每台同一個 Mobility Domain）、BTM／鄰居清單的 Mobility Domain 位元跟著 r、Wi-Fi 頁開關；升級不改舊設定 | ✅ 程式完成，待實機（手機 FT 換 AP、CR6608 的 IoT 網路 `FtSupport` 是否為 0） |
 | I14 | ~~自適應 11r~~ → **IoT 網路**（訪客網路那一格改成 `_IoT`，不宣告 11k/v/r；舊裝置改連它，主網路就能開 11r；見 `docs/ROAM-COOP.md` 第 13.2 節） | ✅ 待實機 |
 
 ## J. 網際網路與 VPN

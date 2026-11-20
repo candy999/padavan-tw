@@ -168,6 +168,7 @@ git pull
   - 實機要看：`tw-roamd status` 的「驅動」那行（各頻段能不能問／收回報／建議）、每台裝置的 11k／11v、`/etc/storage/tw-diag/roam.log`；驗證步驟照 ROAM-COOP 第 11 節（D3＋Android 手機先做回 5G）。
 - H4：三台 D3 多 AP 漫遊實測（同一 SSID、11k/v）
 - I5b CR6608 5G 的 `WNMEnable` 要實機確認；I7 D3 的 802.11r（ralinkiappd）已改成兩個頻段都聽，待實機；I8 CR6608 頻段導引評估
+- **802.11r 預設開**（2026-11-20）：`FtMdId1` 由 SSID 算、Wi-Fi 頁開關、BTM 的 Mobility Domain 位元跟著 r；AP 間金鑰交換的加密金鑰是驅動預設值（ROAM-COOP 第 10 節）
 - ~~11r 自適應~~：改成 **IoT 網路**（訪客那一格改成 `_IoT`，不宣告 k/v/r，舊裝置改連它；ROAM-COOP 第 13 節），程式完成、待實機
 
 ### 5.6 設定存進 Flash 的其餘部分

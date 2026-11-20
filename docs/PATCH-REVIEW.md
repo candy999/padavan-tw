@@ -80,7 +80,7 @@ TurBoTse 沒有的 571 個 commit 分類：其他機型 184、套件版本 167�
 
 ## 本專案自己的修正
 
-- `rc/src/ralink.c`：802.11k/v 開關無效（驅動只讀第一個 `RRMEnable`／`WNMEnable`），以及 MT7915 DBDC 的 `FtSupport` 少一個參數。之後 802.11k/v 改成預設開、802.11r 預設關。
+- `rc/src/ralink.c`：802.11k/v 開關無效（驅動只讀第一個 `RRMEnable`／`WNMEnable`），以及 MT7915 DBDC 的 `FtSupport` 少一個參數。之後 802.11k/v 改成預設開、802.11r 預設關；2026-11-20 有了 IoT 網路後 802.11r 也改成預設開，並寫入由 SSID 算出的 `FtMdId1`（ROADMAP I15）。
 - 台灣化：繁體中文（台灣）介面、時區、NTP、斷線偵測主機。
 - 機型設定：放在 `trunk/configs/tw/`，編譯時接在上游的機型設定後面（上游設定檔保持不改）。關閉科學上網／校園網等外掛；開啟 SFE、WireGuard、msd_lite；不超頻（另外編 `-oc1000` 版）。軟體 SQM（連同 QoS 排程、IFB 核心選項）已從韌體移除，原本規劃的硬體 QoS（QDMA）也在 2026-11-18 捨棄。
 - 其他本專案修正（細節見 ROADMAP、WIFI-STABILITY）：D3 單一 GMAC、D3 重開機、硬體 NAT 殘留標記（STP 誤判 2.4G 迴圈，已回報 TurBoTse/padavan#33、hanwckf/padavan-4.4#73）、Wi-Fi BPDU 擋法、STP 8 秒＋急速連線、自動 NAT66、刷機重開、busybox dhcp6c 洗日誌、中華電信 MOD 自動偵測。

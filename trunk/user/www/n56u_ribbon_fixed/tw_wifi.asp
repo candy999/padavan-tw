@@ -51,6 +51,8 @@ var NV = {
 	rt_g_apiso: "<% nvram_get_x("", "rt_guest_ap_isolate"); %>",
 	wl_g_apiso: "<% nvram_get_x("", "wl_guest_ap_isolate"); %>",
 	roam_on: "<% nvram_get_x("", "tw_roam_enable"); %>",
+	rt_ft: "<% nvram_get_x("", "rt_HT_80211R"); %>",
+	wl_ft: "<% nvram_get_x("", "wl_HT_80211R"); %>",
 	roam_weak: "<% nvram_get_x("", "tw_roam_weak"); %>",
 	productid: "<% nvram_get_x("", "productid"); %>",
 	lan_ip: "<% nvram_get_x("", "lan_ipaddr"); %>"

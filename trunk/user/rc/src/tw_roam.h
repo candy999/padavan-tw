@@ -15,6 +15,7 @@ struct twr_nbr {
 	int ch;
 	int bw;			/* MHz */
 	int pref;		/* BTM 偏好值 1～255（越大越想要），鄰居清單填 0 */
+	int ft;			/* 有開 802.11r（同一個 Mobility Domain，可以快速漫遊過去） */
 };
 
 /* 驅動送上來的事件 */

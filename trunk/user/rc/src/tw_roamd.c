@@ -1029,10 +1029,12 @@ static int
 cands_for(int band, struct twr_nbr *out, int max, long now)
 {
 	const struct twr_radio *me = own_radio(band);
-	int i, j, n = 0;
+	int i, j, n = 0, my_r;
 
 	if (!me)
 		return 0;
+	/* Mobility Domain 位元：目前這個頻段跟候選都開 802.11r 才算（同 SSID 時 Mobility Domain 一樣，見 ralink.c） */
+	my_r = strchr(me->cap, 'r') != NULL;
 	for (i = 0; i < g_nradio && n < max; i++) {
 		if (g_radio[i].band == band || g_radio[i].ssid_hash != me->ssid_hash)
 			continue;
@@ -1041,6 +1043,7 @@ cands_for(int band, struct twr_nbr *out, int max, long now)
 		out[n].ch = g_radio[i].ch;
 		out[n].bw = g_radio[i].bw;
 		out[n].pref = 0;
+		out[n].ft = my_r && strchr(g_radio[i].cap, 'r') != NULL;
 		n++;
 	}
 	for (i = 0; i < TWR_MAX_PEERS; i++) {
@@ -1055,6 +1058,7 @@ cands_for(int band, struct twr_nbr *out, int max, long now)
 			out[n].ch = p->radio[j].ch;
 			out[n].bw = p->radio[j].bw;
 			out[n].pref = 0;
+			out[n].ft = my_r && strchr(p->radio[j].cap, 'r') != NULL;
 			n++;
 		}
 	}
@@ -1170,6 +1174,7 @@ suggest(struct twr_local *c, struct twr_hist *h, int kind, const unsigned char *
 	cand.ch = tr->ch;
 	cand.bw = tr->bw;
 	cand.pref = 255;
+	cand.ft = own_radio(c->band) && strchr(own_radio(c->band)->cap, 'r') && strchr(tr->cap, 'r');
 	if (g_mode == TWR_MODE_SUGGEST) {
 		if (now < g_btm_busy[bi])
 			return;		/* 另一台的建議還在等回應，下一輪再說（確認次數保留） */
