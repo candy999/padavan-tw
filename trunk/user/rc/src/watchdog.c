@@ -252,13 +252,21 @@ tw_acs_daily_check(void)
 static void
 tw_roamd_check(void)
 {
+	static int last_on = -1;
 	int on = nvram_get_int("tw_roam_enable");
 	int running = pids("tw-roamd");
 
+	/* 觀察（1）↔ 建議（2）：tw-roamd 只在啟動時讀模式，改了就重新啟動 */
+	if (on && running && last_on > 0 && on != last_on) {
+		doSystem("killall %s", "tw-roamd");
+		running = 0;
+		sleep(1);
+	}
 	if (on && !running)
 		eval("/sbin/tw-roamd");
 	else if (!on && running)
 		doSystem("killall %s", "tw-roamd");
+	last_on = on;
 }
 
 /* padavan-tw：igmpproxy 0.3 會當掉（D3 實測開機約 1 分鐘 SIGSEGV），應該在跑卻不在時重新啟動 */

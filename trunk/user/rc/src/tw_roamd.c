@@ -1,17 +1,26 @@
 /*
- * padavan-tw：輕量漫遊中控 tw-roamd（第一版：觀察模式）
+ * padavan-tw：AP 互助漫遊 tw-roamd（設計：docs/ROAM-COOP.md）
  *
- * 每台 AP 各跑一個，彼此在區網用多播交換「我這裡有哪些裝置、訊號多強」：
+ * 每台 AP 各跑一個，彼此在區網用多播交換資訊（TWR2）：
  * - 每 2 秒讀自己的 Wi-Fi 裝置訊號表（驅動的 MAC table）
- * - 每 5 秒在 br0 多播一份報告（239.255.77.77:27330，TTL 1，只在區網內）
- * - 記錄裝置換 AP、換頻段的時間點，以及換之前訊號弱了多久（調整門檻用的資料）
- * - 給「建議」：訊號持續太弱而家裡還有別台 AP、2.4G 訊號很好可以用 5G
- * 觀察模式不做任何動作（不踢除、不送 802.11v），只寫紀錄。
+ * - 每 5 秒在 br0 多播一份報告（239.255.77.77:27330，TTL 1，只在區網內）：
+ *   自己的頻段（BSSID、頻道、頻寬、SSID 雜湊、k/v/r）、連著的裝置、剛離開的裝置
+ * - 記錄裝置換 AP、換頻段的時間點；記住 24 小時內連過 5G 的裝置
  *
- *   tw-roamd            以背景程式執行（由 watchdog 依 nvram tw_roam_enable 啟停）
+ * 模式（nvram tw_roam_enable）：
+ *   1 觀察：交換資訊、寫紀錄，算「會怎麼建議」，不送任何請求
+ *   2 建議：決定層（問 → 比 → 建議 → 看結果）：
+ *      11k Beacon Request 請裝置量候選 AP → 裝置量到的訊號明顯比較好（連續兩次）→
+ *      11v BTM 建議換過去（不設 Disassociation Imminent、不帶斷線計時）→ 15 秒內有沒有過去；
+ *      不理會就退避 10 分鐘 → 1 小時 → 24 小時；每台每天 6 次、每台 AP 每小時 12 次（超過自動退回觀察）。
+ *      暫時掉到 2.4G 的手機回來後建議回 5G（第 6.3 節）。永遠不踢人。
+ *   各晶片能做到哪裡看 tw_roam_drv.c；驅動不支援的頻段自動只觀察。
+ *
+ *   tw-roamd            以背景程式執行（由 watchdog 依 nvram tw_roam_enable 啟停，改模式會重新啟動）
  *   tw-roamd status     顯示目前狀態與最近的事件
  *
  * 輸出：/tmp/tw-roamd.status（狀態，每 5 秒更新）、/tmp/tw-roamd.events（最近 100 筆事件）、
+ *       /tmp/tw-roamd.neighbors（鄰居清單）、/etc/storage/tw-diag/roam.log（決定紀錄，循環 32 KB）、
  *       系統記錄（換 AP 與建議，有頻率限制）
  */
 
@@ -27,6 +36,7 @@
 #include <syslog.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
+#include <sys/stat.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #ifdef TWR_TEST
@@ -38,6 +48,7 @@
 #endif
 
 #include "rc.h"
+#include "tw_roam.h"
 
 #define TWR_GROUP		"239.255.77.77"
 #define TWR_PORT		27330
@@ -89,6 +100,11 @@ struct twr_local {
 	long weak_since;	/* 0＝目前不弱 */
 	int missing;		/* 連續幾次沒讀到 */
 	long sug_weak_at, sug_band_at;
+	int psm;		/* 省電中（螢幕關著、待機）：不打擾 */
+	long band_since;	/* 到這個頻段的時間 */
+	int drop_rssi;		/* 剛到 2.4G 時的訊號（回 5G 的備案規則用） */
+	int fb_n;		/* 備案規則連續成立幾次 */
+	long fb_at;
 	int used;
 };
 
@@ -436,6 +452,8 @@ on_entry(const struct twr_mac_entry *e, int band, int guest, long now)
 		struct twr_peer *p = peer_had(e->Addr, now, &pband, &prssi);
 		c->first_seen = now;
 		c->band = band;
+		c->band_since = now;
+		c->drop_rssi = rssi;
 		c->ema16 = rssi * 16;
 		if (p) {
 			event(1, "換 AP：%s 從 %s %s（%s，%d dBm）到這台（%s，%d dBm）",
@@ -445,10 +463,14 @@ on_entry(const struct twr_mac_entry *e, int band, int guest, long now)
 		event(1, "換頻段：%s %s → %s（%d dBm）",
 		      client_name(e->Addr, name, sizeof(name)), band_str(c->band), band_str(band), rssi);
 		c->band = band;
+		c->band_since = now;
+		c->drop_rssi = rssi;
+		c->fb_n = 0;
 		c->ema16 = rssi * 16;
 		c->weak_since = 0;
 	}
 	c->guest = guest;
+	c->psm = e->Psm ? 1 : 0;
 	c->rssi = rssi;
 	c->ema16 += (rssi * 16 - c->ema16) / 4;
 	c->ema = (c->ema16 >= 0 ? c->ema16 + 8 : c->ema16 - 8) / 16;
@@ -816,6 +838,681 @@ recv_report(int s, long now)
 	}
 }
 
+/* ---------- 決定層：問 → 比 → 建議 → 看結果（docs/ROAM-COOP.md 第 6 節） ---------- */
+
+#define TWR_MODE_OBSERVE	1
+#define TWR_MODE_SUGGEST	2
+
+#define K_CROSS		1	/* 換到別台 AP */
+#define K_TO5		2	/* 同一台 2.4G → 5G */
+#define K_TO24		3	/* 同一台 5G → 2.4G */
+#define K_BACK5		4	/* 暫時掉到 2.4G，回到 5G */
+
+#define TWR_MAX_HIST	128
+#define TWR_MAX_REP	8
+#define TWR_MAX_CAND	8
+#define TWR_RESULT_SEC	15	/* 建議後幾秒內要在目標出現 */
+#define TWR_DAY_MAX	6	/* 每台裝置每天最多建議幾次 */
+#define TWR_HOUR_MAX	12	/* 每台 AP 每小時最多建議幾次，超過就退回觀察模式 */
+
+#ifndef TWR_TEST
+#define TWR_ROAMLOG	"/etc/storage/tw-diag/roam.log"
+#else
+#define TWR_ROAMLOG	"roam.log"
+#endif
+#define TWR_ROAMLOG_MAX	16384	/* 超過就換到 roam.log.1，兩個合計最多 32 KB */
+
+/* 每台裝置的決定紀錄：裝置離開這台也保留（退避、次數要一直算到重開機） */
+struct twr_hist {
+	unsigned char mac[6];
+	int used;
+	long last;
+	int k, v;			/* 支援 11k／11v：1 是、0 否、-1 不知道 */
+	int k_noreply;			/* 連續幾次問了沒回報 */
+	long ask_at;			/* 上次送 Beacon Request */
+	int ask_rssi, ask_ch, ask_band, ask_seq, ask_counted;
+	long rep_at;			/* 上次收到回報 */
+	int rep_new;			/* 有新回報還沒比 */
+	int nrep;
+	struct { unsigned char bssid[6]; int ch, dbm; long at; } rep[TWR_MAX_REP];
+	unsigned char cand[6];		/* 確認中的目標 */
+	int cand_kind, cand_n;
+	long cand_at;
+	int pend;			/* 已建議、等結果 */
+	unsigned char pend_bssid[6];
+	int pend_band, pend_kind, pend_cur, pend_dbm, pend_real;
+	long pend_at;
+	int ignore_n;			/* 連續不理會次數 */
+	long backoff_until;
+	int day_n;
+	long day_start;
+	long back5_at;			/* 上次成功回到 5G */
+	int n_sug, n_ok;
+};
+
+static struct twr_hist g_hist[TWR_MAX_HIST];
+static struct twr_drv_caps g_caps;
+static int g_mode = TWR_MODE_OBSERVE;	/* 實際模式（超過上限時會自動降回觀察） */
+static int g_mode_cfg = TWR_MODE_OBSERVE;	/* nvram 設定的模式 */
+static int g_token = 1;
+/* 同一個頻段一次只有一個 Beacon Request／BTM 在等回應：MT7603 的量測表會把 500 ms 以前的請求擠掉，
+ * BTM 回覆的對應也只認清單第一筆（驅動的毛病），所以排隊一個一個來 */
+static long g_ask_busy[2], g_btm_busy[2];
+static long g_hour_start;
+static int g_hour_n;
+static struct { int ask, rep, sug, ok, ign, rej, back5; } g_st;
+
+static const char *
+kind_str(int k)
+{
+	switch (k) {
+	case K_CROSS:	return "換 AP";
+	case K_TO5:	return "2.4G→5G";
+	case K_TO24:	return "5G→2.4G";
+	case K_BACK5:	return "回 5G";
+	}
+	return "?";
+}
+
+static int
+bidx(int band)
+{
+	return band == 5 ? 1 : 0;
+}
+
+static int
+next_token(void)
+{
+	g_token = g_token % 255 + 1;
+	return g_token;
+}
+
+/* 決定紀錄：系統日誌＋事件＋ roam.log（循環） */
+static void
+roam_log(const char *fmt, ...)
+{
+	char msg[160], ts[24];
+	time_t t = time(NULL);
+	va_list ap;
+	FILE *fp;
+	long sz = 0;
+
+	va_start(ap, fmt);
+	vsnprintf(msg, sizeof(msg), fmt, ap);
+	va_end(ap);
+	event(1, "%s", msg);
+
+	fp = fopen(TWR_ROAMLOG, "a");
+	if (!fp) {
+#ifndef TWR_TEST
+		mkdir("/etc/storage/tw-diag", 0755);
+#endif
+		fp = fopen(TWR_ROAMLOG, "a");
+	}
+	if (!fp)
+		return;
+	strftime(ts, sizeof(ts), "%Y-%m-%d %H:%M:%S", localtime(&t));
+	fprintf(fp, "%s ROAM %s\n", ts, msg);
+	sz = ftell(fp);
+	fclose(fp);
+	if (sz > TWR_ROAMLOG_MAX)
+		rename(TWR_ROAMLOG, TWR_ROAMLOG ".1");
+}
+
+static struct twr_hist *
+hist_find(const unsigned char *mac, int create, long now)
+{
+	int i, oldest = -1;
+	for (i = 0; i < TWR_MAX_HIST; i++) {
+		if (g_hist[i].used && memcmp(g_hist[i].mac, mac, 6) == 0) {
+			g_hist[i].last = now;
+			return &g_hist[i];
+		}
+	}
+	if (!create)
+		return NULL;
+	/* 先用空的；滿了就擠掉最久沒用、而且沒在等結果的 */
+	for (i = 0; i < TWR_MAX_HIST; i++) {
+		if (!g_hist[i].used) {
+			oldest = i;
+			break;
+		}
+		if (!g_hist[i].pend && (oldest < 0 || g_hist[i].last < g_hist[oldest].last))
+			oldest = i;
+	}
+	if (oldest < 0)
+		return NULL;
+	memset(&g_hist[oldest], 0, sizeof(g_hist[0]));
+	memcpy(g_hist[oldest].mac, mac, 6);
+	g_hist[oldest].used = 1;
+	g_hist[oldest].last = now;
+	g_hist[oldest].k = g_hist[oldest].v = -1;
+	g_hist[oldest].day_start = now;
+	return &g_hist[oldest];
+}
+
+/* 自己的頻段（radio） */
+static const struct twr_radio *
+own_radio(int band)
+{
+	int i;
+	for (i = 0; i < g_nradio; i++)
+		if (g_radio[i].band == band)
+			return &g_radio[i];
+	return NULL;
+}
+
+/* 某個 BSSID 是誰的：本機（*peer＝NULL）或哪台 AP；找不到回傳 NULL */
+static const struct twr_radio *
+radio_by_bssid(const unsigned char *bssid, long now, const struct twr_peer **peer)
+{
+	int i, j;
+	*peer = NULL;
+	for (i = 0; i < g_nradio; i++)
+		if (memcmp(g_radio[i].bssid, bssid, 6) == 0)
+			return &g_radio[i];
+	for (i = 0; i < TWR_MAX_PEERS; i++) {
+		const struct twr_peer *p = &g_peer[i];
+		if (!p->used || now - p->last_seen > TWR_PEER_EXPIRE)
+			continue;
+		for (j = 0; j < p->nradio; j++)
+			if (memcmp(p->radio[j].bssid, bssid, 6) == 0) {
+				*peer = p;
+				return &p->radio[j];
+			}
+	}
+	return NULL;
+}
+
+/* 裝置目前頻段的候選：同 SSID 的本機另一個頻段＋別台 AP 的頻段 */
+static int
+cands_for(int band, struct twr_nbr *out, int max, long now)
+{
+	const struct twr_radio *me = own_radio(band);
+	int i, j, n = 0;
+
+	if (!me)
+		return 0;
+	for (i = 0; i < g_nradio && n < max; i++) {
+		if (g_radio[i].band == band || g_radio[i].ssid_hash != me->ssid_hash)
+			continue;
+		memcpy(out[n].bssid, g_radio[i].bssid, 6);
+		out[n].band = g_radio[i].band;
+		out[n].ch = g_radio[i].ch;
+		out[n].bw = g_radio[i].bw;
+		out[n].pref = 0;
+		n++;
+	}
+	for (i = 0; i < TWR_MAX_PEERS; i++) {
+		const struct twr_peer *p = &g_peer[i];
+		if (!p->used || now - p->last_seen > TWR_PEER_EXPIRE)
+			continue;
+		for (j = 0; j < p->nradio && n < max; j++) {
+			if (p->radio[j].ssid_hash != me->ssid_hash || !p->radio[j].ch)
+				continue;
+			memcpy(out[n].bssid, p->radio[j].bssid, 6);
+			out[n].band = p->radio[j].band;
+			out[n].ch = p->radio[j].ch;
+			out[n].bw = p->radio[j].bw;
+			out[n].pref = 0;
+			n++;
+		}
+	}
+	return n;
+}
+
+/* 裝置回報的某個 BSS 訊號（只算這次問之後的），沒有就回傳 0 */
+static int
+rep_dbm(const struct twr_hist *h, const unsigned char *bssid)
+{
+	int i;
+	for (i = 0; i < h->nrep; i++)
+		if (memcmp(h->rep[i].bssid, bssid, 6) == 0 && h->rep[i].at >= h->ask_at)
+			return h->rep[i].dbm;
+	return 0;
+}
+
+static void
+on_bcn_report(const struct twr_drv_ev *ev, long now)
+{
+	struct twr_hist *h = hist_find(ev->sta, 0, now);
+	int i, slot = -1, oldest = 0;
+	char name[96], b[18];
+
+	if (!h || ev->dbm >= 0 || ev->dbm < -110)
+		return;
+	for (i = 0; i < h->nrep; i++) {
+		if (memcmp(h->rep[i].bssid, ev->bssid, 6) == 0)
+			slot = i;
+		if (h->rep[i].at < h->rep[oldest].at)
+			oldest = i;
+	}
+	if (slot < 0)
+		slot = h->nrep < TWR_MAX_REP ? h->nrep++ : oldest;
+	memcpy(h->rep[slot].bssid, ev->bssid, 6);
+	h->rep[slot].ch = ev->ch;
+	h->rep[slot].dbm = ev->dbm;
+	h->rep[slot].at = now;
+	h->rep_at = now;
+	h->rep_new = 1;
+	h->k_noreply = 0;
+	if (ev->band && g_ask_busy[bidx(ev->band)] > now + 1)
+		g_ask_busy[bidx(ev->band)] = now + 1;	/* 回來了：再等 1 秒收完同一份報告的其他筆 */
+	if (h->k != 1) {
+		h->k = 1;
+		event(0, "%s 會回 Beacon Report（支援 11k）", client_name(ev->sta, name, sizeof(name)));
+	}
+	g_st.rep++;
+	mac2str(ev->bssid, b);
+	event(0, "回報：%s 量到 %s 頻道 %d %d dBm", client_name(ev->sta, name, sizeof(name)), b, ev->ch, ev->dbm);
+}
+
+static void
+on_btm_resp(const struct twr_drv_ev *ev, long now)
+{
+	struct twr_hist *h = hist_find(ev->sta, 0, now);
+	char name[96];
+
+	if (!h || !h->pend || !h->pend_real)
+		return;
+	if (ev->status != 0) {
+		/* 拒絕＝不理會，一樣退避 */
+		roam_log("結果 %s 拒絕建議（狀態 %d）", client_name(ev->sta, name, sizeof(name)), ev->status);
+		g_st.rej++;
+		h->pend_at = now - TWR_RESULT_SEC - 1;	/* 下一輪當作不理會處理 */
+	} else {
+		event(0, "%s 接受建議（BTM 回覆 0），等它換過去", client_name(ev->sta, name, sizeof(name)));
+	}
+}
+
+/* 送出建議（或觀察模式下只記錄） */
+static void
+suggest(struct twr_local *c, struct twr_hist *h, int kind, const unsigned char *target, int tband, int tdbm, int cur, long now)
+{
+	const struct twr_peer *peer;
+	const struct twr_radio *tr = radio_by_bssid(target, now, &peer);
+	struct twr_nbr cand;
+	char name[96], where[48];
+	int bi = bidx(c->band), real = 0;
+
+	if (!tr)
+		return;
+	snprintf(where, sizeof(where), "%s%s", peer ? peer->name : "本機", band_str(tr->band));
+	if (h->ignore_n >= 3 || now < h->backoff_until)
+		return;
+	if (now - h->day_start >= 86400) {
+		h->day_start = now;
+		h->day_n = 0;
+	}
+	if (h->day_n >= TWR_DAY_MAX)
+		return;
+	if (h->v == 0 || !g_caps.btm[bi]) {
+		/* 裝置不支援 11v 或這顆驅動不能送：什麼都不做，等它自己換 */
+		h->cand_n = 0;
+		return;
+	}
+	if (now - g_hour_start >= 3600) {
+		g_hour_start = now;
+		g_hour_n = 0;
+	}
+	if (g_hour_n >= TWR_HOUR_MAX) {
+		if (g_mode == TWR_MODE_SUGGEST) {
+			g_mode = TWR_MODE_OBSERVE;
+			roam_log("這一小時已建議 %d 次，超過上限，自動退回觀察模式（重新啟動 tw-roamd 才會恢復）", g_hour_n);
+		}
+		return;
+	}
+
+	client_name(c->mac, name, sizeof(name));
+	memset(&cand, 0, sizeof(cand));
+	memcpy(cand.bssid, tr->bssid, 6);
+	cand.band = tr->band;
+	cand.ch = tr->ch;
+	cand.bw = tr->bw;
+	cand.pref = 255;
+	if (g_mode == TWR_MODE_SUGGEST) {
+		if (now < g_btm_busy[bi])
+			return;		/* 另一台的建議還在等回應，下一輪再說（確認次數保留） */
+		if (twr_drv_btm_req(c->band, c->mac, &cand, 1, next_token()) == 0) {
+			real = 1;
+			g_btm_busy[bi] = now + 12;
+		} else {
+			event(0, "送 BTM 給 %s 失敗（驅動不接受）", name);
+		}
+	}
+	if (kind == K_BACK5)
+		roam_log("%s %s 在 2.4G 待了 %ld 秒，%s %d dBm → %s%s，今日第 %d 次", real ? "回5G" : "（觀察）會建議回5G",
+			 name, now - c->band_since, where, tdbm, where, real ? "" : "（沒有送出）", h->day_n + 1);
+	else
+		roam_log("%s %s %s：目前 %s %d dBm → %s %d dBm（強 %d dB，第 %d 次確認）今日第 %d 次",
+			 real ? "建議" : "（觀察）會建議", name, kind_str(kind), band_str(c->band), cur, where, tdbm,
+			 tdbm - cur, h->cand_n, h->day_n + 1);
+	h->pend = 1;
+	h->pend_real = real;
+	memcpy(h->pend_bssid, tr->bssid, 6);
+	h->pend_band = tr->band;
+	h->pend_kind = kind;
+	h->pend_cur = cur;
+	h->pend_dbm = tdbm;
+	h->pend_at = now;
+	h->cand_n = 0;
+	h->day_n++;
+	h->n_sug++;
+	g_hour_n++;
+	g_st.sug++;
+	(void)tband;
+}
+
+/* 建議之後有沒有到目標：本機另一個頻段，或目標那台 AP 的 C 行 */
+static int
+arrived(const struct twr_hist *h, long now)
+{
+	const struct twr_peer *peer;
+	const struct twr_radio *tr = radio_by_bssid(h->pend_bssid, now, &peer);
+	int i;
+
+	if (!tr)
+		return 0;
+	if (!peer) {
+		struct twr_local *c = local_find(h->mac, 0);
+		return c && !c->missing && c->band == h->pend_band;
+	}
+	for (i = 0; i < peer->ncli; i++)
+		if (memcmp(peer->cli[i].mac, h->mac, 6) == 0 && peer->cli[i].band == tr->band)
+			return 1;
+	return 0;
+}
+
+static void
+check_result(struct twr_hist *h, long now)
+{
+	char name[96];
+
+	if (!h->pend)
+		return;
+	if (arrived(h, now)) {
+		roam_log("結果 %s %ld 秒後到 %s（%s）%s", client_name(h->mac, name, sizeof(name)), now - h->pend_at,
+			 band_str(h->pend_band), kind_str(h->pend_kind), h->pend_real ? "" : "（觀察模式，裝置自己換的）");
+		if (h->pend_real) {
+			h->ignore_n = 0;
+			h->backoff_until = 0;
+			h->n_ok++;
+			g_st.ok++;
+			if (h->pend_kind == K_BACK5)
+				g_st.back5++;
+		}
+		if (h->pend_kind == K_BACK5 || h->pend_kind == K_TO5)
+			h->back5_at = now;
+		h->pend = 0;
+		return;
+	}
+	if (now - h->pend_at <= TWR_RESULT_SEC)
+		return;
+	h->pend = 0;
+	if (!h->pend_real) {
+		/* 觀察模式：沒送出，不算不理會；10 分鐘內不再重複同樣的「會建議」 */
+		h->backoff_until = now + 600;
+		return;
+	}
+	h->ignore_n++;
+	g_st.ign++;
+	h->backoff_until = now + (h->ignore_n == 1 ? 600 : h->ignore_n == 2 ? 3600 : 86400);
+	roam_log("結果 %s 不理會（第 %d 次）→ %s內不再建議%s", client_name(h->mac, name, sizeof(name)), h->ignore_n,
+		 h->ignore_n == 1 ? "10 分鐘" : h->ignore_n == 2 ? "1 小時" : "24 小時",
+		 h->ignore_n >= 3 ? "；這次開機期間不再建議它" : "");
+}
+
+static int
+prio(int k)
+{
+	return k == K_BACK5 ? 4 : k == K_CROSS ? 3 : k == K_TO5 ? 2 : k == K_TO24 ? 1 : 0;
+}
+
+/* 用裝置量到的數字比：回傳目標種類，target／tdbm／cur 填結果；沒有就回傳 0 */
+static int
+compare(const struct twr_local *c, const struct twr_hist *h, unsigned char *target, int *tdbm, int *cur, long now)
+{
+	const struct twr_radio *me = own_radio(c->band);
+	const struct twr_peer *peer;
+	int i, best_k = 0, best_d = -200, d, own = 0;
+
+	if (!me)
+		return 0;
+	/* 目前連線的訊號：裝置量到自己這台的值優先，沒有就用 AP 聽到的 */
+	d = rep_dbm(h, me->bssid);
+	*cur = d ? d : c->ema;
+
+	for (i = 0; i < h->nrep; i++) {
+		const struct twr_radio *r;
+		int k = 0;
+		if (h->rep[i].at < h->ask_at || memcmp(h->rep[i].bssid, me->bssid, 6) == 0)
+			continue;
+		r = radio_by_bssid(h->rep[i].bssid, now, &peer);
+		if (!r || r->ssid_hash != me->ssid_hash)
+			continue;
+		d = h->rep[i].dbm;
+		own = (peer == NULL);
+		if (c->band == 2 && r->band == 5 && seen5_ago(c->mac, now) >= 0 && now - c->band_since >= 60 && d >= -67)
+			k = K_BACK5;
+		else if (!own && d >= *cur + 10 && d >= -72)
+			k = K_CROSS;
+		else if (own && c->band == 2 && r->band == 5 && d >= -65)
+			k = K_TO5;
+		else if (own && c->band == 5 && r->band == 2 && *cur <= -75 && d >= *cur + 15 &&
+			 (now - h->back5_at >= 600 || *cur <= -78))
+			k = K_TO24;
+		/* 優先順序：回 5G ＞ 換 AP ＞ 2.4G→5G ＞ 5G→2.4G；同一種選裝置量到最強的 */
+		if (k && (best_k == 0 || prio(k) > prio(best_k) || (k == best_k && d > best_d))) {
+			best_k = k;
+			best_d = d;
+			memcpy(target, h->rep[i].bssid, 6);
+		}
+	}
+	*tdbm = best_d;
+	return best_k;
+}
+
+/* 選這次要量的頻道：確認中的目標優先；2.4G 上連過 5G 的量 5G；其他輪流 */
+static int
+pick_channel(const struct twr_local *c, struct twr_hist *h, const struct twr_nbr *cand, int n, long now)
+{
+	int i, chs[TWR_MAX_CAND], nch = 0, j;
+
+	if (h->cand_n == 1) {
+		const struct twr_peer *peer;
+		const struct twr_radio *r = radio_by_bssid(h->cand, now, &peer);
+		if (r)
+			return r->ch;
+	}
+	for (i = 0; i < n; i++) {
+		if (c->band == 2 && seen5_ago(c->mac, now) >= 0 && cand[i].band != 5)
+			continue;
+		for (j = 0; j < nch; j++)
+			if (chs[j] == cand[i].ch)
+				break;
+		if (j == nch)
+			chs[nch++] = cand[i].ch;
+	}
+	if (!nch)
+		for (i = 0; i < n; i++) {
+			for (j = 0; j < nch; j++)
+				if (chs[j] == cand[i].ch)
+					break;
+			if (j == nch)
+				chs[nch++] = cand[i].ch;
+		}
+	if (!nch)
+		return 0;
+	return chs[(h->ask_seq++) % nch];
+}
+
+static void
+decide_one(struct twr_local *c, long now)
+{
+	struct twr_hist *h;
+	struct twr_nbr cand[TWR_MAX_CAND];
+	int n, bi = bidx(c->band), k, tdbm, cur, min_conn;
+	unsigned char target[6];
+	char name[96];
+
+	if (c->guest || c->missing)
+		return;
+	h = hist_find(c->mac, 1, now);
+	if (!h)
+		return;
+	if (h->k < 0 || h->v < 0) {
+		int kk = -1, vv = -1;
+		twr_drv_sta_caps(c->band, c->mac, &kk, &vv);
+		if (h->k < 0 && kk >= 0)
+			h->k = kk;
+		if (h->v < 0 && vv >= 0)
+			h->v = vv;
+	}
+	check_result(h, now);
+	if (h->pend)
+		return;
+	n = cands_for(c->band, cand, TWR_MAX_CAND, now);
+	if (!n) {
+		h->cand_n = 0;
+		return;
+	}
+
+	/* 有新回報：比 */
+	if (h->rep_new) {
+		h->rep_new = 0;
+		k = compare(c, h, target, &tdbm, &cur, now);
+		if (!k) {
+			h->cand_n = 0;
+		} else if (h->cand_n && memcmp(h->cand, target, 6) == 0 && now - h->cand_at >= 8 && now - h->cand_at <= 120) {
+			h->cand_n++;
+			h->cand_at = now;
+		} else {
+			memcpy(h->cand, target, 6);
+			h->cand_kind = k;
+			h->cand_n = 1;
+			h->cand_at = now;
+		}
+		if (k && h->cand_n >= 2 && !c->psm)
+			suggest(c, h, k, target, 0, tdbm, cur, now);
+		if (h->pend)
+			return;
+	}
+
+	/* 問了沒回：連續 3 次就當作不支援 11k（只在這顆驅動收得到回報時才判斷） */
+	if (h->ask_at && !h->ask_counted && now - h->ask_at >= 10 && h->rep_at < h->ask_at && g_caps.bcn_rep[bidx(h->ask_band)]) {
+		h->ask_counted = 1;
+		if (++h->k_noreply >= 3 && h->k < 0) {
+			h->k = 0;
+			event(0, "%s 問了 3 次都沒回 Beacon Report，當作不支援 11k", client_name(c->mac, name, sizeof(name)));
+		}
+	}
+
+	/* 備案（裝置不回 Beacon Report、驅動收不到回報）：只做回 5G，用 AP 聽到的 2.4G 訊號估 */
+	if ((h->k == 0 || !g_caps.bcn_rep[bi]) && c->band == 2 && seen5_ago(c->mac, now) >= 0 &&
+	    now - c->band_since >= 60 && !c->psm) {
+		const struct twr_radio *r5 = own_radio(5);
+		if (r5 && c->ema >= -58 && c->ema >= c->drop_rssi + 8) {
+			if (now - c->fb_at >= 10) {
+				c->fb_n++;
+				c->fb_at = now;
+			}
+			if (c->fb_n >= 2) {
+				h->cand_n = 2;
+				suggest(c, h, K_BACK5, r5->bssid, 5, c->ema - 8, c->ema, now);
+				c->fb_n = 0;
+			}
+		} else {
+			c->fb_n = 0;
+		}
+		return;
+	}
+
+	/* 問（送 Beacon Request） */
+	if (h->k == 0 || !g_caps.bcn_req[bi] || c->psm || h->ignore_n >= 3 || now < h->backoff_until)
+		return;
+	min_conn = (c->band == 2 && seen5_ago(c->mac, now) >= 0) ? 60 : 120;
+	if (now - c->band_since < min_conn)
+		return;
+	if (!(h->cand_n == 1 && now - h->ask_at >= 10) &&
+	    !(now - h->ask_at >= 60 && (!h->ask_at || abs(c->ema - h->ask_rssi) >= 6 || now - h->ask_at >= 600)))
+		return;
+	if (g_mode == TWR_MODE_SUGGEST && now < g_ask_busy[bi])
+		return;		/* 這個頻段有一個 Beacon Request 還在等，下一輪再問 */
+	{
+		int ch = pick_channel(c, h, cand, n, now);
+		if (!ch)
+			return;
+		h->ask_at = now;
+		h->ask_rssi = c->ema;
+		h->ask_ch = ch;
+		h->ask_band = c->band;
+		h->ask_counted = 0;
+		if (g_mode == TWR_MODE_SUGGEST) {
+			if (twr_drv_bcn_req(c->band, c->mac, ch, NULL, next_token()) == 0) {
+				g_ask_busy[bi] = now + 6;
+				g_st.ask++;
+				event(0, "問：%s 目前 %s %d dBm，量頻道 %d", client_name(c->mac, name, sizeof(name)),
+				      band_str(c->band), c->ema, ch);
+			}
+		}
+	}
+}
+
+static void
+decide_all(long now)
+{
+	int i;
+
+	if (g_mode_cfg < TWR_MODE_OBSERVE)
+		return;
+	for (i = 0; i < TWR_MAX_LOCAL; i++)
+		if (g_local[i].used)
+			decide_one(&g_local[i], now);
+	/* 離開這台的裝置也要看建議結果（換到別台 AP 的情況） */
+	for (i = 0; i < TWR_MAX_HIST; i++)
+		if (g_hist[i].used && g_hist[i].pend && !local_find(g_hist[i].mac, 0))
+			check_result(&g_hist[i], now);
+}
+
+/* 11k 鄰居清單：有變動才送給驅動（建議模式才做） */
+static void
+feed_neighbors(long now)
+{
+	static unsigned int last_sum[2];
+	struct twr_nbr list[TWR_MAX_CAND];
+	int i, j, n;
+
+	for (i = 0; i < g_nradio; i++) {
+		unsigned int sum = 0;
+		int bi = bidx(g_radio[i].band);
+		if (!g_caps.nbr[bi] || g_mode != TWR_MODE_SUGGEST)
+			continue;
+		n = cands_for(g_radio[i].band, list, TWR_MAX_CAND, now);
+		for (j = 0; j < n; j++)
+			sum = sum * 31 + list[j].bssid[5] + (list[j].bssid[4] << 8) + list[j].ch * 65537u;
+		sum += n;
+		if (sum == last_sum[bi])
+			continue;
+		if (twr_drv_set_nbr(g_radio[i].band, list, n) == 0) {
+			last_sum[bi] = sum;
+			event(0, "%s 的鄰居清單更新：%d 個", band_str(g_radio[i].band), n);
+		}
+	}
+}
+
+static void
+drv_events(long now)
+{
+	struct twr_drv_ev ev[16];
+	int i, n = twr_drv_read(ev, 16);
+	for (i = 0; i < n; i++) {
+		if (ev[i].type == TWR_EV_BCN_REPORT)
+			on_bcn_report(&ev[i], now);
+		else if (ev[i].type == TWR_EV_BTM_RESP)
+			on_btm_resp(&ev[i], now);
+	}
+}
+
 /* ---------- 狀態檔 ---------- */
 
 #ifndef TWR_TEST
@@ -880,7 +1577,17 @@ write_status(long now)
 		return;
 	mac2str(g_node, m);
 	fprintf(fp, "這台 AP：%s（%s，%s）\n", g_name, g_ip, m);
-	fprintf(fp, "觀察模式：只記錄，不引導裝置。弱訊號門檻 %d dBm\n", g_weak_dbm);
+	if (g_mode == TWR_MODE_SUGGEST)
+		fprintf(fp, "建議模式：用 11k 問裝置、11v 建議換 AP／頻段，永遠不踢人\n");
+	else if (g_mode_cfg == TWR_MODE_SUGGEST)
+		fprintf(fp, "觀察模式（設定是建議模式，但%s）\n", (g_caps.btm[0] || g_caps.btm[1]) ? "這一小時建議次數超過上限，已自動退回" : "驅動還不能送 11v 建議");
+	else
+		fprintf(fp, "觀察模式：只記錄，不引導裝置。弱訊號門檻 %d dBm\n", g_weak_dbm);
+	fprintf(fp, "驅動：%s｜2.4G 問 %s 回報 %s 建議 %s 鄰居清單 %s｜5G 問 %s 回報 %s 建議 %s 鄰居清單 %s\n", g_caps.name,
+		g_caps.bcn_req[0] ? "✓" : "✗", g_caps.bcn_rep[0] ? "✓" : "✗", g_caps.btm[0] ? "✓" : "✗", g_caps.nbr[0] ? "✓" : "✗",
+		g_caps.bcn_req[1] ? "✓" : "✗", g_caps.bcn_rep[1] ? "✓" : "✗", g_caps.btm[1] ? "✓" : "✗", g_caps.nbr[1] ? "✓" : "✗");
+	fprintf(fp, "開機以來：問 %d 次、收到回報 %d 筆、建議 %d 次、換過去 %d 次（回 5G %d 次）、不理會 %d 次、拒絕 %d 次；這一小時建議 %d／%d 次\n",
+		g_st.ask, g_st.rep, g_st.sug, g_st.ok, g_st.back5, g_st.ign, g_st.rej, g_hour_n, TWR_HOUR_MAX);
 	for (i = 0; i < g_nradio; i++)
 		radio_line(fp, "  ", &g_radio[i]);
 	fprintf(fp, "\n");
@@ -890,10 +1597,19 @@ write_status(long now)
 		if (!c->used || c->missing)
 			continue;
 		n++;
-		fprintf(fp, "  %-40s %-4s%s  %4d dBm  已連線 %u 秒%s%s\n",
-			client_name(c->mac, name, sizeof(name)), band_str(c->band), c->guest ? "（訪客）" : "",
-			c->ema, c->conn, c->weak_since ? "  ⚠ 訊號弱" : "",
+		fprintf(fp, "  %-40s %-4s%s  %4d dBm  已連線 %u 秒%s%s%s",
+			client_name(c->mac, name, sizeof(name)), band_str(c->band), c->guest ? "（IoT）" : "",
+			c->ema, c->conn, c->psm ? "  省電中" : "", c->weak_since ? "  ⚠ 訊號弱" : "",
 			(c->band == 2 && seen5_ago(c->mac, now) >= 0) ? "  24 小時內連過 5G" : "");
+		{
+			struct twr_hist *h = hist_find(c->mac, 0, now);
+			if (h && !c->guest)
+				fprintf(fp, "  11k %s 11v %s%s", h->k > 0 ? "✓" : h->k == 0 ? "✗" : "?", h->v > 0 ? "✓" : h->v == 0 ? "✗" : "?",
+					h->pend ? "  等建議結果" : h->ignore_n >= 3 ? "  不再建議" : now < h->backoff_until ? "  退避中" : "");
+			if (h && h->n_sug)
+				fprintf(fp, "  建議 %d 次、換過去 %d 次", h->n_sug, h->n_ok);
+		}
+		fprintf(fp, "\n");
 	}
 	if (!n)
 		fprintf(fp, "  （無）\n");
@@ -995,10 +1711,18 @@ tw_roamd_main(int argc, char **argv)
 	signal(SIGPIPE, SIG_IGN);
 
 	s = make_socket();
-	event(0, "漫遊中控（觀察模式）啟動：%s %s", g_name, g_ip);
+	g_mode_cfg = nvram_get_int("tw_roam_enable") >= TWR_MODE_SUGGEST ? TWR_MODE_SUGGEST : TWR_MODE_OBSERVE;
+	twr_drv_init(&g_caps);
+	g_mode = g_mode_cfg;
+	if (g_mode == TWR_MODE_SUGGEST && !g_caps.btm[0] && !g_caps.btm[1]) {
+		g_mode = TWR_MODE_OBSERVE;
+		event(1, "這台的驅動（%s）還不能送 11v 建議，先用觀察模式", g_caps.name);
+	}
+	g_hour_start = mono_sec();
+	event(0, "漫遊中控（%s模式）啟動：%s %s；驅動 %s", g_mode == TWR_MODE_SUGGEST ? "建議" : "觀察", g_name, g_ip, g_caps.name);
 
 	while (!g_stop) {
-		struct pollfd pfd = { s, POLLIN, 0 };
+		struct pollfd pfd[2] = { { s, POLLIN, 0 }, { twr_drv_event_fd(), POLLIN, 0 } };
 		now = mono_sec();
 		if (now >= next_poll) {
 			int before[TWR_MAX_LOCAL];
@@ -1008,11 +1732,14 @@ tw_roamd_main(int argc, char **argv)
 			for (i = 0; i < TWR_MAX_LOCAL; i++)
 				if (before[i] && !g_local[i].used)
 					note_gone(&g_local[i], now);
+			if (g_nradio)
+				decide_all(now);
 			next_poll = now + TWR_POLL_SEC;
 		}
 		if (s >= 0 && now >= next_report) {
 			update_radios();
 			send_report(s, now);
+			feed_neighbors(now);
 			next_report = now + TWR_REPORT_SEC;
 		}
 		if (now >= next_status) {
@@ -1024,12 +1751,17 @@ tw_roamd_main(int argc, char **argv)
 			s = make_socket();	/* br0 還沒有位址時稍後再試 */
 			continue;
 		}
-		if (poll(&pfd, 1, 1000) > 0)
-			recv_report(s, mono_sec());
+		if (poll(pfd, pfd[1].fd >= 0 ? 2 : 1, 1000) > 0) {
+			if (pfd[0].revents & POLLIN)
+				recv_report(s, mono_sec());
+			if (pfd[1].fd >= 0 && (pfd[1].revents & POLLIN))
+				drv_events(mono_sec());
+		}
 	}
 
 	if (s >= 0)
 		close(s);
+	twr_drv_close();
 	unlink(TWR_PID_FILE);
 	return 0;
 }

@@ -628,6 +628,12 @@ VOID RRM_BeaconReportHandler(
 	}
 	NdisZeroMemory(ie_list, sizeof(BCN_IE_LIST));
 
+	/* padavan-tw：長度不夠一筆固定欄位就不處理（原本會讀到垃圾、在掃描表插一筆全 0） */
+	if (Length < (LONG)sizeof(RRM_BEACON_REP_INFO)) {
+		os_free_mem(NULL, ie_list);
+		return;
+	}
+
 	ptr = (PUINT8)pBcnRepInfo;
 
 	pBcnRep = (PRRM_BEACON_REP_INFO)ptr;
@@ -699,6 +705,8 @@ VOID RRM_BeaconReportHandler(
 		pBssEntry->RSNI = pBcnRep->RSNI;
 	}
 #endif /* AP_SCAN_SUPPORT */
+	/* padavan-tw：原本 ie_list 沒有釋放，每筆 Beacon Report 漏一個 BCN_IE_LIST */
+	os_free_mem(NULL, ie_list);
 	return;
 }
 
@@ -714,6 +722,11 @@ VOID RRM_PeerMeasureRepAction(
 	UINT8 DialogToken;
 
 	DBGPRINT(RT_DEBUG_TRACE, ("%s::\n", __FUNCTION__));
+
+	/* padavan-tw：MsgLen 含 802.11 標頭，pFramePtr 卻從標頭之後開始，原本的迴圈邊界多算 24 位元組 */
+	if (MsgLen < LENGTH_802_11 + 3)
+		return;
+	MsgLen -= LENGTH_802_11;
 
 	/* skip Category and action code. */
 	pFramePtr += 2;
@@ -761,9 +774,30 @@ VOID RRM_PeerMeasureRepAction(
 						NdisMoveMemory(&ReportMode, eid_ptr->Octet + 1, 1);
 						NdisMoveMemory(&ReportType, eid_ptr->Octet + 2, 1);
 						pMeasureRep = (PVOID)(eid_ptr->Octet + 3);
-						if (ReportType == RRM_MEASURE_SUBTYPE_BEACON)
+						/*
+						 * padavan-tw：只處理正常的報告（Late／Incapable／Refused 都是 0），並把
+						 * 「哪台裝置量到哪個 BSS、多強」用 IWEVCUSTOM 事件送給 tw-roamd
+						 * （flags TW_BCN_REPORT_EVENT；內容：裝置 MAC 6、BSSID 6、Operating Class、頻道、RCPI、RSNI）。
+						 * 原本只寫進掃描表、不記是哪台裝置回的，漫遊中控拿不到。
+						 */
+						if (ReportType == RRM_MEASURE_SUBTYPE_BEACON && ReportMode.word == 0 &&
+						    BcnRepLen >= (LONG)sizeof(RRM_BEACON_REP_INFO))
+						{
+							UCHAR TwEv[16];
+
+							COPY_MAC_ADDR(TwEv, pEntry->Addr);
+							COPY_MAC_ADDR(TwEv + 6, pMeasureRep->Bssid);
+							TwEv[12] = pMeasureRep->RegulatoryClass;
+							TwEv[13] = pMeasureRep->ChNumber;
+							TwEv[14] = pMeasureRep->RCPI;
+							TwEv[15] = pMeasureRep->RSNI;
+							if (pEntry->apidx < pAd->ApCfg.BssidNum &&
+							    pAd->ApCfg.MBSSID[pEntry->apidx].wdev.if_dev)
+								RtmpOSWrielessEventSend(pAd->ApCfg.MBSSID[pEntry->apidx].wdev.if_dev,
+									RT_WLAN_EVENT_CUSTOM, TW_BCN_REPORT_EVENT, NULL, TwEv, sizeof(TwEv));
 							RRM_BeaconReportHandler(pAd, pMeasureRep,
 								BcnRepLen);
+						}
 					}
 					break;
 

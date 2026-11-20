@@ -1764,6 +1764,8 @@ struct security_type {
 #define OID_802_11_HS_ONOFF                     0x0925
 #define OID_802_11_HS_PARAM_SETTING             0x0927
 #define OID_802_11_WNM_BTM_REQ                  0x0928
+/* padavan-tw：Beacon Report 事件（IWEVCUSTOM 的 flags），給 tw-roamd：裝置 MAC、BSSID、Operating Class、頻道、RCPI、RSNI */
+#define TW_BCN_REPORT_EVENT                     0x0950
 #define OID_802_11_WNM_BTM_QUERY                0x0929
 #define OID_802_11_WNM_BTM_RSP                  0x093a
 #define OID_802_11_WNM_PROXY_ARP                0x093b

@@ -285,6 +285,14 @@ function wf_channel_apply() {
 }
 
 /* ---------- 多台 AP 與漫遊 ---------- */
+function wf_roam_mode(v) {
+	if (v == (NV.roam_on || '0')) return;
+	var f = { tw_roam_enable: v };
+	TW.apply({ sid: wf_has5() ? 'WLANConfig11a;' : 'WLANConfig11b;', fields: f,
+		title: { '0': '關閉漫遊中控？', '1': '改成觀察模式？', '2': '改成建議模式？' }[v],
+		impacts: v == '2' ? ['不會重新啟動 Wi-Fi；約 30 秒內生效', '支援 11k／11v 的手機會收到「換到比較好的 AP／頻段」的建議，手機可以不理會', '建議與結果都記在「查看漫遊紀錄」'] :
+			['不會重新啟動 Wi-Fi；約 30 秒內生效'] });
+}
 function wf_roam_render(r) {
 	var U = TW, h = '';
 	if (r && r.available !== false && !r.warming_up && r.aps) {
@@ -300,15 +308,19 @@ function wf_roam_render(r) {
 		}), '最近沒有漫遊');
 	} else {
 		var why = r && r.warming_up ? '資料收集中' : 'AP 清單與漫遊事件的圖表之後的版本才有';
-		h += '<div class="tw-inline">' + U.dot(NV.roam_on == '1' ? 'ok' : 'off') + '<b>漫遊中控：' + (NV.roam_on == '1' ? '觀察模式（只記錄，不引導）' : '關閉') + '</b></div>';
+		h += '<div class="tw-inline">' + U.dot(NV.roam_on == '2' ? 'ok' : NV.roam_on == '1' ? 'info' : 'off') + '<b>漫遊中控：' +
+			(NV.roam_on == '2' ? '建議模式（11k 問裝置、11v 建議換，不踢人）' : NV.roam_on == '1' ? '觀察模式（只記錄，不引導）' : '關閉') + '</b></div>';
 		h += '<div class="tw-partial">' + U.icon('info', 14) + '<span>' + why + '。現在可以先看文字紀錄：</span></div>';
 		h += '<div class="tw-actions"><button type="button" class="tw-btn tw-btn-sm" onclick="tw_roam_show(this)">查看漫遊紀錄</button></div>' +
 			'<pre id="tw_roam_out" style="display:none;white-space:pre-wrap;background:var(--surface-2);color:var(--text);border:0;border-radius:8px;padding:12px;font-size:12.5px"></pre>';
 	}
-	h += '<hr class="tw-sep"><div class="tw-field"><span class="tw-field-label">引導裝置換到比較近的 AP</span><div class="tw-seg" role="group" aria-label="漫遊模式">' +
-		'<button type="button" aria-pressed="' + (NV.roam_on != '1') + '" disabled>關閉</button><button type="button" aria-pressed="' + (NV.roam_on == '1') + '" disabled>觀察</button>' +
-		'<button type="button" disabled title="之後的版本才有">引導（11k＋11v）</button></div>' +
-		'<div class="tw-help">「引導」會建議裝置換到訊號比較好的 AP，不會強制踢除；之後的版本才有，而且每台 AP 都要是 padavan-tw（CR6608 支援）。觀察模式的開關與弱訊號門檻在 ' +
-		'<a href="Advanced_Wireless_Content.asp">原始 5 GHz 設定頁</a>。</div></div>';
+	var m = NV.roam_on == '2' ? '2' : NV.roam_on == '1' ? '1' : '0';
+	h += '<hr class="tw-sep"><div class="tw-field"><span class="tw-field-label">引導裝置換到比較好的 AP 或頻段</span><div class="tw-seg" role="group" aria-label="漫遊模式">' +
+		['0', '1', '2'].map(function (v) {
+			return '<button type="button" aria-pressed="' + (m == v) + '" onclick="wf_roam_mode(\'' + v + '\')">' + { '0': '關閉', '1': '觀察', '2': '建議（11k＋11v）' }[v] + '</button>';
+		}).join('') + '</div>' +
+		'<div class="tw-help">「建議」會用 11k 請手機量附近的 AP，明顯比較好時用 11v 建議它換過去（也包括暫時掉到 2.4G、回來後建議回 5G）。' +
+		'<b>永遠不踢人</b>：手機不理會就退避，不支援 11k／11v 的裝置完全不碰；每台裝置每天最多 6 次，每台 AP 每小時超過 12 次會自動退回觀察。' +
+		'2.4G 與 5G 要同名同密碼才有效。IoT 網路不參與。弱訊號門檻在 <a href="Advanced_Wireless_Content.asp">原始 5 GHz 設定頁</a>。</div></div>';
 	U.set('wf-roam', h);
 }

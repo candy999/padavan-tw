@@ -445,10 +445,11 @@ function validate_wlphrase(s, v, obj){
                                             <td>
                                                 <select name="tw_roam_enable" class="input" style="width:auto;">
                                                     <option value="1" <% nvram_match_x("", "tw_roam_enable", "1", "selected"); %>>觀察模式 (*)</option>
+                                                    <option value="2" <% nvram_match_x("", "tw_roam_enable", "2", "selected"); %>>建議模式（11k＋11v）</option>
                                                     <option value="0" <% nvram_match_x("", "tw_roam_enable", "0", "selected"); %>>關閉</option>
                                                 </select>
                                                 弱訊號門檻 <input type="text" maxlength="3" size="4" class="input" name="tw_roam_weak" style="width:60px;" value="<% nvram_get_x("", "tw_roam_weak"); %>" /> dBm
-                                                <div class="tw-hint">家裡有多台 padavan-tw AP（同一個 SSID）時，會互相交換「哪台裝置連在哪、訊號多強」，記錄裝置什麼時候換 AP、換之前訊號弱了多久，並提出建議。觀察模式只記錄，不會把裝置斷線。</div>
+                                                <div class="tw-hint">家裡有多台 padavan-tw AP（同一個 SSID）時，會互相交換頻段與裝置資訊。觀察模式只記錄；建議模式會用 11k 請手機量附近的 AP，明顯比較好時用 11v 建議它換過去（也包括暫時掉到 2.4G 的手機回到 5G）。兩種模式都不會把裝置斷線；手機不理會就退避，每台 AP 每小時超過 12 次自動退回觀察。</div>
                                                 <div style="margin-top:6px;"><input class="btn" type="button" value="查看漫遊紀錄" onclick="tw_roam_show(this);" /></div>
                                                 <pre id="tw_roam_out" style="display:none;margin-top:6px;white-space:pre-wrap;max-height:420px;overflow:auto;"></pre>
                                             </td>

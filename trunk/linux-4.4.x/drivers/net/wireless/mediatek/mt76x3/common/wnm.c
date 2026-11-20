@@ -2370,8 +2370,12 @@ VOID WNMCtrlInit(IN PRTMP_ADAPTER pAd)
 	{
 		pWNMCtrl = &pAd->ApCfg.MBSSID[APIndex].WNMCtrl;
 #ifndef CONFIG_HOTSPOT_R2
-		if (pWNMCtrl->WNMBTMEnable)
-			WNMBTMEnable = pWNMCtrl->WNMBTMEnable;
+		/*
+		 * padavan-tw：每個 BSS 照 dat 檔的 WNMEnable（WNMCtrlInit 在讀 dat 之後才跑）。
+		 * 原本從 TRUE 開始、只會被設成 TRUE，WNMEnable=0 完全無效，IoT 網路（ra1）照樣宣告 11v。
+		 * padavan-tw 的 rc 每個 BSS 都會寫 WNMEnable，所以直接用讀到的值。
+		 */
+		WNMBTMEnable = pWNMCtrl->WNMBTMEnable;
 #endif
 		NdisZeroMemory(pWNMCtrl, sizeof(*pWNMCtrl));
 		RTMP_SEM_EVENT_INIT(&pWNMCtrl->BTMPeerListLock, &pAd->RscSemMemList);

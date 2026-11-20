@@ -1,6 +1,7 @@
 # AP 互助漫遊：交換資訊的手段與方法
 
 > 2026-11-20 定稿第一版。設計由 Fable 提案、本機工作階段整理。
+> **2026-11-20 程式完成、待實機**：交換（`trunk/user/rc/src/tw_roamd.c`）、決定層（同一檔「決定層」一節）、驅動介面（`tw_roam_drv.c`／`tw_roam.h`）、D3 驅動修補（第 8 節）、Wi-Fi 頁模式切換。實作跟本文不同的地方都在各節標「實作」。
 > 目的：讓同一個區網裡的 AP 互相找到、交換資訊，**只用「建議」幫裝置換到比較好的 AP 或頻段，永遠不踢人**。
 > 寫法盡量和韌體無關，方便之後移植到 OpenWrt（第 9 節是對照表）。
 
@@ -60,7 +61,8 @@ G <裝置 MAC> <頻段> <訊號> <幾秒前離開>                         最�
 
 - tw-roamd 把「自己另一個頻段」加上「鄰居 AP 的 `R` 行（同 SSID）」組成鄰居清單，送給驅動；鄰居變動（新 AP、換頻道、離線）才更新。
 - 裝置問鄰居時（Neighbor Report Request），驅動就照這份清單回答，裝置掃描時只要掃這幾個頻道，換得快也省電。
-- D3 的 5G 驅動不能直接餵清單，是用自己的掃描表組；做法是鄰居變動時掃一次讓對方進表（見第 8 節）。
+- D3 的 5G 驅動不能直接餵清單，是用自己的掃描表組。~~鄰居變動時掃一次~~不做（掃描會讓 5G 離開頻道、中斷服務）；裝置回的 Beacon Report 本來就會寫進掃描表，問過一次之後驅動就答得出來。
+- **實作**：只有 D3 2.4G 由 tw-roamd 回答（建議模式才接手，tw-roamd 結束時交回驅動）；CR6608 先讓驅動自己答。清單最多 5 筆。
 
 ## 6. 什麼時候建議裝置換
 
@@ -118,7 +120,7 @@ G <裝置 MAC> <頻段> <訊號> <幾秒前離開>                         最�
 |---|---|---|
 | 0 | 關閉 | 不跑 tw-roamd |
 | 1 | 觀察（目前預設） | 交換資訊、寫記錄、算「如果是建議模式會怎麼做」，**不送任何請求** |
-| 2 | 建議 | 送 Beacon Request、鄰居報告、BTM 建議 |
+| 2 | 建議 | 送 Beacon Request、鄰居報告、BTM 建議（驅動不能送的頻段自動只觀察；每小時超過上限自動降回 1，重新啟動 tw-roamd 才恢復） |
 
 **記錄**：系統日誌，另寫 `/etc/storage/tw-diag/roam.log`（上限 32 KB，循環覆寫）
 
@@ -130,17 +132,55 @@ ROAM 回5G mac=.. 2.4G 待了 3分12秒，5G=-61 → 本機5G
 ROAM 結果 mac=.. 6秒後到 AP2-5G   ｜或｜ 不理會(第1次)→10分鐘內不再問
 ```
 
+**實作**（`tw-roamd status` 與 `roam.log`）：
+
+- 「問」與「回報」只寫事件（`/tmp/tw-roamd.events`，網頁「查看漫遊紀錄」看得到），不寫系統日誌，避免洗版；「建議」「回5G」「結果」「退回觀察」寫系統日誌＋事件＋`roam.log`。
+- `roam.log` 超過 16 KB 換到 `roam.log.1`，兩個合計最多 32 KB；`/etc/storage` 在記憶體，只有存設定時才寫進 Flash。
+- 觀察模式也會寫「（觀察）會建議 …」，並在 15 秒後看裝置有沒有自己換過去；觀察模式不算不理會、不增加退避次數，只在 10 分鐘內不重複同一句。
+- 狀態檔多了：模式、這顆驅動每個頻段能不能問／收回報／建議／設鄰居清單、開機以來的次數、每台裝置的 11k／11v（✓／✗／?）、等結果／退避中／不再建議。
+- 同一個頻段一次只有一個 Beacon Request（最多等 6 秒，收到回報後 1 秒）與一個 BTM（12 秒）在等：MT7603 的量測表會擠掉 500 ms 以前的請求、BTM 回覆的對應只認清單第一筆。
+
 **退回順序**：模式改 1 → 驅動的 11k／11v 開關改 0 並重啟無線 → 刷回上一版韌體。
 
 **要看的數字**：建議次數、成功率、換過去花幾秒、每台每天次數、誤建議次數（換過去後訊號反而變差）、回 5G 成功次數。
 
 ## 8. 各硬體的驅動狀況
 
-| 機種／頻段 | 晶片（驅動） | 11k 鄰居報告 | 11k Beacon Request／Report | 11v BTM | 要修的地方 |
-|---|---|---|---|---|---|
-| D3 2.4G | MT7603E（mt76x3） | 有，可由程式餵清單 | 有；回報寫進掃描表，另有事件路徑待確認 | 有（`OID_802_11_WNM_COMMAND`），不需 Hotspot | **2026-11-20 已處理**：11k 原本就開；`configs/tw/kernel-NEWIFI3.config` 再開 `CONFIG_MT7603E_WNM_SUPPORT`（11v）、`CONFIG_MT7603E_DOT11R_FT_SUPPORT`（11r，預設仍關）；`rtmp_def.h` 補沒有 PMF 時的 `CATEGORY_WNM` |
-| D3 5G | MT7612E（mt76x2） | 有，從自己的掃描表組 | 能送；回報只寫掃描表、不記是哪台裝置回的（**還沒補**） | **2026-11-20 已接上**：新增 Kconfig `RT_DOT11V_WNM`，Makefile 接 `wnm.o`；`OID_802_11_WNM_BTM_REQ` 加了不需 Hotspot 的版本；beacon／探測回應／連線回應宣告 BSS Transition（跟 11k 同一個開關） | Beacon Report 上報（含裝置 MAC）還要補 |
-| CR6608 2.4G／5G | MT7905／MT7975（mt7915 7.3.0.1，2.4G＝rax0、5G＝ra0） | 有，但要用 ioctl 設，不能用 iwpriv | 有；回報以事件送出，**含手機 MAC** | 有；`SendBTMReq` **不能用**（會踢人），要用 ioctl | 核心設定不用改，要寫一支小工具發 ioctl、收事件（見 8.1） |
+2026-11-20 讀驅動原始碼查證（三顆都沒有實機驗證）。程式在 `trunk/user/rc/src/tw_roam_drv.c`，決定層只透過 `tw_roam.h` 呼叫。
+
+| 機種／頻段 | 晶片（驅動） | 11k Beacon Request | 收 Beacon Report | 11v BTM（不踢人） | 裝置支不支援 11k／11v | 11k 鄰居清單 |
+|---|---|---|---|---|---|---|
+| D3 2.4G（ra0） | MT7603E（mt76x3） | OID 0x894C 子命令 5（參數版，141 位元組） | 事件 0x094D（含裝置 MAC） | OID 0x894A 子命令 5（**原始版**，本體自己組） | 0x494A／0x494C 查詢 | **程式回答**（子命令 8 交給程式、收到詢問事件後用子命令 7 回） |
+| D3 5G（rai0） | MT7612E（mt76x2） | `iwpriv set BcnReq=`（字串，第一欄是 WCID） | **padavan-tw 補的事件 0x0950** | OID 0x8928（padavan-tw 加的不需 Hotspot 版） | 驅動不匯出，看有沒有回報推斷 | 驅動用掃描表回答（Beacon Report 會寫進掃描表） |
+| CR6608 2.4G（rax0）／5G（ra0） | MT7915（mt7915 7.3.0.1） | OID 0x894C 子命令 5 | 事件 0x094D | OID 0x894A 子命令 6（參數版） | 0x5102（`KVRH_SUPPORT`） | 驅動自己回答（程式回答的格式還沒查清） |
+
+**共通的坑**（三顆都是同一家族的私有驅動）
+
+- 送出時的檢查有一半在 MLME 狀態機裡做，**失敗也不回錯誤**（ioctl 照樣成功、也沒有事件），所以程式要自己確認裝置已連線、支援 11k／11v。
+- Beacon Request 的 `timeout`（秒）一定要填：填 0 會變成十幾小時，佔住只有 32 格的量測表。程式填 5。
+- `regclass`（Operating Class）一定要自己填：驅動在 HT40 時會選錯（例：2.4G 頻道 6 給 83）。程式用全球表：2.4G＝81；5G 36–48＝115、52–64＝118、100–144＝121、149–161＝124、165＝125。
+- 訊號：回報的 RCPI 換成 dBm＝RCPI／2 − 110（驅動自己的換算不對）。
+- BTM 候選（`struct nr_info`）的 phytype、regclass、capinfo、is_ht、is_vht、mobility 六個欄位要**全部非 0**，不然驅動改去掃描表找、找不到就丟掉；而且這個旗標不會重設，一個觸發後面全部觸發。1 位元的欄位填 2＝存成 0（不宣告該功能但通過檢查）。
+- 量測、BTM 都一次一個（第 7 節）。
+
+**D3 要修的地方（2026-11-20 已處理）**
+
+| 檔案 | 修改 |
+|---|---|
+| `configs/tw/kernel-NEWIFI3.config` | `CONFIG_MT7603E_WNM_SUPPORT`（2.4G 11v）、`CONFIG_RT_DOT11V_WNM`（5G 11v）、`CONFIG_MT7603E_DOT11R_FT_SUPPORT`（2.4G 11r，預設仍關） |
+| `mt76x2_ap/Kconfig`、`Makefile` | 新增 `RT_DOT11V_WNM`：編 `common/wnm.o`、加 `-DCONFIG_DOT11V_WNM` |
+| `mt76x2/ap/ap_cfg.c` | `OID_802_11_WNM_BTM_REQ` 加不需 Hotspot 的版本（本體由程式組，驅動照抄，不會自己設斷線） |
+| `mt76x2/ap/ap_sync.c`、`ap_connect.c`、`ap_assoc.c` | beacon／探測回應／連線回應宣告 BSS Transition，跟 11k 同一個開關（每個 BSS 分開，IoT 網路不宣告） |
+| `mt76x2/common/rrm.c` | Beacon Report 送 IWEVCUSTOM 事件（flags `TW_BCN_REPORT_EVENT`＝0x0950：裝置 MAC、BSSID、Class、頻道、RCPI、RSNI）；修每筆回報漏一個 `BCN_IE_LIST`、迴圈邊界多算 802.11 標頭 24 位元組、拒絕／不能量的回報也被當成正常的處理 |
+| `mt76x3/common/wnm.c` | `WNMCtrlInit` 改成照 dat 檔每個 BSS 的 `WNMEnable`（原本只會被設成開，IoT 網路照樣宣告 11v） |
+| `mt76x2`／`mt76x3` `rtmp_def.h`、`mt76x3/include/dot11r_ft.h` | 沒開 PMF 時補 `CATEGORY_WNM`、`FT_IGTK_ID`（開 11v／11r 編譯失敗） |
+| `user/ralinkiappd/iappd.sh` | 11r 的金鑰交換程式兩個頻段都聽 |
+
+**D3 已知限制**
+
+- MT7612 的 BTM 回覆沒有接上（動作框架第 10 類沒有處理函式；接上後還有三個驅動的毛病），所以 5G 只能用「15 秒內有沒有出現在目標」判斷結果。
+- MT7612 的 BTM dialog token 固定是 1，同一台裝置 1 秒內第二次 BTM 會被丟掉（程式本來就不會這樣送）。
+- MT7603 的 BTM 參數版會把偏好值子元素放在鄰居元素外面（格式錯誤），所以改用原始版自己組。
 
 ### 8.1 CR6608（mt7915）細節
 
@@ -165,7 +205,8 @@ ROAM 結果 mac=.. 6秒後到 AP2-5G   ｜或｜ 不理會(第1次)→10分鐘�
   - 分隔符號是 `!`，不是說明文字寫的 `-`（`rrm.c:204-380`）。
   - 模式：0 被動、1 主動、2 查表。
 - **`iwpriv set SendBTMReq=<MAC>` 不能用**（`ap_cfg.c:21001-21037`）：它固定設 Disassociation Imminent、計時 600 TBTT，約 60 秒後驅動會把手機踢掉（`wnm.c:1835-1846`），而且不帶候選清單。違反第 1 節原則。
-- **正確做法：私有 ioctl**（`RT_PRIV_IOCTL`，flags＝OID｜0x8000）。只要 RRM／WNM 編進去就能用，不需要 HOTSPOT、MBO、WAPP。
+- **正確做法：私有 ioctl**（`RT_PRIV_IOCTL`＝SIOCIWFIRSTPRIV＋1，flags＝OID｜0x8000，也就是 0x894C、0x894A；查詢用 0x4000 開頭）。只要 RRM／WNM 編進去就能用，不需要 HOTSPOT、MBO、WAPP。
+- **實作**（`tw_roam_drv.c`）：Beacon Request 用子命令 5（`bcn_req_info` 141 位元組、只量同 SSID、timeout 5 秒）；BTM 用子命令 6（`btm_reqinfo_t` 67 位元組＋每個候選 18 位元組，`disassoc_timer`＝0：驅動在 0 時自己清掉 Disassociation Imminent、也不設斷線倒數，**確認不會踢人**）；裝置能力用 `RT_QUERY_KVR_CAPABILITY`（0x5102，長度剛好 7）；事件 0x094D／0x094B 照下表解析。
 
 | OID | 子命令 | 用途 |
 |---|---|---|
@@ -195,7 +236,7 @@ ROAM 結果 mac=.. 6秒後到 AP2-5G   ｜或｜ 不理會(第1次)→10分鐘�
 4. **`WNMEnable` 可能只套用到 2.4G**：多設定檔合併時只合併 `RRMEnable`（`multi_profile.c:2801`），但 `WNMCtrlInit` 又把每個 BSS 預設設成開（`wnm.c:2774-2797`），順序沒查清，要實機確認。
 5. 驅動自己回鄰居報告要靠 AP 掃描，會中斷服務，建議交給程式回答。
 
-**D3 可以借鏡的地方**：mt76x3／mt76x2 和 mt7915 是同一家族的私有驅動。D3 修好編譯後，也應該優先找同樣的 OID ioctl 和 rtnetlink 事件，比讀掃描表可靠；D3 的 BTM 也要先確認不會預設設 Disassociation Imminent。
+**D3 可以借鏡的地方**：mt76x3 跟 mt7915 用同一套 OID 與事件（已採用）；mt76x2 比較舊，Beacon Request 只能用字串指令、回報要補事件（第 8 節）。三顆的 BTM 都確認不會自己設 Disassociation Imminent。
 
 驅動對 Beacon Report 的訊號用「RCPI ＋ 固定偏移」換算，跟標準的 RCPI/2 − 110 不同；程式要拿原始值自己算，並跟手機顯示的訊號對照。
 
@@ -219,12 +260,12 @@ OpenWrt 用 hostapd，11k／11v 都是標準功能，而且有 ubus 介面，移
 
 ## 10. 第一版範圍
 
-| 階段 | 內容 | 工作量 |
-|---|---|---|
-| 0 | 驅動：D3 兩個頻段的 11k／11v 編譯與修補（第 8 節） | 2～3 天（含幾輪編譯刷機） |
-| 1 | tw-roamd：`TWR2`、Beacon Request／Report、比較、BTM、退避、記錄；模式 2 | 2～2.5 天 |
-| 2 | 鄰居清單自動餵入；頻段引導與回 5G（6.2、6.3） | 1 天 |
-| 驗證 | 第 11 節 | 2～3 晚 |
+| 階段 | 內容 | 工作量 | 狀態（2026-11-20） |
+|---|---|---|---|
+| 0 | 驅動：D3 兩個頻段的 11k／11v 編譯與修補（第 8 節） | 2～3 天（含幾輪編譯刷機） | ✅ 編譯通過；5G Beacon Report 事件、IoT 的 11v 開關另外修好 |
+| 1 | tw-roamd：`TWR2`、Beacon Request／Report、比較、BTM、退避、記錄；模式 2 | 2～2.5 天 | ✅ 程式完成 |
+| 2 | 鄰居清單自動餵入；頻段引導與回 5G（6.2、6.3） | 1 天 | ✅ 程式完成（鄰居清單只有 D3 2.4G 由程式回答） |
+| 驗證 | 第 11 節 | 2～3 晚 | 📋 待刷機 |
 
 以後再做：負載參與決策、11r 快速漫遊、介面卡片、CR6608。不做：學習模型、自適應 11r。
 
@@ -237,10 +278,10 @@ OpenWrt 用 hostapd，11k／11v 都是標準功能，而且有 ubus 介面，移
 
 ## 12. 還不確定、要實機確認
 
-1. Android 手機是否回 Beacon Report（尤其螢幕關著時）、是否接受 BTM；各廠牌不同，這是成效的最大變數。
-2. D3 5G 的 11v 接上後能否編過、BTM 框內容是否正確。
-3. D3 2.4G 的 Beacon Report 事件在沒開 `WAPP_SUPPORT` 時會不會送出；不會就改讀掃描表的 BcnRept 欄。
-4. Beacon Request 的參數：兩顆驅動格式略不同；台灣頻道的 Regulatory Class（81／115／124／125）要對照。
+1. Android 手機是否回 Beacon Report（尤其螢幕關著時）、是否接受 BTM；各廠牌不同，這是成效的最大變數。`tw-roamd status` 會顯示每台裝置的 11k／11v。
+2. ~~D3 5G 的 11v 接上後能否編過~~（✅ 編過）；BTM 框內容是否正確（要抓封包或看手機反應）。
+3. ~~D3 2.4G 的 Beacon Report 事件在沒開 `WAPP_SUPPORT` 時會不會送出~~：讀原始碼確認會送（`wext_send_bcn_rsp_event`，不靠 WAPP），而且只有參數版 Beacon Request 會記下是哪台裝置；要實機確認事件真的收得到。
+4. ~~Beacon Request 的參數~~：已對照（第 8 節共通的坑）；要實機確認手機接受 50 TU、只量一個頻道的請求。
 5. 「省電狀態」能不能代表「沒在用」：驅動沒有每台裝置的流量，第一版只能這樣近似。
 6. 用 2.4G 估 5G 的 7～10 dB 差距要用實測校正（不同牆、不同手機會不一樣）。
 7. 2.4G 開 11v 會改變 beacon 的能力欄位，少數舊 IoT 可能不相容，所以要過夜回歸。
