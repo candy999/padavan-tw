@@ -163,7 +163,7 @@
 | I11 | STP 誤判 2.4G 迴圈的根因：新配置的 skb 清掉硬體 NAT 殘留標記（`d333736`）；Wi-Fi BPDU 擋法保留當保險，觸發時記錄原因與狀態（`/etc/storage/tw-diag/`） | ✅ D3 實機（修正前 30 分鐘 2 次、修正後 60 分鐘 0 次） |
 | I12 | 5G 預設值：TxBurst 開、HT 運作模式混合（`wl_HT_OpMode=0`，關閉 Greenfield）、80 MHz、自動頻道（兩晚 15 輪：Greenfield 關 5 輪 0 斷線、開著 5 輪 1 次斷線，TxBurst 關最差，推翻早期「TxBurst 關延遲較低」的候選結論）；TxBF 在 D3 無效（沒有原廠校正）。2.4G 維持 20 MHz、TxBurst 開（40 MHz 較快，但 `HT_BSSCoexistence=0` 共存偵測關閉，不預設開）；`rt_HT_OpMode` 維持 1，因為 2.4G 預設 b/g/n 混合，驅動實際套用的是 0（iNIC／RT2860 dat 都是 `0;0`），Greenfield 只在純 N 模式生效 | ✅ 1a9cbaf（D3 實機） |
 | I13 | 自動選頻考慮強的緊鄰頻道（同頻道之外，鄰頻溢出也會干擾） | 📋 |
-| I14 | **自適應 11r**（KVR R5）：beacon 不宣告 FT，只對已知相容的裝置在探測／連線回應帶 FT；名單只記在記憶體 | 📋 |
+| I14 | **自適應 11r**：改成不動驅動的「5G 開、2.4G 關＋偵測到不相容裝置自動關 5G 的 11r」（原本依裝置調整 FT 的做法要改驅動，不採用；見 `docs/ROAM-COOP.md` 第 13 節） | 📋 |
 
 ## J. 網際網路與 VPN
 
