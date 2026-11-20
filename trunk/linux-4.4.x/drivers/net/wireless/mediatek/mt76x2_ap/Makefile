@@ -255,6 +255,11 @@ $(RT_DRV_NAME)-objs += $(RT_DRV_PATH)/common/ft_rc.o
 $(RT_DRV_NAME)-objs += $(RT_DRV_PATH)/ap/ap_ftkd.o
 endif
 
+# padavan-tw：11v BTM（不需要 Hotspot 2.0）
+ifeq ($(CONFIG_RT_DOT11V_WNM),y)
+$(RT_DRV_NAME)-objs += $(RT_DRV_PATH)/common/wnm.o
+endif
+
 ifeq ($(CONFIG_RT_DOT11K_RRM),y)
 $(RT_DRV_NAME)-objs += $(RT_DRV_PATH)/common/rrm_tlv.o
 $(RT_DRV_NAME)-objs += $(RT_DRV_PATH)/common/rrm_sanity.o
@@ -549,6 +554,10 @@ endif
 
 ifeq ($(CONFIG_RT_DOT11K_RRM),y)
 EXTRA_CFLAGS += -DDOT11K_RRM_SUPPORT -DAPPLE_11K_IOT
+endif
+
+ifeq ($(CONFIG_RT_DOT11V_WNM),y)
+EXTRA_CFLAGS += -DCONFIG_DOT11V_WNM
 endif
 
 ifeq ($(CONFIG_RT_HDR_TRANS),y)

@@ -1617,6 +1617,14 @@ SendAssocResponse:
 		}
 #endif /* DOT11V_WNM_SUPPORT */
 
+#ifdef CONFIG_DOT11V_WNM
+		/* padavan-tw: advertise BSS Transition so clients accept BTM suggestions (same switch as 11k) */
+#ifdef DOT11K_RRM_SUPPORT
+		if (IS_RRM_ENABLE(pAd, pEntry->apidx))
+#endif
+			extCapInfo.BssTransitionManmt = 1;
+#endif /* CONFIG_DOT11V_WNM */
+
 #ifdef DOT11_VHT_AC
 		if (WMODE_CAP_AC(pAd->CommonCfg.PhyMode) &&
 			(pAd->CommonCfg.Channel > 14))

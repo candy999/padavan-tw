@@ -2,7 +2,8 @@
 
 
 start() {   if grep -q 'mt76x3_ap' /proc/modules ; then
-	    ralinkiappd -wi rai0 -d 0          &
+	    # padavan-tw：MT7603（2.4G，ra0）也編了 11r，金鑰交換要一起帶上
+	    ralinkiappd -wi rai0 -wi ra0 -d 0  &
 	    sysctl -wq net.ipv4.neigh.rai0.base_reachable_time_ms=10000
 	    sysctl -wq net.ipv4.neigh.rai0.delay_first_probe_time=1
             else

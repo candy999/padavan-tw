@@ -4054,6 +4054,50 @@ INT RTMPAPSetInformation(
 #endif
 
 #ifdef CONFIG_DOT11V_WNM
+#ifndef CONFIG_HOTSPOT_R2
+	/*
+	 * padavan-tw: send a BSS Transition Management Request without Hotspot 2.0.
+	 * The request body (mode, disassoc timer, validity, candidate list) is built
+	 * by user space (tw-roamd), which never sets Disassociation Imminent.
+	 */
+	case OID_802_11_WNM_BTM_REQ:
+		{
+			UCHAR *Buf = NULL;
+			MAC_TABLE_ENTRY *pEntry;
+			struct btm_req_data *req_data;
+
+			if (wrq->u.data.length < sizeof(struct btm_req_data) || wrq->u.data.length > 1024)
+			{
+				Status = -EINVAL;
+				break;
+			}
+			os_alloc_mem(NULL, (UCHAR **)&Buf, wrq->u.data.length);
+			if (Buf == NULL)
+			{
+				Status = -ENOMEM;
+				break;
+			}
+			if (copy_from_user(Buf, wrq->u.data.pointer, wrq->u.data.length))
+			{
+				os_free_mem(NULL, Buf);
+				Status = -EFAULT;
+				break;
+			}
+			req_data = (struct btm_req_data *)Buf;
+			if (sizeof(struct btm_req_data) + req_data->btm_req_len > wrq->u.data.length)
+				Status = -EINVAL;
+			else if ((pEntry = MacTableLookup(pAd, req_data->peer_mac_addr)) == NULL)
+				Status = -ENOENT;
+			else if ((pAd->ApCfg.MBSSID[pObj->ioctl_if].wdev.AuthMode >= Ndis802_11AuthModeWPA) &&
+					 (pEntry->WpaState != AS_PTKINITDONE))
+				Status = -EAGAIN;
+			else if (!Send_BTM_Req(pAd, (PSTRING)req_data->peer_mac_addr,
+					       (PSTRING)req_data->btm_req, req_data->btm_req_len))
+				Status = -ENOMEM;
+			os_free_mem(NULL, Buf);
+		}
+		break;
+#endif /* !CONFIG_HOTSPOT_R2 */
 #ifdef CONFIG_HOTSPOT_R2
 	case OID_802_11_WNM_BTM_REQ:
 		{

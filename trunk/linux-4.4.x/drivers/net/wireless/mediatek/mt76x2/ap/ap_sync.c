@@ -452,6 +452,11 @@ VOID APPeerProbeReqAction(
 #ifdef CONFIG_DOT11V_WNM
 			if (pAd->ApCfg.MBSSID[apidx].WNMCtrl.ProxyARPEnable)
 				extCapInfo.proxy_arp = 1;
+			/* padavan-tw: advertise BSS Transition so clients accept BTM suggestions (same switch as 11k) */
+#ifdef DOT11K_RRM_SUPPORT
+			if (IS_RRM_ENABLE(pAd, apidx))
+#endif
+				extCapInfo.BssTransitionManmt = 1;
 #ifdef CONFIG_HOTSPOT_R2		
 			if (pAd->ApCfg.MBSSID[apidx].WNMCtrl.WNMNotifyEnable)
 				extCapInfo.wnm_notification= 1;

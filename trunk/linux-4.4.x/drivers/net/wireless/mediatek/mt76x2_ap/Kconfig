@@ -182,6 +182,13 @@ config RT_DOT11K_RRM
 	bool "802.11k Radio Resource Management support"
 	default n
 
+config RT_DOT11V_WNM
+	bool "802.11v BSS Transition Management (without Hotspot 2.0)"
+	default n
+	help
+	  padavan-tw: build common/wnm.o so the AP can send BSS Transition
+	  Management Requests (suggest, never kick) via OID_802_11_WNM_BTM_REQ.
+
 config RT_80211N_DRAFT3
 	bool "802.11n Draft3 (BSS Coexistence)"
 	default n
