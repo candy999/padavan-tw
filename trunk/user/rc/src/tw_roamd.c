@@ -409,6 +409,7 @@ local_find(const unsigned char *mac, int create)
 }
 
 static int g_peer_count(long now);
+static void roam_note(const unsigned char *mac, const char *type, const char *from, const char *to, int rf, int rt);
 
 /* 這台裝置最近是不是在別台 AP（剛離開或還在報告裡）？回傳那台與當時訊號 */
 static struct twr_peer *
@@ -456,12 +457,17 @@ on_entry(const struct twr_mac_entry *e, int band, int guest, long now)
 		c->drop_rssi = rssi;
 		c->ema16 = rssi * 16;
 		if (p) {
+			char fr[28], to[28];
 			event(1, "換 AP：%s 從 %s %s（%s，%d dBm）到這台（%s，%d dBm）",
 			      client_name(e->Addr, name, sizeof(name)), p->name, p->ip, band_str(pband), prssi, band_str(band), rssi);
+			snprintf(fr, sizeof(fr), "%.20s %s", p->name, band_str(pband));
+			snprintf(to, sizeof(to), "%.20s %s", g_name, band_str(band));
+			roam_note(e->Addr, "roam", fr, to, prssi, rssi);
 		}
 	} else if (c->band != band && c->missing < TWR_GONE_POLLS) {
 		event(1, "換頻段：%s %s → %s（%d dBm）",
 		      client_name(e->Addr, name, sizeof(name)), band_str(c->band), band_str(band), rssi);
+		roam_note(e->Addr, "band", band_str(c->band), band_str(band), c->ema, rssi);
 		c->band = band;
 		c->band_since = now;
 		c->drop_rssi = rssi;
@@ -861,6 +867,17 @@ recv_report(int s, long now)
 #define TWR_ROAMLOG	"roam.log"
 #endif
 #define TWR_ROAMLOG_MAX	16384	/* 超過就換到 roam.log.1，兩個合計最多 32 KB */
+#define TWR_SIG_N	96	/* 24 小時 × 每 15 分鐘 */
+#define TWR_SIG_STEP	900
+#define TWR_DEV_LOG	12	/* 每台裝置保留幾筆斷線／漫遊 */
+#define TWR_MAX_REV	50	/* 漫遊頁的事件 */
+#ifndef TWR_TEST
+#define TWR_JSON_FILE	"/tmp/tw-roamd.json"
+#define TWR_DEV_FILE	"/tmp/tw-roamd.devices"
+#else
+#define TWR_JSON_FILE	"tw-roamd.json"
+#define TWR_DEV_FILE	"tw-roamd.devices"
+#endif
 
 /* 每台裝置的決定紀錄：裝置離開這台也保留（退避、次數要一直算到重開機） */
 struct twr_hist {
@@ -888,6 +905,18 @@ struct twr_hist {
 	long day_start;
 	long back5_at;			/* 上次成功回到 5G */
 	int n_sug, n_ok;
+	/* 裝置頁（/tw_api.asp?q=device&mac=）：24 小時訊號（每 15 分鐘一點）、斷線、漫遊；時間都是 Unix 秒 */
+	long sig_s[TWR_SIG_N];		/* 這一格是第幾個 15 分鐘（time/900），0＝沒有 */
+	short sig_v[TWR_SIG_N];
+	long sig_cur;			/* 正在累計的格子 */
+	int sig_sum, sig_cnt;
+	long gone_at;			/* 離開這台的時間（Unix 秒），20 秒後確認是不是換到別台 */
+	int gone_rssi, gone_weak;
+	int ndisc;
+	struct { long ts; char reason[48]; } disc[TWR_DEV_LOG];
+	int nroam;
+	struct { long ts; char from[28], to[28]; int rf, rt; } roam[TWR_DEV_LOG];
+	int dirty;			/* 裝置檔要重寫 */
 };
 
 static struct twr_hist g_hist[TWR_MAX_HIST];
@@ -989,6 +1018,176 @@ hist_find(const unsigned char *mac, int create, long now)
 	g_hist[oldest].k = g_hist[oldest].v = -1;
 	g_hist[oldest].day_start = now;
 	return &g_hist[oldest];
+}
+
+/* ---------- 給網頁的資料（漫遊頁、裝置頁） ---------- */
+
+/* 漫遊頁的事件（新的在後） */
+static struct {
+	long ts;
+	unsigned char mac[6];
+	char type[8];			/* roam（換 AP）／band（同一台換頻段） */
+	char from[28], to[28];
+	int rf, rt;
+} g_rev[TWR_MAX_REV];
+static int g_rev_n, g_rev_head;
+
+static void
+roam_note(const unsigned char *mac, const char *type, const char *from, const char *to, int rf, int rt)
+{
+	long wall = (long)time(NULL);
+	struct twr_hist *h = hist_find(mac, 1, mono_sec());
+	int i = g_rev_head;
+
+	memcpy(g_rev[i].mac, mac, 6);
+	g_rev[i].ts = wall;
+	snprintf(g_rev[i].type, sizeof(g_rev[i].type), "%s", type);
+	snprintf(g_rev[i].from, sizeof(g_rev[i].from), "%s", from);
+	snprintf(g_rev[i].to, sizeof(g_rev[i].to), "%s", to);
+	g_rev[i].rf = rf;
+	g_rev[i].rt = rt;
+	g_rev_head = (g_rev_head + 1) % TWR_MAX_REV;
+	if (g_rev_n < TWR_MAX_REV)
+		g_rev_n++;
+	if (h) {
+		int k;
+		if (h->nroam < TWR_DEV_LOG) {
+			k = h->nroam++;
+		} else {
+			memmove(&h->roam[0], &h->roam[1], sizeof(h->roam[0]) * (TWR_DEV_LOG - 1));
+			k = TWR_DEV_LOG - 1;
+		}
+		h->roam[k].ts = wall;
+		snprintf(h->roam[k].from, sizeof(h->roam[k].from), "%s", from);
+		snprintf(h->roam[k].to, sizeof(h->roam[k].to), "%s", to);
+		h->roam[k].rf = rf;
+		h->roam[k].rt = rt;
+		h->dirty = 1;
+	}
+}
+
+static void
+dev_disc(struct twr_hist *h, long ts, const char *reason)
+{
+	int k;
+	if (h->ndisc < TWR_DEV_LOG) {
+		k = h->ndisc++;
+	} else {
+		memmove(&h->disc[0], &h->disc[1], sizeof(h->disc[0]) * (TWR_DEV_LOG - 1));
+		k = TWR_DEV_LOG - 1;
+	}
+	h->disc[k].ts = ts;
+	snprintf(h->disc[k].reason, sizeof(h->disc[k].reason), "%s", reason);
+	h->dirty = 1;
+}
+
+/* 每 2 秒記一次訊號，累計成 15 分鐘一點（平均） */
+static void
+sig_note(struct twr_hist *h, int rssi)
+{
+	long slot = (long)time(NULL) / TWR_SIG_STEP;
+	if (slot != h->sig_cur) {
+		if (h->sig_cur && h->sig_cnt) {
+			int i = h->sig_cur % TWR_SIG_N;
+			h->sig_s[i] = h->sig_cur;
+			h->sig_v[i] = (short)(h->sig_sum / h->sig_cnt);
+			h->dirty = 1;
+		}
+		h->sig_cur = slot;
+		h->sig_sum = h->sig_cnt = 0;
+	}
+	h->sig_sum += rssi;
+	h->sig_cnt++;
+}
+
+/* 離開這台：先記下，20 秒後看是不是出現在別台（那是漫遊，不算斷線） */
+static void
+dev_gone(const struct twr_local *c)
+{
+	struct twr_hist *h;
+	if (c->guest)
+		return;
+	h = hist_find(c->mac, 0, mono_sec());
+	if (!h)
+		return;
+	h->gone_at = (long)time(NULL);
+	h->gone_rssi = c->ema;
+	h->gone_weak = c->weak_since != 0;
+}
+
+static int
+on_some_peer(const unsigned char *mac, long now)
+{
+	int i, j;
+	for (i = 0; i < TWR_MAX_PEERS; i++) {
+		const struct twr_peer *p = &g_peer[i];
+		if (!p->used || now - p->last_seen > TWR_PEER_EXPIRE)
+			continue;
+		for (j = 0; j < p->ncli; j++)
+			if (memcmp(p->cli[j].mac, mac, 6) == 0)
+				return 1;
+	}
+	return 0;
+}
+
+static void
+gone_check(struct twr_hist *h, long now)
+{
+	long wall = (long)time(NULL);
+	struct twr_local *c;
+	char r[48];
+
+	if (!h->gone_at || wall - h->gone_at < 20)
+		return;
+	c = local_find(h->mac, 0);
+	if (!(c && !c->missing) && !on_some_peer(h->mac, now)) {
+		if (h->gone_weak)
+			snprintf(r, sizeof(r), "訊號太弱（%d dBm）", h->gone_rssi);
+		else
+			snprintf(r, sizeof(r), "離線（最後 %d dBm）", h->gone_rssi);
+		dev_disc(h, h->gone_at, r);
+	}
+	h->gone_at = 0;
+}
+
+/* DHCP 租約的主機名稱（沒有就空字串） */
+static const char *
+client_host(const unsigned char *mac, char *buf, size_t len)
+{
+	char line[256], m[18], lm[24], ip[48], host[64];
+	FILE *fp;
+
+	buf[0] = 0;
+	mac2str(mac, m);
+	fp = fopen("/tmp/dnsmasq.leases", "r");
+	if (!fp)
+		return buf;
+	while (fgets(line, sizeof(line), fp)) {
+		if (sscanf(line, "%*s %23s %47s %63s", lm, ip, host) == 3 && strcasecmp(lm, m) == 0) {
+			if (strcmp(host, "*") != 0)
+				snprintf(buf, len, "%s", host);
+			break;
+		}
+	}
+	fclose(fp);
+	return buf;
+}
+
+/* JSON 字串（含引號）；控制字元與引號、反斜線都跳脫 */
+static void
+json_str(FILE *fp, const char *s)
+{
+	fputc('"', fp);
+	for (; *s; s++) {
+		unsigned char ch = (unsigned char)*s;
+		if (ch == '"' || ch == '\\')
+			fprintf(fp, "\\%c", ch);
+		else if (ch < 0x20)
+			fprintf(fp, "\\u%04x", ch);
+		else
+			fputc(ch, fp);
+	}
+	fputc('"', fp);
 }
 
 /* 自己的頻段（radio） */
@@ -1365,6 +1564,8 @@ decide_one(struct twr_local *c, long now)
 	h = hist_find(c->mac, 1, now);
 	if (!h)
 		return;
+	sig_note(h, c->ema);
+	h->gone_at = 0;		/* 還在（或又回來了） */
 	if (h->k < 0 || h->v < 0) {
 		int kk = -1, vv = -1;
 		twr_drv_sta_caps(c->band, c->mac, &kk, &vv);
@@ -1473,10 +1674,14 @@ decide_all(long now)
 	for (i = 0; i < TWR_MAX_LOCAL; i++)
 		if (g_local[i].used)
 			decide_one(&g_local[i], now);
-	/* 離開這台的裝置也要看建議結果（換到別台 AP 的情況） */
-	for (i = 0; i < TWR_MAX_HIST; i++)
-		if (g_hist[i].used && g_hist[i].pend && !local_find(g_hist[i].mac, 0))
+	/* 離開這台的裝置也要看建議結果（換到別台 AP 的情況）；離開 20 秒後確認是斷線還是漫遊 */
+	for (i = 0; i < TWR_MAX_HIST; i++) {
+		if (!g_hist[i].used)
+			continue;
+		if (g_hist[i].pend && !local_find(g_hist[i].mac, 0))
 			check_result(&g_hist[i], now);
+		gone_check(&g_hist[i], now);
+	}
 }
 
 /* 11k 鄰居清單：有變動才送給驅動（建議模式才做） */
@@ -1571,6 +1776,176 @@ write_neighbors(long now)
 	rename(TWR_NEIGHBORS_FILE ".tmp", TWR_NEIGHBORS_FILE);
 }
 
+/* 漫遊頁的資料（/tw_api.asp?q=roam，欄位見 docs/HANDOFF-UI.md 第 6 節） */
+static void
+write_json(long now)
+{
+	FILE *fp = fopen(TWR_JSON_FILE ".tmp", "w");
+	char m[18], host[64];
+	int i, j, n24 = 0, n5 = 0, first, peers = g_peer_count(now);
+	const struct twr_radio *r2 = own_radio(2), *r5 = own_radio(5);
+
+	if (!fp)
+		return;
+	for (i = 0; i < TWR_MAX_LOCAL; i++)
+		if (g_local[i].used && !g_local[i].missing && !g_local[i].guest) {
+			if (g_local[i].band == 5)
+				n5++;
+			else
+				n24++;
+		}
+	fprintf(fp, "{\"ok\":true,\"available\":true,\"ts\":%ld,\"mode\":\"%s\",\"mode_cfg\":\"%s\",\"weak_dbm\":%d,",
+		(long)time(NULL), g_mode == TWR_MODE_SUGGEST ? "steer" : "observe",
+		g_mode_cfg == TWR_MODE_SUGGEST ? "steer" : "observe", g_weak_dbm);
+	fprintf(fp, "\"driver\":{\"name\":");
+	json_str(fp, g_caps.name ? g_caps.name : "");
+	for (i = 0; i < 2; i++)
+		fprintf(fp, ",\"%s\":{\"ask\":%s,\"report\":%s,\"steer\":%s,\"neighbor\":%s}", i ? "b5" : "b24",
+			g_caps.bcn_req[i] ? "true" : "false", g_caps.bcn_rep[i] ? "true" : "false",
+			g_caps.btm[i] ? "true" : "false", g_caps.nbr[i] ? "true" : "false");
+	fprintf(fp, "},\"stats\":{\"ask\":%d,\"report\":%d,\"suggest\":%d,\"moved\":%d,\"back5\":%d,\"ignored\":%d,\"rejected\":%d,\"hour\":%d,\"hour_max\":%d},",
+		g_st.ask, g_st.rep, g_st.sug, g_st.ok, g_st.back5, g_st.ign, g_st.rej, g_hour_n, TWR_HOUR_MAX);
+
+	/* AP 清單：這台在最前面 */
+	fprintf(fp, "\"aps\":[{\"name\":");
+	json_str(fp, g_name);
+	fprintf(fp, ",\"model\":\"%s\",\"ip\":\"%s\",\"online\":true,\"self\":true,\"clients_24\":%d,\"clients_5\":%d,\"steer_capable\":%s,\"ft\":%s}",
+		BOARD_NAME, g_ip, n24, n5, (g_caps.btm[0] || g_caps.btm[1]) ? "true" : "false",
+		((r2 && strchr(r2->cap, 'r')) || (r5 && strchr(r5->cap, 'r'))) ? "true" : "false");
+	for (i = 0; i < TWR_MAX_PEERS; i++) {
+		const struct twr_peer *p = &g_peer[i];
+		int c24 = 0, c5 = 0, v = 0, ft = 0;
+		if (!p->used || now - p->last_seen > 300)
+			continue;
+		for (j = 0; j < p->ncli; j++) {
+			if (p->cli[j].band == 5)
+				c5++;
+			else
+				c24++;
+		}
+		for (j = 0; j < p->nradio; j++) {
+			if (strchr(p->radio[j].cap, 'v'))
+				v = 1;
+			if (strchr(p->radio[j].cap, 'r'))
+				ft = 1;
+		}
+		fprintf(fp, ",{\"name\":");
+		json_str(fp, p->name);
+		fprintf(fp, ",\"model\":\"\",\"ip\":\"%s\",\"online\":%s,\"self\":false,\"clients_24\":%d,\"clients_5\":%d,\"steer_capable\":%s,\"ft\":%s}",
+			p->ip, now - p->last_seen <= TWR_PEER_EXPIRE ? "true" : "false", c24, c5, v ? "true" : "false", ft ? "true" : "false");
+	}
+
+	/* 事件：新的在前 */
+	fprintf(fp, "],\"events\":[");
+	for (i = 0, first = 1; i < g_rev_n; i++) {
+		int k = (g_rev_head - 1 - i + TWR_MAX_REV * 2) % TWR_MAX_REV;
+		mac2str(g_rev[k].mac, m);
+		client_host(g_rev[k].mac, host, sizeof(host));
+		fprintf(fp, "%s{\"ts\":%ld,\"mac\":\"%s\",\"name\":", first ? "" : ",", g_rev[k].ts, m);
+		json_str(fp, host[0] ? host : m);
+		fprintf(fp, ",\"from\":");
+		json_str(fp, g_rev[k].from);
+		fprintf(fp, ",\"to\":");
+		json_str(fp, g_rev[k].to);
+		fprintf(fp, ",\"rssi_from\":%d,\"rssi_to\":%d,\"type\":\"%s\"}", g_rev[k].rf, g_rev[k].rt, g_rev[k].type);
+		first = 0;
+	}
+
+	/* 建議（設定面的提醒） */
+	fprintf(fp, "],\"advice\":[");
+	first = 1;
+	if (r2 && r5 && r2->ssid_hash != r5->ssid_hash) {
+		fprintf(fp, "{\"level\":\"warn\",\"title\":\"2.4G 和 5G 的名稱不一樣\",\"detail\":\"頻段引導與「回 5G」只對同名同密碼的網路有效；名稱不同時手機會把建議當成換網路而不理會。\"}");
+		first = 0;
+	}
+	if (g_mode_cfg != TWR_MODE_SUGGEST && (g_caps.btm[0] || g_caps.btm[1])) {
+		fprintf(fp, "%s{\"level\":\"info\",\"title\":\"可以改成建議模式\",\"detail\":\"這台的驅動能用 11k 請手機量附近的 AP、用 11v 建議它換過去（不會踢人）。目前是觀察模式，只記錄。\"}", first ? "" : ",");
+		first = 0;
+	}
+	if (g_mode != g_mode_cfg) {
+		fprintf(fp, "%s{\"level\":\"warn\",\"title\":\"已自動退回觀察模式\",\"detail\":\"這一小時建議次數超過 %d 次；重新啟動 tw-roamd（或改一次模式）才會恢復。\"}", first ? "" : ",", TWR_HOUR_MAX);
+		first = 0;
+	}
+	if (peers && !((r2 && strchr(r2->cap, 'r')) || (r5 && strchr(r5->cap, 'r')))) {
+		fprintf(fp, "%s{\"level\":\"info\",\"title\":\"家裡有 %d 台 AP，快速漫遊（802.11r）沒開\",\"detail\":\"開啟後換 AP 時省掉重新驗證；連不上的舊裝置請改連 IoT 網路。\"}", first ? "" : ",", peers + 1);
+		first = 0;
+	}
+
+	/* 連在這台的裝置與決定狀態 */
+	fprintf(fp, "],\"clients\":[");
+	for (i = 0, first = 1; i < TWR_MAX_LOCAL; i++) {
+		struct twr_local *c = &g_local[i];
+		struct twr_hist *h;
+		if (!c->used || c->missing || c->guest)
+			continue;
+		h = hist_find(c->mac, 0, now);
+		mac2str(c->mac, m);
+		client_host(c->mac, host, sizeof(host));
+		fprintf(fp, "%s{\"mac\":\"%s\",\"name\":", first ? "" : ",", m);
+		json_str(fp, host[0] ? host : m);
+		fprintf(fp, ",\"band\":%d,\"rssi\":%d,\"psm\":%s,\"seen5\":%s,\"k\":%d,\"v\":%d,\"state\":\"%s\",\"suggested\":%d,\"moved\":%d}",
+			c->band, c->ema, c->psm ? "true" : "false", seen5_ago(c->mac, now) >= 0 ? "true" : "false",
+			h ? h->k : -1, h ? h->v : -1,
+			!h ? "" : h->pend ? "pending" : h->ignore_n >= 3 ? "stopped" : now < h->backoff_until ? "backoff" : "",
+			h ? h->n_sug : 0, h ? h->n_ok : 0);
+		first = 0;
+	}
+	fprintf(fp, "]}\n");
+	fclose(fp);
+	rename(TWR_JSON_FILE ".tmp", TWR_JSON_FILE);
+}
+
+/* 裝置頁的資料：每台一行「MAC JSON」（/tw_api.asp?q=device&mac= 找到那一行就原樣送出）。
+ * 欄位：signal{step,start,values[96]}（沒有資料的格子是 null）、disconnects[{ts,reason}]、roams[{ts,from,to,rssi_from,rssi_to}] */
+static void
+write_devices(void)
+{
+	FILE *fp;
+	char m[18];
+	long wall = (long)time(NULL), cur = wall / TWR_SIG_STEP;
+	int i, j;
+
+	fp = fopen(TWR_DEV_FILE ".tmp", "w");
+	if (!fp)
+		return;
+	for (i = 0; i < TWR_MAX_HIST; i++) {
+		struct twr_hist *h = &g_hist[i];
+		if (!h->used || (!h->sig_cur && !h->ndisc && !h->nroam))
+			continue;
+		mac2str(h->mac, m);
+		fprintf(fp, "%s {\"ok\":true,\"available\":true,\"mac\":\"%s\",\"signal\":{\"step\":%d,\"start\":%ld,\"values\":[",
+			m, m, TWR_SIG_STEP, (cur - TWR_SIG_N + 1) * TWR_SIG_STEP);
+		for (j = 0; j < TWR_SIG_N; j++) {
+			long s = cur - TWR_SIG_N + 1 + j;
+			int k = s % TWR_SIG_N;
+			if (s == h->sig_cur && h->sig_cnt)
+				fprintf(fp, "%s%d", j ? "," : "", h->sig_sum / h->sig_cnt);
+			else if (h->sig_s[k] == s)
+				fprintf(fp, "%s%d", j ? "," : "", h->sig_v[k]);
+			else
+				fprintf(fp, "%snull", j ? "," : "");
+		}
+		fprintf(fp, "]},\"disconnects\":[");
+		for (j = 0; j < h->ndisc; j++) {
+			fprintf(fp, "%s{\"ts\":%ld,\"reason\":", j ? "," : "", h->disc[j].ts);
+			json_str(fp, h->disc[j].reason);
+			fprintf(fp, "}");
+		}
+		fprintf(fp, "],\"roams\":[");
+		for (j = 0; j < h->nroam; j++) {
+			fprintf(fp, "%s{\"ts\":%ld,\"from\":", j ? "," : "", h->roam[j].ts);
+			json_str(fp, h->roam[j].from);
+			fprintf(fp, ",\"to\":");
+			json_str(fp, h->roam[j].to);
+			fprintf(fp, ",\"rssi_from\":%d,\"rssi_to\":%d}", h->roam[j].rf, h->roam[j].rt);
+		}
+		fprintf(fp, "],\"advice\":[]}\n");
+		h->dirty = 0;
+	}
+	fclose(fp);
+	rename(TWR_DEV_FILE ".tmp", TWR_DEV_FILE);
+}
+
 static void
 write_status(long now)
 {
@@ -1645,6 +2020,14 @@ write_status(long now)
 	fclose(fp);
 	rename(TWR_STATUS_FILE ".tmp", TWR_STATUS_FILE);
 	write_neighbors(now);
+	write_json(now);
+	{
+		static long last_dev;
+		if (!last_dev || now - last_dev >= 60) {
+			write_devices();
+			last_dev = now;
+		}
+	}
 }
 
 /* ---------- 主程式 ---------- */
@@ -1735,8 +2118,10 @@ tw_roamd_main(int argc, char **argv)
 				before[i] = g_local[i].used;
 			poll_local(now);
 			for (i = 0; i < TWR_MAX_LOCAL; i++)
-				if (before[i] && !g_local[i].used)
+				if (before[i] && !g_local[i].used) {
 					note_gone(&g_local[i], now);
+					dev_gone(&g_local[i]);
+				}
 			if (g_nradio)
 				decide_all(now);
 			next_poll = now + TWR_POLL_SEC;

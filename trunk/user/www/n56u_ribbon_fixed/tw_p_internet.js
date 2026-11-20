@@ -94,6 +94,10 @@ function in_isp_pick(id, init) {
 		h += '<div class="tw-field"><label for="in-mtu">MTU（每個封包的最大大小）</label><div class="tw-inline"><input type="number" id="in-mtu" min="1280" max="1492" style="width:120px" value="' + U.esc(NV.pppoe_mtu || '1480') + '">' +
 			'<button type="button" class="tw-btn tw-btn-sm" id="in-mtu-btn" onclick="in_mtu_detect()">自動偵測</button></div>' +
 			'<div class="tw-help" id="in-mtu-res">中華電信光世代建議 1480（PPPoE 理論上限 1492）；部分網站打不開、IPv6 時好時壞時，按「自動偵測」找出最適合的值（約 20 秒，要已經連線）。</div></div>';
+		/* J5：中華電信光世代的 IPv6 是 PPPoE＋DHCPv6 取得前綴（ip6_service=dhcp6，padavan-tw 出廠預設就是這樣） */
+		h += '<div class="tw-field"><label class="tw-switch"><input type="checkbox" id="in-ip6"' + (NV.ipv6 ? ' checked' : '') + '><span class="tw-track"></span>IPv6</label>' +
+			'<div class="tw-help">' + (/hinet/.test(id) ? '中華電信光世代有提供 IPv6（撥號後自動取得前綴），建議開著。' : '業者有提供 IPv6 才有作用。') +
+			'業者沒有給可分配的前綴時，區網自動改用 NAT66。細項在 <a href="Advanced_IPv6_Content.asp">原始 IPv6 設定</a>。</div></div>';
 	} else if (o.proto == 'static') {
 		h += '<div class="tw-fields">' + [['in-ip', 'IP 位址', 'wan_ip'], ['in-mask', '子網路遮罩', 'wan_mask'], ['in-gw', '預設閘道', 'wan_gw'], ['in-dns1', 'DNS 伺服器 1', 'dns1'], ['in-dns2', 'DNS 伺服器 2（選填）', 'dns2']].map(function (f) {
 			return '<div class="tw-field"><label for="' + f[0] + '">' + f[1] + '</label><input type="text" id="' + f[0] + '" maxlength="15" value="' + U.esc(same ? NV[f[2]] : '') + '"></div>';
@@ -122,6 +126,11 @@ function in_isp_apply() {
 		if (pass) f.wan_pppoe_passwd = pass;
 		f.wan_pppoe_mtu = mtu; f.wan_pppoe_mru = mtu;
 		f.wan_dnsenable_x = '1';
+		if (U.$('in-ip6')) {
+			var ip6 = U.$('in-ip6').checked;
+			/* 開：沒有設定過就用 dhcp6（光世代）；原本有別的設定（例如 6rd）就保留；關：空字串 */
+			f.ip6_service = ip6 ? (NV.ipv6 || 'dhcp6') : '';
+		}
 	} else if (o.proto == 'static') {
 		var v = {}, bad = null;
 		[['in-ip', 'wan_ipaddr', 1], ['in-mask', 'wan_netmask', 1], ['in-gw', 'wan_gateway', 1], ['in-dns1', 'wan_dns1_x', 1], ['in-dns2', 'wan_dns2_x', 0]].forEach(function (x) {
@@ -137,11 +146,12 @@ function in_isp_apply() {
 	}
 	/* 沒有任何變更就不要嚇人說「會中斷」（httpd 也不會重啟 WAN） */
 	var nvOf = { wan_proto: NV.wan_proto, wan_pppoe_username: NV.pppoe_user, wan_pppoe_mtu: NV.pppoe_mtu, wan_pppoe_mru: NV.pppoe_mru, wan_dnsenable_x: NV.dns_auto,
-		wan_ipaddr: NV.wan_ip, wan_netmask: NV.wan_mask, wan_gateway: NV.wan_gw, wan_dns1_x: NV.dns1, wan_dns2_x: NV.dns2 };
+		wan_ipaddr: NV.wan_ip, wan_netmask: NV.wan_mask, wan_gateway: NV.wan_gw, wan_dns1_x: NV.dns1, wan_dns2_x: NV.dns2, ip6_service: NV.ipv6 };
 	if (Object.keys(f).every(function (k) { return k != 'wan_pppoe_passwd' && String(f[k]) == String(nvOf[k] == null ? '' : nvOf[k]); })) { U.toast('沒有變更'); return; }
 	if (NV.wan_proto != o.proto) imp.push('連線方式從 ' + ({ pppoe: 'PPPoE', dhcp: '自動取得 IP', static: '固定 IP' }[NV.wan_proto] || NV.wan_proto) + ' 改成 ' + ({ pppoe: 'PPPoE', dhcp: '自動取得 IP', static: '固定 IP' }[o.proto]));
 	imp.push('設定錯了不會影響登入後台（區域網路不變），可以再改回來');
-	U.apply({ sid: 'Layer3Forwarding;IPConnection;PPPConnection;', fields: f, title: '套用連線方式？', impacts: imp });
+	if (f.ip6_service != null && f.ip6_service != NV.ipv6) imp.push(f.ip6_service ? '開啟 IPv6（撥號後自動取得前綴）' : '關閉 IPv6');
+	U.apply({ sid: 'Layer3Forwarding;IPConnection;PPPConnection;' + (f.ip6_service != null ? 'IP6Connection;' : ''), fields: f, title: '套用連線方式？', impacts: imp });
 }
 function in_mtu_detect() {
 	var U = TW, b = U.$('in-mtu-btn'), r = U.$('in-mtu-res');

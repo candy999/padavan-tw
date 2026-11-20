@@ -1,5 +1,5 @@
 {
- "mode": "observe",
+ "mode": "steer",
  "weak_dbm": -75,
  "aps": [
   {
@@ -10,7 +10,8 @@
    "self": true,
    "clients_24": 3,
    "clients_5": 2,
-   "steer_capable": false
+   "steer_capable": true,
+   "ft": true
   },
   {
    "name": "客廳 CR6608",
@@ -20,7 +21,8 @@
    "self": false,
    "clients_24": 0,
    "clients_5": 1,
-   "steer_capable": true
+   "steer_capable": true,
+   "ft": true
   }
  ],
  "events": [
@@ -33,6 +35,16 @@
    "rssi_from": -79,
    "rssi_to": -51,
    "type": "roam"
+  },
+  {
+   "ts": -3600,
+   "mac": "A4:83:E7:00:00:21",
+   "name": "小明的 iPhone",
+   "from": "2.4G",
+   "to": "5G",
+   "rssi_from": -56,
+   "rssi_to": -63,
+   "type": "band"
   },
   {
    "ts": -50400,
@@ -49,7 +61,75 @@
   {
    "level": "warn",
    "title": "客廳電視常停在比較遠的 NEWIFI3",
-   "detail": "在客廳 CR6608 的訊號是 -58 dBm，比現在好很多。開啟引導（11k＋11v）後，路由器會建議它換過去，不會強制踢除。"
+   "detail": "在客廳 CR6608 的訊號是 -58 dBm，比現在好很多。建議模式會用 11v 建議它換過去，不會強制踢除。"
+  }
+ ],
+ "mode_cfg": "steer",
+ "driver": {
+  "name": "MT7603E＋MT7612E",
+  "b24": {
+   "ask": true,
+   "report": true,
+   "steer": true,
+   "neighbor": true
+  },
+  "b5": {
+   "ask": true,
+   "report": true,
+   "steer": true,
+   "neighbor": false
+  }
+ },
+ "stats": {
+  "ask": 41,
+  "report": 37,
+  "suggest": 6,
+  "moved": 4,
+  "back5": 3,
+  "ignored": 2,
+  "rejected": 0,
+  "hour": 1,
+  "hour_max": 12
+ },
+ "clients": [
+  {
+   "mac": "A4:83:E7:00:00:21",
+   "name": "小明的 iPhone",
+   "band": 5,
+   "rssi": -58,
+   "psm": false,
+   "seen5": true,
+   "k": 1,
+   "v": 1,
+   "state": "",
+   "suggested": 2,
+   "moved": 2
+  },
+  {
+   "mac": "7C:1E:52:00:00:A4",
+   "name": "客廳電視",
+   "band": 2,
+   "rssi": -71,
+   "psm": false,
+   "seen5": true,
+   "k": 0,
+   "v": 1,
+   "state": "backoff",
+   "suggested": 1,
+   "moved": 0
+  },
+  {
+   "mac": "B8:27:EB:00:00:10",
+   "name": "出單機",
+   "band": 2,
+   "rssi": -64,
+   "psm": true,
+   "seen5": false,
+   "k": -1,
+   "v": -1,
+   "state": "",
+   "suggested": 0,
+   "moved": 0
   }
  ]
 }

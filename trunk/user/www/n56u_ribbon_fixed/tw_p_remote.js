@@ -18,6 +18,7 @@ function page_init() {
 	h += '<div class="tw-grid-2">' + U.card({ id: 'upnp', title: 'UPnP（自動開連接埠）', body: rm_upnp() }) +
 		U.card({ id: 'domain', title: '網域與憑證', bodyId: 'rm-domain', body: U.stateBox('loading') }) + '</div>';
 	U.mount(h);
+	if (location.hash) { var t = U.$(location.hash.slice(1)); if (t) setTimeout(function () { t.scrollIntoView(); }, 50); }
 	Promise.all([U.api('cgnat'), U.api('devices')]).then(function (a) {
 		RM.cgnat = a[0]; RM.devices = (a[1].devices || []).filter(function (d) { return d.ip && d.conn != 'guest'; });
 		rm_cgnat_note(); rm_pf_render();
@@ -42,7 +43,9 @@ function rm_endpoint() {
 function rm_vpn(r) {
 	var U = TW, on = NV.wgs_on == '1', h = '';
 	if (typeof found_app_wireguard == 'function' && !found_app_wireguard()) { U.set('rm-vpn', U.stateBox('unavailable', '這個韌體沒有 WireGuard')); return; }
-	h += '<div class="tw-inline">' + U.dot(on ? 'ok' : 'off') + '<b>' + (on ? 'VPN 伺服器開啟中' : 'VPN 伺服器關閉') + '</b>' +
+	/* 即時資料（/tw_api.asp?q=vpn）；down＝設定開著、但 wg1 沒有在執行 */
+	var hasLive = !!(r && r.available !== false && r.peers), down = on && hasLive && r.running === false;
+	h += '<div class="tw-inline">' + U.dot(down ? 'bad' : (on ? 'ok' : 'off')) + '<b>' + (down ? 'VPN 伺服器沒有在執行' : (on ? 'VPN 伺服器開啟中' : 'VPN 伺服器關閉')) + '</b>' +
 		(on ? '<span class="tw-small tw-muted">連線位址 ' + U.esc(rm_endpoint() || '（未設定）') + ':' + U.esc(NV.wgs_port || '51820') + '</span>' : '') + '</div>';
 	if (!on) {
 		h += '<p class="tw-small">開啟後，手機、筆電在外面也能連回家裡的 NAS、攝影機，或透過家裡的網路上網。</p>';
@@ -52,20 +55,38 @@ function rm_vpn(r) {
 	}
 	var ep = rm_endpoint();
 	if (ep && !NV.wgs_host && ep == NV.wan_ip) h += '<div class="tw-note tw-s-warn">用的是目前的 IP（' + U.esc(ep) + '），浮動 IP 會變。建議在 <a href="tw_kuroshio.asp#settings">黑潮 DNS</a> 設定網域並開啟 DDNS。</div>';
-	var live = {};
-	if (r && r.available !== false && r.peers) r.peers.forEach(function (p) { live[p.name] = p; });
+	/* 依名稱對應 WGSPeerList，名稱對不到時用 VPN 位址 */
+	var byName = {}, byIp = {};
+	if (hasLive) r.peers.forEach(function (p) { byName[p.name] = p; if (p.ip) byIp[p.ip] = p; });
+	if (down) h += '<div class="tw-note tw-s-bad">設定是開啟的，但啟動失敗。請看 <a href="Main_LogStatus_Content.asp">系統記錄</a> 裡「WireGuard」的訊息，或到完整設定重新套用一次。</div>';
+	var nOnline = 0;
 	var rows = WGPEERS.map(function (p) {
-		var L = live[p[0]], online = L && L.last_handshake_ts && (Date.now() / 1000 - L.last_handshake_ts) < 180;
+		var ip = rm_vpn_net() + '.' + p[3], L = byName[p[0]] || byIp[ip];
+		var st = rm_vpn_state(L);
+		if (st.online) nOnline++;
+		var sub = '<span class="tw-dev-sub tw-num">' + U.esc(ip) + (st.online && L.endpoint ? ' · 從 ' + U.esc(L.endpoint) : '') + '</span>';
 		return {
-			n: '<b>' + U.esc(p[0]) + '</b><span class="tw-dev-sub tw-num">' + U.esc(rm_vpn_net() + '.' + p[3]) + '</span>',
-			s: L ? (online ? U.chip('ok', '連線中') : '<span class="tw-muted">' + (L.last_handshake_ts ? '上次 ' + U.fmtAgo(L.last_handshake_ts) : '從未連線') + '</span>') : '<span class="tw-muted">--</span>',
-			t: L && L.rx_bytes != null ? '↓ ' + U.fmtBytes(L.tx_bytes) + ' ↑ ' + U.fmtBytes(L.rx_bytes) : '<span class="tw-muted">--</span>'
+			n: '<b>' + U.esc(p[0]) + '</b>' + sub,
+			s: st.html,
+			t: L && L.rx_bytes != null ? '<span class="tw-num">↓ ' + U.fmtBytes(L.tx_bytes) + ' ↑ ' + U.fmtBytes(L.rx_bytes) + '</span>' : '<span class="tw-muted">--</span>'
 		};
 	});
-	h += U.table({ cols: [{ key: 'n', label: '裝置', cls: 'tw-cell-main' }, { key: 's', label: '最後連線' }, { key: 't', label: '流量' }], rows: rows, empty: '還沒有裝置。按「新增裝置」產生設定，用手機掃 QR 碼。' });
-	if (!r || r.available === false) h += '<div class="tw-partial">' + U.icon('info', 14) + '<span>誰正在連線、最後連線時間與流量之後的版本才有。</span></div>';
+	if (hasLive && !down && WGPEERS.length) h += '<div class="tw-small">' + (nOnline ? '<b>' + nOnline + ' 台</b>裝置正在連線（共 ' + WGPEERS.length + ' 台）' : '目前沒有裝置連線（共 ' + WGPEERS.length + ' 台）') + '</div>';
+	h += U.table({ cols: [{ key: 'n', label: '裝置', cls: 'tw-cell-main' }, { key: 's', label: '連線狀態' }, { key: 't', label: '流量（下載／上傳）' }], rows: rows, empty: '還沒有裝置。按「新增裝置」產生設定，用手機掃 QR 碼。' });
+	if (!hasLive) h += '<div class="tw-partial">' + U.icon('info', 14) + '<span>誰正在連線、最後連線時間與流量需要更新韌體後才有。</span></div>';
+	else if (!down && WGPEERS.length) h += '<div class="tw-small tw-muted">3 分鐘內有握手就算連線中；流量從 VPN 伺服器上次啟動起算。</div>';
 	h += '<div class="tw-actions">' + U.button('新增裝置', { primary: true, icon: 'plus', onclick: 'rm_vpn_add()' }) + U.button('刪除裝置', { small: true, ghost: true, href: 'Advanced_wireguard.asp' }) + '</div>';
 	U.set('rm-vpn', h);
+}
+/* 一台裝置的連線狀態：最後握手在 3 分鐘內＝連線中（WireGuard 有流量時約每 2 分鐘重新握手） */
+var RM_VPN_ONLINE_S = 180;
+function rm_vpn_state(L) {
+	var U = TW;
+	if (!L || L.last_handshake_ts == null) return { online: false, html: '<span class="tw-muted">--</span>' };
+	if (!L.last_handshake_ts) return { online: false, html: '<span class="tw-muted">從未連線</span>' };
+	var online = Date.now() / 1000 - L.last_handshake_ts < RM_VPN_ONLINE_S;
+	if (online) return { online: true, html: U.chip('ok', '連線中') + '<span class="tw-dev-sub">' + U.esc(U.fmtAgo(L.last_handshake_ts)) + '握手</span>' };
+	return { online: false, html: '<span class="tw-muted">上次 ' + U.esc(U.fmtAgo(L.last_handshake_ts)) + '</span>' };
 }
 function rm_vpn_net() { var a = (NV.wgs_addr || '10.66.0.1').split('.'); return a[0] + '.' + a[1] + '.' + a[2]; }
 function rm_vpn_enable() {

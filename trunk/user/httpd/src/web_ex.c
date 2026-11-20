@@ -4806,6 +4806,51 @@ ej_tw_api(int eid, webs_t wp, int argc, char **argv)
 		fclose(fp);
 		return 0;
 	}
+	/* 漫遊頁：tw-roamd 每 5 秒寫一次 /tmp/tw-roamd.json */
+	if (strcmp(q, "roam") == 0) {
+		if (nvram_get_int("tw_roam_enable") == 0) {
+			websWrite(wp, "{\"ok\":true,\"available\":false,\"reason\":\"disabled\",\"mode\":\"off\"}");
+			return 0;
+		}
+		fp = fopen("/tmp/tw-roamd.json", "r");
+		if (!fp) {
+			websWrite(wp, "{\"ok\":true,\"available\":true,\"warming_up\":true}");
+			return 0;
+		}
+		while ((n = fread(buf, 1, sizeof(buf), fp)) > 0)
+			fwrite(buf, 1, n, wp);
+		fclose(fp);
+		return 0;
+	}
+	/* 裝置頁：tw-roamd 每分鐘寫 /tmp/tw-roamd.devices（每台一行「MAC JSON」），找到那一行就送出 */
+	if (strcmp(q, "device") == 0) {
+		const char *mac = websGetVar(wp, "mac", "");
+		char line[4096];
+		int i, ok = (strlen(mac) == 17);
+
+		for (i = 0; ok && i < 17; i++)
+			ok = (i % 3 == 2) ? (mac[i] == ':') : isxdigit((unsigned char)mac[i]);
+		if (!ok || nvram_get_int("tw_roam_enable") == 0) {
+			websWrite(wp, "{\"_fallback\":true}");
+			return 0;
+		}
+		fp = fopen("/tmp/tw-roamd.devices", "r");
+		if (fp) {
+			while (fgets(line, sizeof(line), fp)) {
+				if (strlen(line) > 18 && strncasecmp(line, mac, 17) == 0 && line[17] == ' ') {
+					websWrite(wp, "%s", line + 18);
+					fclose(fp);
+					return 0;
+				}
+			}
+			fclose(fp);
+		}
+		websWrite(wp, "{\"ok\":true,\"available\":true,\"warming_up\":true}");
+		return 0;
+	}
+	/* WireGuard 伺服器的裝置連線狀態（J4，tw_api_vpn.c） */
+	if (strcmp(q, "vpn") == 0)
+		return tw_api_vpn(wp);
 	websWrite(wp, "{\"_fallback\":true}");
 	return 0;
 }

@@ -136,7 +136,8 @@ def expand_mock(v, now, key=None):
         return {k: expand_mock(x, now, k) for k, x in v.items()}
     if isinstance(v, list):
         return [expand_mock(x, now, key) for x in v]
-    if key in TIME_KEYS and isinstance(v, (int, float)) and abs(v) < 1e9:
+    # 寫 0 就維持 0（例如 vpn 的 last_handshake_ts：0＝從來沒有連線）
+    if key in TIME_KEYS and isinstance(v, (int, float)) and v != 0 and abs(v) < 1e9:
         return int(now + v)
     return v
 

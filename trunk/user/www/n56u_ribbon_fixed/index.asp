@@ -36,7 +36,8 @@ var NV = {
 	wl_auth: "<% nvram_get_x("", "wl_auth_mode"); %>",
 	rt_radio: "<% nvram_get_x("", "rt_radio_x"); %>",
 	wl_radio: "<% nvram_get_x("", "wl_radio_x"); %>",
-	sw_mode: "<% nvram_get_x("", "sw_mode"); %>"
+	sw_mode: "<% nvram_get_x("", "sw_mode"); %>",
+	wgs_on: "<% nvram_get_x("", "wgs_enable"); %>"
 };
 </script>
 <script type="text/javascript" src="/tw_p_home.js"></script>

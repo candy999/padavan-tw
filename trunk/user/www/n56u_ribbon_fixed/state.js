@@ -562,9 +562,15 @@ menuL1_link[7] = '';
 menuL1_icon = new Array("", "icon-home", "icon-hdd", "icon-retweet", "icon-globe", "icon-tasks", "icon-random", "icon-wrench");
 
 if (!found_app_vpnsvr()) {
-	menuL1_title[3] = '';
-	menuL1_link[3] = '';
-	menuL1_icon[3] = '';
+	/* padavan-tw：沒有原本的 VPN 伺服器時，「VPN 伺服器」選單改到 WireGuard 伺服器（外出連回家，ROADMAP J4）；
+	 * 原本 WireGuard 只收在「穿透服務」底下，而且有阿里 DDNS／ZeroTier／DDNSTO 時會被擠掉 */
+	if (found_app_wireguard()) {
+		menuL1_link[3] = 'Advanced_wireguard.asp';
+	} else {
+		menuL1_title[3] = '';
+		menuL1_link[3] = '';
+		menuL1_icon[3] = '';
+	}
 }
 if (!found_app_vpncli()) {
 	menuL1_title[4] = '';

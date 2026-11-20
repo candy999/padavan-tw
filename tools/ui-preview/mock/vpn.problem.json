@@ -1,0 +1,23 @@
+{
+ "enabled": true,
+ "running": false,
+ "listen_port": 51820,
+ "peers": [
+  {
+   "name": "我的手機",
+   "ip": "10.66.0.2",
+   "last_handshake_ts": null,
+   "rx_bytes": null,
+   "tx_bytes": null,
+   "endpoint": ""
+  },
+  {
+   "name": "公司筆電",
+   "ip": "10.66.0.3",
+   "last_handshake_ts": null,
+   "rx_bytes": null,
+   "tx_bytes": null,
+   "endpoint": ""
+  }
+ ]
+}

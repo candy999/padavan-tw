@@ -306,15 +306,35 @@ function wf_roam_render(r) {
 		h += U.table({ cols: [{ key: 'ap', label: 'AP', cls: 'tw-cell-main' }, { key: 'ip', label: 'IP' }, { key: 'st', label: '狀態' }, { key: 'n', label: '裝置（2.4G／5G）' }],
 			rows: r.aps.map(function (a) {
 				return { ap: '<b>' + U.esc(a.name) + '</b>' + (a.self ? ' ' + U.chip('info', '這台') : '') + '<span class="tw-dev-sub">' + U.esc(a.model || '') + '</span>',
-					ip: '<span class="tw-num">' + U.esc(a.ip) + '</span>', st: a.online ? U.chip('ok', '在線') : U.chip('bad', '離線'), n: a.clients_24 + ' / ' + a.clients_5 };
+					ip: '<span class="tw-num">' + U.esc(a.ip) + '</span>', st: '<span class="tw-inline">' + (a.online ? U.chip('ok', '在線') : U.chip('bad', '離線')) + (a.steer_capable ? U.chip('info', '11v') : '') + (a.ft ? U.chip('info', '11r') : '') + '</span>',
+					n: a.clients_24 + ' / ' + a.clients_5 };
 			}) });
+		if (r.stats) {
+			var st = r.stats;
+			h += '<div class="tw-help">' + (r.mode == 'steer' ? '建議模式' : '觀察模式') + '｜開機以來：問 ' + st.ask + ' 次、收到回報 ' + st.report + ' 筆、建議 ' + st.suggest + ' 次、換過去 ' + st.moved +
+				' 次（回 5G ' + st.back5 + ' 次）、不理會 ' + st.ignored + ' 次；這一小時 ' + st.hour + '／' + st.hour_max + ' 次' + (r.driver && r.driver.name ? '｜驅動 ' + U.esc(r.driver.name) : '') + '</div>';
+		}
+		if (r.clients && r.clients.length) {
+			var cap = function (x) { return x > 0 ? '✓' : x == 0 ? '✗' : '?'; };
+			var stx = { pending: U.chip('info', '等建議結果'), backoff: U.chip('warn', '退避中'), stopped: U.chip('unknown', '不再建議') };
+			h += '<details><summary class="tw-small">連在這台的裝置（' + r.clients.length + ' 台）</summary>' + U.table({ cols: [{ key: 'd', label: '裝置', cls: 'tw-cell-main' }, { key: 'b', label: '頻段' }, { key: 's', label: '訊號' }, { key: 'kv', label: '11k／11v' }, { key: 'st', label: '狀態' }],
+				rows: r.clients.map(function (c) {
+					return { d: U.esc(c.name), b: '<span class="tw-inline">' + (c.band == 5 ? '5G' : '2.4G') + (c.band == 2 && c.seen5 ? '<span class="tw-dev-sub">24 小時內連過 5G</span>' : '') + '</span>',
+						s: '<span class="tw-inline"><span class="tw-num">' + c.rssi + ' dBm</span>' + (c.psm ? '<span class="tw-dev-sub">省電中</span>' : '') + '</span>',
+						kv: cap(c.k) + '／' + cap(c.v), st: (stx[c.state] || '') + (c.suggested ? ' <span class="tw-dev-sub">建議 ' + c.suggested + ' 次、換過去 ' + c.moved + ' 次</span>' : '') };
+				}) }) + '</details>';
+		}
 		(r.advice || []).forEach(function (a) { h += '<div class="tw-note tw-s-' + (a.level || 'warn') + '"><b>' + U.esc(a.title) + '</b><br>' + U.esc(a.detail) + '</div>'; });
 		h += '<h3 class="tw-small tw-muted" style="margin-top:4px">最近的漫遊</h3>' + U.timeline((r.events || []).map(function (e) {
 			return { ts: e.ts, type: 'roam', level: e.type == 'sticky' ? 'warn' : 'ok', device: e.name,
-				text: e.type == 'sticky' ? e.name + ' 停在比較遠的 ' + e.to + '（' + e.rssi_to + ' dBm）' : e.name + ' 從 ' + e.from + ' 換到 ' + e.to + '（' + e.rssi_from + ' → ' + e.rssi_to + ' dBm）' };
+				text: e.type == 'sticky' ? e.name + ' 停在比較遠的 ' + e.to + '（' + e.rssi_to + ' dBm）' :
+					e.type == 'band' ? e.name + ' 換頻段 ' + e.from + ' → ' + e.to + '（' + e.rssi_from + ' → ' + e.rssi_to + ' dBm）' :
+					e.name + ' 從 ' + e.from + ' 換到 ' + e.to + '（' + e.rssi_from + ' → ' + e.rssi_to + ' dBm）' };
 		}), '最近沒有漫遊');
+		h += '<div class="tw-actions"><button type="button" class="tw-btn tw-btn-sm" onclick="tw_roam_show(this)">查看完整紀錄</button></div>' +
+			'<pre id="tw_roam_out" style="display:none;white-space:pre-wrap;background:var(--surface-2);color:var(--text);border:0;border-radius:8px;padding:12px;font-size:12.5px"></pre>';
 	} else {
-		var why = r && r.warming_up ? '資料收集中' : 'AP 清單與漫遊事件的圖表之後的版本才有';
+		var why = r && r.warming_up ? '資料收集中（漫遊中控剛啟動）' : r && r.reason == 'disabled' ? '漫遊中控已關閉' : '這台的韌體還沒有漫遊資料';
 		h += '<div class="tw-inline">' + U.dot(NV.roam_on == '2' ? 'ok' : NV.roam_on == '1' ? 'info' : 'off') + '<b>漫遊中控：' +
 			(NV.roam_on == '2' ? '建議模式（11k 問裝置、11v 建議換，不踢人）' : NV.roam_on == '1' ? '觀察模式（只記錄，不引導）' : '關閉') + '</b></div>';
 		h += '<div class="tw-partial">' + U.icon('info', 14) + '<span>' + why + '。現在可以先看文字紀錄：</span></div>';

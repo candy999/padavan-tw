@@ -217,6 +217,9 @@ extern void do_restore_st_post(const char *url, FILE *stream, int clen, char *bo
 extern void do_kuroshio_import_post(const char *url, FILE *stream, int clen, char *boundary);
 #endif
 
+// tw_api_vpn.c（padavan-tw：/tw_api.asp?q=vpn，WireGuard 伺服器的裝置連線狀態）
+extern int tw_api_vpn(webs_t wp);
+
 // web_ex.c
 extern void nvram_commit_safe(void);
 extern void do_uncgi_query(const char *query);

@@ -6,7 +6,7 @@
  *
  * | 機型／頻段          | 晶片    | Beacon Request        | 回報                     | BTM                         | 裝置能力          | 鄰居清單      |
  * |---------------------|---------|-----------------------|--------------------------|-----------------------------|-------------------|---------------|
- * | CR6608 2.4G／5G     | MT7915  | OID 0x894C 子命令 5   | 事件 0x094D              | OID 0x894A 子命令 6（參數） | 0x5102（KVRH）    | 驅動自己答    |
+ * | CR6608 2.4G／5G     | MT7915  | OID 0x894C 子命令 5   | 事件 0x094D              | OID 0x894A 子命令 6（參數） | 0x5102（KVRH）    | 程式回答      |
  * | D3 2.4G（ra0）      | MT7603E | OID 0x894C 子命令 5   | 事件 0x094D              | OID 0x894A 子命令 5（原始） | 0x494A／0x494C    | 程式回答      |
  * | D3 5G（rai0）       | MT7612E | iwpriv BcnReq（字串） | 事件 0x0950（padavan-tw）| OID 0x8928（padavan-tw）    | 不知道（看回報）  | 驅動用掃描表  |
  *
@@ -89,10 +89,10 @@ static int g_ifidx[2];			/* [0]＝2.4G、[1]＝5G 的 ifindex（判斷事件是�
 static const char *g_ifname[2];
 static unsigned char g_mybssid[2][6];
 
-/* MT7603：由程式回答鄰居詢問時用的清單 */
+/* MT7603／MT7915：由程式回答鄰居詢問時用的清單 */
 static int g_nr_daemon;
-static struct twr_nbr g_nr_list[MT_MAX_CAND];
-static int g_nr_n;
+static struct twr_nbr g_nr_list[2][MT_MAX_CAND];	/* [0]＝2.4G、[1]＝5G */
+static int g_nr_n[2];
 
 /* ---------- 小工具 ---------- */
 
@@ -376,16 +376,18 @@ oid_bcn_req(int band, const unsigned char *sta, int ch, const unsigned char *bss
 	return priv_ioctl(ifname_of(band), MT_RT_PRIV_IOCTL, MT_OID_RRM_SET, b, sizeof(b));
 }
 
-/* MT7603：程式回答裝置的鄰居詢問（RRM 子命令 7，dialog token 要對上） */
+/* MT7603／MT7915：程式回答裝置的鄰居詢問（RRM 子命令 7，dialog token 要對上） */
 static void
 oid_nr_answer(int band, const unsigned char *sta, int token)
 {
 	unsigned char b[5 + 8 + MT_MAX_CAND * MT_NR_INFO_LEN], *p = b + 5;
 	int i, n = 0, len;
 
-	for (i = 0; i < g_nr_n; i++)
-		if (g_nr_list[i].ch)
-			nr_info(p + 8 + (n++) * MT_NR_INFO_LEN, &g_nr_list[i]);
+	int bi = band == 5 ? 1 : 0;
+
+	for (i = 0; i < g_nr_n[bi]; i++)
+		if (g_nr_list[bi][i].ch)
+			nr_info(p + 8 + (n++) * MT_NR_INFO_LEN, &g_nr_list[bi][i]);
 	len = 8 + n * MT_NR_INFO_LEN;
 	b[0] = MT_RRM_SET_NR_RSP;
 	put32(b + 1, len);
@@ -393,6 +395,18 @@ oid_nr_answer(int band, const unsigned char *sta, int token)
 	p[6] = token;
 	p[7] = n;
 	priv_ioctl(ifname_of(band), MT_RT_PRIV_IOCTL, MT_OID_RRM_SET, b, 5 + len);
+}
+
+/* 鄰居詢問交給程式（1）或驅動（0）回答：RRM 子命令 8。這個旗標在驅動是整張卡共用的
+ * （MT7915 DBDC 兩個頻段一起；MT7603 只有 2.4G） */
+static int
+oid_nr_daemon(int on)
+{
+	unsigned char b[6];
+	b[0] = MT_RRM_NR_BY_DAEMON;
+	put32(b + 1, 1);
+	b[5] = on ? 1 : 0;
+	return priv_ioctl(ifname_of(2), MT_RT_PRIV_IOCTL, MT_OID_RRM_SET, b, sizeof(b));
 }
 
 /* 事件：0x094D＝rrm_event_t(5)＋bcn_rsp_data(15)／nr_req_data(14)＋內容；0x094B＝wnm_event(2)＋btm_rsp_data(14)＋回覆 */
@@ -540,15 +554,6 @@ mt7603_caps(const unsigned char *sta, int *k, int *v)
 		*k = (r[11] & 0x30) ? 1 : 0;
 }
 
-static int
-mt7603_nr_daemon(int on)
-{
-	unsigned char b[6];
-	b[0] = MT_RRM_NR_BY_DAEMON;
-	put32(b + 1, 1);
-	b[5] = on ? 1 : 0;
-	return priv_ioctl(ifname_of(2), MT_RT_PRIV_IOCTL, MT_OID_RRM_SET, b, sizeof(b));
-}
 
 /* MT7612 的 BcnReq 第一個欄位是 WCID（MAC table 的 Aid，十六進位） */
 static int
@@ -664,6 +669,7 @@ twr_drv_init(struct twr_drv_caps *caps)
 	caps->bcn_req[0] = caps->bcn_req[1] = 1;
 	caps->bcn_rep[0] = caps->bcn_rep[1] = 1;
 	caps->btm[0] = caps->btm[1] = 1;
+	caps->nbr[0] = caps->nbr[1] = 1;
 	caps->sta_caps = 1;
 	open_netlink();
 #elif defined (TWR_DRV_D3)
@@ -675,6 +681,10 @@ twr_drv_init(struct twr_drv_caps *caps)
 	caps->sta_caps = 1;	/* 只有 2.4G；5G 從回報推斷 */
 	open_netlink();
 #endif
+#if defined (TWR_DRV_MT7915) || defined (TWR_DRV_D3)
+	/* 上次 tw-roamd 沒有正常結束時，驅動可能還在等程式回答鄰居詢問：先交回驅動，建議模式需要時再接手 */
+	oid_nr_daemon(0);
+#endif
 	if (g_nl < 0) {
 		/* 收不到事件就不能「問」，只留備案規則（回 5G 用 AP 聽到的訊號） */
 		caps->bcn_rep[0] = caps->bcn_rep[1] = 0;
@@ -685,9 +695,9 @@ twr_drv_init(struct twr_drv_caps *caps)
 void
 twr_drv_close(void)
 {
-#ifdef TWR_DRV_D3
+#if defined (TWR_DRV_MT7915) || defined (TWR_DRV_D3)
 	if (g_nr_daemon)
-		mt7603_nr_daemon(0);	/* 交回給驅動自己回答 */
+		oid_nr_daemon(0);	/* 交回給驅動自己回答 */
 #endif
 	g_nr_daemon = 0;
 	if (g_nl >= 0)
@@ -725,14 +735,17 @@ twr_drv_btm_req(int band, const unsigned char *sta, const struct twr_nbr *cand, 
 int
 twr_drv_set_nbr(int band, const struct twr_nbr *list, int n)
 {
+#if defined (TWR_DRV_MT7915) || defined (TWR_DRV_D3)
+	int bi = band == 5 ? 1 : 0;
 #if defined (TWR_DRV_D3)
 	if (band != 2)
-		return -1;
+		return -1;	/* MT7612 沒有交給程式回答的功能，用掃描表 */
+#endif
 	if (n > MT_MAX_CAND)
 		n = MT_MAX_CAND;
-	memcpy(g_nr_list, list, n * sizeof(list[0]));
-	g_nr_n = n;
-	if (!g_nr_daemon && g_nl >= 0 && mt7603_nr_daemon(1) == 0)
+	memcpy(g_nr_list[bi], list, n * sizeof(list[0]));
+	g_nr_n[bi] = n;
+	if (!g_nr_daemon && g_nl >= 0 && oid_nr_daemon(1) == 0)
 		g_nr_daemon = 1;
 	return g_nr_daemon ? 0 : -1;
 #else

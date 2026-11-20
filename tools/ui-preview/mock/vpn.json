@@ -1,5 +1,6 @@
 {
  "enabled": true,
+ "running": true,
  "listen_port": 51820,
  "peers": [
   {

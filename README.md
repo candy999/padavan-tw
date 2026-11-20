@@ -123,7 +123,7 @@ CR660x 的設定檔理論上也適用 CR6606、CR6609。
 - 漫遊：**AP 互助漫遊**（`tw-roamd`）：家裡多台 padavan-tw 自動互相找到、交換頻段與裝置資訊；「建議」模式用 11k 請手機量附近的 AP，明顯比較好時用 11v 建議它換過去，暫時掉到 2.4G 的手機回來後建議回 5G；**永遠不踢人**（預設觀察模式，在 Wi-Fi 頁切換）
 - **IoT 網路**：訪客網路那一格改成 `<家用名稱>_IoT`，不宣告 11k/v/r，給舊的智慧家電、出單機連；可選 2.4G／5G、同名、能不能連區網
 - DNS：**[黑潮 DNS](https://github.com/candy999/kuroshio-dns) 3.4.0**（預設開啟；串接模式預設開，前面還有一台跑黑潮的路由器時共用它的結果；找出台灣 CDN 節點、每天挑最快且沒汙染的上游、過濾廣告與詐騙網站；選用：DoT／DoH／DoQ 加密 DNS、Cloudflare DDNS、Let's Encrypt 憑證）；沒有回應時自動改用業者 DNS
-- VPN：WireGuard（核心內建）、OpenVPN、L2TP／PPTP 伺服器
+- VPN：WireGuard（核心內建；後台顯示哪些裝置正在連線、最後連線時間與流量）、OpenVPN、L2TP／PPTP 伺服器
 - IPTV：**中華電信 MOD 自動設定**（自動偵測機上盒接的 LAN 孔並設成 MOD 專用孔，記住機上盒，之後路由器重開、換孔都會自動跟著；網際網路頁的「MOD／IPTV 接法」卡片可手動選孔、設 VLAN 與群播）、msd_lite、xUPnPd、IGMP proxy（預設開；修正 igmpproxy 0.3 群組過期時當機）
 - 管理：OpenSSH（含 SFTP）、ttyd 網頁終端機
 - Newifi D3 另有 USB：Samba、FTP、NTFS／exFAT／ext4

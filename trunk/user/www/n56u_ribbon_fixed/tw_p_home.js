@@ -17,7 +17,11 @@ function page_init() {
 		U.card({ title: 'Wi-Fi', extra: '<a href="tw_wifi.asp">管理</a>', bodyId: 'hm-wifi', body: U.stateBox('loading') }) +
 		U.card({ title: '線上裝置', extra: '<a href="tw_devices.asp">全部裝置</a>', bodyId: 'hm-dev', body: U.stateBox('loading') }) +
 		'</div>';
-	h += U.card({ title: 'DNS', extra: '<a href="tw_internet.asp#dns">設定</a>', bodyId: 'hm-dns', body: U.stateBox('loading') });
+	var dnsCard = U.card({ title: 'DNS', extra: '<a href="tw_internet.asp#dns">設定</a>', bodyId: 'hm-dns', body: U.stateBox('loading') });
+	/* 外出連回家：只有開著 WireGuard 伺服器時才顯示 */
+	if (hm_vpn_on()) h += '<div class="tw-grid-2">' + dnsCard +
+		U.card({ title: '外出連回家', extra: '<a href="tw_remote.asp#vpn">管理</a>', bodyId: 'hm-vpn', body: U.stateBox('loading') }) + '</div>';
+	else h += dnsCard;
 	U.mount(h);
 
 	U.poll(function () {
@@ -25,6 +29,7 @@ function page_init() {
 		var lat = slow ? U.api('latency').then(hm_latency) : Promise.resolve();
 		var jobs = [U.api('health').then(hm_health), lat.then(function () { return U.api('wan'); }).then(hm_wan_now), U.api('router').then(hm_router)];
 		if (slow) jobs.push(U.api('wifi').then(hm_wifi), U.api('devices').then(hm_devices), U.api('dns').then(hm_dns));
+		if (slow && hm_vpn_on()) jobs.push(U.api('vpn').then(hm_vpn));
 		return Promise.all(jobs);
 	}, 5000);
 }
@@ -209,6 +214,40 @@ function hm_dns(r) {
 		h += '<div class="tw-partial">' + U.icon('info', 14) + '<span>查詢、過濾與 CDN 統計之後的版本才有</span></div>';
 	}
 	U.set('hm-dns', h);
+}
+
+/* ---------- 外出連回家（WireGuard 伺服器） ---------- */
+function hm_vpn_on() {
+	return NV.wgs_on == '1' && !(typeof found_app_wireguard == 'function' && !found_app_wireguard());
+}
+function hm_vpn(r) {
+	var U = TW;
+	if (!r) { U.set('hm-vpn', U.stateBox('loading')); return; }
+	if (r._error) { U.set('hm-vpn', U.stateBox('error')); return; }
+	var h;
+	if (r.available === false && r.reason == 'disabled') {
+		/* 頁面載入後才被關掉 */
+		h = '<div class="tw-inline">' + U.dot('off') + '<b>VPN 伺服器關閉</b></div>';
+	} else if (r.available === false || !r.peers) {
+		/* 韌體還沒有 vpn 資料介面：只知道有開 */
+		h = '<div class="tw-inline">' + U.dot('ok') + '<b>VPN 伺服器開啟中</b></div>' +
+			'<div class="tw-partial">' + U.icon('info', 14) + '<span>誰正在連線需要更新韌體後才看得到</span></div>';
+	} else if (r.running === false) {
+		h = '<div class="tw-inline">' + U.dot('bad') + '<b>VPN 伺服器沒有在執行</b></div>' +
+			'<div class="tw-small">設定是開啟的，但啟動失敗。<a href="tw_remote.asp#vpn">查看</a></div>';
+	} else {
+		var now = Date.now() / 1000;
+		var on = r.peers.filter(function (p) { return p.last_handshake_ts && now - p.last_handshake_ts < 180; });
+		h = '<div class="tw-inline">' + U.dot(on.length ? 'ok' : 'off') + '<b>' + (on.length ? on.length + ' 台裝置連線中' : '目前沒有裝置連線') + '</b>' +
+			'<span class="tw-small tw-muted">共 ' + r.peers.length + ' 台</span></div>';
+		if (on.length) h += '<div class="tw-small">' + on.slice(0, 3).map(function (p) { return U.esc(p.name); }).join('、') + (on.length > 3 ? ' 等' : '') + '</div>';
+		else if (!r.peers.length) h += '<div class="tw-small tw-muted">還沒有裝置。<a href="tw_remote.asp#vpn">新增手機或筆電</a></div>';
+		else {
+			var last = r.peers.reduce(function (a, p) { return p.last_handshake_ts > (a ? a.last_handshake_ts : 0) ? p : a; }, null);
+			h += '<div class="tw-small tw-muted">' + (last ? '最近一次：' + U.esc(last.name) + '（' + U.esc(U.fmtAgo(last.last_handshake_ts)) + '）' : '還沒有裝置連線過') + '</div>';
+		}
+	}
+	U.set('hm-vpn', h);
 }
 
 /* ---------- 分享 Wi-Fi ---------- */
