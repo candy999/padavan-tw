@@ -885,7 +885,8 @@ struct twr_hist {
 	int used;
 	long last;
 	int k, v;			/* 支援 11k／11v：1 是、0 否、-1 不知道 */
-	int k_noreply;			/* 連續幾次問了沒回報 */
+	int k_noreply[2];		/* 各頻段連續幾次問了沒回報 */
+	int k_dead[2];			/* 在這個頻段問了 3 次都沒回：先不在這個頻段問（另一個頻段照常） */
 	int rcpi_signed;		/* 這台把 RSSI（有號數 dBm）填在 RCPI 欄位 */
 	long ask_at;			/* 上次送 Beacon Request */
 	int ask_rssi, ask_ch, ask_band, ask_seq, ask_counted;
@@ -1311,7 +1312,9 @@ on_bcn_report(const struct twr_drv_ev *ev, long now)
 	h->rep[slot].at = now;
 	h->rep_at = now;
 	h->rep_new = 1;
-	h->k_noreply = 0;
+	i = bidx(ev->band ? ev->band : h->ask_band);
+	h->k_noreply[i] = 0;
+	h->k_dead[i] = 0;
 	if (ev->band && g_ask_busy[bidx(ev->band)] > now + 1)
 		g_ask_busy[bidx(ev->band)] = now + 1;	/* 回來了：再等 1 秒收完同一份報告的其他筆 */
 	if (h->k != 1) {
@@ -1617,17 +1620,25 @@ decide_one(struct twr_local *c, long now)
 			return;
 	}
 
-	/* 問了沒回：連續 3 次就當作不支援 11k（只在這顆驅動收得到回報時才判斷） */
+	/* 問了沒回：同一個頻段連續 3 次就先不在這個頻段問；兩個頻段都這樣才當作不支援 11k
+	 * （只在這顆驅動收得到回報時才判斷）。2026-11-21 實測：Mi 10T 在 D3 的 2.4G 每次都回，
+	 * 在 5G（MT7612）問 3 次都沒回；以前整台當作不支援，回到 2.4G 後也不再問，回 5G 的建議就沒了 */
 	if (h->ask_at && !h->ask_counted && now - h->ask_at >= 10 && h->rep_at < h->ask_at && g_caps.bcn_rep[bidx(h->ask_band)]) {
+		int ab = bidx(h->ask_band);
 		h->ask_counted = 1;
-		if (++h->k_noreply >= 3 && h->k < 0) {
+		if (++h->k_noreply[ab] >= 3 && h->k < 0 && !h->k_dead[ab]) {
+			h->k_dead[ab] = 1;
+			event(0, "%s 在 %s 問了 3 次都沒回 Beacon Report，這個頻段先不問（另一個頻段照常）",
+				client_name(c->mac, name, sizeof(name)), ab ? "5G" : "2.4G");
+		}
+		if (h->k < 0 && h->k_dead[0] && h->k_dead[1]) {
 			h->k = 0;
-			event(0, "%s 問了 3 次都沒回 Beacon Report，當作不支援 11k", client_name(c->mac, name, sizeof(name)));
+			event(0, "%s 兩個頻段都沒回 Beacon Report，當作不支援 11k", client_name(c->mac, name, sizeof(name)));
 		}
 	}
 
 	/* 備案（裝置不回 Beacon Report、驅動收不到回報）：只做回 5G，用 AP 聽到的 2.4G 訊號估 */
-	if ((h->k == 0 || !g_caps.bcn_rep[bi]) && c->band == 2 && seen5_ago(c->mac, now) >= 0 &&
+	if ((h->k == 0 || h->k_dead[bi] || !g_caps.bcn_rep[bi]) && c->band == 2 && seen5_ago(c->mac, now) >= 0 &&
 	    now - c->band_since >= 60 && !c->psm) {
 		const struct twr_radio *r5 = own_radio(5);
 		if (r5 && c->ema >= -58 && c->ema >= c->drop_rssi + 8) {
@@ -1647,7 +1658,7 @@ decide_one(struct twr_local *c, long now)
 	}
 
 	/* 問（送 Beacon Request） */
-	if (h->k == 0 || !g_caps.bcn_req[bi] || c->psm || h->ignore_n >= 3 || now < h->backoff_until)
+	if (h->k == 0 || h->k_dead[bi] || !g_caps.bcn_req[bi] || c->psm || h->ignore_n >= 3 || now < h->backoff_until)
 		return;
 	min_conn = (c->band == 2 && seen5_ago(c->mac, now) >= 0) ? 60 : 120;
 	if (now - c->band_since < min_conn)
@@ -2035,6 +2046,8 @@ write_status(long now)
 			if (h && !c->guest)
 				fprintf(fp, "  11k %s 11v %s%s", h->k > 0 ? "✓" : h->k == 0 ? "✗" : "?", h->v > 0 ? "✓" : h->v == 0 ? "✗" : "?",
 					h->pend ? "  等建議結果" : h->ignore_n >= 3 ? "  不再建議" : now < h->backoff_until ? "  退避中" : "");
+			if (h && !c->guest && h->k != 0 && (h->k_dead[0] || h->k_dead[1]))
+				fprintf(fp, "（%s不回）", h->k_dead[0] ? (h->k_dead[1] ? "兩邊都" : "2.4G ") : "5G ");
 			if (h && h->n_sug)
 				fprintf(fp, "  建議 %d 次、換過去 %d 次", h->n_sug, h->n_ok);
 		}
