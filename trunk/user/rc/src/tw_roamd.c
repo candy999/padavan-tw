@@ -1939,7 +1939,43 @@ write_devices(void)
 			json_str(fp, h->roam[j].to);
 			fprintf(fp, ",\"rssi_from\":%d,\"rssi_to\":%d}", h->roam[j].rf, h->roam[j].rt);
 		}
-		fprintf(fp, "],\"advice\":[]}\n");
+		/* 改善建議：最近 2 小時的平均訊號、今天斷線次數、2.4G 上的 5G 裝置 */
+		fprintf(fp, "],\"advice\":[");
+		{
+			int sum = 0, cnt = 0, today = 0, first = 1, k;
+			struct twr_local *c = local_find(h->mac, 0);
+			for (j = 0; j < 8; j++) {
+				long s = cur - j;
+				k = s % TWR_SIG_N;
+				if (s == h->sig_cur && h->sig_cnt) {
+					sum += h->sig_sum / h->sig_cnt;
+					cnt++;
+				} else if (h->sig_s[k] == s) {
+					sum += h->sig_v[k];
+					cnt++;
+				}
+			}
+			for (j = 0; j < h->ndisc; j++)
+				if (wall - h->disc[j].ts < 86400)
+					today++;
+			if (cnt >= 2 && sum / cnt <= -75) {
+				fprintf(fp, "{\"title\":\"訊號偏弱（最近 2 小時平均 %d dBm）\",\"detail\":\"%s\",\"action\":\"看 Wi-Fi 設定\",\"href\":\"tw_wifi.asp#roam\"}",
+					sum / cnt, g_peer_count(mono_sec()) ? "家裡有其他 AP：可以把漫遊中控改成建議模式，支援 11v 的裝置會被建議換到比較近的 AP。" :
+					"把路由器放高、放在比較中間的位置，或在訊號弱的地方加一台 padavan-tw AP（同名同密碼）。");
+				first = 0;
+			}
+			if (today >= 3) {
+				fprintf(fp, "%s{\"title\":\"今天斷線 %d 次\",\"detail\":\"常在訊號弱的地方斷線時，先改善訊號；舊裝置看到 802.11r 連不上時，請改連 IoT 網路。\",\"action\":\"看 Wi-Fi 設定\",\"href\":\"tw_wifi.asp\"}",
+					first ? "" : ",", today);
+				first = 0;
+			}
+			if (c && !c->missing && !c->guest && c->band == 2 && seen5_ago(h->mac, mono_sec()) >= 0 && c->ema >= -55) {
+				fprintf(fp, "%s{\"title\":\"可以用 5G\",\"detail\":\"這台裝置連過 5G，現在在 2.4G 而且訊號很好（%d dBm）；5G 通常快很多。建議模式會自動建議它回 5G。\",\"action\":\"看漫遊設定\",\"href\":\"tw_wifi.asp#roam\"}",
+					first ? "" : ",", c->ema);
+				first = 0;
+			}
+		}
+		fprintf(fp, "]}\n");
 		h->dirty = 0;
 	}
 	fclose(fp);
