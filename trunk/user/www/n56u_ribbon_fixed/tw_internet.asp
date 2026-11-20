@@ -58,6 +58,7 @@ var NV = {
 	udpxy: "<% nvram_get_x("", "udpxy_enable_x"); %>",
 	mod_auto: "<% nvram_get_x("", "tw_mod_auto"); %>",
 	mod_auto_last: "<% nvram_get_x("", "tw_mod_auto_last"); %>",
+	mod_mac: "<% nvram_get_x("", "tw_mod_mac"); %>",
 	lan_ip: "<% nvram_get_x("", "lan_ipaddr"); %>"
 };
 </script>

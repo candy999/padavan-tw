@@ -243,7 +243,8 @@ function in_mod_body() {
 	if (cur == 'custom') h += '<div class="tw-note tw-s-warn">目前在原始 WAN 設定裡把兩個以上的 LAN 孔橋接給機上盒，這裡無法完整顯示；在這裡套用會改成只用一個孔。</div>';
 	if (cur == 'vlan_only') h += '<div class="tw-note tw-s-info">上網目前有設定 VLAN（原始 WAN 設定的「VLAN 過濾」）。選「沒有接 MOD」不會動到它。</div>';
 	h += '<label class="tw-switch"><input type="checkbox" id="in-mod-auto"' + (NV.mod_auto != '0' ? ' checked' : '') + ' onchange="in_mod_auto_apply()"><span class="tw-track"></span>自動偵測 MOD 機上盒（建議）</label>' +
-		'<div class="tw-help">機上盒插在任何一個 LAN 孔、開機要位址時，路由器會認出它（中華電信機上盒的識別碼）並自動把那個孔設成 MOD 專用，約 3 分鐘內完成。不用知道孔的編號。</div>' +
+		'<div class="tw-help">機上盒插在任何一個 LAN 孔、開機要位址時，路由器會認出它（中華電信機上盒的識別碼）並記住，自動把那個孔設成 MOD 專用，約 1 分鐘內完成，不用知道孔的編號。之後路由器重開、機上盒換孔都會自動跟著；MOD 孔改接其他裝置、機上盒 10 分鐘沒出現在那個孔，會自動取消。</div>' +
+		(NV.mod_mac ? '<div class="tw-small tw-muted">記得的機上盒：' + U.esc(NV.mod_mac.split(' ').map(function (m) { return m.replace(/(..)(?!$)/g, '$1:').toUpperCase(); }).join('、')) + '</div>' : '') +
 		(NV.mod_auto_last ? '<div class="tw-small tw-muted">上次自動設定：' + U.esc(NV.mod_auto_last) + '</div>' : '');
 	h += '<div class="tw-options" role="group" aria-label="MOD 接法">' + IN_MOD.map(function (o) {
 		return '<button type="button" class="tw-option" id="in-mod-' + o.id + '" aria-pressed="false" onclick="in_mod_pick(\'' + o.id + '\')">' +
@@ -303,7 +304,9 @@ function in_mod_apply() {
 	if (id == 'none') {
 		f.wan_stb_x = '0';
 		if (in_mod_cur() == 'hinet_vlan') f.vlan_filter = '0';	/* 只關掉這裡設的；上網自己的 VLAN（vlan_only）不動 */
+		f.tw_mod_mac = '';	/* 忘記記得的機上盒：不然自動偵測看到它又會把孔設回來 */
 		imp.push('所有 LAN 孔恢復成一般區網，有線網路中斷約 5～10 秒');
+		if (NV.mod_mac) imp.push('路由器會忘記記得的機上盒，不會再自動設回 MOD 孔（機上盒重開要位址時才會再認出它）');
 	} else {
 		f.wan_stb_x = String(p); f.wan_stb_iso = '1';
 		f['vlan_tag_lan' + p] = '0'; f['vlan_pri_lan' + p] = '0';

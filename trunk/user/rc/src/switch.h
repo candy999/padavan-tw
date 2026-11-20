@@ -44,9 +44,6 @@ int phy_status_port_link_changed(unsigned int *p_link_changed);
 int phy_status_port_speed(int port_id_uapi, unsigned int *p_speed_mode);
 
 int phy_status_port_bytes(int port_id_uapi, uint64_t *rx, uint64_t *tx);
-#if defined (USE_MTK_GSW)
-int phy_status_port_rx_bcast(int port_id_uapi, unsigned int *bcast);
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 // SWITCH CONTROL

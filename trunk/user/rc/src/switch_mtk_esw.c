@@ -165,21 +165,6 @@ int phy_status_port_bytes(int port_id_uapi, uint64_t *rx, uint64_t *tx)
 	return ioctl_result;
 }
 
-#if defined (USE_MTK_GSW)
-/* padavan-tw：某個孔「收到的廣播封包」計數（tw_mod.c 用來判斷 MOD 機上盒接在哪個孔） */
-int phy_status_port_rx_bcast(int port_id_uapi, unsigned int *bcast)
-{
-	esw_mib_counters_t mibc;
-	int ret;
-
-	memset(&mibc, 0, sizeof(mibc));
-	ret = mtk_esw_ioctl(MTK_ESW_IOCTL_STATUS_MIB_PORT, port_id_uapi, (unsigned int *)&mibc);
-	if (ret == 0)
-		*bcast = mibc.RxBcastFrames;
-	return ret;
-}
-#endif
-
 ////////////////////////////////////////////////////////////////////////////////
 
 inline int phy_storm_unicast_unknown(unsigned int storm_rate_mbps)
