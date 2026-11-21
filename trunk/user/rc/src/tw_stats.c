@@ -21,7 +21,8 @@
  * 連外中斷自動重新連線（nvram tw_wan_watch，預設開；tw_wan_watch_sec 預設 30 秒，30～600）：
  *   中華電信機房維護時常見「拿著 IP 卻連不出去」，或剛維護完撥號拿到不能上網的 IP、撥號沒拿到 IP，重撥才會好。
  *   - 判斷：HiNet DNS、TWNIC、Cloudflare 三個都沒回 ping 持續設定的秒數（用上面同一份 ping，不另外送）
- *   - 有 IPv4 時，動手前再用 TCP 連 1.1.1.1:443、168.95.1.1:53、8.8.8.8:53 確認，任何一個連得上就不重撥（只是 ping 被擋）
+ *   - 有 IPv4 時，動手前再用 TCP 連 1.1.1.1:443、168.95.1.1:53、8.8.8.8:53 確認，任何一個連得上就不重撥（只是 ping 被擋），
+ *     之後每 60 秒再確認一次
  *   - 沒有 IPv4（撥號沒拿到位址）至少等 90 秒，先讓 pppd、udhcpc 自己重試；WAN 網路線沒接、固定 IP、AP 模式都不動作
  *   - 動作：rc 的 auto_wan_reconnect（跟後台「重新連線」同一條路），寫系統記錄
  *   - 退避：重撥後至少隔 2、5、10、30 分鐘（之後都是 30 分鐘）才會再重撥，連外恢復 10 分鐘後歸零，不會一直撥號
@@ -93,7 +94,7 @@ enum { WW_OFF, WW_OK, WW_BAD, WW_WAIT, WW_NOLINK, WW_ICMP };
 #define WW_MAX_EV	5
 #define WW_NOIP_MIN	90	/* 沒有 IPv4 時至少等幾秒 */
 #define WW_RESET_OK	600	/* 連外恢復多久之後退避歸零 */
-#define WW_ICMP_HOLD	600	/* ping 不通但 TCP 通：多久之後再確認 */
+#define WW_ICMP_HOLD	60	/* ping 不通但 TCP 通：多久之後再用 TCP 確認（ping 一恢復就清掉） */
 static const int ww_gap[] = { 120, 300, 600, 1800 };
 
 static struct {
@@ -102,6 +103,7 @@ static struct {
 	long ok_since;
 	long next_ok;			/* 這之前不再重撥（退避） */
 	long icmp_until;		/* ping 不通但 TCP 通：這之前不再用 TCP 確認 */
+	long icmp_log_at;		/* 上次寫「只是 ping 被擋」的系統記錄 */
 	int n;				/* 連續重撥次數（退避用） */
 	int total;			/* 開機以來 */
 	struct { long ts; int secs; int has_ip; } ev[WW_MAX_EV];
@@ -444,6 +446,7 @@ ww_check(int ext_ok)
 		if (!g_ww.ok_since || g_ww.bad_since)
 			g_ww.ok_since = now;
 		g_ww.bad_since = 0;
+		g_ww.icmp_until = 0;	/* ping 恢復：下次斷線重新判斷（D3 實測：斷線剛結束那一刻 ping 還不通、TCP 已經通，會被誤判成只是 ping 被擋） */
 		if (g_ww.n && now - g_ww.ok_since >= WW_RESET_OK)
 			g_ww.n = 0;
 		g_ww.state = WW_OK;
@@ -471,9 +474,11 @@ ww_check(int ext_ok)
 		return;
 	}
 	if (g_ww.has_ip && ww_tcp_any()) {
-		if (!g_ww.icmp_until || now - g_ww.icmp_until >= 3600)	/* 系統記錄最多每小時一次 */
+		if (!g_ww.icmp_log_at || now - g_ww.icmp_log_at >= 3600) {	/* 系統記錄最多每小時一次 */
+			g_ww.icmp_log_at = now;
 			logmessage("連外偵測", "ping 三個目標都沒有回應 %ld 秒，但 TCP 連得出去（可能只是 ping 被擋），不重新連線",
 				   now - g_ww.bad_since);
+		}
 		g_ww.state = WW_ICMP;
 		g_ww.icmp_until = now + WW_ICMP_HOLD;
 		return;
