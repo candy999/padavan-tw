@@ -667,6 +667,7 @@ watchdog_on_timer(void)
 	tw_nat66_check();
 	tw_wifi_bpdu_check();
 	tw_mod_check();
+	tw_pause_check();
 
 	/* update kernel timezone daylight */
 	setkernel_tz();

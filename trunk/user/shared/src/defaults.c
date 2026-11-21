@@ -1014,6 +1014,7 @@ struct nvram_pair router_defaults[] = {
 	{ "di_port4", "53" },
 	{ "di_port5", "53" },
 	{ "tw_wan_watch", "1" },			/* padavan-tw：連外中斷自動重新連線 WAN（tw_stats.c） */
+	{ "tw_pause_until", "" },			/* padavan-tw：暫停上網的定時恢復「MAC=到期 Unix 秒」（tw_pause.c） */
 	{ "tw_wan_watch_sec", "30" },			/* padavan-tw：連外中斷幾秒後重新連線（30～600） */
 
 	{ "fw_pt_pppoe", "0" },

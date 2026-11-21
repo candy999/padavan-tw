@@ -30,6 +30,7 @@ INJECT = ('\n<meta name="viewport" content="width=device-width, initial-scale=1,
 
 # 範例 nvram（Newifi D3、中華電信 PPPoE）
 NVRAM = {
+    'tw_pause_until': '5CE50C000077=%d' % (int(time.time()) + 5400),  # 小明的 Switch 暫停到 1.5 小時後
     'sw_mode': '1', 'wan_route_x': 'IP_Routed', 'wan_proto': 'pppoe', 'lan_proto_x': '0',
     'log_float_ui': '0', 'preferred_lang': 'TW', 'rt_radio_x': '1', 'wl_radio_x': '1',
     'rt_guest_enable': '0', 'wl_guest_enable': '0', 'nvram_manual': '0', 'link_internet': '1',

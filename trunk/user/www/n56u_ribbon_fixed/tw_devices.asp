@@ -29,7 +29,8 @@ var NV = {
 	dhcp_static: "<% nvram_get_x("", "dhcp_static_x"); %>",
 	dhcp_num: "<% nvram_get_x("", "dhcp_staticnum_x"); %>",
 	mf_mode: "<% nvram_get_x("", "macfilter_enable_x"); %>",
-	mf_num: "<% nvram_get_x("", "macfilter_num_x"); %>"
+	mf_num: "<% nvram_get_x("", "macfilter_num_x"); %>",
+	pause_until: "<% nvram_get_x("", "tw_pause_until"); %>"
 };
 var MDHCP = [<% get_nvram_list("LANHostConfig", "ManualDHCPList"); %>];
 var MFLIST = [<% get_nvram_list("FirewallConfig", "MFList"); %>];

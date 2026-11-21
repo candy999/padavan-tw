@@ -540,6 +540,7 @@
 			{"url_num_x", "", NULL, EVM_RESTART_FIREWALL},
 			{"macfilter_enable_x", "", NULL, EVM_RESTART_FIREWALL},
 			{"macfilter_num_x", "", NULL, EVM_RESTART_FIREWALL},
+			{"tw_pause_until", "", NULL, FALSE},	/* padavan-tw：暫停上網的定時恢復（watchdog 的 tw_pause_check） */
 			{"ftpd_wopen", "", NULL, EVM_RESTART_FIREWALL},
 			{"ftpd_wport", "", NULL, EVM_RESTART_FIREWALL},
 			{"sshd_wopen", "", NULL, EVM_RESTART_FIREWALL},

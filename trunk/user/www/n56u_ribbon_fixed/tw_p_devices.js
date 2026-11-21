@@ -22,9 +22,23 @@ function dv_pause_of(mac) {
 	for (var i = 0; i < MFLIST.length; i++) if (TW.macKey(MFLIST[i][0]) == k) return { index: i };
 	return null;
 }
+/* 定時恢復（tw_pause_until：「MAC=到期 Unix 秒」以空白分隔；路由器的 watchdog 到期時從封鎖清單拿掉） */
+function dv_pause_map() {
+	var m = {};
+	String(NV.pause_until || '').split(/\s+/).forEach(function (x) { var p = x.split('='); if (p.length == 2 && +p[1] > 0) m[TW.macKey(p[0])] = +p[1]; });
+	return m;
+}
+function dv_pause_until(mac) { return dv_pause_map()[TW.macKey(mac)] || 0; }
+function dv_pause_str(m) { return Object.keys(m).map(function (k) { return k + '=' + m[k]; }).join(' '); }
+function dv_until_text(mac) {
+	var t = dv_pause_until(mac);
+	if (!t) return '';
+	var d = new Date(t * 1000), now = new Date();
+	return '（' + (d.toDateString() == now.toDateString() ? '' : (d.getMonth() + 1) + '/' + d.getDate() + ' ') + ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2) + ' 自動恢復）';
+}
 function dv_name(d) { return d.name || d.hostname || TW.maskMac(d.mac); }
 function dv_conn_text(d) {
-	if (!d.online) return d.paused ? '已暫停上網' : '離線' + (d.last_seen_ts ? '（' + TW.fmtAgo(d.last_seen_ts) + '）' : '');
+	if (!d.online) return d.paused ? '已暫停上網' + dv_until_text(d.mac) : '離線' + (d.last_seen_ts ? '（' + TW.fmtAgo(d.last_seen_ts) + '）' : '');
 	if (d.conn == 'wired') return '有線';
 	if (d.conn == 'wired_guess') return '有線，或剛離開 Wi-Fi';
 	var s = d.conn == 'guest' ? 'IoT Wi-Fi' : 'Wi-Fi';
@@ -91,7 +105,7 @@ function dv_render() {
 			dev: '<div class="tw-dev"><span class="tw-dev-ico" title="' + U.esc(t[1]) + '">' + U.icon(t[0], 18) + '</span><span class="tw-dev-text">' +
 				'<a class="tw-dev-name" href="tw_devices.asp?mac=' + encodeURIComponent(d.mac) + '">' + U.esc(dv_name(d)) + '</a>' +
 				'<span class="tw-dev-sub">' + U.esc(U.maskMac(d.mac)) + (d.disconnects_today ? ' · 今天斷線 ' + d.disconnects_today + ' 次' : '') + '</span></span></div>',
-			conn: (d.paused && d.online ? '<span class="tw-inline">' + U.chip('warn', '已暫停上網') + '<span>' + U.esc(dv_conn_text(d)) + '</span></span>' : U.esc(dv_conn_text(d))),
+			conn: (d.paused && d.online ? '<span class="tw-inline">' + U.chip('warn', '已暫停上網' + dv_until_text(d.mac)) + '<span>' + U.esc(dv_conn_text(d)) + '</span></span>' : U.esc(dv_conn_text(d))),
 			signal: signal,
 			ip: d.ip ? '<span class="tw-inline"><span class="tw-num">' + U.esc(d.ip) + '</span>' + (d.static_ip ? U.chip('info', '固定') : '') + '</span>' : '<span class="tw-muted">--</span>',
 			since: d.online && d.since_s != null ? U.fmtDur(d.since_s) : '<span class="tw-muted">--</span>',
@@ -123,7 +137,7 @@ function dv_detail_init() {
 }
 function dv_detail_render(d, r) {
 	var U = TW, sg = U.signal(d.signal_dbm), t = DV_TYPE[d.type] || DV_TYPE.other;
-	var chip = !d.online ? U.chip(d.paused ? 'warn' : 'unknown', d.paused ? '已暫停上網' : '離線') : (d.signal_dbm != null ? U.chip(sg.state, '訊號' + sg.label) : U.chip('ok', '在線'));
+	var chip = !d.online ? U.chip(d.paused ? 'warn' : 'unknown', d.paused ? '已暫停上網' + dv_until_text(d.mac) : '離線') : (d.signal_dbm != null ? U.chip(sg.state, '訊號' + sg.label) : U.chip('ok', '在線'));
 	var sub = [dv_conn_text(d)];
 	if (d.ip) sub.push(d.ip + (d.static_ip ? '（固定）' : '（DHCP）'));
 	sub.push(U.maskMac(d.mac));
@@ -236,21 +250,39 @@ function dv_pause(mac) {
 		return;
 	}
 	if (MFLIST.length >= 64) { U.toast('封鎖清單已滿（64 筆）', 'bad'); return; }
+	var night = new Date(); night.setHours(22, 0, 0, 0);
+	var late = Date.now() > night.getTime() - 30 * 60 * 1000;	/* 21:30 以後「到今晚 10 點」沒意義 */
 	var body = '<p><b>' + U.esc(dv_name(d)) + '</b> 會立刻不能上網，也連不到家裡其他裝置；隨時可以恢復。</p>' +
-		'<div class="tw-field"><span class="tw-field-label">暫停多久</span><div class="tw-seg"><button type="button" aria-pressed="true">直到我恢復</button>' +
-		'<button type="button" disabled title="之後的版本才有">1 小時</button><button type="button" disabled title="之後的版本才有">到今晚 10 點</button></div>' +
-		'<div class="tw-help">定時自動恢復之後的版本才能使用。</div></div>';
+		'<div class="tw-field"><span class="tw-field-label">暫停多久</span><div class="tw-seg" id="dv-pause-for"><button type="button" aria-pressed="true" onclick="dv_pause_pick(this,0)">直到我恢復</button>' +
+		'<button type="button" aria-pressed="false" onclick="dv_pause_pick(this,3600)">1 小時</button>' +
+		'<button type="button" aria-pressed="false"' + (late ? ' disabled title="已經過了 9 點半"' : '') + ' onclick="dv_pause_pick(this,-1)">到今晚 10 點</button></div>' +
+		'<div class="tw-help">時間到路由器會自動恢復（路由器要開著；剛開機、時間還沒對好時會稍晚一點）。</div></div>';
 	var extra = { macfilter_num_x_0: MFLIST.length };
+	var until = dv_pause_map();
+	delete until[U.macKey(d.mac)];
+	extra.tw_pause_until = dv_pause_str(until);
+	DV.pauseExtra = extra; DV.pauseMac = U.macKey(d.mac);
 	if (NV.mf_mode != '2') extra.macfilter_enable_x = '2';
 	U.listAdd({ sid: 'FirewallConfig;', group: 'MFList', title: '暫停上網？', body: body, ok: '暫停上網', danger: true,
 		impacts: ['防火牆重新載入（約 2 秒，其他裝置不受影響）'].concat(NV.mf_mode != '2' ? ['同時開啟 MAC 過濾的「封鎖清單」模式'] : []),
 		fields: { macfilter_list_x_0: U.macKey(d.mac), macfilter_time_x_0: '00002359', macfilter_date_x_0: '1111111' }, extra: extra });
 }
+function dv_pause_pick(btn, secs) {
+	[].forEach.call(btn.parentNode.children, function (b) { b.setAttribute('aria-pressed', b == btn ? 'true' : 'false'); });
+	var m = dv_pause_map(), t;
+	delete m[DV.pauseMac];
+	if (secs) {
+		if (secs < 0) { var n = new Date(); n.setHours(22, 0, 0, 0); t = Math.floor(n.getTime() / 1000); }
+		else t = Math.floor(Date.now() / 1000) + secs;
+		m[DV.pauseMac] = t;
+	}
+	DV.pauseExtra.tw_pause_until = dv_pause_str(m);
+}
 function dv_resume(mac) {
 	var U = TW, d = dv_find(mac), p = dv_pause_of(mac);
 	if (!p) { U.toast('在封鎖清單裡找不到這台裝置，請重新整理', 'bad'); return; }
 	U.listDel({ sid: 'FirewallConfig;', group: 'MFList', title: '恢復上網？', body: '<p><b>' + U.esc(dv_name(d)) + '</b> 會恢復上網。</p>', ok: '恢復上網',
-		impacts: ['防火牆重新載入（約 2 秒）'], fields: { MFList_s: p.index }, extra: { macfilter_num_x_0: MFLIST.length } });
+		impacts: ['防火牆重新載入（約 2 秒）'], fields: { MFList_s: p.index }, extra: { macfilter_num_x_0: MFLIST.length, tw_pause_until: (function () { var m = dv_pause_map(); delete m[U.macKey(d.mac)]; return dv_pause_str(m); })() } });
 }
 function dv_wake() {
 	var U = TW, d = DV.dev;
