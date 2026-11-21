@@ -37,6 +37,8 @@
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
+#include <dirent.h>
+#include <fcntl.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #ifdef TWR_TEST
@@ -442,10 +444,19 @@ peer_had(const unsigned char *mac, long now, int *band, int *rssi)
 static void
 on_entry(const struct twr_mac_entry *e, int band, int guest, long now)
 {
-	struct twr_local *c = local_find(e->Addr, 1);
+	struct twr_local *c;
 	int rssi = entry_rssi(e);
 	char name[96];
 
+	/* 還沒有訊號樣本（AvgRssi 全是 0：剛開始認證、802.11r 交換金鑰中）：不建立、不算換頻段、不拿 -127 當訊號。
+	 * 2026-11-22 實機：電腦 FT 換到 2.4G 失敗的那一刻被記成「5G → 2.4G（-127 dBm）」、「離開前訊號 -127 dBm」 */
+	if (rssi == -127) {
+		c = local_find(e->Addr, 0);
+		if (c && c->band == band)
+			c->missing = 0;
+		return;
+	}
+	c = local_find(e->Addr, 1);
 	if (!c)
 		return;
 	if (c->first_seen == 0) {
@@ -2129,6 +2140,46 @@ cat_file(const char *path)
 	fclose(fp);
 }
 
+#ifndef TWR_TEST
+/* 有沒有別的常駐 tw-roamd（命令列只有程式名稱的；tw-roamd status 不算） */
+static int
+other_instance(void)
+{
+	DIR *d = opendir("/proc");
+	struct dirent *e;
+	pid_t self = getpid();
+	int found = 0;
+
+	if (!d)
+		return 0;
+	while (!found && (e = readdir(d))) {
+		char path[32], buf[64];
+		const char *base;
+		pid_t pid = atoi(e->d_name);
+		ssize_t n;
+		int fd;
+
+		if (pid <= 0 || pid == self)
+			continue;
+		snprintf(path, sizeof(path), "/proc/%d/cmdline", (int)pid);
+		fd = open(path, O_RDONLY);
+		if (fd < 0)
+			continue;
+		n = read(fd, buf, sizeof(buf) - 1);
+		close(fd);
+		if (n <= 0)
+			continue;
+		buf[n] = 0;
+		base = strrchr(buf, '/');
+		base = base ? base + 1 : buf;
+		if (strcmp(base, "tw-roamd") == 0 && (size_t)n == strlen(buf) + 1)
+			found = 1;
+	}
+	closedir(d);
+	return found;
+}
+#endif
+
 int
 tw_roamd_main(int argc, char **argv)
 {
@@ -2142,6 +2193,18 @@ tw_roamd_main(int argc, char **argv)
 		cat_file(TWR_EVENTS_FILE);
 		return 0;
 	}
+	if (argc > 1) {
+		fprintf(stderr, "用法：tw-roamd status（看狀態）；常駐程式由 watchdog 依 tw_roam_enable 啟動\n");
+		return 1;
+	}
+#ifndef TWR_TEST
+	/* 2026-11-22 實機：直接打 tw-roamd（或打錯參數）以前會多開一個，兩個搶著寫狀態檔、重複送 11k 請求，
+	 * 多開的那個結束時還把 pid 檔刪掉 */
+	if (other_instance()) {
+		fprintf(stderr, "tw-roamd 已經在執行；看狀態用 tw-roamd status\n");
+		return 0;
+	}
+#endif
 
 #ifdef TWR_TEST
 	if (getenv("TWR_NODE")) str2mac(getenv("TWR_NODE"), g_node); else
