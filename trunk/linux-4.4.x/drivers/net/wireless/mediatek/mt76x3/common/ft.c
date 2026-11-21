@@ -1372,12 +1372,28 @@ VOID FT_R1KHInfoMaintenance(
 				*/
 				pMacEntry = MacTableLookup(pAd, pEntry->StaMac);
 
-				DBGPRINT(RT_DEBUG_ERROR,
-					("%s:PMKCache timeout.Kick out wcid(%d),delete FT_R1khEntry!\n",
-							__func__, pMacEntry->wcid));
+				/*
+					padavan-tw：PSK（含 FT-PSK）的 PMK 就是密碼導出的，不會過期，到期不該踢人。
+					原本不分認證方式都踢，用 11r 連 2.4G 的裝置每 PMKCachePeriod（10 分鐘）斷線一次
+					（2026-11-21 D3＋Mi 10T 實測：09:24:06、09:34:13…手機紀錄 reason 1）。
+					改成跟 MT7612（mt76x2）、MT7915 一樣：只有 802.1X（WPA2 企業版）才踢；
+					PSK 的裝置還連著就續期，已經離開的照原本刪掉。
+					原本在檢查 pMacEntry 之前就讀 pMacEntry->wcid（裝置已離開時是 NULL），一併修掉。
+				*/
+				if (pMacEntry && pMacEntry->AuthMode != Ndis802_11AuthModeWPA2
+					&& pMacEntry->func_tb_idx < HW_BEACON_MAX_NUM)
+				{
+					pEntry->KeyLifeTime =
+						pAd->ApCfg.MBSSID[pMacEntry->func_tb_idx].PMKCachePeriod / OS_HZ;
+					pEntry = pEntry->pNext;
+					continue;
+				}
 
 				if (pMacEntry)
 				{
+					DBGPRINT(RT_DEBUG_ERROR,
+						("%s:PMKCache timeout.Kick out wcid(%d),delete FT_R1khEntry!\n",
+								__func__, pMacEntry->wcid));
 					DisassocParmFill(pAd, &DisassocReq, pEntry->StaMac,
 						MLME_UNSPECIFY_FAIL);
 					MlmeEnqueue(pAd, AP_ASSOC_STATE_MACHINE, APMT2_MLME_DISASSOC_REQ,
