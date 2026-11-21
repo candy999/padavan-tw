@@ -597,7 +597,9 @@ mt7612_bcn_req(const unsigned char *sta, int ch, const unsigned char *bssid)
 {
 	char cmd[160], ssid[40];
 	const char *s = nvram_wlan_get(1, "ssid");
-	int aid = mt7612_aid(sta), oc = op_class(5, ch);
+	/* 要量的頻道可能是 2.4G（從 5G 問「回 2.4G 好不好」）：Class 要依頻道算。2026-11-22 以前一律用 5G 的算法，
+	 * 量 2.4G 頻道 2 時送出「Class 125＋頻道 2」這種不存在的組合，手機、電腦都不回（ROAM-COOP「從 D3 的 5G 問，手機都沒回」） */
+	int aid = mt7612_aid(sta), oc = op_class(ch > 14 ? 5 : 2, ch);
 	unsigned char bc[6] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
 	const unsigned char *b = bssid ? bssid : bc;
 
