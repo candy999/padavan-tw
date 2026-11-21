@@ -129,7 +129,11 @@ nat66_enable(const char *wan_if)
 static void
 nat66_disable(const char *why)
 {
+	/* 不只刪記下來的 WAN：WAN 換介面時（例如改成 PPPoE），防火牆重啟會照 ip6_nat66_state
+	 * 用新的介面寫回規則，接著拿到前綴就停用，只刪舊介面會留下一條。這個 ULA 的規則全部刪掉 */
 	nat66_rule("-D");
+	doSystem("ip6tables -t nat -S POSTROUTING 2>/dev/null | grep -F -- '-s %s/64 ' | grep MASQUERADE"
+		 " | sed 's/^-A /-D /' | while read r; do ip6tables -t nat $r; done", nat66_ula);
 	doSystem("ip -6 addr del %s1/64 dev %s 2>/dev/null", nat66_ula, IFNAME_BR);
 	nvram_set_temp("ip6_nat66_state", "");
 	nat66_on = 0;
