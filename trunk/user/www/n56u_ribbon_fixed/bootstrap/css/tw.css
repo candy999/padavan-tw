@@ -880,8 +880,9 @@ body.body_iframe input[type="text"], body.body_iframe input[type="password"], bo
   width: auto !important; margin: 0 !important; padding: 22px 24px !important; text-align: left;
   background: var(--surface) !important; color: var(--text) !important; border-radius: var(--r-lg) !important;
 }
+/* state.js 的進度條寫死 width: 50%，不蓋掉的話只佔框的一半 */
 .popup_bg .progress {
-  max-width: none !important; height: 22px; margin: 0 0 14px !important; border-radius: 11px; overflow: hidden;
+  width: auto !important; max-width: none !important; height: 22px; margin: 0 0 14px !important; border-radius: 11px; overflow: hidden;
   background: var(--surface-2) !important; background-image: none !important; box-shadow: none !important;
 }
 .popup_bg .progress .bar {
