@@ -215,5 +215,25 @@
     }
    }
   }
- ]
+ ],
+ "wan_watch": {
+  "state": "wait",
+  "sec": 30,
+  "has_ip": true,
+  "bad_for": 0,
+  "next_in": 240,
+  "total": 2,
+  "events": [
+   {
+    "ts": 1795400000,
+    "secs": 31,
+    "has_ip": true
+   },
+   {
+    "ts": 1795399700,
+    "secs": 92,
+    "has_ip": false
+   }
+  ]
+ }
 }

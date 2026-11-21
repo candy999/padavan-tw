@@ -159,5 +159,14 @@
     }
    }
   }
- ]
+ ],
+ "wan_watch": {
+  "state": "ok",
+  "sec": 30,
+  "has_ip": true,
+  "bad_for": 0,
+  "next_in": 0,
+  "total": 0,
+  "events": []
+ }
 }

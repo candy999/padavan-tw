@@ -17,6 +17,15 @@
  * - 資料只放記憶體（/tmp/twstats/latency.json，每 10 秒覆寫），不寫 Flash
  *
  * 格式見 docs/HANDOFF-UI.md 第 6 節（latency）與 tools/ui-preview/mock/latency.json
+ *
+ * 連外中斷自動重新連線（nvram tw_wan_watch，預設開；tw_wan_watch_sec 預設 30 秒，30～600）：
+ *   中華電信機房維護時常見「拿著 IP 卻連不出去」，或剛維護完撥號拿到不能上網的 IP、撥號沒拿到 IP，重撥才會好。
+ *   - 判斷：HiNet DNS、TWNIC、Cloudflare 三個都沒回 ping 持續設定的秒數（用上面同一份 ping，不另外送）
+ *   - 有 IPv4 時，動手前再用 TCP 連 1.1.1.1:443、168.95.1.1:53、8.8.8.8:53 確認，任何一個連得上就不重撥（只是 ping 被擋）
+ *   - 沒有 IPv4（撥號沒拿到位址）至少等 90 秒，先讓 pppd、udhcpc 自己重試；WAN 網路線沒接、固定 IP、AP 模式都不動作
+ *   - 動作：rc 的 auto_wan_reconnect（跟後台「重新連線」同一條路），寫系統記錄
+ *   - 退避：重撥後至少隔 2、5、10、30 分鐘（之後都是 30 分鐘）才會再重撥，連外恢復 10 分鐘後歸零，不會一直撥號
+ *   - 狀態放在 latency.json 的 wan_watch（診斷頁顯示）
  */
 
 #include <stdio.h>
@@ -78,6 +87,25 @@ static struct target g_t[NTARGETS] = {
 static unsigned short g_id;
 static int g_rounds = 0;
 static volatile sig_atomic_t g_stop = 0;
+
+/* 連外中斷自動重新連線 */
+enum { WW_OFF, WW_OK, WW_BAD, WW_WAIT, WW_NOLINK, WW_ICMP };
+#define WW_MAX_EV	5
+#define WW_NOIP_MIN	90	/* 沒有 IPv4 時至少等幾秒 */
+#define WW_RESET_OK	600	/* 連外恢復多久之後退避歸零 */
+#define WW_ICMP_HOLD	600	/* ping 不通但 TCP 通：多久之後再確認 */
+static const int ww_gap[] = { 120, 300, 600, 1800 };
+
+static struct {
+	int state, sec, has_ip;
+	long bad_since;			/* 單調時鐘秒；0＝目前連得出去 */
+	long ok_since;
+	long next_ok;			/* 這之前不再動作（退避） */
+	int n;				/* 連續重撥次數（退避用） */
+	int total;			/* 開機以來 */
+	struct { long ts; int secs; int has_ip; } ev[WW_MAX_EV];
+	int nev;
+} g_ww;
 
 static long
 mono_ms(void)
@@ -335,6 +363,137 @@ slot_baseline(const struct target *t, long now)
 	return v[c / 4];
 }
 
+/* TCP 確認：三個目標同時連，3 秒內任何一個連上就算連得出去 */
+static int
+ww_tcp_any(void)
+{
+	static const struct { const char *ip; int port; } tt[] = { { "1.1.1.1", 443 }, { "168.95.1.1", 53 }, { "8.8.8.8", 53 } };
+	int fd[3], i, ok = 0;
+	long deadline = mono_ms() + 3000;
+
+	for (i = 0; i < 3; i++) {
+		struct sockaddr_in sa;
+
+		fd[i] = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
+		if (fd[i] < 0)
+			continue;
+		memset(&sa, 0, sizeof(sa));
+		sa.sin_family = AF_INET;
+		sa.sin_port = htons(tt[i].port);
+		inet_aton(tt[i].ip, &sa.sin_addr);
+		if (connect(fd[i], (struct sockaddr *)&sa, sizeof(sa)) == 0)
+			ok = 1;
+		else if (errno != EINPROGRESS) {
+			close(fd[i]);
+			fd[i] = -1;
+		}
+	}
+	while (!ok) {
+		struct pollfd p[3];
+		int n = 0, k;
+		long left = deadline - mono_ms();
+
+		for (i = 0; i < 3; i++)
+			if (fd[i] >= 0) {
+				p[n].fd = fd[i];
+				p[n].events = POLLOUT;
+				p[n].revents = 0;
+				n++;
+			}
+		if (!n || left <= 0 || poll(p, n, (int)left) <= 0)
+			break;
+		for (k = 0; k < n; k++) {
+			int err = 0;
+			socklen_t l = sizeof(err);
+
+			if (!p[k].revents)
+				continue;
+			if (getsockopt(p[k].fd, SOL_SOCKET, SO_ERROR, &err, &l) == 0 && !err && (p[k].revents & POLLOUT)) {
+				ok = 1;
+				break;
+			}
+			for (i = 0; i < 3; i++)
+				if (fd[i] == p[k].fd) {
+					close(fd[i]);
+					fd[i] = -1;
+				}
+		}
+	}
+	for (i = 0; i < 3; i++)
+		if (fd[i] >= 0)
+			close(fd[i]);
+	return ok;
+}
+
+/* 每一輪 ping 之後呼叫：ext_ok＝HiNet DNS、TWNIC、Cloudflare 至少一個有回 */
+static void
+ww_check(int ext_ok)
+{
+	long now = mono_ms() / 1000;
+	int sec, gap;
+
+	if (nvram_match("tw_wan_watch", "0") || get_ap_mode() || get_wan_proto(0) == IPV4_WAN_PROTO_IPOE_STATIC) {
+		g_ww.state = WW_OFF;
+		g_ww.bad_since = 0;
+		return;
+	}
+	g_ww.sec = sec = nvram_safe_get_int("tw_wan_watch_sec", 30, 30, 600);
+	if (ext_ok) {
+		if (!g_ww.ok_since || g_ww.bad_since)
+			g_ww.ok_since = now;
+		g_ww.bad_since = 0;
+		if (g_ww.n && now - g_ww.ok_since >= WW_RESET_OK)
+			g_ww.n = 0;
+		if (g_ww.state != WW_ICMP || now >= g_ww.next_ok)
+			g_ww.state = WW_OK;
+		return;
+	}
+	if (!get_wan_ether_link_cached()) {
+		g_ww.state = WW_NOLINK;
+		g_ww.bad_since = 0;
+		return;
+	}
+	if (!g_ww.bad_since)
+		g_ww.bad_since = now;
+	g_ww.has_ip = has_wan_ip4(0);
+	if (!g_ww.has_ip && sec < WW_NOIP_MIN)
+		sec = WW_NOIP_MIN;
+	if (now - g_ww.bad_since < sec) {
+		if (g_ww.state != WW_ICMP)
+			g_ww.state = WW_BAD;
+		return;
+	}
+	if (now < g_ww.next_ok) {
+		if (g_ww.state != WW_ICMP)
+			g_ww.state = WW_WAIT;
+		return;
+	}
+	if (g_ww.has_ip && ww_tcp_any()) {
+		if (g_ww.state != WW_ICMP)
+			logmessage("連外偵測", "ping 三個目標都沒有回應 %ld 秒，但 TCP 連得出去（可能只是 ping 被擋），不重新連線",
+				   now - g_ww.bad_since);
+		g_ww.state = WW_ICMP;
+		g_ww.next_ok = now + WW_ICMP_HOLD;
+		return;
+	}
+
+	gap = ww_gap[g_ww.n < 3 ? g_ww.n : 3];
+	g_ww.total++;
+	g_ww.n++;
+	memmove(&g_ww.ev[1], &g_ww.ev[0], sizeof(g_ww.ev[0]) * (WW_MAX_EV - 1));
+	g_ww.ev[0].ts = (long)time(NULL);
+	g_ww.ev[0].secs = (int)(now - g_ww.bad_since);
+	g_ww.ev[0].has_ip = g_ww.has_ip;
+	if (g_ww.nev < WW_MAX_EV)
+		g_ww.nev++;
+	logmessage("連外偵測", "%s已 %d 秒（HiNet DNS、TWNIC、Cloudflare 都沒有回應），重新連線 WAN（開機以來第 %d 次；%d 分鐘內不會再重撥）",
+		   g_ww.has_ip ? "拿著 IP 但連不出去" : "WAN 沒有拿到 IP", g_ww.ev[0].secs, g_ww.total, gap / 60);
+	g_ww.next_ok = now + gap;
+	g_ww.bad_since = 0;
+	g_ww.state = WW_WAIT;
+	notify_rc("auto_wan_reconnect");
+}
+
 static void
 put_x10(FILE *fp, int v)
 {
@@ -356,6 +515,23 @@ median3(int *v, int c)
 		return -1;
 	qsort(w, n, sizeof(int), cmp_int);
 	return (n % 2) ? w[n / 2] : (w[n / 2 - 1] + w[n / 2]) / 2;
+}
+
+/* "wan_watch":{state, sec, has_ip, bad_for, next_in, total, events:[{ts, secs, has_ip}]} */
+static void
+ww_json(FILE *fp)
+{
+	static const char *st[] = { "off", "ok", "bad", "wait", "nolink", "icmp" };
+	long now = mono_ms() / 1000;
+	int i;
+
+	fprintf(fp, ",\"wan_watch\":{\"state\":\"%s\",\"sec\":%d,\"has_ip\":%s,\"bad_for\":%ld,\"next_in\":%ld,\"total\":%d,\"events\":[",
+		st[g_ww.state], g_ww.sec ? g_ww.sec : 30, g_ww.has_ip ? "true" : "false",
+		g_ww.bad_since ? now - g_ww.bad_since : 0L, g_ww.next_ok > now ? g_ww.next_ok - now : 0L, g_ww.total);
+	for (i = 0; i < g_ww.nev; i++)
+		fprintf(fp, "%s{\"ts\":%ld,\"secs\":%d,\"has_ip\":%s}", i ? "," : "", g_ww.ev[i].ts, g_ww.ev[i].secs,
+			g_ww.ev[i].has_ip ? "true" : "false");
+	fputs("]}", fp);
 }
 
 static void
@@ -430,7 +606,9 @@ write_json(FILE *fp, long now)
 			fputs(",\"series\":null,\"loss\":null", fp);
 		fputc('}', fp);
 	}
-	fputs("]}\n", fp);
+	fputc(']', fp);
+	ww_json(fp);
+	fputs("}\n", fp);
 }
 
 static void
@@ -506,6 +684,7 @@ tw_stats_main(int argc, char **argv)
 		record((long)time(NULL));
 		if (g_rounds < TWS_CUR_N)
 			g_rounds++;
+		ww_check(g_t[1].got >= 0 || g_t[2].got >= 0 || g_t[3].got >= 0);
 		save_json((long)time(NULL));
 
 		left = TWS_INTERVAL * 1000L - (mono_ms() - t0);

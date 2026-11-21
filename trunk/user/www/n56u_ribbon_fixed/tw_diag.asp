@@ -29,6 +29,8 @@ var NV = {
 	lan_stp: "<% nvram_get_x("", "lan_stp"); %>",
 	wifi_bpdu: "<% nvram_get_x("", "tw_wifi_bpdu"); %>",
 	wifi_fast: "<% nvram_get_x("", "tw_wifi_fast"); %>",
+	wan_watch: "<% nvram_get_x("", "tw_wan_watch"); %>",
+	wan_watch_sec: "<% nvram_get_x("", "tw_wan_watch_sec"); %>",
 	sw_mode: "<% nvram_get_x("", "sw_mode"); %>"
 };
 </script>

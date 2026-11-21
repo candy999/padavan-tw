@@ -11,12 +11,52 @@ function page_init() {
 	h += '<div class="tw-grid-2">' + U.card({ title: '事件時間軸', bodyId: 'dg-events', body: U.stateBox('loading') }) + U.card({ title: '測速', bodyId: 'dg-speed', body: U.stateBox('loading') }) + '</div>';
 	h += U.card({ title: '更多工具', body: '<div class="tw-actions">' + U.button('系統記錄', { small: true, href: 'Main_LogStatus_Content.asp' }) + U.button('連線狀態表', { small: true, href: 'Main_CTStatus_Content.asp' }) +
 		U.button('路由表', { small: true, href: 'Main_RouteStatus_Content.asp' }) + U.button('即時流量', { small: true, href: 'Main_TrafficMonitor_realtime.asp' }) + U.button('網路地圖', { small: true, href: 'Main_NetMap.asp' }) + '</div>' });
+	h += dg_ww_card();
 	h += dg_loop_card();
 	U.mount(h);
 	dg_bpdu_load();
 	if (TW.qs('run') == '1') dg_run();
-	U.poll(function () { return Promise.all([U.api('latency').then(function (r) { DG.lat = r; dg_lat(); }), U.api('events').then(dg_events)]); }, 30000);
+	U.poll(function () { return Promise.all([U.api('latency').then(function (r) { DG.lat = r; dg_lat(); dg_ww_state(); }), U.api('events').then(dg_events)]); }, 30000);
 	U.api('speedtest').then(dg_speed);
+}
+
+/* ---------- 斷線自動重新連線（tw_wan_watch、tw_wan_watch_sec；rc 的 tw_stats.c，狀態在 latency 的 wan_watch） ---------- */
+var DG_WW_SECS = [30, 60, 120, 300];
+function dg_ww_card() {
+	var U = TW, on = NV.wan_watch != '0', sec = +NV.wan_watch_sec || 30;
+	if (DG_WW_SECS.indexOf(sec) < 0) DG_WW_SECS.push(sec);
+	var b = '<label class="tw-switch"><input type="checkbox" id="dg-ww"' + (on ? ' checked' : '') + '><span class="tw-track"></span>連不出去時自動重新連線（重新撥號）</label>' +
+		'<div class="tw-field"><label for="dg-ww-sec">連不出去多久之後重新連線</label><select id="dg-ww-sec" style="width:auto">' +
+		DG_WW_SECS.sort(function (a, b) { return a - b; }).map(function (s) { return '<option value="' + s + '"' + (s == sec ? ' selected' : '') + '>' + (s < 60 ? s + ' 秒' : s / 60 + ' 分鐘') + '</option>'; }).join('') + '</select></div>' +
+		'<p class="tw-small tw-muted">業者機房維護時，可能拿著 IP 卻連不出去，或撥號拿到不能上網的 IP，重新撥號通常就會好。路由器每 10 秒確認 HiNet DNS、TWNIC、Cloudflare 連不連得到，三個都連不上超過設定的時間，再用網站連線確認一次，確定真的斷了才重新連線。重新連線後還是不通，會隔 2、5、10、30 分鐘再試，不會一直撥號。沒有拿到 IP 時至少等 90 秒，網路線沒接、固定 IP 不會動作。</p>' +
+		'<div class="tw-actions">' + U.button('套用', { small: true, onclick: 'dg_ww_apply()' }) + '</div>' +
+		'<div id="dg-ww-state" class="tw-small tw-muted" style="margin-top:12px">讀取狀態…</div>';
+	return U.card({ title: '斷線自動重新連線', body: b });
+}
+function dg_ww_state() {
+	var U = TW, el = U.$('dg-ww-state'), w = DG.lat && DG.lat.wan_watch;
+	if (!el) return;
+	if (!w) { el.textContent = DG.lat && DG.lat.available !== false ? '這版韌體還沒有這個功能。' : '讀不到狀態。'; return; }
+	var S = {
+		off: ['off', NV.sw_mode == '3' ? 'AP 模式不需要' : NV.wan_proto == 'static' ? '固定 IP 不會動作' : '已關閉'],
+		ok: ['ok', '連外正常'],
+		bad: ['warn', '連不出去 ' + w.bad_for + ' 秒，超過 ' + (w.has_ip ? w.sec : Math.max(w.sec, 90)) + ' 秒會重新連線'],
+		wait: ['warn', w.next_in ? '剛重新連線過，' + Math.ceil(w.next_in / 60) + ' 分鐘內不會再重撥' : '等待中'],
+		nolink: ['bad', 'WAN 網路線沒有連上，不會重新連線'],
+		icmp: ['warn', 'ping 不通但網站連得上（可能只是 ping 被擋），不重新連線']
+	}[w.state] || ['unknown', w.state];
+	var h = '<div class="tw-inline">' + U.dot(S[0]) + '<b>' + U.esc(S[1]) + '</b></div>' +
+		'<div style="margin-top:4px">開機以來自動重新連線 ' + (w.total || 0) + ' 次</div>';
+	if (w.events && w.events.length) h += '<ul style="margin:6px 0 0;padding-left:18px">' + w.events.map(function (e) {
+		return '<li>' + U.esc(U.fmtTime(e.ts, true)) + '：' + (e.has_ip ? '拿著 IP 但連不出去' : '沒有拿到 IP') + ' ' + e.secs + ' 秒，重新連線</li>';
+	}).join('') + '</ul>';
+	el.className = 'tw-small'; el.innerHTML = h;
+}
+function dg_ww_apply() {
+	var U = TW, on = U.$('dg-ww').checked ? '1' : '0', sec = U.$('dg-ww-sec').value;
+	if (on == (NV.wan_watch == '0' ? '0' : '1') && sec == (NV.wan_watch_sec || '30')) { U.toast('沒有變更'); return; }
+	U.apply({ sid: 'General;', fields: { tw_wan_watch: on, tw_wan_watch_sec: sec }, title: '套用斷線自動重新連線？',
+		impacts: ['不會中斷網路，10 秒內生效'] });
 }
 
 /* ---------- Wi-Fi 迴圈保護（tw_wifi_bpdu、tw_wifi_fast；rc 的 tw_wifibpdu.c） ----------

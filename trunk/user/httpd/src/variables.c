@@ -274,6 +274,8 @@
 			{"di_port3", "", NULL, EVM_RESTART_DI},
 			{"di_port4", "", NULL, EVM_RESTART_DI},
 			{"di_port5", "", NULL, EVM_RESTART_DI},
+			{"tw_wan_watch", "", NULL, FALSE},	/* padavan-tw：連外中斷自動重新連線（tw-stats 每輪讀，不用重啟） */
+			{"tw_wan_watch_sec", "", NULL, FALSE},
 			{"ez_action_short", "", NULL, FALSE},
 			{"ez_action_long", "", NULL, FALSE},
 			{"fn1_action_short", "", NULL, FALSE},
