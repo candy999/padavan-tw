@@ -1286,6 +1286,17 @@ on_bcn_report(const struct twr_drv_ev *ev, long now)
 
 	if (!h)
 		return;
+	/* 空的報告（BSSID 全 0 或頻道 0）：裝置有回（支援 11k），只是這次什麼都沒量到。
+	 * 實測 Mi 10T（2026-11-21 10:09）：RCPI 0 → 照標準是 -110 dBm，以前會被當成一筆量測存起來 */
+	if (!ev->ch || !memcmp(ev->bssid, "\0\0\0\0\0\0", 6)) {
+		i = bidx(ev->band ? ev->band : h->ask_band);
+		h->k_noreply[i] = 0;
+		h->k_dead[i] = 0;
+		if (ev->band && g_ask_busy[bidx(ev->band)] > now + 1)
+			g_ask_busy[bidx(ev->band)] = now + 1;
+		event(0, "回報：%s 這次沒量到（空的報告）", client_name(ev->sta, name, sizeof(name)));
+		return;
+	}
 	/* 有些裝置把 RSSI（有號數 dBm）直接填進 RCPI 欄位（實測 Mi 10T：貼近 AP 時報 218，照標準是 -1 dBm，
 	 * 當有號數是 -38 dBm，跟它在 2.4G 的訊號相符）。照標準換出 -10 dBm 以上（RCPI 200 以上）只有貼著天線
 	 * 才可能，看到一次就記住這台、之後一律當有號數；判斷錯時只會把訊號看得比較弱（少建議），不會亂建議。
