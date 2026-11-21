@@ -102,6 +102,10 @@ git pull
 | **每日自動選頻** | `tw_acs_daily`、`tw_acs_hour`（預設 4 點起、Wi-Fi 閒置才換）；實測 04:01 執行，頻道沒變也會重啟 2.4G 約 5 秒 | `tw-wifi-acs` |
 | **中華電信 MOD** | `tw_mod.c`（`tw_mod_auto` 預設 1）：看門狗每 10 秒用 BPF 收區網 DHCP 封包，Vendor Class `CHT-` 開頭就是機上盒，比對各 LAN 孔收到的廣播計數（`phy_status_port_rx_bcast()`），連續 3 次只剩同一孔就設成 MOD 專用孔（`wan_stb_x`、`wan_stb_iso=1`）並寫系統記錄；已有 MOD 孔或 AP 模式時不監聽、不會自動取消。有 MOD 孔時 WAN 設成交換器 IGMP 的固定上游孔（1f7ff9e，修正直播黑畫面）。MOD 走交換器橋接，**不經過 igmpproxy**。限制：機上盒沒重新要位址就偵測不到（要重開機上盒）。文件與紀錄不要寫機上盒的 MAC、序號、位址 | `rc/src/tw_mod.c`、`rc/src/switch_mtk_esw.c`、`www/.../tw_p_internet.js` |
 | **igmpproxy 0.3** | 兩個修補：`patches/001-…`（上游 PR #98，`internAgeRoute()` use-after-free；還沒實際觸發驗證）、`patches/002-…`（核心要求啟用路由時來源在下游介面就略過；已實測）；當掉時 watchdog 會重啟。IGMP 代理預設開 | `trunk/user/igmpproxy/patches/` |
+| **連外中斷自動重新連線** | tw-stats 每 10 秒 ping HiNet DNS、TWNIC、Cloudflare（D1 同一份）；三個都不通 `tw_wan_watch_sec` 秒（預設 30）＋TCP（1.1.1.1:443、168.95.1.1:53、8.8.8.8:53）也不通才走 rc `auto_wan_reconnect`；沒有 IPv4 至少 90 秒；退避 2／5／10／30 分鐘、恢復 10 分鐘歸零；ping 不通但 TCP 通＝只是 ping 被擋，60 秒後再確認、ping 恢復就清掉。狀態在 latency.json 的 `wan_watch`，診斷頁卡片。測試法：`iptables -I OUTPUT -o ppp0 -j DROP`（重撥時防火牆重建會清掉；要測退避就迴圈加回去） | `rc/src/tw_stats.c`、`tw_p_diag.js` |
+| **暫停上網定時恢復** | MAC 過濾封鎖清單（MFList）的時段是每週重複的，不能做一次性暫停；另記 `tw_pause_until`（「MAC=到期 Unix 秒」），watchdog 每 30 秒到期就從清單拿掉、`nvram_commit`、重新載入防火牆。**注意 commit 會把其他沒存的 nvram 一起存進去**（例如測試時暫時關掉的 kuroshio_enable） | `rc/src/tw_pause.c`、`tw_p_devices.js` |
+| **Wi-Fi 裝置明細** | httpd `tw_wl_detail`（tw_status.asp 的 `tw_wl2`）：頻段、訊號、協商速率（getRate，跟 Wi-Fi 狀態頁同一套）、已連線秒數、IoT；DBDC 依 ApIdx 分頻段 | `httpd/src/ralink.c` |
+| **不刷機測新程式** | 從 CI 的 .trx 拆 squashfs（PySquashfsImage；Git Bash 要 `MSYS_NO_PATHCONV=1`，不然 /sbin/rc 會被改成 Windows 路徑）→ `/tmp/twtest/rc`＋`ln -s rc tw-stats` 等，殺掉原本的再從 /tmp 啟動（watchdog 看程式名稱，不會再開一個）；重開機就回原版 | — |
 | **新增 nvram** | 要在 `httpd/src/variables.c` 登記（群組＋變更後要重啟的服務）、`shared/src/defaults.c` 給預設值；表單用 `sid_list` 指定群組 | HANDOFF-UI 第 3.3 節 |
 
 ---
