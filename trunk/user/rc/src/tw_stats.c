@@ -100,7 +100,8 @@ static struct {
 	int state, sec, has_ip;
 	long bad_since;			/* 單調時鐘秒；0＝目前連得出去 */
 	long ok_since;
-	long next_ok;			/* 這之前不再動作（退避） */
+	long next_ok;			/* 這之前不再重撥（退避） */
+	long icmp_until;		/* ping 不通但 TCP 通：這之前不再用 TCP 確認 */
 	int n;				/* 連續重撥次數（退避用） */
 	int total;			/* 開機以來 */
 	struct { long ts; int secs; int has_ip; } ev[WW_MAX_EV];
@@ -438,14 +439,14 @@ ww_check(int ext_ok)
 		return;
 	}
 	g_ww.sec = sec = nvram_safe_get_int("tw_wan_watch_sec", 30, 30, 600);
+	g_ww.has_ip = has_wan_ip4(0);
 	if (ext_ok) {
 		if (!g_ww.ok_since || g_ww.bad_since)
 			g_ww.ok_since = now;
 		g_ww.bad_since = 0;
 		if (g_ww.n && now - g_ww.ok_since >= WW_RESET_OK)
 			g_ww.n = 0;
-		if (g_ww.state != WW_ICMP || now >= g_ww.next_ok)
-			g_ww.state = WW_OK;
+		g_ww.state = WW_OK;
 		return;
 	}
 	if (!get_wan_ether_link_cached()) {
@@ -455,25 +456,26 @@ ww_check(int ext_ok)
 	}
 	if (!g_ww.bad_since)
 		g_ww.bad_since = now;
-	g_ww.has_ip = has_wan_ip4(0);
 	if (!g_ww.has_ip && sec < WW_NOIP_MIN)
 		sec = WW_NOIP_MIN;
+	if (g_ww.has_ip && now < g_ww.icmp_until) {
+		g_ww.state = WW_ICMP;
+		return;
+	}
 	if (now - g_ww.bad_since < sec) {
-		if (g_ww.state != WW_ICMP)
-			g_ww.state = WW_BAD;
+		g_ww.state = WW_BAD;
 		return;
 	}
 	if (now < g_ww.next_ok) {
-		if (g_ww.state != WW_ICMP)
-			g_ww.state = WW_WAIT;
+		g_ww.state = WW_WAIT;
 		return;
 	}
 	if (g_ww.has_ip && ww_tcp_any()) {
-		if (g_ww.state != WW_ICMP)
+		if (!g_ww.icmp_until || now - g_ww.icmp_until >= 3600)	/* 系統記錄最多每小時一次 */
 			logmessage("連外偵測", "ping 三個目標都沒有回應 %ld 秒，但 TCP 連得出去（可能只是 ping 被擋），不重新連線",
 				   now - g_ww.bad_since);
 		g_ww.state = WW_ICMP;
-		g_ww.next_ok = now + WW_ICMP_HOLD;
+		g_ww.icmp_until = now + WW_ICMP_HOLD;
 		return;
 	}
 
