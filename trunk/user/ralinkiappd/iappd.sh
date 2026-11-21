@@ -24,8 +24,9 @@ start() {   if grep -q 'mt76x3_ap' /proc/modules ; then
 	    sysctl -wq net.ipv4.neigh.eth2.delay_first_probe_time=1
 	    sysctl -wq net.ipv4.neigh.ra0.base_reachable_time_ms=10000
 	    sysctl -wq net.ipv4.neigh.ra0.delay_first_probe_time=1
-	    iptables -A INPUT -i br0 -p tcp --dport 3517 -j ACCEPT
-	    iptables -A INPUT -i br0 -p udp --dport 3517 -j ACCEPT 
+	    # padavan-tw：先確認沒有才加（以前每次重啟 Wi-Fi 都多加一組，每天自動選頻也會）
+	    iptables -C INPUT -i br0 -p tcp --dport 3517 -j ACCEPT 2>/dev/null || iptables -A INPUT -i br0 -p tcp --dport 3517 -j ACCEPT
+	    iptables -C INPUT -i br0 -p udp --dport 3517 -j ACCEPT 2>/dev/null || iptables -A INPUT -i br0 -p udp --dport 3517 -j ACCEPT
 }
 
 
