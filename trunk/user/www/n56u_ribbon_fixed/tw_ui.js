@@ -659,7 +659,7 @@ var TW = (function () {
 					ip4: b.wanlink_ip4_wan || '',
 					gw4: b.wanlink_gw4_wan || '',
 					ip6: b.wanlink_ip6_wan || '',
-					dns: b.wanlink_dns ? String(b.wanlink_dns).split(/\s+/).filter(Boolean) : [],
+					dns: b.wanlink_dns ? String(b.wanlink_dns).split(/<br\s*\/?>|\s+/i).filter(Boolean) : [],  // 韌體用 <br/> 分隔（舊頁面直接當 HTML 顯示）
 					uptime_s: b.wanlink_uptime || 0,
 					rx_kbps: b.rx_kbps == null ? null : b.rx_kbps,
 					tx_kbps: b.tx_kbps == null ? null : b.tx_kbps,

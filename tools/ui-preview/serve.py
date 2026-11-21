@@ -65,7 +65,7 @@ FUNC_VALUES = {
     # wanlink
     'wanlink_status': 0, 'wanlink_etherlink': "'1000 Full'", 'wanlink_uptime': 2002800,
     'wanlink_type': "'PPPoE'", 'wanlink_ip4_wan': "'114.32.10.20'", 'wanlink_gw4_wan': "'168.95.98.254'",
-    'wanlink_dns': "'168.95.1.1 168.95.192.1'", 'wanlink_mac': "'20:76:93:00:00:01'",
+    'wanlink_dns': "'168.95.192.1<br/>168.95.1.1<br/>2001:b000:168::2'", 'wanlink_mac': "'20:76:93:00:00:01'",
     'wanlink_bytes_rx': 103300000000, 'wanlink_bytes_tx': 9100000000, 'nf_conntrack_count': 3412,
     'board_boot_time': 23, 'board_flash_time': 1, 'get_usb_ports_num': 1,
 }
