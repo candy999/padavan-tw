@@ -40,7 +40,7 @@ function hm_health(r) {
 	var U = TW, g = U.guard(r);
 	if (g) { U.set('hm-health', g); return; }
 	HM.health = r;
-	var h = U.conclusion({ state: r.level, title: r.headline, sub: r.partial ? '依路由器目前能取得的資料判斷；延遲、掉包、干擾等細項之後的版本才有' : '' });
+	var h = U.conclusion({ state: r.level, title: r.headline, sub: r.partial ? '依路由器目前能取得的資料判斷（延遲與掉包在「診斷」頁）' : '' });
 	h += '<ol class="tw-path" aria-label="從裝置到網際網路的每一段">';
 	(r.segments || []).forEach(function (s) {
 		h += '<li><button type="button" class="tw-path-btn" aria-expanded="' + (HM.open == s.id ? 'true' : 'false') + '" aria-controls="hm-detail" onclick="hm_toggle(\'' + s.id + '\')">' +
@@ -104,7 +104,7 @@ function hm_wan_now(r) {
 		var st = L.current_ms > L.baseline_ms * 3 + 20 ? 'bad' : (L.current_ms > L.baseline_ms * 1.8 + 10 ? 'warn' : '');
 		h += U.metric({ label: '延遲', value: U.num(L.current_ms), unit: 'ms', state: st, ref: '平常 ' + U.num(L.baseline_ms) + ' ms' + (L.loss_pct ? '、掉包 ' + L.loss_pct + ' %' : '') });
 	} else {
-		h += U.metric({ label: '延遲', value: '--', ref: L && L.warming_up ? '資料收集中' : '之後的版本才有' });
+		h += U.metric({ label: '延遲', value: '--', ref: L && L.warming_up ? '資料收集中' : L && L.available !== false ? '連不到量測目標' : '要更新韌體才看得到' });
 	}
 	h += '</div>';
 	if (r.series && r.series.down_kbps) {
@@ -158,9 +158,10 @@ function hm_wifi(r) {
 		var row = function (id, name) {
 			var on = r.radio[id], ch = r.channel[id];
 			return { band: '<b>' + name + '</b><span class="tw-dev-sub">' + U.esc(id == '5' ? NV.wl_ssid : NV.rt_ssid) + '</span>',
-				ch: on ? (ch == '0' ? '自動' : ch) : '關閉', busy: '<span class="tw-muted">之後的版本</span>' };
+				ch: on ? (ch == '0' ? '自動' : ch) : '關閉', n: on && r.clients_band ? r.clients_band[id] + ' 台' : '--' };
 		};
-		h += U.table({ cols: [{ key: 'band', label: '頻段', cls: 'tw-cell-main' }, { key: 'ch', label: '頻道' }, { key: 'busy', label: '忙碌程度' }],
+		/* 頻道忙碌程度：閉源驅動拿不到，不做（ROADMAP D6）；改顯示各頻段裝置數 */
+		h += U.table({ cols: [{ key: 'band', label: '頻段', cls: 'tw-cell-main' }, { key: 'ch', label: '頻道' }].concat(r.clients_band ? [{ key: 'n', label: '裝置' }] : []),
 			rows: [row('2.4', '2.4 GHz'), row('5', '5 GHz')] });
 		h += '<div class="tw-small tw-muted">Wi-Fi 裝置共 ' + r.clients_total + ' 台；IoT 網路：' + (r.guest['2.4'] || r.guest['5'] ? '開啟' : '關閉') + '</div>';
 	}

@@ -1646,6 +1646,72 @@ ej_wl_auth_list(int eid, webs_t wp, int argc, char **argv)
 	return ret;
 }
 
+/*
+ * padavan-tw：裝置頁用的 Wi-Fi 裝置明細（tw_status.asp 的 tw_wl2）
+ *   "MAC":[頻段 2／5, 訊號 dBm, 下行 Mbps（路由器送給裝置）, 上行 Mbps, 這次已連線秒數, IoT 網路 0／1]
+ * 速率是驅動的協商速率，換算跟 Wi-Fi 狀態頁（print_sta_list）同一套
+ */
+#if !defined(USE_RT3352_MII) || BOARD_HAS_5G_RADIO
+static int
+tw_wl_detail_table(webs_t wp, const char *ifname, int band, int num_ss_rx, int *first)
+{
+	char data[4096];
+	struct iwreq wrq;
+	RT_802_11_MAC_TABLE *mp;
+	int i, ret = 0;
+
+	memset(data, 0, sizeof(data));
+	wrq.u.data.pointer = data;
+	wrq.u.data.length = sizeof(data);
+	wrq.u.data.flags = 0;
+	if (wl_ioctl(ifname, RTPRIV_IOCTL_GET_MAC_TABLE_STRUCT, &wrq) < 0)
+		return 0;
+	mp = (RT_802_11_MAC_TABLE *)wrq.u.data.pointer;
+	for (i = 0; i < mp->Num; i++) {
+		RT_802_11_MAC_ENTRY *e = &mp->Entry[i];
+		MACHTTRANSMIT_SETTING rx;
+		int b = band, guest;
+
+#if defined (BOARD_MT7915_DBDC)
+		b = (e->ApIdx >= 2) ? 5 : 2;	/* 0／1＝2.4G 主／訪客，2／3＝5G（print_mac_table） */
+		guest = e->ApIdx & 1;
+#elif defined (BOARD_MT7615_DBDC)
+		b = (e->ApIdx >= 2) ? 2 : 5;
+		guest = e->ApIdx & 1;
+#else
+		guest = (e->ApIdx != 0);
+#endif
+		bzero(&rx, sizeof(rx));
+		rx.word = e->LastRxRate;
+		ret += websWrite(wp, "%s\"%02X:%02X:%02X:%02X:%02X:%02X\":[%d,%d,%d,%d,%u,%d]", *first ? "" : ",",
+			e->Addr[0], e->Addr[1], e->Addr[2], e->Addr[3], e->Addr[4], e->Addr[5],
+			b, get_rssi_from_me(e, num_ss_rx), getRate(e->TxRate), getRate(rx),
+			(unsigned int)e->ConnectedTime, guest);
+		*first = 0;
+	}
+	return ret;
+}
+#endif
+
+int
+ej_tw_wl_detail(int eid, webs_t wp, int argc, char **argv)
+{
+	int first = 1, ret = 0;
+
+#if defined (BOARD_MT7615_DBDC) || defined (BOARD_MT7915_DBDC)
+	/* 兩個頻段在同一張表 */
+	ret += tw_wl_detail_table(wp, IFNAME_5G_MAIN, 5, nvram_wlan_get_int(1, "stream_rx"), &first);
+#else
+#if BOARD_HAS_5G_RADIO
+	ret += tw_wl_detail_table(wp, IFNAME_5G_MAIN, 5, nvram_wlan_get_int(1, "stream_rx"), &first);
+#endif
+#if !defined(USE_RT3352_MII)
+	ret += tw_wl_detail_table(wp, IFNAME_2G_MAIN, 2, nvram_wlan_get_int(0, "stream_rx"), &first);
+#endif
+#endif
+	return ret;
+}
+
 
 /*
  * padavan-tw：鄰近 AP 掃描結果（驅動 GSITESURVEY 的文字表）改成「逐行解析、欄位位置從表頭找」。

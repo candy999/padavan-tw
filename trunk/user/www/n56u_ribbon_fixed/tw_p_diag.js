@@ -215,7 +215,7 @@ function dg_lat() {
 
 /* ---------- 事件、測速 ---------- */
 function dg_events(r) {
-	var U = TW, g = U.guard(r, { unavailable: '事件紀錄之後的版本才有；現在可以先看系統記錄' });
+	var U = TW, g = U.guard(r, { unavailable: '路由器沒有另外整理事件紀錄（斷線自動重新連線的紀錄在下面的卡片），其他事件請看系統記錄' });
 	if (g) { U.set('dg-events', g + '<div class="tw-actions">' + U.button('系統記錄', { small: true, href: 'Main_LogStatus_Content.asp' }) + '</div>'); return; }
 	DG.events = r.events || [];
 	U.set('dg-events', U.timeline(DG.events.slice(0, 20), '最近沒有事件'));

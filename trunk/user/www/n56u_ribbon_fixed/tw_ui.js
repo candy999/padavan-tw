@@ -584,7 +584,7 @@ var TW = (function () {
 				'wanlink_ip4_man', 'wanlink_ip6_wan', 'wanlink_dns', 'wanlink_bytes_rx', 'wanlink_bytes_tx', 'nf_conntrack_count', 'kuroshio_status'];
 			var body = t + '\n;return {' + names.map(function (n) { return n + ': (typeof ' + n + ' == "function") ? ' + n + '() : null'; }).join(',') +
 				', sys: typeof tw_sys != "undefined" ? tw_sys : null, clients: typeof tw_clients != "undefined" ? tw_clients : [],' +
-				' wl: typeof tw_wl != "undefined" ? tw_wl : {}, dhcp_static: typeof tw_dhcp_static != "undefined" ? tw_dhcp_static : [],' +
+				' wl: typeof tw_wl != "undefined" ? tw_wl : {}, wl2: typeof tw_wl2 != "undefined" ? tw_wl2 : {}, dhcp_static: typeof tw_dhcp_static != "undefined" ? tw_dhcp_static : [],' +
 				' mf: typeof tw_mf != "undefined" ? tw_mf : [], nv: typeof tw_nv != "undefined" ? tw_nv : {}, netdevs: typeof netdevs != "undefined" ? netdevs : null };';
 			/* eslint-disable-next-line no-new-func */
 			var b = (new Function(body))();
@@ -694,24 +694,27 @@ var TW = (function () {
 				var mfMode = b.nv.macfilter;	/* 0 關閉、1 白名單、2 黑名單 */
 				(b.mf || []).forEach(function (r, i) { blocked[macKey(r[0])] = { index: i }; });
 				Object.keys(b.wl || {}).forEach(function (m) { wl[macKey(m)] = b.wl[m]; });
+				/* tw_wl2（韌體 2026-11-22 起）：[頻段, 訊號, 下行 Mbps, 上行 Mbps, 已連線秒數, IoT] */
+				var wl2 = {}, has2 = Object.keys(b.wl2 || {}).length > 0;
+				Object.keys(b.wl2 || {}).forEach(function (m) { wl2[macKey(m)] = b.wl2[m]; });
 				(b.clients || []).forEach(function (c) {
 					var key = macKey(c[1]), mac = macColon(c[1]);
 					if (!key || seen[key]) return;
 					seen[key] = 1;
-					var st = statics[key], rssi = wl[key], bl = mfMode == '2' ? blocked[key] : null;
+					var st = statics[key], w2 = wl2[key], rssi = w2 ? w2[1] : wl[key], bl = mfMode == '2' ? blocked[key] : null;
 					list.push({
 						mac: mac,
 						name: (st && st.name) || cleanHost(c[2]) || '',
 						hostname: cleanHost(c[2]) || '',
 						type: guessType(c[2], c[3]),
-						conn: rssi != null ? 'wifi' : 'wired_guess',	/* 現有資料分不出有線或剛離開 Wi-Fi */
-						band: null, ap: null,
-						signal_dbm: rssi != null ? rssi : null,
-						tx_rate_mbps: null,
+						conn: w2 ? (w2[5] ? 'guest' : 'wifi') : rssi != null ? 'wifi' : 'wired_guess',	/* 驅動表裡沒有的分不出有線或剛離開 Wi-Fi */
+						band: w2 ? (w2[0] == 5 ? '5' : '2.4') : null, ap: null,
+						signal_dbm: rssi != null && rssi > -127 ? rssi : null,
+						tx_rate_mbps: w2 && w2[2] > 0 ? w2[2] : null, rx_rate_mbps: w2 && w2[3] > 0 ? w2[3] : null,
 						ip: c[0] || (st && st.ip) || '',
 						static_ip: !!st, static_index: st ? st.index : null,
 						online: true,
-						since_s: null,
+						since_s: w2 ? w2[4] : null,
 						paused: !!bl, pause_index: bl ? bl.index : null
 					});
 				});
@@ -725,15 +728,20 @@ var TW = (function () {
 				};
 				Object.keys(statics).forEach(function (k) { offline(k, statics[k], mfMode == '2' ? blocked[k] : null); });
 				if (mfMode == '2') Object.keys(blocked).forEach(function (k) { offline(k, statics[k], blocked[k]); });
-				return withMeta({ devices: list, macfilter_mode: mfMode, static_count: (b.dhcp_static || []).length, pause_count: (b.mf || []).length, partial: true }, 'base');
+				return withMeta({ devices: list, macfilter_mode: mfMode, static_count: (b.dhcp_static || []).length, pause_count: (b.mf || []).length, partial: true, wifi_detail: has2 }, 'base');
 			});
 		},
 		wifi: function () {
 			return base().then(function (b) {
-				var n = Object.keys(b.wl || {}).length;
+				var n = Object.keys(b.wl || {}).length, per = null;
+				if (Object.keys(b.wl2 || {}).length) {
+					per = { '2.4': 0, '5': 0 };
+					Object.keys(b.wl2).forEach(function (m) { per[b.wl2[m][0] == 5 ? '5' : '2.4']++; });
+				}
 				return withMeta({
 					bands: null,
 					clients_total: n,
+					clients_band: per,	/* 各頻段裝置數（含 IoT 網路）；舊韌體沒有 */
 					radio: { '2.4': b.nv.rt_radio == '1', '5': b.nv.wl_radio == '1' },
 					guest: { '2.4': b.nv.rt_guest == '1', '5': b.nv.wl_guest == '1' },
 					channel: { '2.4': b.nv.rt_channel, '5': b.nv.wl_channel },

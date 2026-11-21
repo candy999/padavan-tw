@@ -192,6 +192,7 @@ extern int ej_route_table(int eid, webs_t wp, int argc, char **argv);
 extern int ej_conntrack_table(int eid, webs_t wp, int argc, char **argv);
 extern int wl_ioctl(const char *ifname, int cmd, struct iwreq *pwrq);
 extern int ej_wl_auth_list(int eid, webs_t wp, int argc, char **argv);
+extern int ej_tw_wl_detail(int eid, webs_t wp, int argc, char **argv);
 #if BOARD_HAS_5G_RADIO
 extern int ej_wl_status_5g(int eid, webs_t wp, int argc, char **argv);
 extern int ej_wl_scan_5g(int eid, webs_t wp, int argc, char **argv);

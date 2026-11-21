@@ -88,6 +88,11 @@ SCAN_5G = [('CHT-Wi-Fi-8F21_5G', 'C0:00:00:00:01:01', '36', '55'), ('ASUS_5G', '
 WL_RSSI = {
     '7C:1E:52:00:00:A4': -78, 'A4:83:E7:00:00:21': -52, '3C:06:30:00:00:35': -61, '00:1A:2B:00:00:44': -70,
 }
+# tw_wl_detail：[頻段, 訊號, 下行 Mbps, 上行 Mbps, 已連線秒數, IoT]（掃地機器人在 IoT 網路）
+WL_DETAIL = {
+    '7C:1E:52:00:00:A4': [2, -78, 39, 24, 51830, 0], 'A4:83:E7:00:00:21': [5, -52, 866, 780, 7420, 0],
+    '3C:06:30:00:00:35': [5, -61, 433, 351, 1290, 0], '00:1A:2B:00:00:44': [2, -70, 65, 58, 259200, 1],
+}
 
 
 def rstats_js():
@@ -274,6 +279,8 @@ def call_hook(name, args):
         return "function nf_conntrack_count() { return '3412';}\n"
     if name == 'get_static_client':
         return ', '.join('["%s", "%s", "%s", "%s", "0", "0"]' % (c[0], c[1], c[2], c[3]) for c in STATIC_CLIENTS)
+    if name == 'tw_wl_detail':
+        return ', '.join('"%s":[%s]' % (mac, ','.join(str(x) for x in v)) for mac, v in WL_DETAIL.items())
     if name == 'wl_auth_list':
         return ', '.join('"%s":%d' % (mac, rssi) for mac, rssi in WL_RSSI.items())
     if name == 'get_nvram_list' and args[-1] == 'MFList':

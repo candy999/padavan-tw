@@ -4895,6 +4895,7 @@ struct ej_handler ej_handlers[] =
 	{ "get_vpns_client", ej_get_vpns_client},
 #endif
 	{ "wl_auth_list", ej_wl_auth_list},
+	{ "tw_wl_detail", ej_tw_wl_detail},	/* padavan-tw：裝置頁的 Wi-Fi 明細（頻段、速率、連線時間） */
 #if BOARD_HAS_5G_RADIO
 	{ "wl_scan_5g", ej_wl_scan_5g},
 	{ "wl_bssid_5g", ej_wl_bssid_5g},

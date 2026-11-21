@@ -101,7 +101,8 @@ function dv_render() {
 	U.set('dv-list', U.table({ cols: [{ key: 'dev', label: '裝置', cls: 'tw-cell-main' }, { key: 'conn', label: '連線方式' }, { key: 'signal', label: '訊號' },
 		{ key: 'ip', label: 'IP 位址' }, { key: 'since', label: '這次上線' }, { key: 'act', label: '動作', cls: 'tw-right' }], rows: rows,
 		empty: DV.q ? '找不到符合的裝置' : '這個分類沒有裝置' }));
-	U.set('dv-note', r.partial ? '<div class="tw-partial">' + U.icon('info', 14) + '<span>頻段、連到哪台 AP、上線時間與斷線紀錄之後的版本才有。目前的資料分不出「有線」和「剛離開 Wi-Fi」，所以沒有 Wi-Fi 訊號的裝置都標成「有線，或剛離開 Wi-Fi」。</span></div>' : '');
+	U.set('dv-note', r.partial ? '<div class="tw-partial">' + U.icon('info', 14) + '<span>' + (r.wifi_detail ? '' : '頻段與上線時間要更新韌體才看得到。') +
+		'路由器分不出「有線」和「剛離開 Wi-Fi」，所以 Wi-Fi 上找不到的裝置都標成「有線，或剛離開 Wi-Fi」。斷線紀錄在每台裝置的詳情頁。</span></div>' : '');
 }
 
 /* ---------- 詳情 ---------- */
@@ -136,9 +137,9 @@ function dv_detail_render(d, r) {
 	h += U.metric({ label: '訊號強度', value: d.signal_dbm != null ? d.signal_dbm : '--', unit: d.signal_dbm != null ? 'dBm' : '', state: d.signal_dbm != null ? sg.state : '',
 		ref: d.signal_dbm != null ? '建議 -65 dBm 以上' : (d.conn == 'wired' ? '有線連線' : '') });
 	h += U.metric({ label: '連線速率（下行／上行）', value: d.tx_rate_mbps != null ? d.tx_rate_mbps + ' / ' + (d.rx_rate_mbps == null ? '--' : d.rx_rate_mbps) : '--', unit: d.tx_rate_mbps != null ? 'Mbps' : '',
-		ref: d.tx_rate_mbps == null ? '之後的版本才有' : 'Wi-Fi 協商速率，不是實際流量' });
+		ref: d.tx_rate_mbps == null ? (d.conn == 'wifi' || d.conn == 'guest' ? '要更新韌體才看得到' : '只有 Wi-Fi 裝置有') : 'Wi-Fi 協商速率，不是實際流量' });
 	h += U.metric({ label: '今天斷線', value: d.disconnects_today != null ? d.disconnects_today : '--', unit: d.disconnects_today != null ? '次' : '', state: d.disconnects_today > 2 ? 'bad' : (d.disconnects_today ? 'warn' : ''),
-		ref: d.disconnects_today == null ? '之後的版本才有' : '' });
+		ref: d.disconnects_today == null ? (d.conn == 'wifi' || d.conn == 'guest' ? '漫遊中控有紀錄才看得到' : '只有 Wi-Fi 裝置有') : '從今天 0 點算' });
 	h += U.metric({ label: '今天用量', value: d.usage_today_bytes != null ? U.fmtBytes(d.usage_today_bytes) : '--',
 		ref: d.usage_today_bytes == null ? '硬體 NAT 會繞過計數，只有 Wi-Fi 驅動統計得到' : 'Wi-Fi 驅動統計' });
 	h += '</div>';
@@ -153,6 +154,12 @@ function dv_history(r) {
 	var U = TW, g = U.guard(r, { unavailable: '訊號歷史、斷線與漫遊紀錄之後的版本才有' });
 	if (g) { ['dv-signal', 'dv-advice', 'dv-events'].forEach(function (id) { U.set(id, g); }); return; }
 	var d = DV.dev;
+	/* 今天斷線：漫遊中控的 24 小時斷線紀錄裡、今天 0 點以後的 */
+	if (d && r.disconnects) {
+		var t0 = new Date(); t0.setHours(0, 0, 0, 0);
+		var n = r.disconnects.filter(function (x) { return x.ts * 1000 >= t0.getTime(); }).length;
+		if (d.disconnects_today !== n) { d.disconnects_today = n; dv_detail_render(d); }
+	}
 	if (r.signal && r.signal.values) {
 		U.set('dv-signal', U.chart({ series: [{ values: r.signal.values, color: 'var(--text)', label: '訊號（dBm）' }], step: r.signal.step, start: r.signal.start,
 			height: 180, min: -95, max: -40, bands: [{ from: -65, to: -40, color: 'var(--good-soft)' }, { from: -75, to: -65, color: 'var(--warn-soft)' }, { from: -95, to: -75, color: 'var(--bad-soft)' }],

@@ -5,6 +5,7 @@
 var tw_sys = <% json_system_status(); %>;
 var tw_clients = [<% get_static_client(); %>];
 var tw_wl = {<% wl_auth_list(); %>};
+var tw_wl2 = {<% tw_wl_detail(); %>};
 var tw_dhcp_static = [<% get_nvram_list("LANHostConfig", "ManualDHCPList"); %>];
 var tw_mf = [<% get_nvram_list("FirewallConfig", "MFList"); %>];
 var tw_nv = {
