@@ -1,1 +1,2901 @@
-{"ok":true,"result":{"access":{"active":true,"applyTo":["dot","doh","doq","doh3","site"],"dataBytes":20984,"dataOk":true,"denied":{"byListener":{"community":0,"doh":0,"doh3":0,"doq":0,"dot":0,"plain":0,"site":0},"total":0},"failOpen":false,"generatedAt":"2026-11-11","memoryBytes":15776,"mode":"taiwan","ranges":997,"topDenied":[],"warning":null},"autoUpstreams":{"count":5,"generatedAt":"2026-11-13T20:50:57.089Z"},"cacheBytes":17479,"cacheEntries":35,"cdn":{"domains":3988,"enabled":true,"stats":{"crossRewrites":0,"ecsRewrites":0,"rewrites":0,"trials":0,"v6dropped":0}},"clock":{"buildEpoch":1794598971,"synced":true},"data":{"dir":"/usr/share/kuroshio","expectedFormat":1,"format":1,"note":null,"ok":true,"version":"3.2.0","warning":null},"doh3Provider":null,"dohMode":null,"errors":{"count":0,"recent":[]},"filter":{"byCategory":{"ads":153202,"malware":210918,"telemetry":7684},"complex":269,"complexDropped":0,"custom":210,"customByCategory":{"ads":9,"custom":122,"malware":0,"telemetry":79},"domains":371743,"errors":[],"lists":371804,"maxComplex":20000,"maxDomains":10000000,"maxUnindexed":1000,"memoryBytes":3429093,"notice":null,"skipped":9645,"sources":[{"category":"malware","complexDropped":0,"hits":0,"name":"FutaGuard TW165（台灣 165 反詐騙）","protect":true,"rules":25205,"status":"loaded","unindexedDropped":0},{"category":"malware","complexDropped":0,"hits":0,"name":"FutaGuard TWNIC-RPZ（台灣網路資訊中心停止解析）","protect":true,"rules":98,"status":"loaded","unindexedDropped":0},{"category":"malware","complexDropped":0,"hits":0,"name":"HaGeZi TIF 精簡版（威脅情資）","protect":true,"rules":186005,"status":"loaded","unindexedDropped":0},{"category":"ads","complexDropped":0,"hits":0,"name":"FutaGuard LowTechHost（台灣廣告）","protect":false,"rules":655,"status":"loaded","unindexedDropped":0},{"category":"ads","complexDropped":0,"hits":14,"name":"CHN: anti-AD","protect":false,"rules":101072,"status":"loaded","unindexedDropped":0},{"category":"ads","complexDropped":0,"hits":0,"name":"EasyList China","protect":false,"rules":6015,"status":"loaded","unindexedDropped":0},{"category":"ads","complexDropped":0,"hits":0,"name":"OISD small","protect":false,"rules":62481,"status":"loaded","unindexedDropped":0},{"category":"ads","complexDropped":0,"hits":0,"name":"HaGeZi Light","protect":false,"rules":89754,"status":"loaded","unindexedDropped":0},{"category":"telemetry","complexDropped":0,"hits":0,"name":"a-dove-is-dumb（Adobe 遙測）","protect":false,"rules":7608,"status":"loaded","unindexedDropped":0},{"category":"telemetry","complexDropped":0,"hits":0,"name":"blocklistproject smart-tv（電視遙測）","protect":false,"rules":77,"status":"loaded","unindexedDropped":0}],"unindexed":0,"unindexedDropped":0,"unloaded":[],"updatedAt":1794611243000},"jobs":{"config":{"cdn-pool":{"at":["05:30"],"enabled":true,"runIfMissing":"state/cdn/pools.json","startDelaySec":120,"timeoutMin":60},"cdn-ranges":{"at":["03:10"],"enabled":true,"runIfMissing":"state/cdn/ranges/.done","startDelaySec":30,"timeoutMin":20,"weekdays":[0]},"cdn-scan":{"at":["03:20"],"enabled":true,"startDelaySec":60,"timeoutMin":240,"weekdays":[0]},"dns-benchmark":{"at":["04:10"],"enabled":true,"runIfMissing":"state/upstreams.json","startDelaySec":300,"timeoutMin":150},"tw-ip":{"at":"00:50","deadlineHours":72,"enabled":true,"jitterDays":27,"jitterMin":180,"maxFailures":6,"maxLoadPerCore":2,"maxMemKB":2048,"minAgeDays":20,"monthDays":[1],"pauseSec":[5,30],"retrySec":300,"startDelaySec":900,"timeoutMin":120}},"detail":{"tw-ip":{"eta":null,"lastEnd":null,"lastResult":"","lastSuccess":null,"listDate":"2026-11-11","peakMemKB":0,"progress":"","reason":"","resumeAt":null,"source":"公版","startedAt":null,"state":"idle","step":{"done":0,"phase":"","total":0},"text":""}},"nextRun":{"cdn-pool":1794691800000,"cdn-ranges":1794683400000,"cdn-scan":1794684000000,"dns-benchmark":1794687000000,"tw-ip":1797190560000},"queue":[{"name":"dns-benchmark","reason":"補跑（上次成功 無紀錄）"}],"running":{"name":"cdn-pool","pid":1092,"reason":"首次執行（缺少 state/cdn/pools.json）","startedAt":1794611904794},"state":{"cdn-pool":{"lastStart":1794611904794,"reason":"首次執行（缺少 state/cdn/pools.json）"},"cdn-ranges":{"lastCode":0,"lastEnd":1794610982500,"lastOkEnd":1794610982500,"lastStart":1794610974715,"reason":"首次執行（缺少 state/cdn/ranges/.done）"},"cdn-scan":{"lastCode":0,"lastEnd":1794611904793,"lastOkEnd":1794611904793,"lastStart":1794611284937,"reason":"補跑（上次成功 無紀錄）"},"tw-ip":{"seed":8480679091561824013}}},"listeners":{"ddr":false,"doh":null,"doh3":null,"doq":null,"dot":null},"listenersDetail":[],"memory":{"availKB":329452,"enabled":true,"events":[],"floor":false,"freedBytes":0,"freedTotalBytes":0,"growth":true,"headroomKB":292588,"lastChange":null,"marginKB":18432,"nextRestoreAt":null,"pollSec":30,"protectedSuspended":false,"psi":null,"reserveAuto":true,"reserveHow":"自動：max(16 MB, 實體記憶體 5%, min_free_kbytes 12288 KB × 3)","reserveKB":36864,"rssKB":24028,"shed":[],"since":1794611216000,"sizes":{"cacheConfiguredMax":100000,"cacheEntries":35,"cacheMax":100000,"cdnInRam":3988,"cdnOnDiskOnly":0,"filterListRules":371804,"filterListsBytes":3417801,"filterListsUnloaded":0},"state":"comfortable","stateLabel":"寬裕","totalKB":448168,"waiting":null},"mode":"cmd","ownIp":null,"stats":{"today":{"blocked":203,"blockedAds":203,"blockedCustom":0,"blockedMalware":0,"blockedTelemetry":0,"cdn":{"akamai":77,"azure":3,"cloudflare":102,"fastly":12,"google":8,"line":2,"microsoft":38},"cdnRewrite":4,"cdnServed":242,"cross":{},"crossRewrite":0,"date":"2026-11-14","ecsRewrite":4,"hit":867,"hitRate":83.0,"latency":{"hit":{"n":867,"p50":0.5,"p95":0.5},"miss":{"n":177,"p50":10.0,"p95":1000.0}},"local":2533,"miss":177,"prefetch":676,"query":1207,"route":{"akamai":{"abroad":4,"acc":4,"miss":0,"n":4,"saved":297.0,"savedN":4},"azure":{"abroad":2,"acc":0,"miss":2,"n":2,"saved":0.0,"savedN":0},"cloudflare":{"abroad":0,"acc":0,"miss":0,"n":95,"saved":0.0,"savedN":0}},"servfail":0,"stale":598},"topBlocked":[{"count":6,"name":"google.com"},{"count":4,"name":"youtube.com"}],"topClients":[{"count":73,"name":"facebook.com"}],"topDomains":[{"count":12,"name":"line.me"},{"count":10,"name":"apple.com"},{"count":6,"name":"microsoft.com"},{"count":4,"name":"netflix.com"},{"count":4,"name":"instagram.com"},{"count":4,"name":"shopee.tw"},{"count":3,"name":"yahoo.com"},{"count":2,"name":"pchome.com.tw"},{"count":2,"name":"cloudflare.com"},{"count":2,"name":"amazonaws.com"},{"count":2,"name":"github.com"},{"count":2,"name":"wikipedia.org"},{"count":2,"name":"ptt.cc"},{"count":1,"name":"momoshop.com.tw"},{"count":1,"name":"gamer.com.tw"},{"count":1,"name":"dcard.tw"},{"count":1,"name":"twitch.tv"},{"count":1,"name":"spotify.com"},{"count":1,"name":"icloud.com"},{"count":1,"name":"googlevideo.com"}],"uptimeSec":840},"system":{"aes":false,"arch":"mips","cores":4,"memAvailableMB":321,"memTotalMB":437,"memory":{"availKB":329452,"enabled":true,"events":[],"floor":false,"freedBytes":0,"freedTotalBytes":0,"growth":true,"headroomKB":292588,"lastChange":null,"marginKB":18432,"nextRestoreAt":null,"pollSec":30,"protectedSuspended":false,"psi":null,"reserveAuto":true,"reserveHow":"自動：max(16 MB, 實體記憶體 5%, min_free_kbytes 12288 KB × 3)","reserveKB":36864,"rssKB":24028,"shed":[],"since":1794611216000,"sizes":{"cacheConfiguredMax":100000,"cacheEntries":35,"cacheMax":100000,"cdnInRam":3988,"cdnOnDiskOnly":0,"filterListRules":371804,"filterListsBytes":3417801,"filterListsUnloaded":0},"state":"comfortable","stateLabel":"寬裕","totalKB":448168,"waiting":null},"persist":{"bytesToday":0,"bytesYesterday":0,"class":"flash","dailyBudgetKB":4096,"deferred":0,"dir":"/media/kuroshio/kuroshio/state","effectiveIntervalMin":1440,"estimatedDailyBytes":0,"files":{"cdn/domains/256-000.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611106000,"pendingSince":null,"size":2584},"cdn/domains/256-001.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611106000,"pendingSince":null,"size":1964},"cdn/domains/256-002.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611106000,"pendingSince":null,"size":2351},"cdn/domains/256-003.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611106000,"pendingSince":null,"size":2458},"cdn/domains/256-004.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611106000,"pendingSince":null,"size":2881},"cdn/domains/256-005.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611106000,"pendingSince":null,"size":1895},"cdn/domains/256-006.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611106000,"pendingSince":null,"size":3396},"cdn/domains/256-007.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611106000,"pendingSince":null,"size":2243},"cdn/domains/256-008.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611106000,"pendingSince":null,"size":2755},"cdn/domains/256-009.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611106000,"pendingSince":null,"size":2567},"cdn/domains/256-010.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611106000,"pendingSince":null,"size":3320},"cdn/domains/256-011.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611106000,"pendingSince":null,"size":2048},"cdn/domains/256-012.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611106000,"pendingSince":null,"size":3162},"cdn/domains/256-013.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611106000,"pendingSince":null,"size":1411},"cdn/domains/256-014.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611106000,"pendingSince":null,"size":2460},"cdn/domains/256-015.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611106000,"pendingSince":null,"size":2625},"cdn/domains/256-016.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611106000,"pendingSince":null,"size":1549},"cdn/domains/256-017.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611106000,"pendingSince":null,"size":2476},"cdn/domains/256-018.json":{"compressed":true,"countersOnly":false,"lastWrite":1794611106000,"pendingSince":1794611524000,"size":2424},"cdn/domains/256-019.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611106000,"pendingSince":null,"size":3494},"cdn/domains/256-020.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611106000,"pendingSince":null,"size":2731},"cdn/domains/256-021.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611106000,"pendingSince":null,"size":1641},"cdn/domains/256-022.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611106000,"pendingSince":null,"size":3060},"cdn/domains/256-023.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611106000,"pendingSince":null,"size":1946},"cdn/domains/256-024.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611106000,"pendingSince":null,"size":2826},"cdn/domains/256-025.json":{"compressed":true,"countersOnly":false,"lastWrite":1794611106000,"pendingSince":1794611524000,"size":1994},"cdn/domains/256-026.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611106000,"pendingSince":null,"size":1750},"cdn/domains/256-027.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611106000,"pendingSince":null,"size":2538},"cdn/domains/256-028.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611106000,"pendingSince":null,"size":2420},"cdn/domains/256-029.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611106000,"pendingSince":null,"size":2202},"cdn/domains/256-030.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611106000,"pendingSince":null,"size":1885},"cdn/domains/256-031.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611106000,"pendingSince":null,"size":2372},"cdn/domains/256-032.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611106000,"pendingSince":null,"size":1776},"cdn/domains/256-033.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611106000,"pendingSince":null,"size":1804},"cdn/domains/256-034.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611106000,"pendingSince":null,"size":2117},"cdn/domains/256-035.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611106000,"pendingSince":null,"size":2474},"cdn/domains/256-036.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611106000,"pendingSince":null,"size":2404},"cdn/domains/256-037.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611106000,"pendingSince":null,"size":2392},"cdn/domains/256-038.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611106000,"pendingSince":null,"size":2655},"cdn/domains/256-039.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611106000,"pendingSince":null,"size":1622},"cdn/domains/256-040.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":1972},"cdn/domains/256-041.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":2041},"cdn/domains/256-042.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":3101},"cdn/domains/256-043.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":2043},"cdn/domains/256-044.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":2358},"cdn/domains/256-045.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":1639},"cdn/domains/256-046.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":2208},"cdn/domains/256-047.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":2385},"cdn/domains/256-048.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":2530},"cdn/domains/256-049.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":2058},"cdn/domains/256-050.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":3141},"cdn/domains/256-051.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":1543},"cdn/domains/256-052.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":2220},"cdn/domains/256-053.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":2856},"cdn/domains/256-054.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":2728},"cdn/domains/256-055.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":2596},"cdn/domains/256-056.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":2142},"cdn/domains/256-057.json":{"compressed":true,"countersOnly":false,"lastWrite":1794611107000,"pendingSince":1794611524000,"size":2079},"cdn/domains/256-058.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":3189},"cdn/domains/256-059.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":2120},"cdn/domains/256-060.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":3372},"cdn/domains/256-061.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":1945},"cdn/domains/256-062.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":1844},"cdn/domains/256-063.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":1549},"cdn/domains/256-064.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":2011},"cdn/domains/256-065.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":2102},"cdn/domains/256-066.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":3007},"cdn/domains/256-067.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":3013},"cdn/domains/256-068.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":2533},"cdn/domains/256-069.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":3238},"cdn/domains/256-070.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":2590},"cdn/domains/256-071.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":3559},"cdn/domains/256-072.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":1674},"cdn/domains/256-073.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":2003},"cdn/domains/256-074.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":1898},"cdn/domains/256-075.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":1534},"cdn/domains/256-076.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":2772},"cdn/domains/256-077.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":2122},"cdn/domains/256-078.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":1714},"cdn/domains/256-079.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":1672},"cdn/domains/256-080.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":2577},"cdn/domains/256-081.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":2593},"cdn/domains/256-082.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":2189},"cdn/domains/256-083.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":2012},"cdn/domains/256-084.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":2633},"cdn/domains/256-085.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":2507},"cdn/domains/256-086.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":2845},"cdn/domains/256-087.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":2696},"cdn/domains/256-088.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":2159},"cdn/domains/256-089.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":2711},"cdn/domains/256-090.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":1805},"cdn/domains/256-091.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":2184},"cdn/domains/256-092.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":2663},"cdn/domains/256-093.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":3072},"cdn/domains/256-094.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":2126},"cdn/domains/256-095.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":2175},"cdn/domains/256-096.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611107000,"pendingSince":null,"size":2774},"cdn/domains/256-097.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":1751},"cdn/domains/256-098.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":1793},"cdn/domains/256-099.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":2371},"cdn/domains/256-100.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":2608},"cdn/domains/256-101.json":{"compressed":true,"countersOnly":false,"lastWrite":1794611108000,"pendingSince":1794611824000,"size":2069},"cdn/domains/256-102.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":2199},"cdn/domains/256-103.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":2621},"cdn/domains/256-104.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":3442},"cdn/domains/256-105.json":{"compressed":true,"countersOnly":false,"lastWrite":1794611108000,"pendingSince":1794611824000,"size":2615},"cdn/domains/256-106.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":3023},"cdn/domains/256-107.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":3147},"cdn/domains/256-108.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":2703},"cdn/domains/256-109.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":2755},"cdn/domains/256-110.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":2052},"cdn/domains/256-111.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":1905},"cdn/domains/256-112.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":1902},"cdn/domains/256-113.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":2162},"cdn/domains/256-114.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":1799},"cdn/domains/256-115.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":2209},"cdn/domains/256-116.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":1957},"cdn/domains/256-117.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":2126},"cdn/domains/256-118.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":2239},"cdn/domains/256-119.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":3238},"cdn/domains/256-120.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":2427},"cdn/domains/256-121.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":2244},"cdn/domains/256-122.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":2376},"cdn/domains/256-123.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":2403},"cdn/domains/256-124.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":2188},"cdn/domains/256-125.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611167000,"pendingSince":null,"size":2785},"cdn/domains/256-126.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":2899},"cdn/domains/256-127.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":2165},"cdn/domains/256-128.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":1801},"cdn/domains/256-129.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":2446},"cdn/domains/256-130.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":2272},"cdn/domains/256-131.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":1787},"cdn/domains/256-132.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":3022},"cdn/domains/256-133.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":2798},"cdn/domains/256-134.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":3076},"cdn/domains/256-135.json":{"compressed":true,"countersOnly":false,"lastWrite":1794611108000,"pendingSince":1794611524000,"size":2089},"cdn/domains/256-136.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":1987},"cdn/domains/256-137.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":2172},"cdn/domains/256-138.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":2283},"cdn/domains/256-139.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":3323},"cdn/domains/256-140.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":2824},"cdn/domains/256-141.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":1477},"cdn/domains/256-142.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":3141},"cdn/domains/256-143.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":2835},"cdn/domains/256-144.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":2617},"cdn/domains/256-145.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":2347},"cdn/domains/256-146.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":2073},"cdn/domains/256-147.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":1868},"cdn/domains/256-148.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":2344},"cdn/domains/256-149.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":3651},"cdn/domains/256-150.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":2373},"cdn/domains/256-151.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":1990},"cdn/domains/256-152.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":2352},"cdn/domains/256-153.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":1990},"cdn/domains/256-154.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611108000,"pendingSince":null,"size":2826},"cdn/domains/256-155.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":2757},"cdn/domains/256-156.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":1312},"cdn/domains/256-157.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":3573},"cdn/domains/256-158.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":2744},"cdn/domains/256-159.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":3516},"cdn/domains/256-160.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":2062},"cdn/domains/256-161.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":1588},"cdn/domains/256-162.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":1999},"cdn/domains/256-163.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":2245},"cdn/domains/256-164.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":2538},"cdn/domains/256-165.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":1814},"cdn/domains/256-166.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":1505},"cdn/domains/256-167.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":2153},"cdn/domains/256-168.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":2512},"cdn/domains/256-169.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":2323},"cdn/domains/256-170.json":{"compressed":true,"countersOnly":false,"lastWrite":1794611109000,"pendingSince":1794611824000,"size":2581},"cdn/domains/256-171.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":2637},"cdn/domains/256-172.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":2264},"cdn/domains/256-173.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":836},"cdn/domains/256-174.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":2679},"cdn/domains/256-175.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":2431},"cdn/domains/256-176.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":3241},"cdn/domains/256-177.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":2619},"cdn/domains/256-178.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":2206},"cdn/domains/256-179.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":1904},"cdn/domains/256-180.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":1698},"cdn/domains/256-181.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":2822},"cdn/domains/256-182.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":2498},"cdn/domains/256-183.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":2702},"cdn/domains/256-184.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":2803},"cdn/domains/256-185.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":2738},"cdn/domains/256-186.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":2246},"cdn/domains/256-187.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":2498},"cdn/domains/256-188.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":3562},"cdn/domains/256-189.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":2559},"cdn/domains/256-190.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":1504},"cdn/domains/256-191.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":2487},"cdn/domains/256-192.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":3394},"cdn/domains/256-193.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":1469},"cdn/domains/256-194.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":2513},"cdn/domains/256-195.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":2221},"cdn/domains/256-196.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":2601},"cdn/domains/256-197.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":2171},"cdn/domains/256-198.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":1551},"cdn/domains/256-199.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":2190},"cdn/domains/256-200.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":1958},"cdn/domains/256-201.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":1769},"cdn/domains/256-202.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":2567},"cdn/domains/256-203.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":3413},"cdn/domains/256-204.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":1925},"cdn/domains/256-205.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":2786},"cdn/domains/256-206.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":2295},"cdn/domains/256-207.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":3252},"cdn/domains/256-208.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":1839},"cdn/domains/256-209.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":1542},"cdn/domains/256-210.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":2601},"cdn/domains/256-211.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":3078},"cdn/domains/256-212.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":2386},"cdn/domains/256-213.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611109000,"pendingSince":null,"size":2933},"cdn/domains/256-214.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611110000,"pendingSince":null,"size":2469},"cdn/domains/256-215.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611110000,"pendingSince":null,"size":2664},"cdn/domains/256-216.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611110000,"pendingSince":null,"size":2114},"cdn/domains/256-217.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611110000,"pendingSince":null,"size":2947},"cdn/domains/256-218.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611110000,"pendingSince":null,"size":1818},"cdn/domains/256-219.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611110000,"pendingSince":null,"size":2211},"cdn/domains/256-220.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611110000,"pendingSince":null,"size":2925},"cdn/domains/256-221.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611110000,"pendingSince":null,"size":1878},"cdn/domains/256-222.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611110000,"pendingSince":null,"size":2853},"cdn/domains/256-223.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611110000,"pendingSince":null,"size":3065},"cdn/domains/256-224.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611110000,"pendingSince":null,"size":2553},"cdn/domains/256-225.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611110000,"pendingSince":null,"size":2289},"cdn/domains/256-226.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611110000,"pendingSince":null,"size":2186},"cdn/domains/256-227.json":{"compressed":true,"countersOnly":false,"lastWrite":1794611110000,"pendingSince":1794611824000,"size":2090},"cdn/domains/256-228.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611110000,"pendingSince":null,"size":2841},"cdn/domains/256-229.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611110000,"pendingSince":null,"size":1848},"cdn/domains/256-230.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611110000,"pendingSince":null,"size":2714},"cdn/domains/256-231.json":{"compressed":true,"countersOnly":false,"lastWrite":1794611110000,"pendingSince":1794611524000,"size":3243},"cdn/domains/256-232.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611110000,"pendingSince":null,"size":2842},"cdn/domains/256-233.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611110000,"pendingSince":null,"size":2994},"cdn/domains/256-234.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611110000,"pendingSince":null,"size":2249},"cdn/domains/256-235.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611110000,"pendingSince":null,"size":2776},"cdn/domains/256-236.json":{"compressed":true,"countersOnly":true,"lastWrite":1794611110000,"pendingSince":1794611524000,"size":2387},"cdn/domains/256-237.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611110000,"pendingSince":null,"size":2314},"cdn/domains/256-238.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611110000,"pendingSince":null,"size":2242},"cdn/domains/256-239.json":{"compressed":true,"countersOnly":false,"lastWrite":1794611110000,"pendingSince":1794611524000,"size":2163},"cdn/domains/256-240.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611110000,"pendingSince":null,"size":2582},"cdn/domains/256-241.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611110000,"pendingSince":null,"size":2857},"cdn/domains/256-242.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611110000,"pendingSince":null,"size":2208},"cdn/domains/256-243.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611110000,"pendingSince":null,"size":2070},"cdn/domains/256-244.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611110000,"pendingSince":null,"size":1631},"cdn/domains/256-245.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611110000,"pendingSince":null,"size":1854},"cdn/domains/256-246.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611110000,"pendingSince":null,"size":2667},"cdn/domains/256-247.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611110000,"pendingSince":null,"size":2159},"cdn/domains/256-248.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611110000,"pendingSince":null,"size":2378},"cdn/domains/256-249.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611110000,"pendingSince":null,"size":2110},"cdn/domains/256-250.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611110000,"pendingSince":null,"size":2071},"cdn/domains/256-251.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611110000,"pendingSince":null,"size":2903},"cdn/domains/256-252.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611110000,"pendingSince":null,"size":2340},"cdn/domains/256-253.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611110000,"pendingSince":null,"size":2586},"cdn/domains/256-254.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611110000,"pendingSince":null,"size":2350},"cdn/domains/256-255.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611110000,"pendingSince":null,"size":2609},"cdn/domains/manifest.json":{"compressed":false,"countersOnly":null,"lastWrite":1794611120000,"pendingSince":null,"size":58},"cdn/harvest.json":{"compressed":true,"countersOnly":null,"lastWrite":1794610942000,"pendingSince":null,"size":208},"cdn/ip-zone.json":{"compressed":true,"countersOnly":null,"lastWrite":1794611110000,"pendingSince":null,"size":915},"cdn/pools.json":{"compressed":true,"countersOnly":false,"lastWrite":1794611110000,"pendingSince":1794611524000,"size":8942},"cdn/v6-nodes.json":{"compressed":true,"countersOnly":false,"lastWrite":1794610941000,"pendingSince":1794611524000,"size":109804},"filter-hits.json":{"compressed":false,"countersOnly":true,"lastWrite":1794611126000,"pendingSince":1794611524000,"size":353},"filter-lists/index.json":{"compressed":false,"countersOnly":null,"lastWrite":1794611120000,"pendingSince":null,"size":1883},"hot-names.json":{"compressed":false,"countersOnly":false,"lastWrite":1794611167000,"pendingSince":1794611824000,"size":60},"jobs.json":{"compressed":false,"countersOnly":false,"lastWrite":1794611120000,"pendingSince":1794611284000,"size":356},"stats.json":{"compressed":false,"countersOnly":false,"lastWrite":1794611167000,"pendingSince":1794611524000,"size":4255}},"forcedByAge":0,"freeBytes":3620864,"freedBytes":0,"intervalMin":360,"lowSpace":false,"maxAgeHours":24.0,"minFreeBytes":1048576,"oldestUnsavedSec":780,"pending":17,"skipped":0,"space":{"deleted":[],"freeBytes":3567616,"headroomBytes":2519040,"keepingOptional":true,"marginBytes":1048576,"optionalBytes":3537481,"optionalFiles":39,"reserveAuto":true,"reserveBytes":1048576,"reserveHow":"自動（Flash）：max(1 MB, 10%, 最大待寫 × 2)","totalBytes":7864320},"storage":"flash","writesToday":0},"pressure":"normal","rssKB":24156},"uci":true,"upstreams":[{"avgMs":8.1,"fail":0,"id":"https://1dot1dot1dot1.cloudflare-dns.com/dns-query","ok":53,"paused":false,"role":"auto","type":"doh"},{"avgMs":156.9,"fail":3,"id":"https://public.dns.iij.jp/dns-query","ok":50,"paused":false,"role":"auto","type":"doh"},{"avgMs":171.1,"fail":0,"id":"https://kr-sel.doh.sb/dns-query","ok":53,"paused":false,"role":"auto","type":"doh"},{"avgMs":115.6,"fail":0,"id":"https://doh.sb/dns-query","ok":51,"paused":false,"role":"auto","type":"doh"},{"avgMs":166.5,"fail":0,"id":"https://dns.alidns.com/dns-query","ok":53,"paused":false,"role":"auto","type":"doh"},{"avgMs":null,"fail":0,"id":"udp://45.90.30.126:53","ok":0,"paused":false,"role":"fallback","type":"udp"},{"avgMs":null,"fail":0,"id":"udp://1.0.0.2:53","ok":0,"paused":false,"role":"fallback","type":"udp"},{"avgMs":null,"fail":0,"id":"udp://8.8.4.4:53","ok":0,"paused":false,"role":"fallback","type":"udp"}],"version":"3.2.0","warnings":[]}}
+{
+ "ok": true,
+ "result": {
+  "access": {
+   "active": true,
+   "applyTo": [
+    "dot",
+    "doh",
+    "doq",
+    "doh3",
+    "site"
+   ],
+   "dataBytes": 20984,
+   "dataOk": true,
+   "denied": {
+    "byListener": {
+     "community": 0,
+     "doh": 0,
+     "doh3": 0,
+     "doq": 0,
+     "dot": 0,
+     "plain": 0,
+     "site": 0
+    },
+    "total": 0
+   },
+   "failClosed": false,
+   "failOpen": false,
+   "generatedAt": "2026-11-11",
+   "memoryBytes": 15808,
+   "mode": "taiwan",
+   "ranges": 998,
+   "topDenied": [],
+   "warning": null
+  },
+  "api": 2,
+  "autoUpstreams": {
+   "count": 4,
+   "generatedAt": "2026-11-21T20:33:17.340Z",
+   "source": "chain"
+  },
+  "cacheBytes": 81868,
+  "cacheEntries": 148,
+  "cdn": {
+   "background": {
+    "cross": 0,
+    "deferred": 0,
+    "ecs": 0,
+    "verify": 0
+   },
+   "domains": 67522,
+   "enabled": true,
+   "lite": false,
+   "stats": {
+    "crossRewrites": 0,
+    "ecsRewrites": 0,
+    "liteCapped": 0,
+    "liteWaited": 0,
+    "rewrites": 6,
+    "trials": 1,
+    "v6dropped": 0
+   }
+  },
+  "chain": {
+   "audit": {
+    "last": null,
+    "recentSuspicious": 0,
+    "releases": 0,
+    "sampled": 7,
+    "siteInvalid": 0,
+    "suspicious": 0,
+    "unverified": 0,
+    "valid": 7
+   },
+   "backupActive": false,
+   "enabled": true,
+   "reason": null,
+   "retryAt": null,
+   "serving": {
+    "allowDownstream": true,
+    "downstreams": [],
+    "fingerprint": "0F1E-2D3C-4B5A-6978-8796-A5B4-C3D2-E1F0",
+    "nodeId": "0123456789abcdef",
+    "note": "區網裡任何會講這個協定的裝置都拿得到資料與放行；有啟用「繞過防護」清單時建議關閉 allow_downstream",
+    "probes": {
+     "count24h": 0,
+     "lastAt": null
+    },
+    "refused": {
+     "notAllowed": 0,
+     "notPrivate": 0,
+     "rate": 0
+    },
+    "share": {
+     "cacheBytes": 38141,
+     "chunks": 0,
+     "lastAt": null,
+     "ready": true,
+     "requests": 0
+    },
+    "text": "提供資料給下游黑潮：目前沒有下游連上來"
+   },
+   "shared": {
+    "enabled": true,
+    "error": null,
+    "lastSyncAt": 1795364426603,
+    "nextSyncAt": 1795385594941,
+    "objects": [
+     {
+      "at": 1795293197000,
+      "bytes": 3520,
+      "error": null,
+      "fresh": true,
+      "importedAt": 1795343354993,
+      "kind": "upstreams"
+     },
+     {
+      "at": 1795364426598,
+      "bytes": 8015,
+      "error": null,
+      "fresh": true,
+      "importedAt": 1795364426549,
+      "kind": "cdn-pools"
+     },
+     {
+      "at": 1795364426598,
+      "bytes": 5162,
+      "error": null,
+      "fresh": true,
+      "importedAt": 1795364426585,
+      "kind": "cdn-v6"
+     },
+     {
+      "at": 1795364426598,
+      "bytes": 11578,
+      "error": null,
+      "fresh": true,
+      "importedAt": 1795343355144,
+      "kind": "cdn-ranges"
+     }
+    ],
+    "ownRuns": {
+     "cdn-pool": {
+      "at": null,
+      "dueAt": 1795415749623
+     },
+     "cdn-ranges": {
+      "at": null,
+      "dueAt": 1795415749623
+     },
+     "cdn-scan": {
+      "at": null,
+      "dueAt": 1795415749623
+     },
+     "dns-benchmark": {
+      "at": null,
+      "dueAt": 1795415749623
+     }
+    },
+    "skippedJobs": [
+     "dns-benchmark",
+     "cdn-pool",
+     "cdn-scan",
+     "cdn-ranges"
+    ]
+   },
+   "state": "chained",
+   "text": "串接中：上游 10.0.0.1（黑潮 3.4.4），評測結果與 CDN 節點由上游提供",
+   "upstream": {
+    "address": "10.0.0.1",
+    "allowDownstream": true,
+    "caps": [
+     "share",
+     "reg"
+    ],
+    "depth": 2,
+    "error": null,
+    "failures": 0,
+    "fingerprint": "A1B2-C3D4-E5F6-0718-293A-4B5C-6D7E-8F90",
+    "keyChangedAt": null,
+    "lastOkAt": 1795364409924,
+    "nodeId": "0123456789abcdef",
+    "path": [
+     "fedcba9876543210"
+    ],
+    "previousFingerprint": null,
+    "proto": "udp",
+    "registered": {
+     "at": 1795364409944,
+     "expiresAt": 1795365309944,
+     "names": 4,
+     "ok": true
+    },
+    "since": 1795364396506,
+    "version": "3.4.4",
+    "via": "gateway",
+    "viaNat": false
+   }
+  },
+  "clock": {
+   "buildEpoch": 1795357109,
+   "synced": true
+  },
+  "data": {
+   "dir": "/usr/share/kuroshio",
+   "expectedFormat": 1,
+   "format": 1,
+   "note": null,
+   "ok": true,
+   "version": "3.4.4",
+   "warning": null
+  },
+  "doh3Provider": null,
+  "dohMode": null,
+  "errors": {
+   "count": 0,
+   "recent": []
+  },
+  "filter": {
+   "byCategory": {
+    "ads": 144937,
+    "malware": 232428,
+    "telemetry": 7686
+   },
+   "complex": 269,
+   "complexDropped": 0,
+   "custom": 213,
+   "customByCategory": {
+    "ads": 9,
+    "custom": 125,
+    "malware": 0,
+    "telemetry": 79
+   },
+   "domains": 384993,
+   "errors": [],
+   "heldCopies": {
+    "bytes": 3775999,
+    "count": 5
+   },
+   "lists": 385051,
+   "maxComplex": 20000,
+   "maxDomains": 10000000,
+   "maxUnindexed": 1000,
+   "memoryBytes": 3548436,
+   "notice": null,
+   "skipped": 9645,
+   "sources": [
+    {
+     "category": "malware",
+     "complexDropped": 0,
+     "hits": 2,
+     "name": "FutaGuard TW165（台灣 165 反詐騙）",
+     "protect": true,
+     "rules": 25205,
+     "status": "loaded",
+     "unindexedDropped": 0
+    },
+    {
+     "category": "malware",
+     "complexDropped": 0,
+     "hits": 0,
+     "name": "FutaGuard TWNIC-RPZ（台灣網路資訊中心停止解析）",
+     "protect": true,
+     "rules": 98,
+     "status": "loaded",
+     "unindexedDropped": 0
+    },
+    {
+     "category": "malware",
+     "complexDropped": 0,
+     "hits": 8303,
+     "name": "HaGeZi TIF 精簡版（威脅情資）",
+     "protect": true,
+     "rules": 207515,
+     "status": "loaded",
+     "unindexedDropped": 0
+    },
+    {
+     "category": "ads",
+     "complexDropped": 0,
+     "hits": 30,
+     "name": "FutaGuard LowTechHost（台灣廣告）",
+     "protect": false,
+     "rules": 660,
+     "status": "loaded",
+     "unindexedDropped": 0
+    },
+    {
+     "category": "ads",
+     "complexDropped": 0,
+     "hits": 15555,
+     "name": "CHN: anti-AD",
+     "protect": false,
+     "rules": 102176,
+     "status": "loaded",
+     "unindexedDropped": 0
+    },
+    {
+     "category": "ads",
+     "complexDropped": 0,
+     "hits": 0,
+     "name": "EasyList China",
+     "protect": false,
+     "rules": 5786,
+     "status": "loaded",
+     "unindexedDropped": 0
+    },
+    {
+     "category": "ads",
+     "complexDropped": 0,
+     "hits": 399,
+     "name": "OISD small",
+     "protect": false,
+     "rules": 62113,
+     "status": "loaded",
+     "unindexedDropped": 0
+    },
+    {
+     "category": "ads",
+     "complexDropped": 0,
+     "hits": 106,
+     "name": "HaGeZi Light",
+     "protect": false,
+     "rules": 94157,
+     "status": "loaded",
+     "unindexedDropped": 0
+    },
+    {
+     "category": "telemetry",
+     "complexDropped": 0,
+     "hits": 0,
+     "name": "a-dove-is-dumb（Adobe 遙測）",
+     "protect": false,
+     "rules": 7610,
+     "status": "loaded",
+     "unindexedDropped": 0
+    },
+    {
+     "category": "telemetry",
+     "complexDropped": 0,
+     "hits": 11,
+     "name": "blocklistproject smart-tv（電視遙測）",
+     "protect": false,
+     "rules": 77,
+     "status": "loaded",
+     "unindexedDropped": 0
+    }
+   ],
+   "unindexed": 0,
+   "unindexedDropped": 0,
+   "unloaded": [],
+   "update": {
+    "changed": null,
+    "error": null,
+    "finishedAt": null,
+    "runId": null,
+    "startedAt": null,
+    "state": "idle"
+   },
+   "updatedAt": 1795363556000
+  },
+  "jobs": {
+   "catchUpProvided": [],
+   "catchUpWaiting": [],
+   "catchUpWindow": null,
+   "config": {
+    "cdn-pool": {
+     "at": [
+      "05:30"
+     ],
+     "enabled": true,
+     "runIfMissing": "state/cdn/pools.json",
+     "startDelaySec": 120,
+     "timeoutMin": 60
+    },
+    "cdn-ranges": {
+     "at": [
+      "03:10"
+     ],
+     "enabled": true,
+     "runIfMissing": "state/cdn/ranges/.done",
+     "startDelaySec": 30,
+     "timeoutMin": 20,
+     "weekdays": [
+      0
+     ]
+    },
+    "cdn-scan": {
+     "at": [
+      "03:20"
+     ],
+     "enabled": true,
+     "startDelaySec": 60,
+     "timeoutMin": 240,
+     "weekdays": [
+      0
+     ]
+    },
+    "dns-benchmark": {
+     "at": [
+      "04:10"
+     ],
+     "enabled": true,
+     "runIfMissing": "state/upstreams.json",
+     "startDelaySec": 300,
+     "timeoutMin": 150
+    },
+    "tw-ip": {
+     "at": "00:50",
+     "deadlineHours": 72,
+     "enabled": true,
+     "jitterDays": 27,
+     "jitterMin": 180,
+     "maxFailures": 6,
+     "maxLoadPerCore": 2,
+     "maxMemKB": 2048,
+     "minAgeDays": 20,
+     "monthDays": [
+      1
+     ],
+     "pauseSec": [
+      5,
+      30
+     ],
+     "retrySec": 300,
+     "startDelaySec": 900,
+     "timeoutMin": 120
+    }
+   },
+   "detail": {
+    "tw-ip": {
+     "eta": null,
+     "lastEnd": null,
+     "lastResult": "",
+     "lastSuccess": null,
+     "listDate": "2026-11-11",
+     "peakMemKB": 0,
+     "progress": "",
+     "reason": "",
+     "resumeAt": null,
+     "source": "公版",
+     "startedAt": null,
+     "state": "idle",
+     "step": {
+      "done": 0,
+      "phase": "",
+      "total": 0
+     },
+     "text": ""
+    }
+   },
+   "nextRun": {
+    "cdn-pool": 1795383000000,
+    "cdn-ranges": 1795893000000,
+    "cdn-scan": 1795893600000,
+    "dns-benchmark": 1795378200000,
+    "tw-ip": 1797013320000
+   },
+   "queue": [],
+   "running": null,
+   "state": {
+    "cdn-pool": {
+     "lastCode": 0,
+     "lastEnd": 1795328530130,
+     "lastOkEnd": 1795328530130,
+     "lastSlot": "2026-11-21 05:30",
+     "lastStart": 1795328529775,
+     "reason": "cloudflare 節點不足"
+    },
+    "cdn-ranges": {
+     "lastCode": 0,
+     "lastEnd": 1795193291645,
+     "lastOkEnd": 1795193291645,
+     "lastStart": 1795193284066,
+     "reason": "補跑（上次成功 無紀錄）"
+    },
+    "cdn-scan": {
+     "lastCode": 0,
+     "lastEnd": 1795198909916,
+     "lastOkEnd": 1795198909916,
+     "lastStart": 1795198909915,
+     "reason": "補跑（上次成功 無紀錄）"
+    },
+    "dns-benchmark": {
+     "lastCode": 0,
+     "lastEnd": 1795314811776,
+     "lastOkEnd": 1795314811776,
+     "lastSlot": "2026-11-21 04:10",
+     "lastStart": 1795312808690,
+     "reason": "手動 (管理介面)"
+    },
+    "tw-ip": {
+     "lastCode": 0,
+     "lastEnd": 1795199931833,
+     "lastOkEnd": 1795199931833,
+     "lastStart": 1795199931832,
+     "reason": "補跑（上次成功 無紀錄）",
+     "seed": 7174326896290559471
+    }
+   }
+  },
+  "listeners": {
+   "ddr": false,
+   "doh": null,
+   "doh3": null,
+   "doq": null,
+   "dot": null
+  },
+  "listenersDetail": [],
+  "memory": {
+   "availKB": 295504,
+   "enabled": true,
+   "events": [],
+   "floor": false,
+   "freedBytes": 0,
+   "freedTotalBytes": 0,
+   "growth": true,
+   "headroomKB": 258640,
+   "holdUntil": null,
+   "jobs": {
+    "lastBenchmark": null,
+    "openConnections": 0,
+    "processPeakRssBytes": null,
+    "processRssBytes": null,
+    "rawBytes": 0,
+    "running": null
+   },
+   "lastChange": null,
+   "marginKB": 18432,
+   "nextRestoreAt": null,
+   "pollSec": 10,
+   "pressure": "normal",
+   "protectedSuspended": false,
+   "psi": null,
+   "reserveAuto": true,
+   "reserveHow": "自動：max(16 MB, min(實體記憶體 5%, 1 GB), min_free_kbytes 12288 KB × 3)",
+   "reserveKB": 36864,
+   "rssKB": 62020,
+   "shed": [],
+   "since": 1795364514000,
+   "sizes": {
+    "accountedBytes": 29974703,
+    "cacheBytes": 81868,
+    "cacheConfiguredMax": 100000,
+    "cacheEntries": 148,
+    "cacheMax": 100000,
+    "cdnBytes": 26355811,
+    "cdnInRam": 67522,
+    "cdnOnDiskOnly": 0,
+    "filterListRules": 385051,
+    "filterListsBytes": 3537024,
+    "filterListsUnloaded": 0,
+    "otherBytes": 33533777
+   },
+   "state": "comfortable",
+   "stateLabel": "寬裕",
+   "totalKB": 448168,
+   "waiting": null
+  },
+  "mode": "cmd",
+  "network": {
+   "path": {
+    "blocked": [],
+    "bootstrapViaDoh": false,
+    "checkedAt": 1795363485585,
+    "enabled": true,
+    "gateway": "10.0.0.1",
+    "interceptor": {
+     "chain": {
+      "allowDownstream": true,
+      "caps": [
+       "share",
+       "reg"
+      ],
+      "error": null,
+      "fingerprint": "A1B2-C3D4-E5F6-0718-293A-4B5C-6D7E-8F90",
+      "nodeId": "0123456789abcdef",
+      "supported": true
+     },
+     "kind": "kuroshio",
+     "version": "3.4.4"
+    },
+    "interceptorText": "閘道 10.0.0.1 或更上游的路由器上的黑潮（3.4.4）",
+    "ipv6": {
+     "mode": "auto",
+     "reason": null,
+     "route": "global",
+     "usable": true
+    },
+    "nxRewrite": [],
+    "nxVia": null,
+    "offline": false,
+    "plain": {
+     "intercepted": true,
+     "v4": {
+      "intercepted": true,
+      "tcp": true,
+      "udp": true
+     },
+     "v6": {
+      "intercepted": true,
+      "tcp": true,
+      "udp": true
+     }
+    },
+    "policy": "skip-plain",
+    "protocols": {
+     "doh": {
+      "certErrors": 0,
+      "fail": 0,
+      "lastError": null,
+      "ok": 3
+     },
+     "dot": {
+      "certErrors": 0,
+      "fail": 0,
+      "lastError": null,
+      "ok": 3
+     },
+     "quic": {
+      "certErrors": 0,
+      "fail": 0,
+      "lastError": null,
+      "ok": 3
+     }
+    },
+    "summary": "IPv6 可用，一般 DNS 被閘道 10.0.0.1 或更上游的路由器上的黑潮（3.4.4）接走",
+    "tampered": [],
+    "tlsIntercept": null,
+    "warnings": []
+   }
+  },
+  "ownIp": null,
+  "reload": {
+   "at": null,
+   "error": null,
+   "usingPrevious": false
+  },
+  "stats": {
+   "today": {
+    "backfill": 26,
+    "backfillMismatch": 0,
+    "blocked": 164,
+    "blockedAds": 164,
+    "blockedCustom": 0,
+    "blockedMalware": 0,
+    "blockedTelemetry": 0,
+    "cdn": {
+     "akamai": 53,
+     "alibaba": 160,
+     "azure": 6,
+     "cloudflare": 23,
+     "cloudfront": 10,
+     "fastly": 2,
+     "line": 3,
+     "microsoft": 6,
+     "tencent": 5
+    },
+    "cdnRewrite": 6,
+    "cdnServed": 268,
+    "chainBypass": 27,
+    "chainRetry": 0,
+    "cross": {},
+    "crossRewrite": 0,
+    "date": "2026-11-23",
+    "ecsRewrite": 0,
+    "hit": 696,
+    "hitRate": 70.1,
+    "latency": {
+     "hit": {
+      "n": 696,
+      "p50": 0.5,
+      "p95": 1.0
+     },
+     "miss": {
+      "n": 297,
+      "p50": 100.0,
+      "p95": 1000.0
+     }
+    },
+    "local": 125,
+    "miss": 297,
+    "prefetch": 277,
+    "query": 1157,
+    "route": {
+     "cloudflare": {
+      "abroad": 6,
+      "acc": 5,
+      "miss": 1,
+      "n": 6,
+      "saved": 625.0,
+      "savedN": 5
+     }
+    },
+    "servfail": 0,
+    "stale": 232
+   },
+   "topBlocked": [
+    {
+     "count": 42,
+     "name": "ads.example-adnet.com"
+    },
+    {
+     "count": 36,
+     "name": "tracker.example-metrics.net"
+    },
+    {
+     "count": 19,
+     "name": "pixel.example-ads.com"
+    },
+    {
+     "count": 11,
+     "name": "telemetry.example.com"
+    },
+    {
+     "count": 10,
+     "name": "ad.example-video.tv"
+    },
+    {
+     "count": 8,
+     "name": "stats.example-app.io"
+    },
+    {
+     "count": 6,
+     "name": "beacon.example.net"
+    },
+    {
+     "count": 4,
+     "name": "adservice.example.com"
+    },
+    {
+     "count": 4,
+     "name": "log.example-sdk.com"
+    }
+   ],
+   "topClients": [
+    {
+     "count": 977,
+     "name": "127.0.0.1"
+    }
+   ],
+   "topDomains": [
+    {
+     "count": 155,
+     "name": "www.google.com"
+    },
+    {
+     "count": 69,
+     "name": "www.youtube.com"
+    },
+    {
+     "count": 61,
+     "name": "i.ytimg.com"
+    },
+    {
+     "count": 42,
+     "name": "line.me"
+    },
+    {
+     "count": 36,
+     "name": "www.facebook.com"
+    },
+    {
+     "count": 31,
+     "name": "graph.instagram.com"
+    },
+    {
+     "count": 30,
+     "name": "tw.yahoo.com"
+    },
+    {
+     "count": 25,
+     "name": "www.pchome.com.tw"
+    },
+    {
+     "count": 19,
+     "name": "shopee.tw"
+    },
+    {
+     "count": 19,
+     "name": "www.momoshop.com.tw"
+    },
+    {
+     "count": 17,
+     "name": "www.ptt.cc"
+    },
+    {
+     "count": 17,
+     "name": "api.github.com"
+    },
+    {
+     "count": 14,
+     "name": "www.netflix.com"
+    },
+    {
+     "count": 13,
+     "name": "cdn.jsdelivr.net"
+    },
+    {
+     "count": 13,
+     "name": "www.apple.com"
+    },
+    {
+     "count": 13,
+     "name": "update.microsoft.com"
+    },
+    {
+     "count": 11,
+     "name": "dns.google"
+    },
+    {
+     "count": 11,
+     "name": "www.wikipedia.org"
+    },
+    {
+     "count": 11,
+     "name": "news.google.com"
+    },
+    {
+     "count": 11,
+     "name": "play.googleapis.com"
+    }
+   ],
+   "uptimeSec": 1049
+  },
+  "system": {
+   "aes": false,
+   "arch": "mips",
+   "cores": 4,
+   "memAvailableMB": 289,
+   "memTotalMB": 437,
+   "memory": {
+    "availKB": 295504,
+    "enabled": true,
+    "events": [],
+    "floor": false,
+    "freedBytes": 0,
+    "freedTotalBytes": 0,
+    "growth": true,
+    "headroomKB": 258640,
+    "holdUntil": null,
+    "jobs": {
+     "lastBenchmark": null,
+     "openConnections": 0,
+     "processPeakRssBytes": null,
+     "processRssBytes": null,
+     "rawBytes": 0,
+     "running": null
+    },
+    "lastChange": null,
+    "marginKB": 18432,
+    "nextRestoreAt": null,
+    "pollSec": 10,
+    "pressure": "normal",
+    "protectedSuspended": false,
+    "psi": null,
+    "reserveAuto": true,
+    "reserveHow": "自動：max(16 MB, min(實體記憶體 5%, 1 GB), min_free_kbytes 12288 KB × 3)",
+    "reserveKB": 36864,
+    "rssKB": 62020,
+    "shed": [],
+    "since": 1795364514000,
+    "sizes": {
+     "accountedBytes": 29974703,
+     "cacheBytes": 81868,
+     "cacheConfiguredMax": 100000,
+     "cacheEntries": 148,
+     "cacheMax": 100000,
+     "cdnBytes": 26355811,
+     "cdnInRam": 67522,
+     "cdnOnDiskOnly": 0,
+     "filterListRules": 385051,
+     "filterListsBytes": 3537024,
+     "filterListsUnloaded": 0,
+     "otherBytes": 33533777
+    },
+    "state": "comfortable",
+    "stateLabel": "寬裕",
+    "totalKB": 448168,
+    "waiting": null
+   },
+   "persist": {
+    "bytesToday": 0,
+    "bytesYesterday": 0,
+    "class": "flash",
+    "dailyBudgetKB": 4096,
+    "deferred": 0,
+    "dir": "/media/kuroshio/kuroshio/state",
+    "effectiveIntervalMin": 720,
+    "estimatedDailyBytes": 0,
+    "files": {
+     "cdn/domains/256-000.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324029000,
+      "pendingSince": null,
+      "size": 17456
+     },
+     "cdn/domains/256-001.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795363131000,
+      "pendingSince": null,
+      "size": 16327
+     },
+     "cdn/domains/256-002.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324030000,
+      "pendingSince": null,
+      "size": 18142
+     },
+     "cdn/domains/256-003.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324030000,
+      "pendingSince": null,
+      "size": 16756
+     },
+     "cdn/domains/256-004.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324030000,
+      "pendingSince": null,
+      "size": 19379
+     },
+     "cdn/domains/256-005.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324030000,
+      "pendingSince": null,
+      "size": 15960
+     },
+     "cdn/domains/256-006.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324030000,
+      "pendingSince": null,
+      "size": 18721
+     },
+     "cdn/domains/256-007.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324030000,
+      "pendingSince": null,
+      "size": 17419
+     },
+     "cdn/domains/256-008.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324030000,
+      "pendingSince": null,
+      "size": 16876
+     },
+     "cdn/domains/256-009.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324031000,
+      "pendingSince": null,
+      "size": 16484
+     },
+     "cdn/domains/256-010.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346133000,
+      "pendingSince": null,
+      "size": 16851
+     },
+     "cdn/domains/256-011.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346133000,
+      "pendingSince": null,
+      "size": 16889
+     },
+     "cdn/domains/256-012.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324031000,
+      "pendingSince": null,
+      "size": 16734
+     },
+     "cdn/domains/256-013.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324031000,
+      "pendingSince": null,
+      "size": 17353
+     },
+     "cdn/domains/256-014.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324031000,
+      "pendingSince": null,
+      "size": 18770
+     },
+     "cdn/domains/256-015.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346134000,
+      "pendingSince": null,
+      "size": 17442
+     },
+     "cdn/domains/256-016.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324032000,
+      "pendingSince": null,
+      "size": 16464
+     },
+     "cdn/domains/256-017.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346133000,
+      "pendingSince": null,
+      "size": 16830
+     },
+     "cdn/domains/256-018.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346134000,
+      "pendingSince": null,
+      "size": 17415
+     },
+     "cdn/domains/256-019.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346135000,
+      "pendingSince": null,
+      "size": 18275
+     },
+     "cdn/domains/256-020.json": {
+      "compressed": true,
+      "countersOnly": false,
+      "lastWrite": 1795333316000,
+      "pendingSince": 1795363776000,
+      "size": 16891
+     },
+     "cdn/domains/256-021.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324033000,
+      "pendingSince": null,
+      "size": 16162
+     },
+     "cdn/domains/256-022.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324033000,
+      "pendingSince": null,
+      "size": 18546
+     },
+     "cdn/domains/256-023.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795363126000,
+      "pendingSince": null,
+      "size": 15506
+     },
+     "cdn/domains/256-024.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795329328000,
+      "pendingSince": null,
+      "size": 17224
+     },
+     "cdn/domains/256-025.json": {
+      "compressed": true,
+      "countersOnly": false,
+      "lastWrite": 1795346134000,
+      "pendingSince": 1795364076000,
+      "size": 17570
+     },
+     "cdn/domains/256-026.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324034000,
+      "pendingSince": null,
+      "size": 17749
+     },
+     "cdn/domains/256-027.json": {
+      "compressed": true,
+      "countersOnly": false,
+      "lastWrite": 1795363127000,
+      "pendingSince": 1795363776000,
+      "size": 15998
+     },
+     "cdn/domains/256-028.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324034000,
+      "pendingSince": null,
+      "size": 18118
+     },
+     "cdn/domains/256-029.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346135000,
+      "pendingSince": null,
+      "size": 18114
+     },
+     "cdn/domains/256-030.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324034000,
+      "pendingSince": null,
+      "size": 14950
+     },
+     "cdn/domains/256-031.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324034000,
+      "pendingSince": null,
+      "size": 18095
+     },
+     "cdn/domains/256-032.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346127000,
+      "pendingSince": null,
+      "size": 15074
+     },
+     "cdn/domains/256-033.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346132000,
+      "pendingSince": null,
+      "size": 16796
+     },
+     "cdn/domains/256-034.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324035000,
+      "pendingSince": null,
+      "size": 16599
+     },
+     "cdn/domains/256-035.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324035000,
+      "pendingSince": null,
+      "size": 17171
+     },
+     "cdn/domains/256-036.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324035000,
+      "pendingSince": null,
+      "size": 18189
+     },
+     "cdn/domains/256-037.json": {
+      "compressed": true,
+      "countersOnly": false,
+      "lastWrite": 1795324035000,
+      "pendingSince": 1795363776000,
+      "size": 16782
+     },
+     "cdn/domains/256-038.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324036000,
+      "pendingSince": null,
+      "size": 17868
+     },
+     "cdn/domains/256-039.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324036000,
+      "pendingSince": null,
+      "size": 17121
+     },
+     "cdn/domains/256-040.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346129000,
+      "pendingSince": null,
+      "size": 15946
+     },
+     "cdn/domains/256-041.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795363129000,
+      "pendingSince": null,
+      "size": 16280
+     },
+     "cdn/domains/256-042.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324037000,
+      "pendingSince": null,
+      "size": 16369
+     },
+     "cdn/domains/256-043.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324037000,
+      "pendingSince": null,
+      "size": 16622
+     },
+     "cdn/domains/256-044.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324037000,
+      "pendingSince": null,
+      "size": 15608
+     },
+     "cdn/domains/256-045.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795363130000,
+      "pendingSince": null,
+      "size": 16346
+     },
+     "cdn/domains/256-046.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324037000,
+      "pendingSince": null,
+      "size": 17782
+     },
+     "cdn/domains/256-047.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346131000,
+      "pendingSince": null,
+      "size": 16575
+     },
+     "cdn/domains/256-048.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324038000,
+      "pendingSince": null,
+      "size": 17152
+     },
+     "cdn/domains/256-049.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324038000,
+      "pendingSince": null,
+      "size": 17654
+     },
+     "cdn/domains/256-050.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346134000,
+      "pendingSince": null,
+      "size": 17092
+     },
+     "cdn/domains/256-051.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324038000,
+      "pendingSince": null,
+      "size": 16545
+     },
+     "cdn/domains/256-052.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324038000,
+      "pendingSince": null,
+      "size": 16555
+     },
+     "cdn/domains/256-053.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795328905000,
+      "pendingSince": null,
+      "size": 18791
+     },
+     "cdn/domains/256-054.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324038000,
+      "pendingSince": null,
+      "size": 17699
+     },
+     "cdn/domains/256-055.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324039000,
+      "pendingSince": null,
+      "size": 17359
+     },
+     "cdn/domains/256-056.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346133000,
+      "pendingSince": null,
+      "size": 16961
+     },
+     "cdn/domains/256-057.json": {
+      "compressed": true,
+      "countersOnly": false,
+      "lastWrite": 1795328906000,
+      "pendingSince": 1795364376000,
+      "size": 19562
+     },
+     "cdn/domains/256-058.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346135000,
+      "pendingSince": null,
+      "size": 18054
+     },
+     "cdn/domains/256-059.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324039000,
+      "pendingSince": null,
+      "size": 17349
+     },
+     "cdn/domains/256-060.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324039000,
+      "pendingSince": null,
+      "size": 19297
+     },
+     "cdn/domains/256-061.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324039000,
+      "pendingSince": null,
+      "size": 14953
+     },
+     "cdn/domains/256-062.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346131000,
+      "pendingSince": null,
+      "size": 16541
+     },
+     "cdn/domains/256-063.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324040000,
+      "pendingSince": null,
+      "size": 16582
+     },
+     "cdn/domains/256-064.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324040000,
+      "pendingSince": null,
+      "size": 17534
+     },
+     "cdn/domains/256-065.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795363127000,
+      "pendingSince": null,
+      "size": 15862
+     },
+     "cdn/domains/256-066.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324040000,
+      "pendingSince": null,
+      "size": 18455
+     },
+     "cdn/domains/256-067.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346132000,
+      "pendingSince": null,
+      "size": 16735
+     },
+     "cdn/domains/256-068.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324041000,
+      "pendingSince": null,
+      "size": 16849
+     },
+     "cdn/domains/256-069.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324041000,
+      "pendingSince": null,
+      "size": 18328
+     },
+     "cdn/domains/256-070.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346135000,
+      "pendingSince": null,
+      "size": 18188
+     },
+     "cdn/domains/256-071.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324041000,
+      "pendingSince": null,
+      "size": 19827
+     },
+     "cdn/domains/256-072.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795328906000,
+      "pendingSince": null,
+      "size": 16697
+     },
+     "cdn/domains/256-073.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346128000,
+      "pendingSince": null,
+      "size": 15615
+     },
+     "cdn/domains/256-074.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324042000,
+      "pendingSince": null,
+      "size": 16612
+     },
+     "cdn/domains/256-075.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795363125000,
+      "pendingSince": null,
+      "size": 15373
+     },
+     "cdn/domains/256-076.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324042000,
+      "pendingSince": null,
+      "size": 17764
+     },
+     "cdn/domains/256-077.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324042000,
+      "pendingSince": null,
+      "size": 18321
+     },
+     "cdn/domains/256-078.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346128000,
+      "pendingSince": null,
+      "size": 15490
+     },
+     "cdn/domains/256-079.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795363130000,
+      "pendingSince": null,
+      "size": 16329
+     },
+     "cdn/domains/256-080.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324043000,
+      "pendingSince": null,
+      "size": 18871
+     },
+     "cdn/domains/256-081.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324043000,
+      "pendingSince": null,
+      "size": 18100
+     },
+     "cdn/domains/256-082.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324043000,
+      "pendingSince": null,
+      "size": 14808
+     },
+     "cdn/domains/256-083.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795328906000,
+      "pendingSince": null,
+      "size": 17546
+     },
+     "cdn/domains/256-084.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795328906000,
+      "pendingSince": null,
+      "size": 18666
+     },
+     "cdn/domains/256-085.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324044000,
+      "pendingSince": null,
+      "size": 18005
+     },
+     "cdn/domains/256-086.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346135000,
+      "pendingSince": null,
+      "size": 17898
+     },
+     "cdn/domains/256-087.json": {
+      "compressed": true,
+      "countersOnly": false,
+      "lastWrite": 1795363311000,
+      "pendingSince": 1795363776000,
+      "size": 17156
+     },
+     "cdn/domains/256-088.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324044000,
+      "pendingSince": null,
+      "size": 15539
+     },
+     "cdn/domains/256-089.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324045000,
+      "pendingSince": null,
+      "size": 17419
+     },
+     "cdn/domains/256-090.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795363129000,
+      "pendingSince": null,
+      "size": 16216
+     },
+     "cdn/domains/256-091.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324045000,
+      "pendingSince": null,
+      "size": 17859
+     },
+     "cdn/domains/256-092.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346133000,
+      "pendingSince": null,
+      "size": 16850
+     },
+     "cdn/domains/256-093.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324045000,
+      "pendingSince": null,
+      "size": 17546
+     },
+     "cdn/domains/256-094.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346133000,
+      "pendingSince": null,
+      "size": 17070
+     },
+     "cdn/domains/256-095.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346133000,
+      "pendingSince": null,
+      "size": 16793
+     },
+     "cdn/domains/256-096.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795326554000,
+      "pendingSince": null,
+      "size": 16994
+     },
+     "cdn/domains/256-097.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324046000,
+      "pendingSince": null,
+      "size": 16740
+     },
+     "cdn/domains/256-098.json": {
+      "compressed": true,
+      "countersOnly": false,
+      "lastWrite": 1795346134000,
+      "pendingSince": 1795364376000,
+      "size": 17469
+     },
+     "cdn/domains/256-099.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324047000,
+      "pendingSince": null,
+      "size": 17056
+     },
+     "cdn/domains/256-100.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795328907000,
+      "pendingSince": null,
+      "size": 17506
+     },
+     "cdn/domains/256-101.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346135000,
+      "pendingSince": null,
+      "size": 17736
+     },
+     "cdn/domains/256-102.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346128000,
+      "pendingSince": null,
+      "size": 15517
+     },
+     "cdn/domains/256-103.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795363130000,
+      "pendingSince": null,
+      "size": 16280
+     },
+     "cdn/domains/256-104.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324047000,
+      "pendingSince": null,
+      "size": 17357
+     },
+     "cdn/domains/256-105.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346134000,
+      "pendingSince": null,
+      "size": 17086
+     },
+     "cdn/domains/256-106.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795328907000,
+      "pendingSince": null,
+      "size": 15647
+     },
+     "cdn/domains/256-107.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324048000,
+      "pendingSince": null,
+      "size": 15306
+     },
+     "cdn/domains/256-108.json": {
+      "compressed": true,
+      "countersOnly": false,
+      "lastWrite": 1795346127000,
+      "pendingSince": 1795363776000,
+      "size": 15300
+     },
+     "cdn/domains/256-109.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324048000,
+      "pendingSince": null,
+      "size": 15469
+     },
+     "cdn/domains/256-110.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795328908000,
+      "pendingSince": null,
+      "size": 16229
+     },
+     "cdn/domains/256-111.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795363122000,
+      "pendingSince": null,
+      "size": 14778
+     },
+     "cdn/domains/256-112.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795328908000,
+      "pendingSince": null,
+      "size": 14976
+     },
+     "cdn/domains/256-113.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795328908000,
+      "pendingSince": null,
+      "size": 14965
+     },
+     "cdn/domains/256-114.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795363122000,
+      "pendingSince": null,
+      "size": 14820
+     },
+     "cdn/domains/256-115.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324049000,
+      "pendingSince": null,
+      "size": 16804
+     },
+     "cdn/domains/256-116.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346128000,
+      "pendingSince": null,
+      "size": 15787
+     },
+     "cdn/domains/256-117.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795328908000,
+      "pendingSince": null,
+      "size": 16503
+     },
+     "cdn/domains/256-118.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795363124000,
+      "pendingSince": null,
+      "size": 15302
+     },
+     "cdn/domains/256-119.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795363123000,
+      "pendingSince": null,
+      "size": 14867
+     },
+     "cdn/domains/256-120.json": {
+      "compressed": true,
+      "countersOnly": false,
+      "lastWrite": 1795363123000,
+      "pendingSince": 1795363776000,
+      "size": 15282
+     },
+     "cdn/domains/256-121.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346128000,
+      "pendingSince": null,
+      "size": 15483
+     },
+     "cdn/domains/256-122.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346132000,
+      "pendingSince": null,
+      "size": 16619
+     },
+     "cdn/domains/256-123.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795363121000,
+      "pendingSince": null,
+      "size": 14786
+     },
+     "cdn/domains/256-124.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324050000,
+      "pendingSince": null,
+      "size": 16814
+     },
+     "cdn/domains/256-125.json": {
+      "compressed": true,
+      "countersOnly": false,
+      "lastWrite": 1795363128000,
+      "pendingSince": 1795364376000,
+      "size": 16147
+     },
+     "cdn/domains/256-126.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795328909000,
+      "pendingSince": null,
+      "size": 16832
+     },
+     "cdn/domains/256-127.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795363121000,
+      "pendingSince": null,
+      "size": 14702
+     },
+     "cdn/domains/256-128.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324051000,
+      "pendingSince": null,
+      "size": 16085
+     },
+     "cdn/domains/256-129.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346130000,
+      "pendingSince": null,
+      "size": 16200
+     },
+     "cdn/domains/256-130.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346132000,
+      "pendingSince": null,
+      "size": 16776
+     },
+     "cdn/domains/256-131.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324051000,
+      "pendingSince": null,
+      "size": 14642
+     },
+     "cdn/domains/256-132.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324052000,
+      "pendingSince": null,
+      "size": 14993
+     },
+     "cdn/domains/256-133.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346131000,
+      "pendingSince": null,
+      "size": 16258
+     },
+     "cdn/domains/256-134.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795328909000,
+      "pendingSince": null,
+      "size": 16947
+     },
+     "cdn/domains/256-135.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795328909000,
+      "pendingSince": null,
+      "size": 14680
+     },
+     "cdn/domains/256-136.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795363121000,
+      "pendingSince": null,
+      "size": 14737
+     },
+     "cdn/domains/256-137.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324052000,
+      "pendingSince": null,
+      "size": 15426
+     },
+     "cdn/domains/256-138.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324052000,
+      "pendingSince": null,
+      "size": 14688
+     },
+     "cdn/domains/256-139.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346133000,
+      "pendingSince": null,
+      "size": 16888
+     },
+     "cdn/domains/256-140.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795363128000,
+      "pendingSince": null,
+      "size": 16233
+     },
+     "cdn/domains/256-141.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346131000,
+      "pendingSince": null,
+      "size": 16575
+     },
+     "cdn/domains/256-142.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324053000,
+      "pendingSince": null,
+      "size": 17577
+     },
+     "cdn/domains/256-143.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795363124000,
+      "pendingSince": null,
+      "size": 15331
+     },
+     "cdn/domains/256-144.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795363129000,
+      "pendingSince": null,
+      "size": 16279
+     },
+     "cdn/domains/256-145.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795363125000,
+      "pendingSince": null,
+      "size": 15455
+     },
+     "cdn/domains/256-146.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795363125000,
+      "pendingSince": null,
+      "size": 15377
+     },
+     "cdn/domains/256-147.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346131000,
+      "pendingSince": null,
+      "size": 16306
+     },
+     "cdn/domains/256-148.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324054000,
+      "pendingSince": null,
+      "size": 14892
+     },
+     "cdn/domains/256-149.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795328910000,
+      "pendingSince": null,
+      "size": 15663
+     },
+     "cdn/domains/256-150.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795363128000,
+      "pendingSince": null,
+      "size": 16130
+     },
+     "cdn/domains/256-151.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346127000,
+      "pendingSince": null,
+      "size": 15086
+     },
+     "cdn/domains/256-152.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795363123000,
+      "pendingSince": null,
+      "size": 15109
+     },
+     "cdn/domains/256-153.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346127000,
+      "pendingSince": null,
+      "size": 15113
+     },
+     "cdn/domains/256-154.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795363126000,
+      "pendingSince": null,
+      "size": 15549
+     },
+     "cdn/domains/256-155.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795328911000,
+      "pendingSince": null,
+      "size": 15623
+     },
+     "cdn/domains/256-156.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346132000,
+      "pendingSince": null,
+      "size": 16608
+     },
+     "cdn/domains/256-157.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795363123000,
+      "pendingSince": null,
+      "size": 14853
+     },
+     "cdn/domains/256-158.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795328911000,
+      "pendingSince": null,
+      "size": 15609
+     },
+     "cdn/domains/256-159.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346127000,
+      "pendingSince": null,
+      "size": 15138
+     },
+     "cdn/domains/256-160.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795363126000,
+      "pendingSince": null,
+      "size": 15762
+     },
+     "cdn/domains/256-161.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346129000,
+      "pendingSince": null,
+      "size": 16059
+     },
+     "cdn/domains/256-162.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324056000,
+      "pendingSince": null,
+      "size": 17007
+     },
+     "cdn/domains/256-163.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346131000,
+      "pendingSince": null,
+      "size": 16319
+     },
+     "cdn/domains/256-164.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346131000,
+      "pendingSince": null,
+      "size": 16560
+     },
+     "cdn/domains/256-165.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324057000,
+      "pendingSince": null,
+      "size": 17010
+     },
+     "cdn/domains/256-166.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346130000,
+      "pendingSince": null,
+      "size": 16175
+     },
+     "cdn/domains/256-167.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795363123000,
+      "pendingSince": null,
+      "size": 15018
+     },
+     "cdn/domains/256-168.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346126000,
+      "pendingSince": null,
+      "size": 14803
+     },
+     "cdn/domains/256-169.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795363123000,
+      "pendingSince": null,
+      "size": 14866
+     },
+     "cdn/domains/256-170.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795363122000,
+      "pendingSince": null,
+      "size": 14780
+     },
+     "cdn/domains/256-171.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795328913000,
+      "pendingSince": null,
+      "size": 15135
+     },
+     "cdn/domains/256-172.json": {
+      "compressed": true,
+      "countersOnly": false,
+      "lastWrite": 1795328913000,
+      "pendingSince": 1795364076000,
+      "size": 15682
+     },
+     "cdn/domains/256-173.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795328914000,
+      "pendingSince": null,
+      "size": 16218
+     },
+     "cdn/domains/256-174.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795363122000,
+      "pendingSince": null,
+      "size": 14835
+     },
+     "cdn/domains/256-175.json": {
+      "compressed": true,
+      "countersOnly": false,
+      "lastWrite": 1795328914000,
+      "pendingSince": 1795363776000,
+      "size": 15073
+     },
+     "cdn/domains/256-176.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324058000,
+      "pendingSince": null,
+      "size": 14546
+     },
+     "cdn/domains/256-177.json": {
+      "compressed": true,
+      "countersOnly": false,
+      "lastWrite": 1795328914000,
+      "pendingSince": 1795363776000,
+      "size": 14832
+     },
+     "cdn/domains/256-178.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795363121000,
+      "pendingSince": null,
+      "size": 14679
+     },
+     "cdn/domains/256-179.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324059000,
+      "pendingSince": null,
+      "size": 16570
+     },
+     "cdn/domains/256-180.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795328914000,
+      "pendingSince": null,
+      "size": 15706
+     },
+     "cdn/domains/256-181.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795324059000,
+      "pendingSince": null,
+      "size": 15171
+     },
+     "cdn/domains/256-182.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346129000,
+      "pendingSince": null,
+      "size": 16009
+     },
+     "cdn/domains/256-183.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795363128000,
+      "pendingSince": null,
+      "size": 15955
+     },
+     "cdn/domains/256-184.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346132000,
+      "pendingSince": null,
+      "size": 16730
+     },
+     "cdn/domains/256-185.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795329328000,
+      "pendingSince": null,
+      "size": 15794
+     },
+     "cdn/domains/256-186.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795328914000,
+      "pendingSince": null,
+      "size": 16460
+     },
+     "cdn/domains/256-187.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795363127000,
+      "pendingSince": null,
+      "size": 15840
+     },
+     "cdn/domains/256-188.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346132000,
+      "pendingSince": null,
+      "size": 16726
+     },
+     "cdn/domains/256-189.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346134000,
+      "pendingSince": null,
+      "size": 17247
+     },
+     "cdn/domains/256-190.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346132000,
+      "pendingSince": null,
+      "size": 16551
+     },
+     "cdn/domains/256-191.json": {
+      "compressed": true,
+      "countersOnly": false,
+      "lastWrite": 1795328915000,
+      "pendingSince": 1795363776000,
+      "size": 15421
+     },
+     "cdn/domains/256-192.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346126000,
+      "pendingSince": null,
+      "size": 14769
+     },
+     "cdn/domains/256-193.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795328915000,
+      "pendingSince": null,
+      "size": 17053
+     },
+     "cdn/domains/256-194.json": {
+      "compressed": true,
+      "countersOnly": false,
+      "lastWrite": 1795328916000,
+      "pendingSince": 1795363776000,
+      "size": 16864
+     },
+     "cdn/domains/256-195.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795328916000,
+      "pendingSince": null,
+      "size": 14581
+     },
+     "cdn/domains/256-196.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795328916000,
+      "pendingSince": null,
+      "size": 14500
+     },
+     "cdn/domains/256-197.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795328916000,
+      "pendingSince": null,
+      "size": 14542
+     },
+     "cdn/domains/256-198.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795363129000,
+      "pendingSince": null,
+      "size": 16263
+     },
+     "cdn/domains/256-199.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346129000,
+      "pendingSince": null,
+      "size": 15958
+     },
+     "cdn/domains/256-200.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795363122000,
+      "pendingSince": null,
+      "size": 14839
+     },
+     "cdn/domains/256-201.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795363124000,
+      "pendingSince": null,
+      "size": 15377
+     },
+     "cdn/domains/256-202.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346133000,
+      "pendingSince": null,
+      "size": 17203
+     },
+     "cdn/domains/256-203.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346126000,
+      "pendingSince": null,
+      "size": 14843
+     },
+     "cdn/domains/256-204.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795328918000,
+      "pendingSince": null,
+      "size": 15405
+     },
+     "cdn/domains/256-205.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346134000,
+      "pendingSince": null,
+      "size": 17286
+     },
+     "cdn/domains/256-206.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795328918000,
+      "pendingSince": null,
+      "size": 15402
+     },
+     "cdn/domains/256-207.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795363126000,
+      "pendingSince": null,
+      "size": 15711
+     },
+     "cdn/domains/256-208.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795328918000,
+      "pendingSince": null,
+      "size": 15416
+     },
+     "cdn/domains/256-209.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795328918000,
+      "pendingSince": null,
+      "size": 14970
+     },
+     "cdn/domains/256-210.json": {
+      "compressed": true,
+      "countersOnly": false,
+      "lastWrite": 1795328918000,
+      "pendingSince": 1795364076000,
+      "size": 15964
+     },
+     "cdn/domains/256-211.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795328918000,
+      "pendingSince": null,
+      "size": 15057
+     },
+     "cdn/domains/256-212.json": {
+      "compressed": true,
+      "countersOnly": false,
+      "lastWrite": 1795328919000,
+      "pendingSince": 1795363776000,
+      "size": 14853
+     },
+     "cdn/domains/256-213.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795328919000,
+      "pendingSince": null,
+      "size": 16282
+     },
+     "cdn/domains/256-214.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795328919000,
+      "pendingSince": null,
+      "size": 15762
+     },
+     "cdn/domains/256-215.json": {
+      "compressed": true,
+      "countersOnly": false,
+      "lastWrite": 1795328919000,
+      "pendingSince": 1795363776000,
+      "size": 15232
+     },
+     "cdn/domains/256-216.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795328919000,
+      "pendingSince": null,
+      "size": 14552
+     },
+     "cdn/domains/256-217.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795328919000,
+      "pendingSince": null,
+      "size": 14581
+     },
+     "cdn/domains/256-218.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795328920000,
+      "pendingSince": null,
+      "size": 16101
+     },
+     "cdn/domains/256-219.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346125000,
+      "pendingSince": null,
+      "size": 14693
+     },
+     "cdn/domains/256-220.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795328920000,
+      "pendingSince": null,
+      "size": 14430
+     },
+     "cdn/domains/256-221.json": {
+      "compressed": true,
+      "countersOnly": false,
+      "lastWrite": 1795363122000,
+      "pendingSince": 1795364376000,
+      "size": 14796
+     },
+     "cdn/domains/256-222.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346129000,
+      "pendingSince": null,
+      "size": 16036
+     },
+     "cdn/domains/256-223.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346127000,
+      "pendingSince": null,
+      "size": 15110
+     },
+     "cdn/domains/256-224.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795328921000,
+      "pendingSince": null,
+      "size": 16032
+     },
+     "cdn/domains/256-225.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795363123000,
+      "pendingSince": null,
+      "size": 14998
+     },
+     "cdn/domains/256-226.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795328921000,
+      "pendingSince": null,
+      "size": 14892
+     },
+     "cdn/domains/256-227.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795363128000,
+      "pendingSince": null,
+      "size": 16019
+     },
+     "cdn/domains/256-228.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346130000,
+      "pendingSince": null,
+      "size": 16000
+     },
+     "cdn/domains/256-229.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795363125000,
+      "pendingSince": null,
+      "size": 15378
+     },
+     "cdn/domains/256-230.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795363124000,
+      "pendingSince": null,
+      "size": 15271
+     },
+     "cdn/domains/256-231.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795328922000,
+      "pendingSince": null,
+      "size": 15185
+     },
+     "cdn/domains/256-232.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346129000,
+      "pendingSince": null,
+      "size": 15819
+     },
+     "cdn/domains/256-233.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346126000,
+      "pendingSince": null,
+      "size": 14996
+     },
+     "cdn/domains/256-234.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795363124000,
+      "pendingSince": null,
+      "size": 15329
+     },
+     "cdn/domains/256-235.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795328923000,
+      "pendingSince": null,
+      "size": 16207
+     },
+     "cdn/domains/256-236.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346129000,
+      "pendingSince": null,
+      "size": 15972
+     },
+     "cdn/domains/256-237.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795328923000,
+      "pendingSince": null,
+      "size": 16219
+     },
+     "cdn/domains/256-238.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346130000,
+      "pendingSince": null,
+      "size": 16255
+     },
+     "cdn/domains/256-239.json": {
+      "compressed": true,
+      "countersOnly": false,
+      "lastWrite": 1795346125000,
+      "pendingSince": 1795364076000,
+      "size": 14278
+     },
+     "cdn/domains/256-240.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795328924000,
+      "pendingSince": null,
+      "size": 15760
+     },
+     "cdn/domains/256-241.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795328924000,
+      "pendingSince": null,
+      "size": 15624
+     },
+     "cdn/domains/256-242.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795328924000,
+      "pendingSince": null,
+      "size": 15460
+     },
+     "cdn/domains/256-243.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795328924000,
+      "pendingSince": null,
+      "size": 14646
+     },
+     "cdn/domains/256-244.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346128000,
+      "pendingSince": null,
+      "size": 15802
+     },
+     "cdn/domains/256-245.json": {
+      "compressed": true,
+      "countersOnly": false,
+      "lastWrite": 1795346130000,
+      "pendingSince": 1795363776000,
+      "size": 16142
+     },
+     "cdn/domains/256-246.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795363127000,
+      "pendingSince": null,
+      "size": 15971
+     },
+     "cdn/domains/256-247.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795363121000,
+      "pendingSince": null,
+      "size": 14500
+     },
+     "cdn/domains/256-248.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795363122000,
+      "pendingSince": null,
+      "size": 14836
+     },
+     "cdn/domains/256-249.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346130000,
+      "pendingSince": null,
+      "size": 16213
+     },
+     "cdn/domains/256-250.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346129000,
+      "pendingSince": null,
+      "size": 15910
+     },
+     "cdn/domains/256-251.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346126000,
+      "pendingSince": null,
+      "size": 14738
+     },
+     "cdn/domains/256-252.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346130000,
+      "pendingSince": null,
+      "size": 16154
+     },
+     "cdn/domains/256-253.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795346131000,
+      "pendingSince": null,
+      "size": 16502
+     },
+     "cdn/domains/256-254.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795328926000,
+      "pendingSince": null,
+      "size": 14697
+     },
+     "cdn/domains/256-255.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795328926000,
+      "pendingSince": null,
+      "size": 14461
+     },
+     "cdn/domains/manifest.json": {
+      "compressed": false,
+      "countersOnly": null,
+      "lastWrite": 1794986954000,
+      "pendingSince": null,
+      "size": 58
+     },
+     "cdn/harvest.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795329329000,
+      "pendingSince": null,
+      "size": 4909
+     },
+     "cdn/ip-zone.json": {
+      "compressed": true,
+      "countersOnly": false,
+      "lastWrite": 1795328926000,
+      "pendingSince": 1795364076000,
+      "size": 6470
+     },
+     "cdn/pools.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795363197000,
+      "pendingSince": null,
+      "size": 4352
+     },
+     "cdn/v6-nodes.json": {
+      "compressed": true,
+      "countersOnly": null,
+      "lastWrite": 1795363311000,
+      "pendingSince": null,
+      "size": 2513
+     },
+     "chain-share.json": {
+      "compressed": false,
+      "countersOnly": false,
+      "lastWrite": 1795363197000,
+      "pendingSince": 1795364426000,
+      "size": 2844
+     },
+     "filter-hits.json": {
+      "compressed": false,
+      "countersOnly": true,
+      "lastWrite": 1795363460000,
+      "pendingSince": 1795363776000,
+      "size": 366
+     },
+     "filter-lists/index.json": {
+      "compressed": false,
+      "countersOnly": false,
+      "lastWrite": 1795363311000,
+      "pendingSince": 1795363556000,
+      "size": 2225
+     },
+     "hot-names.json": {
+      "compressed": false,
+      "countersOnly": false,
+      "lastWrite": 1795363460000,
+      "pendingSince": 1795364076000,
+      "size": 283
+     },
+     "jobs.json": {
+      "compressed": false,
+      "countersOnly": null,
+      "lastWrite": 1795328926000,
+      "pendingSince": null,
+      "size": 1012
+     },
+     "stats.json": {
+      "compressed": false,
+      "countersOnly": false,
+      "lastWrite": 1795363460000,
+      "pendingSince": 1795363776000,
+      "size": 44447
+     }
+    },
+    "forcedByAge": 0,
+    "freeBytes": 2347008,
+    "freedBytes": 0,
+    "intervalMin": 360,
+    "lowSpace": false,
+    "maxAgeHours": 24.0,
+    "minFreeBytes": 1048576,
+    "oldestUnsavedSec": 958,
+    "pending": 27,
+    "skipped": 0,
+    "space": {
+     "deleted": [],
+     "freeBytes": 2347008,
+     "headroomBytes": 1298432,
+     "keepingOptional": true,
+     "marginBytes": 1048576,
+     "optionalBytes": 1209758,
+     "optionalFiles": 33,
+     "reserveAuto": true,
+     "reserveBytes": 1048576,
+     "reserveHow": "自動（Flash）：max(1 MB, 10%, 最大待寫 × 2)",
+     "totalBytes": 7864320
+    },
+    "storage": "flash",
+    "writesToday": 0
+   },
+   "pressure": "normal",
+   "rssKB": 62088
+  },
+  "uci": true,
+  "upstreams": [
+   {
+    "avgMs": 4.5,
+    "fail": 2,
+    "id": "udp://10.0.0.1:53",
+    "ok": 29,
+    "pathBlocked": false,
+    "paused": false,
+    "reason": null,
+    "region": null,
+    "role": "chain",
+    "type": "udp",
+    "via": null
+   },
+   {
+    "avgMs": 315.4,
+    "fail": 0,
+    "id": "tls://dns.nextdns.io:853",
+    "ok": 175,
+    "pathBlocked": false,
+    "paused": false,
+    "reason": "最快",
+    "region": "TW",
+    "role": "auto",
+    "type": "dot",
+    "via": null
+   },
+   {
+    "avgMs": 120.4,
+    "fail": 0,
+    "id": "https://sg-w-p-1.nashkan.net/dns-query",
+    "ok": 53,
+    "pathBlocked": false,
+    "paused": false,
+    "reason": "覆蓋",
+    "region": "SG",
+    "role": "auto",
+    "type": "doh",
+    "via": null
+   },
+   {
+    "avgMs": null,
+    "fail": 6,
+    "id": "https://doh.funil.de/dns-query",
+    "ok": 0,
+    "pathBlocked": false,
+    "paused": false,
+    "reason": "覆蓋",
+    "region": "DE",
+    "role": "auto",
+    "type": "doh",
+    "via": null
+   },
+   {
+    "avgMs": 104.4,
+    "fail": 0,
+    "id": "https://freedns.controld.com/dns-query",
+    "ok": 73,
+    "pathBlocked": false,
+    "paused": false,
+    "reason": "覆蓋",
+    "region": "CA",
+    "role": "auto",
+    "type": "doh",
+    "via": null
+   },
+   {
+    "avgMs": null,
+    "fail": 0,
+    "id": "udp://45.90.30.126:53",
+    "ok": 0,
+    "pathBlocked": false,
+    "paused": false,
+    "reason": null,
+    "region": null,
+    "role": "fallback",
+    "type": "udp",
+    "via": "interceptor"
+   },
+   {
+    "avgMs": null,
+    "fail": 0,
+    "id": "udp://1.0.0.2:53",
+    "ok": 0,
+    "pathBlocked": false,
+    "paused": false,
+    "reason": null,
+    "region": null,
+    "role": "fallback",
+    "type": "udp",
+    "via": "interceptor"
+   },
+   {
+    "avgMs": null,
+    "fail": 0,
+    "id": "udp://8.8.4.4:53",
+    "ok": 0,
+    "pathBlocked": false,
+    "paused": false,
+    "reason": null,
+    "region": null,
+    "role": "fallback",
+    "type": "udp",
+    "via": "interceptor"
+   }
+  ],
+  "version": "3.4.4",
+  "warnings": []
+ }
+}

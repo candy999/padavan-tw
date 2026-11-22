@@ -69,7 +69,7 @@ function in_cgnat(r) {
 		h += '<div class="tw-note tw-s-bad">外面的人連不到你家：<b>連接埠轉送、WireGuard 從外面連回家都不會通</b>。要向業者申請「公網 IP」（中華電信動態 IP 本來就是公網；有線電視業者常需要另外申請）。</div>';
 	}
 	if (r.public_ip && r.public_ip != r.wan_ip) h += '<div class="tw-small tw-muted">對外看到的位址：' + U.esc(r.public_ip) + '</div>';
-	if (r.method == 'wan_ip') h += '<div class="tw-partial">' + U.icon('info', 14) + '<span>依路由器拿到的位址判斷；更準確的檢查（比對對外位址）之後的版本才有。</span></div>';
+	if (r.method == 'wan_ip') h += '<div class="tw-partial">' + U.icon('info', 14) + '<span>依路由器拿到的位址判斷（路由器不另外連到外面查詢對外位址）。</span></div>';
 	U.set('in-cgnat', h);
 }
 
@@ -188,13 +188,14 @@ function in_dns(r) {
 		'<li>加密 DNS（DoT／DoH）給手機用：' + (NV.kuro_dot == '1' || NV.kuro_doh == '1' ? '開啟' + (NV.kuro_domain ? '（' + U.esc(NV.kuro_domain) + '）' : '') : '關閉（要先設定網域）') + '</li></ul>';
 	if (r.upstreams) {
 		h += U.table({ cols: [{ key: 'n', label: '上游', cls: 'tw-cell-main' }, { key: 's', label: '狀態' }, { key: 'ms', label: '回應' }],
-			rows: r.upstreams.map(function (u) { return { n: U.esc(u.name) + '<span class="tw-dev-sub">' + U.esc(u.addr) + '</span>', s: u.ok ? U.chip('ok', '正常') : U.chip('bad', '逾時'), ms: u.ms == null ? '--' : u.ms + ' ms' }; }) });
+			rows: r.upstreams.map(function (u) { return { n: U.esc(u.name) + '<span class="tw-dev-sub">' + U.esc(u.addr) + '</span>', s: u.paused ? U.chip('warn', '暫停中') : u.ok ? U.chip('ok', '正常') : U.chip('bad', '失敗'), ms: u.ms == null ? '--' : u.ms + ' ms' }; }) });
 	}
 	if (r.cert_expiry_ts) {
 		var days = Math.round((r.cert_expiry_ts - Date.now() / 1000) / 86400);
 		h += '<div class="tw-small ' + (days < 14 ? '' : 'tw-muted') + '"' + (days < 14 ? ' style="color:var(--warn)"' : '') + '>憑證 ' + days + ' 天後到期' + (days < 14 ? '（會自動更新；如果一直沒更新，檢查 Cloudflare Token）' : '') + '</div>';
 	}
-	if (r.partial) h += '<div class="tw-partial">' + U.icon('info', 14) + '<span>查詢數、擋下數、上游狀態之後的版本才有。</span></div>';
+	if (r.partial && on) h += '<div class="tw-partial">' + U.icon('info', 14) + '<span>' + (r.running ? '黑潮 DNS 的統計暫時讀不到（可能正在重新啟動），稍後重新整理。' : '黑潮 DNS 沒有執行，沒有上游狀態。') + '</span></div>';
+	if (r.queries != null) h += '<div class="tw-small tw-muted">今天 ' + U.num(r.queries) + ' 筆查詢、擋下 ' + U.num(r.blocked) + ' 筆、換到台灣 CDN ' + U.num(r.cdn_rewrites) + ' 筆' + (r.chained ? '；跟主路由器的黑潮 DNS 串接中' : '') + '</div>';
 	h += '<div class="tw-actions">' + U.button('套用', { primary: true, onclick: 'in_dns_apply()' }) + U.button('黑潮 DNS 完整設定', { small: true, ghost: true, href: 'tw_kuroshio.asp' }) + '</div>';
 	U.set('in-dns', h);
 }

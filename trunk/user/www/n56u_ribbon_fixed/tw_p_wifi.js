@@ -225,7 +225,7 @@ function wf_neighbors(id, ab) {
 	var U = TW, s = WF.scan[id];
 	if (ab && ab.neighbors) return wf_nb_chart(id, ab.neighbors.by_channel, ab.neighbors.strongest, ab.channel, '鄰近 AP（每 30 秒更新）');
 	if (s && s.loading) return U.stateBox('loading', '掃描中，約 5 秒…');
-	if (s && s.broken) return U.stateBox('unavailable', '這個韌體的掃描結果無法正確讀取，鄰近 AP 之後的版本才看得到');
+	if (s && s.broken) return U.stateBox('unavailable', '掃描結果的格式讀不懂（驅動回報的格式跟預期不同），請重新掃描一次');
 	if (s && s.list) {
 		var by = {};
 		s.list.forEach(function (a) { by[a.ch] = (by[a.ch] || 0) + 1; });

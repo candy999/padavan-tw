@@ -319,7 +319,7 @@ var TW = (function () {
 			loading: '讀取中…',
 			empty: '沒有資料',
 			error: '讀取失敗，稍後會自動重試',
-			unavailable: '這個功能之後的版本才能使用',
+			unavailable: '這個韌體沒有提供這項資料',
 			warming: '資料收集中，約需 10 分鐘'
 		};
 		var ic = { loading: 'clock', empty: 'info', error: 'alert', unavailable: 'info', warming: 'clock' }[kind] || 'info';
@@ -752,13 +752,34 @@ var TW = (function () {
 		dns: function () {
 			return base().then(function (b) {
 				if (b.kuroshio_status == null) return withMeta({ available: false }, 'none');
-				return withMeta({
+				var o = {
 					enabled: b.nv.kuroshio_enable == '1',
 					running: b.kuroshio_status >= 1,
 					healthy: b.kuroshio_status == 2,
 					queries: null, blocked: null, cdn_rewrites: null,
 					partial: true
-				}, 'base');
+				};
+				if (!o.running) return withMeta(o, 'base');
+				/* 黑潮 DNS 自己的統計（/api/status 精簡版）：查詢、擋下、CDN 置換、上游、憑證 */
+				return kuroStatus().then(function (k) {
+					if (!k) return withMeta(o, 'base');
+					var t = (k.stats && k.stats.today) || {}, lat = t.latency || {}, ti = k.tls && k.tls.info;
+					o.queries = t.query || 0;
+					o.blocked = t.blocked || 0;
+					o.cdn_rewrites = (k.cdn && k.cdn.stats && k.cdn.stats.rewrites) != null ? k.cdn.stats.rewrites : (t.cdnRewrite || 0);
+					o.hit_pct = t.hitRate != null ? t.hitRate : null;
+					o.p50_ms = lat.hit && lat.hit.p50 != null ? lat.hit.p50 : null;
+					o.miss_p50_ms = lat.miss && lat.miss.p50 != null ? lat.miss.p50 : null;
+					o.version = k.version || null;
+					o.chained = !!(k.chain && k.chain.state == 'chained');
+					o.upstreams = (k.upstreams || []).map(function (u) {
+						var role = { pinned: '固定', auto: '自動', fallback: '備援', chain: '上游黑潮' }[u.role] || u.role || '';
+						return { name: u.id, addr: role, ok: !u.paused && (u.ok > 0 || !u.fail), ms: u.avgMs != null ? Math.round(u.avgMs) : null, paused: !!u.paused };
+					});
+					if (ti && ti.daysLeft != null) o.cert_expiry_ts = Math.round(Date.now() / 1000 + ti.daysLeft * 86400);
+					o.partial = false;
+					return withMeta(o, 'base');
+				});
 			});
 		},
 		cgnat: function () {
@@ -773,12 +794,41 @@ var TW = (function () {
 			});
 		},
 		health: function () {
-			return Promise.all([adapters.wan(), adapters.router(), adapters.wifi(), adapters.dns().catch(function () { return null; }), adapters.devices()]).then(function (a) {
-				return withMeta(healthFromBase(a[0], a[1], a[2], a[3], a[4]), 'base');
+			return Promise.all([adapters.wan(), adapters.router(), adapters.wifi(), adapters.dns().catch(function () { return null; }), adapters.devices(),
+				api('latency').catch(function () { return null; })]).then(function (a) {
+				return withMeta(healthFromBase(a[0], a[1], a[2], a[3], a[4], a[5]), 'base');
 			});
 		},
-		diag: function () { return adapters.health().then(function (h) { h.report = reportText(h); return h; }); }
+		diag: function () { return adapters.health().then(function (h) { h.report = reportText(h); return h; }); },
+		/* 事件時間軸：合併「斷線自動重新連線」（latency.json 的 wan_watch.events）與漫遊中控的漫遊／換頻段紀錄 */
+		events: function () {
+			return Promise.all([api('latency').catch(function () { return null; }), api('roam').catch(function () { return null; })]).then(function (a) {
+				var L = a[0], R = a[1], ev = [], now = Date.now() / 1000;
+				var abs = function (t) { return t < 0 ? now + t : t; };	/* 預覽的模擬資料用相對秒數 */
+				((L && L.wan_watch && L.wan_watch.events) || []).forEach(function (e) {
+					ev.push({ ts: abs(e.ts), type: 'wan', level: 'warn', text: '連不出去 ' + e.secs + ' 秒，自動重新連線' + (e.has_ip ? '' : '（當時沒有 IP）') });
+				});
+				((R && R.events) || []).forEach(function (e) {
+					var band = e.type == 'band';
+					ev.push({ ts: abs(e.ts), type: 'roam', level: 'ok', device: e.name || e.mac,
+						text: (band ? '換頻段：' : '漫遊：') + e.from + ' → ' + e.to + (e.rssi_to ? '（' + e.rssi_from + ' → ' + e.rssi_to + ' dBm）' : '') });
+				});
+				if (!L && !R) return withMeta({ available: false }, 'none');
+				ev.sort(function (x, y) { return y.ts - x.ts; });
+				return withMeta({ events: ev.filter(function (e) { return e.ts > now - 7 * 86400; }) }, 'base');
+			});
+		}
 	};
+	/* 黑潮 DNS 的 /api/status 精簡版（總覽、網際網路、遠端頁共用；25 秒內重用） */
+	var kuroCache = null;
+	function kuroStatus() {
+		if (kuroCache && Date.now() - kuroCache.t < 25000) return kuroCache.p;
+		var p = fetch('/kuroshio_api.cgi?op=api&path=%2Fapi%2Fstatus&q=lite%3D1', { credentials: 'same-origin', cache: 'no-store', headers: { 'X-TW-Request': '1' } })
+			.then(function (r) { return r.text(); }).then(function (t) { var j = JSON.parse(t); return j && j.ok !== false ? (j.result || j) : null; })
+			.catch(function () { return null; });
+		kuroCache = { t: Date.now(), p: p };
+		return p;
+	}
 	function cleanHost(h) { return String(h || '').replace(/\.lan$/i, '').replace(/^\*$/, ''); }
 	function guessType(name, t) {
 		var n = String(name || '').toLowerCase();
@@ -794,7 +844,7 @@ var TW = (function () {
 		return 'other';
 	}
 	/* 用現有資料組出健康路徑：只說得出確定的事，不能判斷的段落標「未知」 */
-	function healthFromBase(wan, router, wifi, dns, dev) {
+	function healthFromBase(wan, router, wifi, dns, dev, lat) {
 		var seg = [];
 		var weak = (dev.devices || []).filter(function (d) { return d.online && d.signal_dbm != null && d.signal_dbm < -75; });
 		var wl = (dev.devices || []).filter(function (d) { return d.online && d.conn == 'wifi'; });
@@ -805,7 +855,7 @@ var TW = (function () {
 		var radioOn = wifi.radio['2.4'] || wifi.radio['5'];
 		seg.push({ id: 'wifi', label: 'Wi-Fi', state: radioOn ? 'ok' : 'warn',
 			summary: radioOn ? wl.length + ' 台連線中' : 'Wi-Fi 已關閉',
-			evidence: '頻道：2.4G ' + (wifi.channel['2.4'] == '0' ? '自動' : wifi.channel['2.4']) + '、5G ' + (wifi.channel['5'] == '0' ? '自動' : wifi.channel['5']) + '（鄰近干擾之後的版本才看得到）',
+			evidence: '頻道：2.4G ' + (wifi.channel['2.4'] == '0' ? '自動' : wifi.channel['2.4']) + '、5G ' + (wifi.channel['5'] == '0' ? '自動' : wifi.channel['5']) + '（鄰近干擾：到 Wi-Fi 頁按「掃描附近的 Wi-Fi」）',
 			actions: [{ label: 'Wi-Fi 設定', href: 'tw_wifi.asp' }] });
 		var rs = 'ok', rsum = (router.cpu_pct == null ? '' : 'CPU ' + router.cpu_pct + ' %、') + '記憶體 ' + (router.mem_used_pct == null ? '--' : router.mem_used_pct) + ' %';
 		if (router.cpu_pct > 90 || router.mem_used_pct > 90) rs = 'warn';
@@ -816,14 +866,21 @@ var TW = (function () {
 			summary: wan.connected ? '已連線 ' + fmtDur(wan.uptime_s) : '沒有連線',
 			evidence: (wan.proto_label || '') + (wan.ip4 ? ' · ' + wan.ip4 : '') + (wan.ether ? ' · 網路線 ' + wan.ether : ''),
 			actions: wan.connected ? [] : [{ label: '檢查網際網路設定', href: 'tw_internet.asp' }] });
-		seg.push({ id: 'internet', label: '網際網路', state: wan.connected ? wan.internet : 'bad',
-			summary: wan.internet == 'ok' ? '連得到外面' : (wan.internet == 'warn' ? '偵測中或不穩定' : '連不到外面'),
-			evidence: '延遲與掉包紀錄之後的版本才有', actions: [] });
+		/* 延遲與掉包：tw-stats 每 10 秒量一次（/tw_api.asp?q=latency），門檻跟總覽的延遲卡一樣 */
+		var ist = wan.connected ? wan.internet : 'bad', iev;
+		if (lat && lat.available !== false && !lat.warming_up && lat.current_ms != null) {
+			iev = '延遲 ' + lat.current_ms + ' ms（平常 ' + lat.baseline_ms + ' ms）' + (lat.loss_pct ? '、掉包 ' + lat.loss_pct + ' %' : '、沒有掉包');
+			if (ist == 'ok' && (lat.current_ms > lat.baseline_ms * 3 + 20 || lat.loss_pct >= 5)) ist = 'warn';
+		} else iev = lat && lat.warming_up ? '延遲資料收集中' : (lat && lat.reason == 'disabled' ? '延遲監測已關閉（診斷頁可開啟）' : '');
+		seg.push({ id: 'internet', label: '網際網路', state: ist,
+			summary: wan.internet == 'ok' ? (ist == 'warn' ? '連得到外面，但延遲或掉包偏高' : '連得到外面') : (wan.internet == 'warn' ? '偵測中或不穩定' : '連不到外面'),
+			evidence: iev, actions: ist == 'warn' ? [{ label: '看延遲紀錄', href: 'tw_diag.asp' }] : [] });
 		if (dns && dns.available !== false) {
 			var ds = !dns.enabled ? 'off' : (dns.healthy ? 'ok' : (dns.running ? 'warn' : 'bad'));
 			seg.push({ id: 'dns', label: 'DNS', state: ds,
 				summary: !dns.enabled ? '使用業者 DNS' : (dns.healthy ? '黑潮 DNS 運作中' : (dns.running ? '黑潮 DNS 暫時改用業者 DNS' : '黑潮 DNS 沒有執行')),
-				evidence: '', actions: [{ label: 'DNS 設定', href: 'tw_internet.asp#dns' }] });
+				evidence: dns.queries != null ? '今天 ' + dns.queries + ' 筆查詢、擋下 ' + dns.blocked + ' 筆' + (dns.p50_ms != null ? '、回應中位數 ' + dns.p50_ms + ' ms' : '') : '',
+				actions: [{ label: 'DNS 設定', href: 'tw_internet.asp#dns' }] });
 		} else {
 			seg.push({ id: 'dns', label: 'DNS', state: 'unknown', summary: '使用業者 DNS', evidence: '', actions: [] });
 		}
@@ -837,7 +894,7 @@ var TW = (function () {
 			notices.push({ level: 'warn', title: (d.name || d.mac) + ' 的 Wi-Fi 訊號弱', evidence: d.signal_dbm + ' dBm（建議 -65 dBm 以上）', href: 'tw_devices.asp?mac=' + encodeURIComponent(d.mac), action: '查看' });
 		});
 		if (ct > 0.8) notices.push({ level: ct > 0.9 ? 'bad' : 'warn', title: '連線追蹤表用量偏高', evidence: router.conntrack_count + ' / ' + router.conntrack_max, href: 'tw_diag.asp', action: '診斷' });
-		return { headline: headline, level: level, segments: seg, notices: notices.slice(0, 3), partial: true };
+		return { headline: headline, level: level, segments: seg, notices: notices.slice(0, 3), partial: true, has_latency: !!(lat && lat.current_ms != null) };
 	}
 	function reportText(h) {
 		var lines = ['padavan-tw 診斷報告', '時間：' + new Date().toLocaleString('zh-TW'), '結論：' + h.headline, ''];

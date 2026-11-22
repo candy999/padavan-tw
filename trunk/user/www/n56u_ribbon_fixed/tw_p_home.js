@@ -40,7 +40,7 @@ function hm_health(r) {
 	var U = TW, g = U.guard(r);
 	if (g) { U.set('hm-health', g); return; }
 	HM.health = r;
-	var h = U.conclusion({ state: r.level, title: r.headline, sub: r.partial ? '依路由器目前能取得的資料判斷（延遲與掉包在「診斷」頁）' : '' });
+	var h = U.conclusion({ state: r.level, title: r.headline, sub: r.partial ? (r.has_latency ? '依裝置、Wi-Fi、連線、延遲與 DNS 的資料判斷；詳細紀錄在「診斷」頁' : '依路由器現有的資料判斷（延遲資料還沒有，詳細紀錄在「診斷」頁）') : '' });
 	h += '<ol class="tw-path" aria-label="從裝置到網際網路的每一段">';
 	(r.segments || []).forEach(function (s) {
 		h += '<li><button type="button" class="tw-path-btn" aria-expanded="' + (HM.open == s.id ? 'true' : 'false') + '" aria-controls="hm-detail" onclick="hm_toggle(\'' + s.id + '\')">' +
@@ -104,7 +104,7 @@ function hm_wan_now(r) {
 		var st = L.current_ms > L.baseline_ms * 3 + 20 ? 'bad' : (L.current_ms > L.baseline_ms * 1.8 + 10 ? 'warn' : '');
 		h += U.metric({ label: '延遲', value: U.num(L.current_ms), unit: 'ms', state: st, ref: '平常 ' + U.num(L.baseline_ms) + ' ms' + (L.loss_pct ? '、掉包 ' + L.loss_pct + ' %' : '') });
 	} else {
-		h += U.metric({ label: '延遲', value: '--', ref: L && L.warming_up ? '資料收集中' : L && L.available !== false ? '連不到量測目標' : '要更新韌體才看得到' });
+		h += U.metric({ label: '延遲', value: '--', ref: L && L.warming_up ? '資料收集中' : L && L.available !== false ? '連不到量測目標' : (L && L.reason == 'disabled' ? '延遲監測已關閉' : '這個韌體沒有延遲監測') });
 	}
 	h += '</div>';
 	if (r.series && r.series.down_kbps) {
@@ -208,11 +208,11 @@ function hm_dns(r) {
 	var h = '<div class="tw-inline">' + U.dot(st) + '<b>' + title + '</b></div>';
 	if (r.queries != null) {
 		h += '<div class="tw-grid-metrics">' +
-			U.metric({ label: '今天查詢', value: U.num(r.queries), ref: r.avg_ms != null ? '平均 ' + r.avg_ms + ' ms' : '' }) +
+			U.metric({ label: '今天查詢', value: U.num(r.queries), ref: r.p50_ms != null ? '回應中位數 ' + r.p50_ms + ' ms' : (r.hit_pct != null ? '快取命中 ' + r.hit_pct + ' %' : '') }) +
 			U.metric({ label: '擋下的廣告與追蹤', value: U.num(r.blocked), ref: r.queries ? '佔 ' + Math.round(r.blocked / r.queries * 100) + ' %' : '' }) +
 			U.metric({ label: '換到台灣 CDN', value: U.num(r.cdn_rewrites), ref: '影音、更新下載更快' }) + '</div>';
 	} else if (r.enabled) {
-		h += '<div class="tw-partial">' + U.icon('info', 14) + '<span>查詢、過濾與 CDN 統計之後的版本才有</span></div>';
+		h += '<div class="tw-partial">' + U.icon('info', 14) + '<span>' + (r.running ? '黑潮 DNS 的統計暫時讀不到（可能正在重新啟動）' : '黑潮 DNS 沒有執行，沒有統計') + '</span></div>';
 	}
 	U.set('hm-dns', h);
 }
@@ -232,7 +232,7 @@ function hm_vpn(r) {
 	} else if (r.available === false || !r.peers) {
 		/* 韌體還沒有 vpn 資料介面：只知道有開 */
 		h = '<div class="tw-inline">' + U.dot('ok') + '<b>VPN 伺服器開啟中</b></div>' +
-			'<div class="tw-partial">' + U.icon('info', 14) + '<span>誰正在連線需要更新韌體後才看得到</span></div>';
+			'<div class="tw-partial">' + U.icon('info', 14) + '<span>讀不到誰正在連線（VPN 狀態資料暫時沒有回應）</span></div>';
 	} else if (r.running === false) {
 		h = '<div class="tw-inline">' + U.dot('bad') + '<b>VPN 伺服器沒有在執行</b></div>' +
 			'<div class="tw-small">設定是開啟的，但啟動失敗。<a href="tw_remote.asp#vpn">查看</a></div>';

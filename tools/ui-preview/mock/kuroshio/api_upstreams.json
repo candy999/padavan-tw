@@ -1,1 +1,109 @@
-{"ok":true,"result":[{"avgMs":8.1,"fail":0,"id":"https://1dot1dot1dot1.cloudflare-dns.com/dns-query","ok":53,"paused":false,"role":"auto","type":"doh"},{"avgMs":156.9,"fail":3,"id":"https://public.dns.iij.jp/dns-query","ok":50,"paused":false,"role":"auto","type":"doh"},{"avgMs":171.1,"fail":0,"id":"https://kr-sel.doh.sb/dns-query","ok":53,"paused":false,"role":"auto","type":"doh"},{"avgMs":115.6,"fail":0,"id":"https://doh.sb/dns-query","ok":51,"paused":false,"role":"auto","type":"doh"},{"avgMs":166.5,"fail":0,"id":"https://dns.alidns.com/dns-query","ok":53,"paused":false,"role":"auto","type":"doh"},{"avgMs":null,"fail":0,"id":"udp://45.90.30.126:53","ok":0,"paused":false,"role":"fallback","type":"udp"},{"avgMs":null,"fail":0,"id":"udp://1.0.0.2:53","ok":0,"paused":false,"role":"fallback","type":"udp"},{"avgMs":null,"fail":0,"id":"udp://8.8.4.4:53","ok":0,"paused":false,"role":"fallback","type":"udp"}]}
+{
+ "ok": true,
+ "result": [
+  {
+   "avgMs": 4.5,
+   "fail": 2,
+   "id": "udp://10.0.0.1:53",
+   "ok": 29,
+   "pathBlocked": false,
+   "paused": false,
+   "reason": null,
+   "region": null,
+   "role": "chain",
+   "type": "udp",
+   "via": null
+  },
+  {
+   "avgMs": 315.4,
+   "fail": 0,
+   "id": "tls://dns.nextdns.io:853",
+   "ok": 175,
+   "pathBlocked": false,
+   "paused": false,
+   "reason": "最快",
+   "region": "TW",
+   "role": "auto",
+   "type": "dot",
+   "via": null
+  },
+  {
+   "avgMs": 120.4,
+   "fail": 0,
+   "id": "https://sg-w-p-1.nashkan.net/dns-query",
+   "ok": 53,
+   "pathBlocked": false,
+   "paused": false,
+   "reason": "覆蓋",
+   "region": "SG",
+   "role": "auto",
+   "type": "doh",
+   "via": null
+  },
+  {
+   "avgMs": null,
+   "fail": 6,
+   "id": "https://doh.funil.de/dns-query",
+   "ok": 0,
+   "pathBlocked": false,
+   "paused": false,
+   "reason": "覆蓋",
+   "region": "DE",
+   "role": "auto",
+   "type": "doh",
+   "via": null
+  },
+  {
+   "avgMs": 104.4,
+   "fail": 0,
+   "id": "https://freedns.controld.com/dns-query",
+   "ok": 73,
+   "pathBlocked": false,
+   "paused": false,
+   "reason": "覆蓋",
+   "region": "CA",
+   "role": "auto",
+   "type": "doh",
+   "via": null
+  },
+  {
+   "avgMs": null,
+   "fail": 0,
+   "id": "udp://45.90.30.126:53",
+   "ok": 0,
+   "pathBlocked": false,
+   "paused": false,
+   "reason": null,
+   "region": null,
+   "role": "fallback",
+   "type": "udp",
+   "via": "interceptor"
+  },
+  {
+   "avgMs": null,
+   "fail": 0,
+   "id": "udp://1.0.0.2:53",
+   "ok": 0,
+   "pathBlocked": false,
+   "paused": false,
+   "reason": null,
+   "region": null,
+   "role": "fallback",
+   "type": "udp",
+   "via": "interceptor"
+  },
+  {
+   "avgMs": null,
+   "fail": 0,
+   "id": "udp://8.8.4.4:53",
+   "ok": 0,
+   "pathBlocked": false,
+   "paused": false,
+   "reason": null,
+   "region": null,
+   "role": "fallback",
+   "type": "udp",
+   "via": "interceptor"
+  }
+ ]
+}

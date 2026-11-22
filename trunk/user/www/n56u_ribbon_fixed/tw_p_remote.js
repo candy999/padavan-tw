@@ -73,7 +73,7 @@ function rm_vpn(r) {
 	});
 	if (hasLive && !down && WGPEERS.length) h += '<div class="tw-small">' + (nOnline ? '<b>' + nOnline + ' 台</b>裝置正在連線（共 ' + WGPEERS.length + ' 台）' : '目前沒有裝置連線（共 ' + WGPEERS.length + ' 台）') + '</div>';
 	h += U.table({ cols: [{ key: 'n', label: '裝置', cls: 'tw-cell-main' }, { key: 's', label: '連線狀態' }, { key: 't', label: '流量（下載／上傳）' }], rows: rows, empty: '還沒有裝置。按「新增裝置」產生設定，用手機掃 QR 碼。' });
-	if (!hasLive) h += '<div class="tw-partial">' + U.icon('info', 14) + '<span>誰正在連線、最後連線時間與流量需要更新韌體後才有。</span></div>';
+	if (!hasLive) h += '<div class="tw-partial">' + U.icon('info', 14) + '<span>讀不到誰正在連線（VPN 狀態資料暫時沒有回應），稍後重新整理。</span></div>';
 	else if (!down && WGPEERS.length) h += '<div class="tw-small tw-muted">3 分鐘內有握手就算連線中；流量從 VPN 伺服器上次啟動起算。</div>';
 	h += '<div class="tw-actions">' + U.button('新增裝置', { primary: true, icon: 'plus', onclick: 'rm_vpn_add()' }) + U.button('刪除裝置', { small: true, ghost: true, href: 'Advanced_wireguard.asp' }) + '</div>';
 	U.set('rm-vpn', h);
@@ -203,7 +203,7 @@ function rm_domain(r) {
 	h += '<dt>網域</dt><dd>' + (dom ? U.esc(dom) : '沒有設定') + '</dd>';
 	h += '<dt>自動更新 IP</dt><dd>' + (NV.kuro_on == '1' && NV.kuro_ddns == '1' ? '黑潮 DNS DDNS 開啟' : NV.ddns_on == '1' ? 'DDNS 開啟' : '關閉') + '</dd>';
 	if (r && r.cert_expiry_ts) h += '<dt>憑證</dt><dd>' + Math.round((r.cert_expiry_ts - Date.now() / 1000) / 86400) + ' 天後到期（自動更新）</dd>';
-	else h += '<dt>憑證</dt><dd class="tw-muted">' + (r && r.available === false ? '--' : '到期日之後的版本才看得到') + '</dd>';
+	else h += '<dt>憑證</dt><dd class="tw-muted">' + (r && r.available === false ? '--' : (r && r.running === false ? '黑潮 DNS 沒有執行' : '讀不到到期日（還沒有憑證，或黑潮 DNS 暫時沒有回應）')) + '</dd>';
 	h += '</dl><p class="tw-small">有了網域，WireGuard 和連接埠轉送就不怕浮動 IP 改變。</p><div class="tw-actions">' + U.button('設定網域與 DDNS', { small: true, href: 'tw_kuroshio.asp#settings' }) + '</div>';
 	U.set('rm-domain', h);
 }

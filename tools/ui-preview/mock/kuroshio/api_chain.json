@@ -1,0 +1,139 @@
+{
+ "ok": true,
+ "result": {
+  "audit": {
+   "last": null,
+   "recentSuspicious": 0,
+   "releases": 0,
+   "sampled": 7,
+   "siteInvalid": 0,
+   "suspicious": 0,
+   "unverified": 0,
+   "valid": 7
+  },
+  "backupActive": false,
+  "enabled": true,
+  "reason": null,
+  "retryAt": null,
+  "serving": {
+   "allowDownstream": true,
+   "downstreams": [],
+   "fingerprint": "0F1E-2D3C-4B5A-6978-8796-A5B4-C3D2-E1F0",
+   "nodeId": "0123456789abcdef",
+   "note": "區網裡任何會講這個協定的裝置都拿得到資料與放行；有啟用「繞過防護」清單時建議關閉 allow_downstream",
+   "probes": {
+    "count24h": 0,
+    "lastAt": null
+   },
+   "refused": {
+    "notAllowed": 0,
+    "notPrivate": 0,
+    "rate": 0
+   },
+   "share": {
+    "cacheBytes": 38141,
+    "chunks": 0,
+    "lastAt": null,
+    "ready": true,
+    "requests": 0
+   },
+   "text": "提供資料給下游黑潮：目前沒有下游連上來"
+  },
+  "shared": {
+   "enabled": true,
+   "error": null,
+   "lastSyncAt": 1795364426603,
+   "nextSyncAt": 1795385594941,
+   "objects": [
+    {
+     "at": 1795293197000,
+     "bytes": 3520,
+     "error": null,
+     "fresh": true,
+     "importedAt": 1795343354993,
+     "kind": "upstreams"
+    },
+    {
+     "at": 1795364426598,
+     "bytes": 8015,
+     "error": null,
+     "fresh": true,
+     "importedAt": 1795364426549,
+     "kind": "cdn-pools"
+    },
+    {
+     "at": 1795364426598,
+     "bytes": 5162,
+     "error": null,
+     "fresh": true,
+     "importedAt": 1795364426585,
+     "kind": "cdn-v6"
+    },
+    {
+     "at": 1795364426598,
+     "bytes": 11578,
+     "error": null,
+     "fresh": true,
+     "importedAt": 1795343355144,
+     "kind": "cdn-ranges"
+    }
+   ],
+   "ownRuns": {
+    "cdn-pool": {
+     "at": null,
+     "dueAt": 1795415749623
+    },
+    "cdn-ranges": {
+     "at": null,
+     "dueAt": 1795415749623
+    },
+    "cdn-scan": {
+     "at": null,
+     "dueAt": 1795415749623
+    },
+    "dns-benchmark": {
+     "at": null,
+     "dueAt": 1795415749623
+    }
+   },
+   "skippedJobs": [
+    "dns-benchmark",
+    "cdn-pool",
+    "cdn-scan",
+    "cdn-ranges"
+   ]
+  },
+  "state": "chained",
+  "text": "串接中：上游 10.0.0.1（黑潮 3.4.4），評測結果與 CDN 節點由上游提供",
+  "upstream": {
+   "address": "10.0.0.1",
+   "allowDownstream": true,
+   "caps": [
+    "share",
+    "reg"
+   ],
+   "depth": 2,
+   "error": null,
+   "failures": 0,
+   "fingerprint": "A1B2-C3D4-E5F6-0718-293A-4B5C-6D7E-8F90",
+   "keyChangedAt": null,
+   "lastOkAt": 1795364409924,
+   "nodeId": "0123456789abcdef",
+   "path": [
+    "fedcba9876543210"
+   ],
+   "previousFingerprint": null,
+   "proto": "udp",
+   "registered": {
+    "at": 1795364409944,
+    "expiresAt": 1795365309944,
+    "names": 4,
+    "ok": true
+   },
+   "since": 1795364396506,
+   "version": "3.4.4",
+   "via": "gateway",
+   "viaNat": false
+  }
+ }
+}

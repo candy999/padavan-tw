@@ -953,7 +953,13 @@ textarea.kr-mono, textarea.kr-rules { width: 100%; max-width: none; box-sizing: 
 .kr-empty { margin: 4px 0; }
 .kr-pre { white-space: pre-wrap; word-break: break-all; max-height: 30em; overflow: auto; font-size: 12px; line-height: 1.5; margin: 8px 0 0; padding: 10px 12px; border-radius: var(--r-sm); background: var(--surface-2); color: var(--text); border: 0; }
 #kr-log { max-height: 70vh; }
-.kr-tiles { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr)); }
+.kr-tiles { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 168px), 1fr)); }
+@media (max-width: 480px) { .kr-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; } .kr-tile { padding: 10px 12px; } .kr-tile-v { font-size: 18px; } }
+/* 黑潮狀態頁：服務一行、效能卡的「更多細節」 */
+.kr-svc { margin: -6px 0 14px; }
+.kr-more { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 8px; }
+.kr-more > summary { cursor: pointer; color: var(--muted); font-size: 13px; padding: 4px 0; }
+.kr-more[open] > summary { margin-bottom: 6px; }
 .kr-tile { min-width: 0; padding: 12px 14px; border-radius: var(--r-sm); background: var(--surface-2); }
 .kr-tile-l { font-size: 12.5px; color: var(--muted); }
 .kr-tile-v { font-size: 20px; font-weight: 600; line-height: 1.35; margin: 2px 0; overflow-wrap: anywhere; }
