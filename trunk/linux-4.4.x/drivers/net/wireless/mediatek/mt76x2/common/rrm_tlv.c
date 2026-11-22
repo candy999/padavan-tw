@@ -430,8 +430,11 @@ VOID RRM_EnqueueBcnReq(
 	*/
 	BcnReq.RegulatoryClass = pMlmeBcnReq->RegulatoryClass;
 	BcnReq.ChNumber = pMlmeBcnReq->MeasureCh;
-	BcnReq.RandomInterval = cpu2le16((UINT16)RandomByte(pAd) << 8
-								| (UINT16)RandomByte(pAd));
+	/* padavan-tw：原本是隨機 0～65535 TU（最多約 67 秒），重複次數 1（再重複量一次）；
+	 * 手機（Mi 10T）從來不回。改成 0／0（跟 MT7603 由程式填 0 一樣，也是下面 TxStream 請求註解說的
+	 * Voice-Enterprise 要求）之後，2026-11-22 實測同一秒就回（量同頻段、量 2.4G 都會）。
+	 * 兩個是一起改的，沒有分開測是哪一個造成的（ROAM-COOP「從 D3 的 5G 問，手機都沒回」） */
+	BcnReq.RandomInterval = 0;
 	BcnReq.MeasureDuration = cpu2le16(pMlmeBcnReq->MeasureDuration);
 	BcnReq.MeasureMode = pMlmeBcnReq->MeasureMode;
 	COPY_MAC_ADDR(BcnReq.Bssid, pMlmeBcnReq->Bssid);
@@ -504,7 +507,7 @@ VOID RRM_EnqueueBcnReq(
 		MeasureReqMode.word = 0;
 		MakeMeasurementReqFrame(pAd, pOutBuffer, &tmpLen,
 			TotalLen, CATEGORY_RM, RRM_MEASURE_REQ, MeasureReqToken,
-			MeasureReqMode.word, MeasureReqType, 1);
+			MeasureReqMode.word, MeasureReqType, 0);	/* padavan-tw：重複次數 0＝量一次（見上面） */
 	}
 
 	MeasureReqInsert(pAd, MeasureReqToken);

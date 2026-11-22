@@ -172,6 +172,7 @@ ROAM 結果 mac=.. 6秒後到 AP2-5G   ｜或｜ 不理會(第1次)→10分鐘�
 | `mt76x2/ap/ap_cfg.c` | `OID_802_11_WNM_BTM_REQ` 加不需 Hotspot 的版本（本體由程式組，驅動照抄，不會自己設斷線） |
 | `mt76x2/ap/ap_sync.c`、`ap_connect.c`、`ap_assoc.c` | beacon／探測回應／連線回應宣告 BSS Transition，跟 11k 同一個開關（每個 BSS 分開，IoT 網路不宣告） |
 | `mt76x2/common/rrm.c` | Beacon Report 送 IWEVCUSTOM 事件（flags `TW_BCN_REPORT_EVENT`＝0x0950：裝置 MAC、BSSID、Class、頻道、RCPI、RSNI）；修每筆回報漏一個 `BCN_IE_LIST`、迴圈邊界多算 802.11 標頭 24 位元組、拒絕／不能量的回報也被當成正常的處理 |
+| `mt76x2/common/rrm_tlv.c` | Beacon Request 的 Randomization Interval 與 Number of Repetitions 改成 0（原本隨機最多約 67 秒、重複 1 次，手機從來不回；改了之後同一秒就回） |
 | `mt76x3/common/wnm.c` | `WNMCtrlInit` 改成照 dat 檔每個 BSS 的 `WNMEnable`（原本只會被設成開，IoT 網路照樣宣告 11v） |
 | `mt76x2`／`mt76x3` `rtmp_def.h`、`mt76x3/include/dot11r_ft.h` | 沒開 PMF 時補 `CATEGORY_WNM`、`FT_IGTK_ID`（開 11v／11r 編譯失敗） |
 | `user/ralinkiappd/iappd.sh` | 11r 的金鑰交換程式兩個頻段都聽 |
@@ -306,6 +307,11 @@ OpenWrt 用 hostapd，11k／11v 都是標準功能，而且有 ubus 介面，移
 - 螢幕一打開，手機自己就掃描並換回 5G（06:30:48，不用建議）；所以「回 5G」的建議真正有用的是螢幕關著、手機自己不掃描的時候。
 - 訊號對照：AP 量到手機 5G -60 dBm、手機回報（有號數換算）-38 dBm；2.4G 是 AP -43、手機 -23。這支手機量到的一直比 AP 量到的強約 20 dB，換算方式合理。
 - **從 D3 的 5G（MT7612）問，手機都沒回**（07:02～07:27 問 3 次，量 2.4G 頻道 1）：2.4G（MT7603）問每次 1 秒內就回。原因還不知道：可能是 `BcnReq` 參數字串（量另一個頻段的 Class 81、頻道 1）手機不接受，也可能是 MT7612 的請求根本沒送出去；下次要在手機螢幕亮著時，從 5G 問「同頻段」的頻道，並抓手機的紀錄對照。**2026-11-22 找到原因**：`mt7612_bcn_req()` 的 Operating Class 一律用 5G 的算法（`op_class(5, ch)`），量 2.4G 頻道時送出「Class 125＋頻道 1／2」這種不存在的組合；已改成依頻道算（2.4G 頻道用 Class 81）。**11-22 上午實測：還是沒回**。手機螢幕亮著、在 5G（-64 dBm），aa1e4d7 的 tw-roamd 在 10:53、11:04 量 2.4G 頻道 10（Class 81），手機都沒回。另外手動送了「同頻段」的 BcnReq（Class 124、頻道 157，主動與信標表兩種模式；WCID 1、2 都試），手機也沒回，驅動也沒有任何紀錄。所以不是 Class 的問題（這個修正本身還是對的）。剩下兩個可能：MT7612 驅動 `RRM_EnqueueBcnReq()` 組出來的請求有問題（或沒有真的送出），或者手機有回、但 0x0950 事件沒有接上。下一步要在 `RRM_EnqueueBcnReq()` 與收到 Radio Measurement Report 的地方加 printk，刷測試版確認是哪一段斷掉；或比對 MT7603（會回）的組法。以前 3 次沒回就整台當作不支援 11k，回到 2.4G 也不再問；已改成分頻段計算（`d4ffa3f`）。
+- **11-22 下午找到原因並修好**：用除錯版（分支 `claude/debug-5g-rrm`，訊息前綴 `tw-rrm5g`）實機確認。
+  - 收的那一端本來就通：手機一連上 5G 就送 Neighbor Report Request（第 5 類 action 4），驅動有收到。
+  - 送出那一端：`RRM_EnqueueBcnReq()`（`rrm_tlv.c`）把 Randomization Interval 填成隨機 0～65535 TU（最多約 67 秒），Number of Repetitions 填 1（要再重複量一次）。MT7603 這兩個都是 0（由程式填）。
+  - 兩個都改成 0 之後，13:10 從 5G 問同頻段的頻道 149，**同一秒就回**；13:11 問 2.4G 頻道 10（Class 81）也同一秒回。token 對得上量測表，0x0950 事件正常，tw-roamd 記下「會回 Beacon Report」。
+  - 兩個是一起改的，沒有分開測是哪一個造成的。以前間隔 7～17 分鐘問都沒有回報，所以不只是晚回；比較可能是手機不接受重複次數不是 0 的請求，但沒有驗證。
 - **「省電中」不能代表螢幕關著**（第 12 節第 5 項的答案）：驅動的 Psm 位元是當下的狀態，手機螢幕亮著、閒置時也會進省電，所以會一下有一下沒有；06:20 手機螢幕關著，漫遊中控剛好在 Psm＝0 的瞬間送了建議。建議不帶「即將斷線」，手機可以不理，所以先不改；之後要改成「一段時間內大多在省電」才算省電中。
 
 ## 13. 自適應 11r：不動驅動的做法（2026-11-20 研究）
