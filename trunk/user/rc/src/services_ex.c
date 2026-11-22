@@ -598,8 +598,21 @@ start_dns_dhcpd(int is_ap_mode)
 	if (is_dns_used)
 		fill_dnsmasq_servers();
 
-	if (is_dns_used || is_dhcp_used)
-		return eval("/usr/sbin/dnsmasq");
+	if (is_dns_used || is_dhcp_used) {
+		/* padavan-tw：開機時黑潮 DNS 接管後的 restart_dhcpd 偶爾起不來（2026-11-22、23 兩次開機都是，
+		 * 要等 watchdog 約 16 秒後補啟動，這段時間區網沒有 DNS／DHCP）。dnsmasq 在綁定埠或讀設定失敗時
+		 * 會在背景化之前以非 0 結束：記下結束碼與設定檢查結果，1 秒後再試一次 */
+		int ret = eval("/usr/sbin/dnsmasq");
+		if (ret != 0) {
+			logmessage("dnsmasq", "啟動失敗（結束碼 %d），1 秒後再試", ret);
+			doSystem("/usr/sbin/dnsmasq --test 2>&1 | logger -t dnsmasq");
+			sleep(1);
+			ret = eval("/usr/sbin/dnsmasq");
+			if (ret != 0)
+				logmessage("dnsmasq", "再試一次還是失敗（結束碼 %d），交給 watchdog", ret);
+		}
+		return ret;
+	}
 
 	return 0;
 }

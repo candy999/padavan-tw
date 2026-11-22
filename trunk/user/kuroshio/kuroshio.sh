@@ -423,6 +423,9 @@ dnsmasq_extra() {
 	if [ "$(md5sum < "$new")" != "$([ -f "$DNSMASQ_EXTRA" ] && md5sum < "$DNSMASQ_EXTRA")" ]; then
 		mv "$new" "$DNSMASQ_EXTRA"
 		notify_rc restart_dhcpd
+		# 開機時這次 restart_dhcpd 偶爾停了 dnsmasq 卻沒起來（要等 watchdog 約 16 秒，區網沒有 DNS／DHCP）：
+		# 5 秒後確認，沒有就直接再啟動一次（rc 那邊也會記下失敗原因）
+		( sleep 5; pidof dnsmasq >/dev/null || { log "dnsmasq 重新啟動後沒有在執行，再啟動一次"; /sbin/restart_dhcpd >/dev/null 2>&1; } ) </dev/null >/dev/null 2>&1 &
 	else
 		rm -f "$new"
 	fi
