@@ -26,6 +26,10 @@ static const struct tw_mig tw_mig_v1[] = {
 	{ NULL, NULL, NULL, NULL }
 };
 
+/* 這時 syslogd 還沒啟動，先記下來，start_logger() 之後由 tw_migrate_log() 寫進系統記錄 */
+static const struct tw_mig *g_done[8];
+static int g_ndone;
+
 /* 回傳改了幾項（有改就要 commit） */
 int
 tw_migrate_defaults(int had_ver)
@@ -39,8 +43,20 @@ tw_migrate_defaults(int had_ver)
 		if (!nvram_match((char *)m->name, (char *)m->old_val))
 			continue;
 		nvram_set(m->name, m->new_val);
-		logmessage("padavan-tw", "升級：%s（%s %s→%s）", m->why, m->name, m->old_val, m->new_val);
+		if (g_ndone < (int)(sizeof(g_done) / sizeof(g_done[0])))
+			g_done[g_ndone++] = m;
 		n++;
 	}
 	return n;
+}
+
+void
+tw_migrate_log(void)
+{
+	int i;
+
+	for (i = 0; i < g_ndone; i++)
+		logmessage("padavan-tw", "升級：%s（%s %s→%s）", (char *)g_done[i]->why, (char *)g_done[i]->name,
+			(char *)g_done[i]->old_val, (char *)g_done[i]->new_val);
+	g_ndone = 0;
 }

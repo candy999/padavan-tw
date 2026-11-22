@@ -190,6 +190,7 @@ void tw_wifi_bpdu_check(void);
 void tw_mod_check(void);
 /* tw_migrate.c */
 int tw_migrate_defaults(int had_ver);
+void tw_migrate_log(void);
 
 /* tw_pause.c */
 void tw_pause_check(void);

@@ -780,6 +780,9 @@ init_router(void)
 	if (log_remote)
 		start_logger(1);
 
+	/* padavan-tw：升級遷移的紀錄（遷移時 syslogd 還沒啟動） */
+	tw_migrate_log();
+
 	start_dns_dhcpd(is_ap_mode);
 #if defined (APP_SMBD) || defined (APP_NMBD)
 	start_wins();
