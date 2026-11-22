@@ -956,7 +956,10 @@ textarea.kr-mono, textarea.kr-rules { width: 100%; max-width: none; box-sizing: 
 .kr-tiles { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 168px), 1fr)); }
 @media (max-width: 480px) { .kr-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; } .kr-tile { padding: 10px 12px; } .kr-tile-v { font-size: 18px; } }
 /* 黑潮狀態頁：服務一行、效能卡的「更多細節」 */
-.kr-svc { margin: -6px 0 14px; }
+/* 狀態頁的內容是一般區塊，卡片之間要自己留間距（跟 .kr-body 的 16px 一樣） */
+#kr-status { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+#kr-status > .tw-conclusion, #kr-status > .tw-note { margin: 0; }
+.kr-svc { margin: -10px 0 0; }
 .kr-more { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 8px; }
 .kr-more > summary { cursor: pointer; color: var(--muted); font-size: 13px; padding: 4px 0; }
 .kr-more[open] > summary { margin-bottom: 6px; }

@@ -18,6 +18,8 @@ DWURL_MOD_PATTERN=s/ZVMODWURLVZ/$(PROJECT_HOME_URL_MOD)/g
 
 WEBUI_NAME=n56u_ribbon_fixed
 
+TW_ASSET_VER := $(shell date +%y%m%d%H%M)
+
 all:
 
 romfs:
@@ -27,6 +29,11 @@ romfs:
 	# padavan-tw：在每個頁面的 main.css 之後注入 viewport 與 tw.css（原始 .asp 不修改，方便同步上游）
 	# 與 tools/ui-preview/serve.py 的 INJECT 保持一致
 	find $(ROMFS_DIR)/www -name '*.asp' -exec sed -i 's|<link rel="stylesheet" type="text/css" href="/bootstrap/css/main.css">|&\n<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n<link rel="stylesheet" type="text/css" href="/bootstrap/css/tw.css">|' {} +
+	# padavan-tw：httpd 讓瀏覽器快取 JS／CSS 30 天，韌體更新後會一直用舊檔（新頁面配舊樣式）。
+	# 頁面裡引用的本機 .js／.css 都加上這次編譯的版本參數（httpd 會忽略 ? 後面），換版就會重新下載；
+	# JS 裡動態載入的檔案用 __TW_ASSET_VER__ 佔位（tw_kuro.js）
+	find $(ROMFS_DIR)/www -name '*.asp' -exec sed -i -E 's#((src|href)="/[^"?]+\.(js|css))"#\1?v=$(TW_ASSET_VER)"#g' {} +
+	find $(ROMFS_DIR)/www -maxdepth 1 -name '*.js' -exec sed -i 's#__TW_ASSET_VER__#$(TW_ASSET_VER)#g' {} +
 	rm -f $(ROMFS_DIR)/www/httpd_check.htm
 	echo "ASUSTeK" > $(ROMFS_DIR)/www/httpd_check.htm
 	cd $(ROMFS_DIR)/www && ln -sf /opt/share/www/custom custom

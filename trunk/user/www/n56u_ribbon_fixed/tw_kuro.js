@@ -679,7 +679,7 @@ var KURO = (function () {
 		if (coreP) return coreP;
 		return (coreP = new Promise(function (res) {
 			var s = document.createElement('script');
-			s.src = '/kuroshio-shared/ui-core.js';
+			s.src = '/kuroshio-shared/ui-core.js?v=__TW_ASSET_VER__';
 			s.onload = function () { res(window.KuroshioUiCore || null); };
 			s.onerror = function () { res(null); };
 			document.head.appendChild(s);
@@ -1046,11 +1046,11 @@ var KR_MORE = false, KR_MORE_CH = false;	/* 狀態頁「更多細節」的開合
 		if (window.KuroshioDashboard) return Promise.resolve(true);
 		if (dashP) return dashP;
 		var css = document.createElement('link');
-		css.rel = 'stylesheet'; css.href = '/kuroshio/dashboard.css';
+		css.rel = 'stylesheet'; css.href = '/kuroshio/dashboard.css?v=__TW_ASSET_VER__';
 		document.head.appendChild(css);
 		return (dashP = new Promise(function (res) {
 			var s = document.createElement('script');
-			s.src = '/kuroshio/dashboard.js';
+			s.src = '/kuroshio/dashboard.js?v=__TW_ASSET_VER__';
 			s.onload = function () { res(!!window.KuroshioDashboard); };
 			s.onerror = function () { dashP = null; res(false); };
 			document.head.appendChild(s);
