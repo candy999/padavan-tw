@@ -39,8 +39,9 @@
 #define DEF_WLAN_5G_CC		"TW"
 #define DEF_WLAN_2G_SSID	BOARD_PID "_%s"
 #define DEF_WLAN_5G_SSID	BOARD_PID "_%s"	/* padavan-tw：兩個頻段同一個 SSID，手機自己選頻段 */
-#define DEF_WLAN_2G_GSSID	BOARD_PID "_GUEST_%s"
-#define DEF_WLAN_5G_GSSID	BOARD_PID "_GUEST_%s"
+/* padavan-tw：訪客那一格改成 IoT 網路，出廠名稱＝家用名稱＋_IoT（兩個頻段同名；後台 Wi-Fi 頁的預設也是這樣） */
+#define DEF_WLAN_2G_GSSID	BOARD_PID "_%s_IoT"
+#define DEF_WLAN_5G_GSSID	BOARD_PID "_%s_IoT"
 #define DEF_WLAN_2G_PSK		"1234567890"
 #define DEF_WLAN_5G_PSK		"1234567890"
 
