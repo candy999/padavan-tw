@@ -403,8 +403,8 @@ function done_validating(action){
                                             <th><#WLANConfig11n_80211kv#></th>
                                             <td>
                                                 <select name="rt_HT_80211KV" class="input">
-                                                    <option value="0" <% nvram_match_x("", "rt_HT_80211KV", "0", "selected"); %>><#btn_Disable#> (*)</option>
-                                                    <option value="1" <% nvram_match_x("", "rt_HT_80211KV", "1", "selected"); %>><#btn_Enable#></option>
+                                                    <option value="0" <% nvram_match_x("", "rt_HT_80211KV", "0", "selected"); %>><#btn_Disable#></option>
+                                                    <option value="1" <% nvram_match_x("", "rt_HT_80211KV", "1", "selected"); %>><#btn_Enable#> (*)</option>
                                                 </select>
                                             </td>
                                         </tr>
@@ -412,8 +412,8 @@ function done_validating(action){
                                             <th><#WLANConfig11n_80211r#></th>
                                             <td>
                                                 <select name="rt_HT_80211R" class="input">
-                                                    <option value="0" <% nvram_match_x("", "rt_HT_80211R", "0", "selected"); %>><#btn_Disable#> (*)</option>
-                                                    <option value="1" <% nvram_match_x("", "rt_HT_80211R", "1", "selected"); %>><#btn_Enable#></option>
+                                                    <option value="0" <% nvram_match_x("", "rt_HT_80211R", "0", "selected"); %>><#btn_Disable#></option>
+                                                    <option value="1" <% nvram_match_x("", "rt_HT_80211R", "1", "selected"); %>><#btn_Enable#> (*)</option>
                                                 </select>
                                             </td>
                                         </tr>
@@ -421,8 +421,8 @@ function done_validating(action){
                                             <th><a class="help_tooltip" href="javascript:void(0);" onmouseover="openTooltip(this, 3, 19);"><#WLANConfig11b_x_HT_OpMode_itemname#></a></th>
                                             <td>
                                                 <select class="input" id="rt_HT_OpMode" name="rt_HT_OpMode" onChange="return change_common_rt(this, 'WLANConfig11b', 'rt_HT_OpMode')">
-                                                    <option value="0" <% nvram_match_x("","rt_HT_OpMode", "0","selected"); %>><#btn_Disable#></option>
-                                                    <option value="1" <% nvram_match_x("","rt_HT_OpMode", "1","selected"); %>><#btn_Enable#> (*)</option>
+                                                    <option value="0" <% nvram_match_x("","rt_HT_OpMode", "0","selected"); %>><#btn_Disable#> (*)</option>
+                                                    <option value="1" <% nvram_match_x("","rt_HT_OpMode", "1","selected"); %>><#btn_Enable#></option>
                                                 </select>
                                             </td>
                                         </tr>

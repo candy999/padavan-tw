@@ -19,7 +19,7 @@ OBJS  = rc.o init.o auth.o services.o watchdog.o firewall_ex.o common_ex.o
 OBJS += net.o net_lan.o net_wan.o net_wifi.o net_ppp.o services_ex.o rstats.o
 OBJS += ralink.o gpio_pins.o detect_link.o detect_internet.o detect_wan.o
 OBJS += vpn_server.o vpn_client.o
-OBJS += tw_mtu.o tw_roamd.o tw_roam_drv.o tw_stats.o tw_nat66.o tw_wifibpdu.o tw_mod.o tw_pause.o
+OBJS += tw_mtu.o tw_roamd.o tw_roam_drv.o tw_stats.o tw_nat66.o tw_wifibpdu.o tw_mod.o tw_pause.o tw_migrate.o
 OBJS += gpio_btn.o btn_action.o
 ifeq ($(CONFIG_FIRMWARE_INCLUDE_OPENVPN),y)
 OBJS += vpn_openvpn.o

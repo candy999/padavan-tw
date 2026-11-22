@@ -305,7 +305,7 @@ struct nvram_pair router_defaults[] = {
 	{ "rt_mode", "ap" },
 	{ "rt_HT_BW", "0" },		/* padavan-tw：2.4G 預設 20 MHz（台灣住宅密集，40 MHz 會互相干擾、反而變慢） */
 	{ "rt_HT_EXTCHA", "1" },
-	{ "rt_HT_OpMode", "1" },
+	{ "rt_HT_OpMode", "0" },	/* padavan-tw：Greenfield 關（跟 5G 的實測結論一致；預設 g/n 模式下驅動本來就寫 0，只有改成純 N 才有差） */
 	{ "rt_wme", "1" },
 	{ "rt_wme_no_ack", "off" },
 	{ "rt_IgmpSnEnable", "1" },
@@ -1014,6 +1014,7 @@ struct nvram_pair router_defaults[] = {
 	{ "di_port4", "53" },
 	{ "di_port5", "53" },
 	{ "tw_wan_watch", "1" },			/* padavan-tw：連外中斷自動重新連線 WAN（tw_stats.c） */
+	{ "tw_defaults_ver", "1" },			/* padavan-tw：出廠預設值的版本（新機器直接是最新；舊機器升級時由 tw_migrate.c 換掉舊預設值） */
 	{ "tw_pause_until", "" },			/* padavan-tw：暫停上網的定時恢復「MAC=到期 Unix 秒」（tw_pause.c） */
 	{ "tw_wan_watch_sec", "30" },			/* padavan-tw：連外中斷幾秒後重新連線（30～600） */
 

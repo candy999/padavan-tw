@@ -78,6 +78,9 @@ nvram_restore_defaults(void)
 	if (restore_defaults)
 		nvram_clear();
 
+	/* padavan-tw：升級前有沒有 tw_defaults_ver（下面補預設值時會補上，要先記下來） */
+	int had_ver = restore_defaults || nvram_get("tw_defaults_ver") != NULL;
+
 	/* Restore defaults */
 	for (np = router_defaults; np->name; np++) {
 		if (restore_defaults || !nvram_get(np->name)) {
@@ -91,6 +94,10 @@ nvram_restore_defaults(void)
 	}
 
 	klogctl(8, NULL, nvram_get_int("console_loglevel"));
+
+	/* padavan-tw：還是舊出廠預設值的穩定性設定換成新預設（tw_migrate.c） */
+	if (tw_migrate_defaults(had_ver))
+		restore_defaults |= 2;	/* 只用來讓 init_router 存進 Flash */
 
 	/* load static values */
 	nvram_modem_type = nvram_get_int("modem_type");

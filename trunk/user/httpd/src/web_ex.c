@@ -2780,13 +2780,19 @@ ej_firmware_caps_hook(int eid, webs_t wp, int argc, char **argv)
 	int has_btn_mode = 0;
 #if defined (USE_WID_5G) && (USE_WID_5G==7610 || USE_WID_5G==7612 || USE_WID_5G==7615 || USE_WID_5G==7915)
 	int has_5g_vht = 1;
+	/* padavan-tw：頻段導引只有 7615／7915 的驅動有編（MT7612 沒有 CONFIG_RT_BAND_STEERING，rc 也只對 7615／7915 寫 dat），D3 不顯示 */
+#if (USE_WID_5G==7615 || USE_WID_5G==7915)
 	int has_5g_band_steering = 1;
+#else
+	int has_5g_band_steering = 0;
+#endif
 #else
 	int has_5g_vht = 0;
 	int has_5g_band_steering = 0;
 #endif
 #if defined (USE_WID_5G) && (USE_WID_5G==7612 || USE_WID_5G==7615 || USE_WID_5G==7915)
-	int has_5g_mumimo = 1;
+	/* padavan-tw：MU-MIMO 只有 7615／7915 會寫進 dat（MT7612 的 nvram 也沒有這個鍵），D3 不顯示 */
+	int has_5g_mumimo = (USE_WID_5G != 7612);
 	int has_5g_txbf = 1;
 #if defined (BOARD_MT7615_DBDC) || defined (BOARD_MT7915_DBDC)
 	int has_5g_160mhz = 0;
@@ -2805,7 +2811,8 @@ ej_firmware_caps_hook(int eid, webs_t wp, int argc, char **argv)
 #if defined (USE_WID_2G) && (USE_WID_2G==7615 || USE_WID_2G==7915)
 	int has_2g_band_steering = 1;
 	int has_2g_turbo_qam = 1;
-	int has_2g_airtimefairness = 1;
+	/* padavan-tw：rc 沒有讀 rt_airtimefairness（ralink.c 固定寫 VOW_Airtime_Fairness_En=0），設了也沒用，不顯示 */
+	int has_2g_airtimefairness = 0;
 #else
 	int has_2g_band_steering = 0;
 	int has_2g_turbo_qam = 0;
