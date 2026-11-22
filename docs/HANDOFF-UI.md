@@ -301,7 +301,7 @@ scp -r trunk/user/www/n56u_ribbon_fixed/state.js admin@192.168.2.1:/www/
 
 | 名稱 | 內容（欄位） | 更新頻率 | 狀態 |
 |---|---|---|---|
-| `health` | `headline`、`level`；`segments[{id: device/wifi/router/isp/internet/dns, label, state, summary, evidence, actions[{label, cost, href}]}]`（`href: "#reconnect"` 代表「重新連線網際網路」）；`notices[{level, title, evidence, href, action}]` 最多 3 則（總覽的「值得注意」） | 10 秒 | B 階段（依 twstats）；現在前端用現有資料組出簡化版 |
+| `health` | `headline`、`level`；`segments[{id: device/wifi/router/isp/internet/dns, label, state, summary, evidence, actions[{label, cost, href}]}]`（`href: "#reconnect"` 代表「重新連線網際網路」）；`notices[{level, title, evidence, href, action}]` 最多 3 則（總覽的「值得注意」） | 10 秒 | B 階段（依 twstats）；現在前端用現有資料組出簡化版（076d405 起網際網路段帶 tw-stats 的延遲與掉包、門檻跟總覽延遲卡相同，DNS 段帶今天的查詢與擋下） |
 | `latency` | `baseline_ms`、`current_ms`、`loss_pct`；`targets[{id: gw/hinet/twnic/cf, label, host, current_ms, baseline_ms, loss_pct, series, loss}]`（`series`、`loss` 是時間序列，loss 單位 %） | 10 秒 | ✅ `tw-stats`（D1）；時鐘對時前 `series`／`loss` 是 null，找不到閘道時 gw 的 `host` 是空字串 |
 | `wan` | `connected`、`internet`（狀態值）、`proto`（pppoe/dhcp/static）、`proto_label`、`isp`、`ip4`、`gw4`、`ip6`、`dns[]`、`uptime_s`、`ether`、`rx_kbps`、`tx_kbps`、`plan_down_kbps`、`plan_up_kbps`、`mtu`、`last_error`；`series{step, start, down_kbps[], up_kbps[]}` | 2 秒（即時）／60 秒（序列） | 現在由 wanlink、netdev、rstats 組出（序列 120 秒一筆；速率與序列都取 WAN 介面與 `ESW_P0` 大的，硬體 NAT 也準）；`isp`、方案頻寬 B 階段 |
 | `router` | `cpu_pct`、`mem_used_pct`、`mem_total_kb`、`uptime_s`、`load[]`、`conntrack_count`、`conntrack_max`、`temp_c`（可能 null）、`cpu_series`（選用） | 5 秒 | 現在由 json_system_status、nf_values 組出 |
@@ -309,19 +309,19 @@ scp -r trunk/user/www/n56u_ribbon_fixed/state.js admin@192.168.2.1:/www/
 | `device?mac=` | `signal`、`rate`（時間序列）、`disconnects[{ts, reason}]`、`roams[{ts, from, to, rssi_from, rssi_to}]`、`advice[{title, detail, action, href}]`、`usage_today_bytes` | 60 秒 | **2026-11-20 已實作（Wi-Fi 裝置）**：tw-roamd 每分鐘寫 `/tmp/tw-roamd.devices`（每台一行「MAC JSON」），`signal{step:900,start,values[96]}`（沒資料的格子 null）、`disconnects`（離開 20 秒後沒出現在任何 AP 才算斷線；理由「訊號太弱（-83 dBm）」或「離線（最後 -70 dBm）」）、`roams`（換 AP、換頻段）、`advice`（最近 2 小時平均 ≤ -75 dBm、今天斷線 ≥ 3 次、連過 5G 卻在 2.4G 而且訊號 ≥ -55 dBm）；`rate`（驅動給的是編碼過的傳輸設定，要逐晶片換算）、`usage_today_bytes` 還沒有。漫遊中控關閉時回 `_fallback` |
 | `wifi` | `bands[{id, ssid, enabled, channel, auto_channel, width_mhz, txpower_pct, clients, busy_pct, neighbors{count, by_channel{頻道: 數量}, strongest[{ssid, channel, rssi_dbm}]}, acs_last{ts, from, to, reason}}]`；`guest{enabled, ssid, expires_ts, clients}` | 30 秒 | 部分現有；**鄰近 AP 要 B 階段**（見第 12 節：現有的 `wl_scan_*` 在 D3 輸出壞掉） |
 | `roam` | `mode: off/observe/steer`、`mode_cfg`、`weak_dbm`；`driver{name, b24/b5{ask, report, steer, neighbor}}`；`stats{ask, report, suggest, moved, back5, ignored, rejected, hour, hour_max}`；`aps[{name, model, ip, online, self, clients_24, clients_5, steer_capable, ft}]`；`events[{ts, mac, name, from, to, rssi_from, rssi_to, type: roam/band/sticky}]`；`advice[{level, title, detail}]`；`clients[{mac, name, band, rssi, psm, seen5, k, v, state: pending/backoff/stopped, suggested, moved}]` | 30 秒 | **2026-11-20 已實作**：tw-roamd 每 5 秒寫 `/tmp/tw-roamd.json`；關閉時回 `available:false, reason:disabled`；剛啟動回 `warming_up` |
-| `events` | `events[{ts, type: wan/channel/device/qos/dns/system/roam/vpn, level, text, device}]`，新的在前 | 30 秒 | B 階段（D5） |
+| `events` | `events[{ts, type: wan/channel/device/qos/dns/system/roam/vpn, level, text, device}]`，新的在前 | 30 秒 | **2026-11-23 前端組出（076d405）**：合併 `latency` 的 `wan_watch.events`（斷線自動重新連線）與 `roam` 的 `events`（漫遊、換頻段），只留 7 天內；不另做 D5 取樣器。換頻道、裝置斷線、DNS 故障轉移還沒有，頁面請使用者看系統記錄 |
 | ~~`qos`~~（捨棄） | `mode: off/fixed/auto`、`plan_down_kbps`、`plan_up_kbps`、`state: idle/probing/limiting/deciding/ending`、`limit_down_kbps`、`limit_up_kbps`、`interventions[{ts, reason, action, latency_before_ms, latency_after_ms, duration_s}]` | 5 秒 | B 階段（E4～E8）。**設定寫入**（後端 E1 已登記，2026-11-13 更正）：`hw_qos_mode`（0 關閉／1 固定／2 自動）、`hw_qos_wlan`（Wi-Fi 也套用，預設 1）、`hw_qos_down`、`hw_qos_up`（Mbps）、`hw_qos_tech`、`hw_qos_over`、`hw_qos_under`、`hw_qos_method`，頁面用 `sid_list=IPConnection;` 送出。見 `docs/LOCAL-NEXT.md` 第二件 |
-| `dns` | `enabled`、`running`、`healthy`、`zone_mode`、`filter_ads`、`encrypted`、`cdn_tw`、`queries`、`blocked`、`cdn_rewrites`、`cache_hit_pct`、`avg_ms`、`upstreams[{name, addr, ok, ms}]`、`domain`、`cert_expiry_ts`、`queries_series` | 30 秒 | 現在由 kuroshio_status 組出啟用與健康；統計 B 階段（G9） |
+| `dns` | `enabled`、`running`、`healthy`、`zone_mode`、`filter_ads`、`encrypted`、`cdn_tw`、`queries`、`blocked`、`cdn_rewrites`、`cache_hit_pct`、`avg_ms`、`upstreams[{name, addr, ok, ms}]`、`domain`、`cert_expiry_ts`、`queries_series` | 30 秒 | 啟用與健康由 kuroshio_status 組出；**統計 076d405 起**讀 `/kuroshio_api.cgi` 的 `/api/status` 精簡版（`lite=1`，`kuroStatus()` 25 秒內重用）：`queries`、`blocked`、`cdn_rewrites`、`hit_pct`、`p50_ms`、`miss_p50_ms`、`version`、`chained`、`upstreams[{name, addr（角色）, ok, ms, paused}]`、`cert_expiry_ts`（由 `tls.info.daysLeft` 換算）；`queries_series` 還沒有 |
 | `vpn` | `enabled`、`running`（設定開著但 wg1 沒起來＝false）、`listen_port`、`peers[{name, ip, last_handshake_ts, rx_bytes, tx_bytes, endpoint}]`（`name` 對應 WGSPeerList 的名稱；`last_handshake_ts` 0＝從未連線、null＝不知道；rx／tx 是路由器端收／送；`endpoint` 只有 IP）；伺服器關閉回 `available:false, reason:"disabled"` | 10 秒 | ✅ `tw_api_vpn.c`（J4，`wg show wg1 dump`＋nvram）；遠端與分享頁、總覽「外出連回家」使用 |
-| `cgnat` | `cgnat`（true/false/null）、`kind: public/cgnat/double_nat`、`wan_ip`、`public_ip`、`reason`、`method: stun/wan_ip` | 開頁時 | 現在前端依 WAN 位址判斷（`method: "wan_ip"`，分得出公網／私人／100.64），比對對外位址是 B 階段 |
-| `diag` | 同 `health` 的 `headline`、`level`、`segments`（每段多 `metric`，段落 id：wifi/router/isp/load/dns/web）＋`duration_s`、`report`（文字） | 按下時（約 30～40 秒） | B 階段；現在用 `health` 的後備資料 |
-| `speedtest` | `running`、`plan_down_kbps`、`last{ts, down_kbps, up_kbps, latency_ms, server}`；`speedtest&run=1` 開始測速 | 按下時 | **新增**，B 階段 |
+| `cgnat` | `cgnat`（true/false/null）、`kind: public/cgnat/double_nat`、`wan_ip`、`public_ip`、`reason`、`method: stun/wan_ip` | 開頁時 | 現在前端依 WAN 位址判斷（`method: "wan_ip"`，分得出公網／私人／100.64），頁面寫明「依路由器拿到的位址判斷」；向外查對外位址比對：還沒做（需要新後端） |
+| `diag` | 同 `health` 的 `headline`、`level`、`segments`（每段多 `metric`，段落 id：wifi/router/isp/load/dns/web）＋`duration_s`、`report`（文字） | 按下時（約 30～40 秒） | B 階段；現在用 `health` 的後備資料（`has_latency` 表示有沒有延遲資料）；網站回應檢查（`web` 段）還沒做（需要新後端） |
+| `speedtest` | `running`、`plan_down_kbps`、`last{ts, down_kbps, up_kbps, latency_ms, server}`；`speedtest&run=1` 開始測速 | 按下時 | **決定不提供**（2026-11-23）：路由器自己測會受 CPU 限制，測不出方案的真實速度；診斷頁已寫明原因 |
 | ~~`firmware`~~ | — | — | **取消**（使用者 2026-11-13 決定）：韌體更新由瀏覽器直接查 GitHub Release（`api.github.com/repos/candy999/padavan-tw/releases/latest`），路由器不用連外 |
 
 本機在設計時如果需要新欄位或新名稱：**直接修改這張表**（並在 commit 訊息說明），B 階段會依表實作。
 
 ### 6.1 需要新的後端功能（B 階段）
-- **暫停上網可設時間**（「1 小時」「到今晚 10 點」）：現在只做「直到我恢復」（MAC 過濾封鎖清單 MFList），時間選項顯示「需要更新韌體」。需要一次性排程規則（到時自動從 MFList 移除）
+- ~~**暫停上網可設時間**（「1 小時」「到今晚 10 點」）~~：2026-11-22 完成（71ab6e7，`tw_pause_until`＋watchdog 到期自動從 MFList 移除；實測見 VERIFY-d179165 第 5 節）
 - **訪客網路時效**（2 小時／到今天結束）：現在只有「一直開著」；Padavan 原有的每日時段（`rt_guest_time_x`）在原始頁面
 - ~~**漫遊引導模式**（11k＋11v）~~：2026-11-20 完成（Wi-Fi 頁可切換關閉／觀察／建議）
 - **Wi-Fi 鄰近 AP 掃描**：見第 12 節
@@ -348,18 +348,18 @@ scp -r trunk/user/www/n56u_ribbon_fixed/state.js admin@192.168.2.1:/www/
 1. ~~實作 `/tw_api.asp`~~：2026-11-18 完成（`d230446`）；還沒做的名稱回 `{"_fallback":true}`
 2. `twstats` 取樣器：D1、D2 完成；D3、D5、D6 不做，D4 併入 KVR R1（ROADMAP D 章）
 3. ~~硬體 QoS 固定／自動模式（E4～E8）~~：2026-11-18 捨棄，頻寬管理頁已移除
-4. `tw-roamd` 資料轉 JSON、WireGuard 狀態、CGNAT 偵測（比對對外位址）
+4. ~~`tw-roamd` 資料轉 JSON、WireGuard 狀態~~（2026-11-20 完成）；CGNAT 偵測（比對對外位址）還沒做
 5. ~~黑潮 DNS 統計轉接（G9）~~：完成（黑潮頁「儀表板」分頁）
-6. 本機在第 6 節新增的約定：`speedtest`、6.1 的排程功能（暫停上網時間、訪客時效、漫遊引導）
+6. 本機在第 6 節新增的約定：~~`speedtest`~~（決定不提供）、6.1 的排程功能（~~暫停上網時間~~ 71ab6e7 完成、訪客時效、~~漫遊引導~~ 完成）
 7. ~~修 `ralink.c` 的 Wi-Fi 掃描解析~~：d8c9062 完成並實機確認
 8. ~~韌體版本檢查~~：已改由瀏覽器查 GitHub，不用做
 
-## 9. 目前硬體與韌體狀態（2026-11-20）
+## 9. 目前硬體與韌體狀態（2026-11-23）
 
-- Newifi D3：刷 `1f7ff9e` 前後的版本（黑潮 3.4.0、5G 混合模式、MOD 自動偵測），有線、重開機、黑潮資料區、Wi-Fi 掃描都已實機確認，夜間長測通過。這台就是實機測試機
+- Newifi D3：刷 d5434a2（v2026.11.22 同一個提交的分支編譯，黑潮 3.4.4），有線、重開機、黑潮資料區、Wi-Fi 掃描都已實機確認，夜間長測通過；076d405 的網頁用記憶體副本在 D3 確認過；0bf61c2 有沒有刷進去待確認。這台就是實機測試機
 - 小米 CR6608：使用者正在使用中，**不能動**，等 D3 接手後才刷；尚未實機測試
 - 小米 MI-MINI：暫緩（若做，會用 3.4 核心另外處理）
-- 黑潮 DNS：3.4.0 已整合並在 D3 實機驗證（HANDOFF-LOCAL 5.7）
+- 黑潮 DNS：3.4.4 已整合並在 D3 實機驗證（主路由器也是 3.4.4 時的串接驗證見 HANDOFF-LOCAL 5.7）
 - 路線圖總表：`docs/ROADMAP.md`；舊的 UI 計畫：`docs/UI-PLAN.md`（本文件取代它的階段規劃）
 
 ## 10. 使用者確認的結果（2026-11-13，U0）
@@ -717,7 +717,7 @@ trim 把 CDN 冷資料移出記憶體（1.7 MB），RSS 只降 1 MB；評測後�
 
 ### 13.14 黑潮 DNS 3.3.3～3.4.0（2026-11-18～20，摘要）
 - 韌體依序升到 3.3.3（25beed5）、3.3.6（e7588c5；路由器 IPv6 關閉時帶 `upstream.ipv6=0`）、3.3.7（6432347）、**3.4.0**（ace2df1）
-- 3.4.0 串接模式（預設開）：黑潮頁面適配串接狀態與設定（fdc4446）。D3 已驗證串接狀態、共用結果、重新載入不斷線（400 筆 0 失敗）、每秒 40 筆查詢 0 逾時；作者要的 ③④（要動主路由器）、⑥補跑時段 `catchup_window` 還沒做（HANDOFF-LOCAL 5.7）
+- 3.4.0 串接模式（預設開）：黑潮頁面適配串接狀態與設定（fdc4446）。D3 已驗證串接狀態、共用結果、重新載入不斷線（400 筆 0 失敗）、每秒 40 筆查詢 0 逾時；作者要的 ③④（要動主路由器）、⑥補跑時段 `catchup_window` 當時還沒做（③④ 之後在 3.4.4 驗證，見 13.16；⑥仍未做）
 - 記憶體隨快取長大、閒置不回落（約 110 MB），已回報作者，不擋 B6
 
 ### 13.15 網際網路頁「MOD／IPTV 接法」卡片（2026-11-20，40a9205、1f7ff9e，D3 實機）
@@ -726,3 +726,11 @@ trim 把 CDN 冷資料移出記憶體（1.7 MB），RSS 只降 1 MB；評測後�
 - D3 實測：機上盒重開後約 1～2 分鐘偵測到 LAN1；直播約 10 Mbps 只送到 LAN1，接電腦的 LAN2 沒有被灌群播；換台正常（實測多台）
 - 限制：機上盒沒重新要位址（例如只重開路由器）時偵測不到，要重開機上盒；偵測到不會自動取消（在這張卡片改回）
 - 頁面與文件不要顯示或記錄機上盒的 MAC、序號、位址
+
+### 13.16 黑潮 DNS 3.4.4 與狀態頁整理（2026-11-22～23，d5434a2、076d405，D3 實機）
+- 韌體升到 **3.4.4**（d5434a2）：`kuroshio.sh api` 白名單加 `/api/chain`（內容跟 `/api/status` 的 chain 相同）；`UCI_OLD_DEFAULTS` 補 3.3.6～3.3.7 的預設檔 sha256（3.4.0～3.4.4 預設檔沒變）
+- 狀態頁串接卡片照 LuCI `ui-core.js` 的 chainView 重做：狀態標籤看 `state`＋`backupActive`，句子照 API 的 text，原因代碼（例如 `pin-mismatch`）放括號；心跳、登記、下次重試、共用內容、抽查結果、換金鑰的舊指紋。排程表顯示「由上游黑潮提供，暫不補跑」與「等補跑時段」；今天的統計加串接中這台自己解析的次數；記憶體加 `pressure`、`sizes.otherBytes`
+- 進階（專業模式）：`upstream.chain_pin`；社群：`use_hints`、`use_upstreams` 兩個開關
+- 版面（076d405）：「服務」卡片收成結論下面一行；「硬體與效能」改成「效能」，其餘收進「更多細節」（重新整理時記住開合）；串接卡片常看的（上游、心跳、登記、重試）留在外面，指紋、層數、共用內容、抽查收進「更多細節」；磚塊最小寬度 168px（手機固定兩欄）
+- 預覽：`tools/ui-preview/mock/kuroshio` 換成 D3 實機 3.4.4 的回應（指紋、節點 ID、網域、IPv6 前綴都已換掉）
+- D3 實機（主路由器也是 3.4.4）：鎖錯指紋原因 `pin-mismatch`、不向上游登記，改回正確指紋重新串接；D3 關 CDN 置換時上游不再幫它換；主路由器關 `allow_downstream`、黑潮短重啟的結果見 HANDOFF-LOCAL 5.7

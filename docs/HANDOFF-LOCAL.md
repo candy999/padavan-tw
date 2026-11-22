@@ -18,7 +18,7 @@
 | `docs/ROAM-COOP.md` | AP 互助漫遊：交換協定、決策規則、回 5G、D3／CR6608 驅動狀況、OpenWrt 對照 | 動漫遊、11k／v、tw-roamd 前 |
 | `docs/COMPAT.md` | 社群機型相容度預測（`tools/compat/predict.py` 產生）與移植指南 | 有人問其他機型、改了跟硬體有關的程式後 |
 | `docs/WIFI-STABILITY.md` | Wi-Fi 穩定性調查、STP 根因、5G／2.4G 參數測試、夜間長測 | 動 Wi-Fi、網橋、hw_nat 前 |
-| `docs/RELEASE-NOTES-v2026.11.20.md` | 第一個正式版的發布說明 | 發布時 |
+| `docs/RELEASE-NOTES-v2026.11.20.md` | 第一個正式版的發布說明（v2026.11.22 的說明只在 GitHub Release：`gh release view v2026.11.22`） | 發布時 |
 | `docs/VERIFY-*.md` | 每一版的實機驗證單與結果 | 寫新的驗證單時當範本 |
 | `docs/PATCH-REVIEW.md` | 各分支修補的取捨 | 同步上游、評估別人的修補時 |
 | `docs/KVR-3.4-REVIEW.md` | 3.4 版「KVR」做法調查（結論：對 D3 無效，4.4 比較完整） | 有人提 3.4 時 |
@@ -98,8 +98,10 @@ git pull
 | **Wi-Fi BPDU 擋法** | 第二層保險（根因已在 d333736 修掉），nvram `tw_wifi_bpdu` 0／1／2（預設 2＝收送都擋）。規則在 `tw_wifi_bpdu_rules()`（`restart_guest_lan_isolation` 清空 ebtables 後呼叫）；watchdog `tw_wifi_bpdu_check()` 看 ebtables 計數與 hw_nat 保險計數，增加就跑 `/sbin/tw-bpdu-snap` 寫 `/etc/storage/tw-diag/bpdu-events.log`。韌體的 ebtables 原本沒有 log 擴充，`extensions/ebt_log.c` 是補回的最小版（靜態編譯會改名每行第一個「底線 init」，檔案裡別再出現） | `rc/src/tw_wifibpdu.c`、`scripts/files/sbin/tw-bpdu-snap`、`ebtables-2.0.10-4/extensions/ebt_log.c` |
 | **自動 NAT66** | 二級路由 WAN 有全球 IPv6、但上一層沒有可分配的前綴（DHCPv6-PD 要不到，例如 HiNet 只給主路由 /64）時，watchdog 等 60 秒後在 br0 加 ULA `fdXX:XXXX:XXXX::1/64`（由 MAC 算）＋ `ip6tables -t nat MASQUERADE`；dnsmasq `constructor:br0` 自動廣播。開關 `ip6_nat66_auto`（預設 1，網際網路頁可關），狀態在暫存 nvram `ip6_nat66_state`；防火牆重啟時 `ip6t_nat_rules()` 照狀態寫回規則。上游原本就有 `fc00:101:101::/64 FULLCONENAT`（手動設 LAN IPv6 用），兩者不衝突 | `rc/src/tw_nat66.c`、`firewall_ex.c` |
 | **STP 計時／急速連線** | STP 計時 8 秒（hello 2、max_age 6、forward_delay 4，rc `tw_stp_timers()`）；急速連線 nvram `tw_wifi_fast`（預設 1）：Wi-Fi AP 介面（`ra` 開頭）一啟用就轉送（核心 `br_stp.c` 的 `br_tw_fast_port()`），只在 BPDU 擋法開著時有效；收到外部裝置 BPDU 的介面個別退回標準 STP（`brport/tw_slow`，清單 `/tmp/tw-bpdu-conflict`，只記在記憶體）。診斷頁「Wi-Fi 迴圈保護」卡片有兩個開關（d29b6bf） | `rc/src/tw_wifibpdu.c`、`linux-4.4.x/net/bridge/br_stp.c` |
-| **Wi-Fi 出廠預設** | 5G：`wl_TxBurst=1`、`wl_HT_OpMode=0`（混合，關閉 Greenfield，1a9cbaf）、80 MHz、自動頻道；2.4G：`rt_HT_BW=0`（20 MHz）、`rt_TxBurst=1`；`rt_HT_OpMode` 維持 1——2.4G 預設 b/g/n 混合，驅動實際套用的是 0（iNIC／RT2860 dat 都是 `0;0`），Greenfield 只在純 N 模式生效。5G 40／80 MHz 時自動選頻不選 165（d29b6bf）。依據見 WIFI-STABILITY | `shared/src/defaults.c`、`rc/src/ralink.c` |
-| **每日自動選頻** | `tw_acs_daily`、`tw_acs_hour`（預設 4 點起、Wi-Fi 閒置才換）；實測 04:01 執行，頻道沒變也會重啟 2.4G 約 5 秒 | `tw-wifi-acs` |
+| **Wi-Fi 出廠預設** | 5G：`wl_TxBurst=1`、`wl_HT_OpMode=0`（混合，關閉 Greenfield，1a9cbaf）、80 MHz、自動頻道；2.4G：`rt_HT_BW=0`（20 MHz）、`rt_TxBurst=1`、`rt_HT_OpMode=0`（0bf61c2 起；以前是 1）。D3 的 2.4G 預設是 g/n 混合（`rt_gmode=5`；以前文件寫 b/g/n 是錯的），這個模式下驅動本來就寫 HT_OpMode 0（iNIC／RT2860 dat 都是 `0;0`），Greenfield 只在純 N 模式生效。無線進階頁的「(*)」建議值跟出廠值一致；D3 不顯示沒作用的 5G 頻段導引、MU-MIMO（只有 7615／7915 有）與 2.4G 空中時間公平（rc 沒讀 `rt_airtimefairness`）。5G 40／80 MHz 時自動選頻不選 165（d29b6bf）。依據與還沒實測的參數見 WIFI-STABILITY | `shared/src/defaults.c`、`rc/src/ralink.c`、`httpd/src/web_ex.c` |
+| **升級時換掉舊預設** | `nvram_restore_defaults()` 只補不存在的鍵，舊機器的舊預設會一直留著；`tw_defaults_ver`（defaults.c 給 1，新機器不跑）升級前不存在、又不是整份回復出廠時，值剛好等於舊預設的才換成新預設，每項寫一行系統記錄（只做一次）。目前只遷移 `wl_HT_OpMode`、`rt_HT_OpMode` 1→0；802.11r 照專案決定升級不改。分不出「刻意設成舊值」和「舊預設」，只放證據強的項目，Release 說明要寫 | `rc/src/tw_migrate.c`、`rc/src/rc.c` |
+| **每日自動選頻** | `tw_acs_daily`、`tw_acs_hour`（預設 4 點起、Wi-Fi 閒置才換）；實測 04:01 執行，頻道沒變也會重啟 2.4G 約 5 秒。5G 選頻後避開強的緊鄰頻道 `tw_acs_adj`（0de393d 起出廠 1；ROADMAP I13） | `tw-wifi-acs` |
+| **後台讀黑潮統計** | 總覽、網際網路、遠端頁經 `/kuroshio_api.cgi` 讀 `/api/status` 精簡版（`lite=1`，`tw_ui.js` 的 `kuroStatus()`，25 秒內重用）：今天查詢、擋下、CDN 置換、回應中位數、上游狀態、憑證到期日；診斷頁事件時間軸＝`latency.json` 的 `wan_watch.events`＋tw-roamd 的漫遊／換頻段紀錄（7 天內），不是另外的取樣器（076d405） | `www/.../tw_ui.js` |
 | **中華電信 MOD** | `tw_mod.c`（`tw_mod_auto` 預設 1）：看門狗每 10 秒用 BPF 收區網 DHCP 封包，Vendor Class `CHT-` 開頭就是機上盒，比對各 LAN 孔收到的廣播計數（`phy_status_port_rx_bcast()`），連續 3 次只剩同一孔就設成 MOD 專用孔（`wan_stb_x`、`wan_stb_iso=1`）並寫系統記錄；已有 MOD 孔或 AP 模式時不監聽、不會自動取消。有 MOD 孔時 WAN 設成交換器 IGMP 的固定上游孔（1f7ff9e，修正直播黑畫面）。MOD 走交換器橋接，**不經過 igmpproxy**。限制：機上盒沒重新要位址就偵測不到（要重開機上盒）。文件與紀錄不要寫機上盒的 MAC、序號、位址 | `rc/src/tw_mod.c`、`rc/src/switch_mtk_esw.c`、`www/.../tw_p_internet.js` |
 | **igmpproxy 0.3** | 兩個修補：`patches/001-…`（上游 PR #98，`internAgeRoute()` use-after-free；還沒實際觸發驗證）、`patches/002-…`（核心要求啟用路由時來源在下游介面就略過；已實測）；當掉時 watchdog 會重啟。IGMP 代理預設開 | `trunk/user/igmpproxy/patches/` |
 | **連外中斷自動重新連線** | tw-stats 每 10 秒 ping HiNet DNS、TWNIC、Cloudflare（D1 同一份）；三個都不通 `tw_wan_watch_sec` 秒（預設 30）＋TCP（1.1.1.1:443、168.95.1.1:53、8.8.8.8:53）也不通才走 rc `auto_wan_reconnect`；沒有 IPv4 至少 90 秒；退避 2／5／10／30 分鐘、恢復 10 分鐘歸零；ping 不通但 TCP 通＝只是 ping 被擋，60 秒後再確認、ping 恢復就清掉。狀態在 latency.json 的 `wan_watch`，診斷頁卡片。測試法：`iptables -I OUTPUT -o ppp0 -j DROP`（重撥時防火牆重建會清掉；要測退避就迴圈加回去） | `rc/src/tw_stats.c`、`tw_p_diag.js` |
@@ -110,7 +112,18 @@ git pull
 
 ---
 
-## 3. 已完成（截至 2026-11-20，`1f7ff9e`）
+## 3. 已完成（截至 2026-11-23，`41a448b`）
+
+- 正式版：**v2026.11.20**（第一版，PR #2 合併 main）、**v2026.11.22**（黑潮 DNS 3.4.4；標籤打在開發分支的 d5434a2，main 沒有再合併）
+- 2026-11-21～23（v2026.11.20 之後）：
+  - AP 互助漫遊 D3＋手機實機：MT7603 用 11r 的裝置每 10 分鐘被踢（9443404）、MT7612 手機不回 Beacon Report（4cfd01a）都已修，細節見 ROAM-COOP 12.1
+  - 連不出去時自動重新連線 WAN（4da9167、5af3c2c、3bca635）、暫停上網定時恢復（71ab6e7）、裝置頁 Wi-Fi 明細（47c6a67），實測見 VERIFY-d179165
+  - 黑潮 DNS 3.4.4（d5434a2）：串接卡片照 LuCI 重做、`chain_pin`、社群 `use_hints`／`use_upstreams`、`/api/chain` 加進白名單、補 3.3.6～3.3.7 舊預設檔 sha256；D3 與主路由器都 3.4.4 時的串接驗證見 5.7
+  - 後台（076d405）：總覽／網際網路／遠端接上黑潮統計與憑證到期日、健康路徑加延遲與掉包、診斷頁事件時間軸、「之後的版本才有」字樣都改成實際原因、黑潮狀態頁版面整理
+  - Wi-Fi 預設（0bf61c2）：`rt_HT_OpMode` 出廠 0、頁面「(*)」跟出廠值一致、升級時換掉舊預設（`tw_migrate.c`）、D3 不顯示沒作用的選項
+  - 後台（41a448b）：黑潮狀態頁卡片之間留 16px；httpd 讓瀏覽器快取 JS／CSS 30 天，`www/Makefile` 安裝時把頁面引用的本機 .js／.css 加上 `?v=<編譯時間>`（`tw_kuro.js` 動態載入的用 `__TW_ASSET_VER__` 佔位），韌體更新後不會配到舊檔
+
+以下是 2026-11-20（`1f7ff9e`）以前的：
 
 - 台灣化：繁中介面、台灣 Wi-Fi 頻道與功率標示、每日自動選頻、2.4G／5G 同名、802.11k/v 預設開、PPPoE MTU 1480＋自動偵測、WireGuard 伺服器、AP 互助漫遊 `tw-roamd`（觀察／建議模式）、IoT 網路
 - 新後台（依使用者目的重做）：總覽、裝置、Wi-Fi、網際網路、遠端與分享、診斷、系統、進階設定；黑潮 DNS 子頁組（LuCI 移植，含自訂規則與評測名單編輯）。頻寬管理頁已隨硬體 QoS 捨棄移除（6959e79）
@@ -123,7 +136,7 @@ git pull
 
 詳細紀錄：HANDOFF-UI 第 11～13 節、`docs/WIFI-STABILITY.md`、`docs/VERIFY-*.md`。
 
-**ROADMAP 已在 2026-11-20 跟實際進度同步。**
+**ROADMAP 已在 2026-11-23 跟實際進度同步。**
 
 ---
 
@@ -131,20 +144,21 @@ git pull
 
 | 事項 | 狀態 |
 |---|---|
-| D3 長時間穩定性測試（第 5.1 節） | 過夜長測已做兩晚（2026-11-18～19 8 小時、2026-11-20 3 小時 24 分，都通過，見 WIFI-STABILITY）；7 天長測列為發布後、由使用者決定 |
-| 黑潮 3.4.0 作者要的驗證 | ①②⑤ 已驗證；③（主路由器關 `allow_downstream`）④（主路由器重開或暫停黑潮）要動主路由器、由使用者決定；⑥補跑時段 `catchup_window` 還沒做。記憶體不回落已回報作者，不擋 B6 |
+| D3 長時間穩定性測試（第 5.1 節） | 過夜長測已做兩晚（2026-11-18～19 8 小時、2026-11-20 3 小時 24 分，都通過，見 WIFI-STABILITY）；**整晚 Wi-Fi 壓測（2026-11-22 晚到 11-23 08:00）結果待整理**；7 天長測由使用者決定 |
+| 黑潮串接（3.4.0 作者要的驗證） | ①②③⑤ 已驗證，④只做了短重啟（2026-11-22～23，D3 與主路由器都 3.4.4，見 5.7）；④長時間停止、⑥補跑時段 `catchup_window` 還沒做。記憶體不回落已回報作者 |
+| Wi-Fi 參數還沒有證據的項目 | 5G `wl_stbc`、`wl_HT_AMSDU`，2.4G `rt_HT_AMSDU`，LDPC、DTIM，2.4G 開 11v 的 IoT 過夜，11r 手機實際 FT 換 AP（WIFI-STABILITY「無線進階頁預設值整理」）；有實測結果才改預設 |
 | D3 交換器 bug 回報上游 TurBoTse | 2026-11-18 使用者同意後已發 [TurBoTse/padavan#32](https://github.com/TurBoTse/padavan/issues/32)（繁體中文；連同無法重開機） |
 | 硬體 NAT 殘留標記（STP 誤判根因）回報上游 | 2026-11-19 使用者同意後已發 [TurBoTse/padavan#33](https://github.com/TurBoTse/padavan/issues/33)、[hanwckf/padavan-4.4#73](https://github.com/hanwckf/padavan-4.4/issues/73)（繁體中文；3.4 的 `__alloc_skb` 有 `DO_FAST_CLEAR_FOE`，4.4 漏掉；雙 GMAC 機型的影響是推論、沒實測，請社群幫忙確認） |
-| 第一個正式 Release（B6，v2026.11.20） | D3 實機與夜間長測已通過，發布說明 `docs/RELEASE-NOTES-v2026.11.20.md` 已定稿（MOD 偵測、直播、換台都已實測）；由使用者決定合併 main 與打標籤。CR6608 尚未實機（發布說明有註明） |
+| 正式 Release | ✅ v2026.11.20（2026-11-20，PR #2 合併 main）、✅ v2026.11.22（2026-11-22，黑潮 3.4.4，標籤在開發分支 d5434a2）。之後的 076d405、0bf61c2、41a448b 還沒發布；要不要再合併 main、何時發下一版由使用者決定。CR6608 尚未實機（發布說明有註明） |
 | MI-MINI | 暫緩（第 5.9 節） |
 
 ---
 
 ## 5. 待辦清單（依建議優先順序）
 
-> **2026-11-19 起最新的優先順序與工作量以 [ROADMAP.md「目前優先順序」](ROADMAP.md) 為準**；本節以下是較早的細節（硬體 QoS 已捨棄、監測只留漫遊相關），保留參考。
+> **2026-11-19 起最新的優先順序與工作量以 [ROADMAP.md「目前優先順序」](ROADMAP.md) 為準**（2026-11-23 同步過）；本節以下是較早的細節（硬體 QoS 已捨棄、監測只留漫遊相關），保留參考。
 
-### 5.1 D3 長時間穩定性測試（過夜長測已做兩晚；7 天版本發布後由使用者決定）
+### 5.1 D3 長時間穩定性測試（過夜長測已做兩晚；2026-11-22～23 整晚 Wi-Fi 壓測結果待整理；7 天版本由使用者決定）
 目的：用數據回答「4.4 在 D3 上長期是否穩定」（別人的分支推薦 3.4，但他們的 4.4 在 D3 上本來就有交換器與重開機的問題，見 `docs/KVR-3.4-REVIEW.md` 與 HANDOFF-UI 第 12 節）。
 - 寫一個記錄腳本（例如 `trunk/user/scripts/files/usr/bin/tw-soak`，或先放在 `/etc/storage` 手動執行）：每小時記錄運作時間、可用記憶體（`/proc/meminfo`）、各程式 RSS（kuroshio、httpd、dnsmasq）、`nf_conntrack_count`、WAN 連線狀態與重連次數、Wi-Fi 裝置數、黑潮保護程式切換次數（syslog）、`dmesg` 的錯誤；寫到 `/tmp`，每天複製一份到 USB 或用 `scp` 拉回本機
 - 標準：連續 7 天不重開、不當機；可用記憶體沒有持續下降；有線與 Wi-Fi 沒有異常斷線；黑潮很少或沒有切回業者 DNS
@@ -156,7 +170,7 @@ git pull
 - 實測 CPU 約 3 倍、Wi-Fi 延遲沒有改善；頻寬管理頁、`hw_qos_*`、`tw-qos-check` 都已移除（6959e79）。不要再加回來，原本的規劃留在 ROADMAP E 章當紀錄
 
 ### 5.3 監測取樣器 `twstats`＋資料 API（ROADMAP D 章、HANDOFF-UI 第 6、8 節）
-- 總覽、診斷、裝置詳情靠它。目前頁面用「後備資料」與誠實的「功能未提供」
+- 總覽、診斷、裝置詳情靠它。2026-11-23（076d405）起已有資料的都接上，「之後的版本才有」字樣改成實際原因（延遲監測關閉、資料收集中、漫遊中控關閉等）；還沒做、需要新後端的：向外查對外位址比對 CGNAT、網站回應檢查；路由器端測速決定不提供（路由器自己測會受 CPU 限制，畫面已說明）
 - 2026-11-18 完成 D1 延遲、D2 WAN 流量（`d230446`，HANDOFF-UI 第 13.14 節）：rc applet `tw-stats`（watchdog 依 `tw_stats_enable` 啟停，預設開）寫 `/tmp/twstats/latency.json`；`/tw_api.asp?q=<名稱>`，還沒實作的名稱回 `{"_fallback":true}`
 - D3 連線追蹤表、D5 事件時間軸、D6 頻道忙碌率：**不做**（2026-11-19，只留跟漫遊有關的資料）；D4 每台 Wi-Fi 裝置訊號／速率併入 KVR R1。資料只存記憶體，不寫 Flash
 
@@ -166,7 +180,7 @@ git pull
 - CR6608 的設定與使用者舊倉庫的比對已做過（雲端紀錄）：裝置樹、機型、核心設定都相同
 
 ### 5.5 Wi-Fi 與漫遊（ROADMAP I 章）
-- **AP 互助漫遊（2026-11-20 程式完成、待實機）**：設計與驅動查證全在 `docs/ROAM-COOP.md`。
+- **AP 互助漫遊（2026-11-20 程式完成；2026-11-21～22 D3＋手機實機，見 ROAM-COOP 12.1）**：設計與驅動查證全在 `docs/ROAM-COOP.md`。兩個頻段問 Beacon Report 手機都同一秒回（5G 是 4cfd01a 修好的）、手機會回 BTM（目前回狀態 7 拒絕）；多台 AP（H4）、CR6608 還沒測。
   - 程式：`trunk/user/rc/src/tw_roamd.c`（TWR2 交換＋決定層）、`tw_roam_drv.c`／`tw_roam.h`（各晶片 ioctl 與事件）；`watchdog.c` 改模式時重新啟動 tw-roamd；Wi-Fi 頁「多台 AP 與漫遊」切換關閉／觀察／建議（`tw_roam_enable` 0／1／2，預設 1）。
   - 驅動：D3 2.4G／5G 都開 11k＋11v；MT7612 補 Beacon Report 事件 0x0950、修漏記憶體；MT7603 修 `WNMEnable=0` 無效。
   - 實機要看：`tw-roamd status` 的「驅動」那行（各頻段能不能問／收回報／建議）、每台裝置的 11k／11v、`/etc/storage/tw-diag/roam.log`；驗證步驟照 ROAM-COOP 第 11 節（D3＋Android 手機先做回 5G）。
@@ -174,8 +188,8 @@ git pull
 - 漫遊頁與裝置頁的資料（2026-11-20）：tw-roamd 寫 `/tmp/tw-roamd.json`（`q=roam`，每 5 秒）與 `/tmp/tw-roamd.devices`（`q=device&mac=`，每分鐘；24 小時訊號、斷線、漫遊）；實機要看 Wi-Fi 頁「多台 AP 與漫遊」與裝置詳情頁的圖
 - J4 WireGuard 實機驗證：手機連上後確認 `/tw_api.asp?q=vpn` 與「遠端與分享」顯示連線中；`ip link del wg1` 後應出現 `running:false` 的紅燈；用含 `"`、`<` 的裝置名稱確認 JSON 跳脫
 - I5b CR6608 5G 的 `WNMEnable` 要實機確認；I7 D3 的 802.11r（ralinkiappd）已改成兩個頻段都聽，待實機；I8 CR6608 頻段導引評估
-- **802.11r 預設開**（2026-11-20）：`FtMdId1` 由 SSID 算、Wi-Fi 頁開關、BTM 的 Mobility Domain 位元跟著 r；AP 間金鑰交換的加密金鑰是驅動預設值（ROAM-COOP 第 10 節）
-- ~~11r 自適應~~：改成 **IoT 網路**（訪客那一格改成 `_IoT`，不宣告 k/v/r，舊裝置改連它；ROAM-COOP 第 13 節），程式完成、待實機
+- **802.11r 預設開**（2026-11-20）：`FtMdId1` 由 SSID 算、Wi-Fi 頁開關、BTM 的 Mobility Domain 位元跟著 r；AP 間金鑰交換的加密金鑰是驅動預設值（ROAM-COOP 第 10 節）。D3 信標兩頻段 MDID 相同（VERIFY-d179165）；手機實際用 FT 換 AP 還沒實測
+- ~~11r 自適應~~：改成 **IoT 網路**（訪客那一格改成 `_IoT`，不宣告 k/v/r，舊裝置改連它；ROAM-COOP 第 13 節）。D3 信標確認 IoT 網路只有 PSK、沒有 k/v/r（VERIFY-d179165）；2.4G 開 11v 後舊 IoT 裝置的過夜回歸還沒做
 
 ### 5.6 設定存進 Flash 的其餘部分
 - ~~Padavan 其他檔案欄位存進 Flash~~：`d92c48c` 完成（套用完存一次，內容沒變不寫）
@@ -188,7 +202,11 @@ git pull
 - 黑潮新版本：照 `trunk/user/kuroshio/Makefile` 開頭的說明升級；預設設定有變時把舊預設檔的 sha256 加進 `kuroshio.sh` 的 `UCI_OLD_DEFAULTS`（改過的設定檔由 `kuroshio uci-migrate` 處理）
 - ~~查看類的 GET 擋跨站與外網登入~~：`5771f9a` 完成（`X-TW-Request` 標頭、登入來源每次請求判斷）
 - J7 Cloudflare 以外的 DDNS（在黑潮專案做）
-- **黑潮 3.4.0（串接模式，預設開）作者要的驗證**：①串接狀態 ②共用結果 ⑤重新載入不斷線（400 筆 0 失敗）已驗證；還沒做：③主路由器關 `allow_downstream` 後 D3 退回自己評測、打開後自動接回 ④主路由器重開或暫停黑潮時 D3 退回自己的加密上游、回來後自動接回（③④要動主路由器，使用者決定）⑥補跑時段 `catchup_window`
+- **黑潮 3.4.0（串接模式，預設開）作者要的驗證**：①串接狀態 ②共用結果 ⑤重新載入不斷線（400 筆 0 失敗）已驗證（3.4.0 時）。③④ 2026-11-22～23 在 D3 3.4.4、主路由器（KWRT）也是 3.4.4 時驗證：
+  - ③ 主路由器關 `allow_downstream`：約 3 分鐘後 D3 退回自己運作（原因 `not-allowed`）；打開後在 10 分鐘的確認時自動接回 ✅
+  - ④ 主路由器黑潮短重啟：D3 沒察覺、查詢不中斷 ✅。**長時間停止沒測**；升級主路由器時曾中斷一次，D3 記錄「連續失敗 3 次，暫停 30 秒，先用自己的上游」後自動恢復
+  - 3.4.4 新增的：鎖錯指紋（`chain_pin`）原因是 `pin-mismatch`、不向上游登記，改回正確指紋後重新串接 ✅；D3 關 CDN 置換時上游不再幫它換 ✅
+  - 還沒做：⑥補跑時段 `catchup_window`
 - **黑潮 3.4.0 記憶體**（已回報作者，不是 B6 阻擋項目）：每秒 40 筆查詢 0 逾時；輕載 6 小時 22.3→28.7 MB；每秒 20 筆不重複新網域持續 20 分鐘升到約 110 MB、閒置不回落（記憶體控制判斷寬裕、保留量 36 MB）；模擬 64 MB 時會讓出快取但 RSS 不降
 - ~~黑潮 3.3.6 整合與驗證~~（作者 2026-11-19 回覆；已完成，3.3.7 驗證過，以下留作紀錄）：
   - 整合：升級 Makefile；`kuroshio.sh` 在路由器 IPv6 關閉時帶 `option ipv6 '0'`（`config upstream`；另有 `path_check`、`intercept_policy`，預設即建議值）；WAN 連上／位址改變時呼叫 `kuroshio notify wan-changed`
@@ -200,7 +218,7 @@ git pull
 - A8 定期同步 TurBoTse（上游設定檔不改；衝突多在 `www`、`rc`）
 - B4 預編工具鏈改放本專案 Release（目前抓 TurBoTse 的 `toolchain` 標籤，上游刪檔就編不了）
 - ~~B5 Actions 升級 Node 24~~：`8ca57dc` 完成
-- B6 第一個正式 Release v2026.11.20：README 與發布說明已更新 → 開 PR 合併到 main → 打 `v*` 標籤（順便驗證發布用的兩個 action）
+- ~~B6 第一個正式 Release v2026.11.20~~：2026-11-20 完成（PR #2 合併 main、打標籤，發布用的 action 正常）；v2026.11.22 在 2026-11-22 發布（標籤在開發分支）
 - MOD 後續：重開路由器但機上盒沒重開時也能偵測、不用 MOD 時自動取消 MOD 孔（目前都要手動）
 - 低優先：D3 裝置樹整理重複的 MTD 項目（改了 mtd 編號會影響 `mtd_storage.sh` 以外用編號的地方，先全專案搜尋）
 
