@@ -300,10 +300,12 @@ is_public_ip() {
 # 2. 改過的 → kuroshio uci-migrate（3.3.1 起；規則跟 OpenWrt 套件升級時一樣：依 main.lists_version
 #    更新沒動過的預設清單、加上新版本的清單，使用者改過的不動，做過的不再做）
 #    一定要明確給使用者設定檔的路徑：KUROSHIO_UCI_FILE 指的是 /tmp 裡合併過表單值的那一份
-# 舊版預設檔的 sha256：3.0.1～3.1.0（這幾版內容相同）、3.2.0、3.3.0
+# 舊版預設檔的 sha256：3.0.1～3.1.0（這幾版內容相同）、3.2.0、3.3.0～3.3.5、3.3.6～3.3.7
+# （3.4.0～3.4.4 的預設檔是 ec393538…，就是目前這份；下次預設檔變了再加進來）
 UCI_OLD_DEFAULTS="f0cbe30c3856635eb6a28621ee3d84b88fa9a9b5fe38d07ddaa1ef310b6df66e
 2d1a9a7ce393269243957adb124d31a2bf66e70e0098e29c830be6bce31d47b6
-2acf7cb391f48ebe79b4e5432055158e16e93f33f7296382ff0f4513b785beb0"
+2acf7cb391f48ebe79b4e5432055158e16e93f33f7296382ff0f4513b785beb0
+8466fda10ff2631f19bd37f26127549f2430852c0437e56ab0e13cd18a767bfa"
 migrate_uci() {
 	local cur new h tmp="$RUN/uci.migrate" out
 	[ -f "$UCI_SRC" ] && [ -f "$SHARE/kuroshio.uci.default" ] || return 0
@@ -797,9 +799,11 @@ api_fetch() {
 	else echo '{"ok":false,"error":"黑潮 DNS 沒有回應"}'; fi
 }
 
-# 白名單跟 OpenWrt 版（openwrt/kuroshio/files/rpcd.sh）相同
+# 白名單以 OpenWrt 版（openwrt/kuroshio/files/rpcd.sh）為準；韌體另外多了 /api/chain（串接狀態，黑潮 3.4.4 作者要的）
+# 與 /api/backup/last-import，少了 /api/memory/trim
 api_view() {
 	case "$1" in
+	/api/chain) ;;
 	/api/status|/api/access|/api/sysinfo|/api/upstreams|/api/benchmark|/api/cdn/pools|/api/cdn/v6nodes|/api/cdn/summary|/api/cdn/domains|/api/jobs|/api/trace|/api/filter/check|/api/routing|/api/ddns|/api/paths|/api/interfaces) ;;
 	/api/dashboard|/api/backup/last-import) ;;
 	/api/community/status|/api/community/peers|/api/community/events|/api/community/invite) ;;

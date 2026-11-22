@@ -153,11 +153,14 @@
 				{ k: 'community.enabled', t: 'flag', l: '啟用社群模式', def: '0' },
 				{ k: 'community.share_domains', t: 'flag', l: '分享網站驗證結果', def: K.def('community.shareDomains') === false ? '0' : '1', d: '只分享網域雜湊，不公開網站名稱。' },
 				{ k: 'community.share_upstreams', t: 'flag', l: '分享上游 DNS', def: K.def('community.shareUpstreams') === false ? '0' : '1', d: '好友收到後只當每日評測的候選。' },
+				/* 3.4.3 */
+				{ k: 'community.use_hints', t: 'flag', l: '使用好友的 CDN 資料', def: K.def('community.useHints') === false ? '0' : '1', d: '好友給的網站驗證結果、跨 CDN 結果、台灣節點只當候選，本機驗證通過才使用。關掉 = 只靠自己找。' },
+				{ k: 'community.use_upstreams', t: 'flag', l: '使用好友的上游 DNS', def: K.def('community.useUpstreams') === false ? '0' : '1', d: '好友給的上游只當每日評測的候選（合計最多 100 個），照常經過汙染、封殺、速度檢查。' },
 				{ k: 'community.stale_days', t: 'text', l: '好友幾天連不上就自動刪除', v: 'uint', dp: 'community.staleDays' },
 				{ k: 'community.reject_days', t: 'text', l: '拒絕後幾天才能再請求', v: 'uint', dp: 'community.rejectDays', pro: 1 },
 				{ k: 'community.sync_interval', t: 'text', l: '多久向好友拉一次資料（分鐘）', v: 'uint', dp: 'community.syncIntervalMin', pro: 1 },
 				{ k: 'community.max_friends', t: 'text', l: '好友數上限', v: 'uint', dp: 'community.maxFriends', pro: 1, d: '達到上限後，自動同意的請求改成人工審核。' },
-				{ k: 'community.min_hit_rate', t: 'text', l: '命中率下限', v: K.range(0, 1, true), dp: 'community.minHitRate', pro: 1, d: '好友給的資料在我這邊驗證成功的比例（0～1）。0 = 不檢查。' },
+				{ k: 'community.min_hit_rate', t: 'text', l: '命中率下限', v: K.range(0, 1, true), dp: 'community.minHitRate', pro: 1, d: '好友給的資料在我這邊驗證成功的比例（0～1），試過 20 次以上還低於下限就暫停採用那一種資料，每 3 天重試一小批。預設 0.3；0 = 不檢查。' },
 				{ k: 'community.auto_delete_low_hit_rate', t: 'flag', l: '命中率太低時自動刪除好友', def: K.def('community.autoDeleteLowHitRate') ? '1' : '0', pro: 1, d: '試過 20 次以上還低於命中率下限就自動刪除。' },
 				{ k: 'community.pow_bits', t: 'text', l: '好友請求的工作量證明難度', v: 'uint', dp: 'community.powBits', pro: 1, d: '越高越難灌請求，但對方送請求也越久。' }
 			]));

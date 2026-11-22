@@ -828,6 +828,7 @@ var KURO = (function () {
 		if (z.cacheEntries != null) out.push('快取 ' + K.fmtNum(z.cacheEntries) + ' / ' + K.fmtNum(z.cacheMax) + ' 筆');
 		if (z.cdnInRam != null) out.push('CDN ' + K.fmtNum(z.cdnInRam) + ' 筆' + (z.cdnOnDiskOnly ? '（另 ' + K.fmtNum(z.cdnOnDiskOnly) + ' 筆在 Flash）' : ''));
 		if (z.filterListRules != null) out.push('清單 ' + K.fmtNum(z.filterListRules) + ' 條');
+		if (z.otherBytes) out.push('其他 ' + K.bytes(z.otherBytes));	/* 3.4.1 */
 		return out.join(' · ');
 	}
 
@@ -862,7 +863,9 @@ var KURO = (function () {
 			['CDN 置換', K.fmtNum(cdn.rewrites), 'ECS ' + K.fmtNum(cdn.ecsRewrites) + ' · 跨 CDN ' + K.fmtNum(cdn.crossRewrites)],
 			['快取筆數', K.fmtNum(api.cacheEntries), 'CDN 網域庫 ' + K.fmtNum(api.cdn && api.cdn.domains)],
 			['過濾規則', K.fmtNum(api.filter && (api.filter.lists + api.filter.custom)), '自訂 ' + K.fmtNum(api.filter && api.filter.custom) +
-				(api.filter && api.filter.update && api.filter.update.state === 'running' ? ' · 清單更新中…' : '')]
+				(api.filter && api.filter.update && api.filter.update.state === 'running' ? ' · 清單更新中…' : '')],
+			/* 串接中：3.4.2 chainBypass（上游黑潮擋掉、這台自己解析）、3.4.3 chainRetry（上游解析不到、這台自己再問一次） */
+			api.chain && api.chain.state === 'chained' ? ['串接：這台自己解析', K.fmtNum((d.chainBypass || 0) + (d.chainRetry || 0)), '上游擋掉的 ' + K.fmtNum(d.chainBypass || 0) + ' · 上游解析不到的 ' + K.fmtNum(d.chainRetry || 0)] : null
 		]));
 
 		var sys = api.system || {}, per = sys.persist || {}, lat = d.latency || {}, ls = api.listeners || {}, mem = sys.memory || {};
@@ -873,7 +876,9 @@ var KURO = (function () {
 			['硬體', (sys.memTotalMB ? sys.memTotalMB + ' MB · ' : '') + (sys.cores || '?') + ' 核', sys.arch || ''],
 			['系統記憶體', mem.availKB != null ? '可用 ' + mb(mem.availKB) + ' MB' : (sys.memAvailableMB != null ? '可用 ' + sys.memAvailableMB + ' MB' : '-'),
 				'保留 ' + mb(mem.reserveKB) + ' MB（' + (mem.reserveAuto ? '自動' : '設定') + '）' + (mem.headroomKB != null ? ' · 保留以上 ' + mb(mem.headroomKB) + ' MB' : '') +
-				(mem.enabled ? ' · ' + (mem.stateLabel || mem.state) + (mem.growth === false ? '（不再長大）' : '') : '') + (mem.psi ? ' · PSI ' + mem.psi.someAvg10 + '%' : '') +
+				(mem.enabled ? ' · ' + (mem.stateLabel || mem.state) + (mem.growth === false ? '（不再長大）' : '') : '') +
+				/* 3.4.3：pressure 是當下量到的（state 要穩定一段時間才換） */
+				(mem.pressure && mem.pressure !== 'normal' ? ' · 當下：' + ({ low: '偏低', critical: '嚴重不足' }[mem.pressure] || mem.pressure) : '') + (mem.psi ? ' · PSI ' + mem.psi.someAvg10 + '%' : '') +
 				/* 3.3.0：kuroshio notify trim（韌體更新等佔記憶體的操作之前）讓出記憶體後，這段時間不長大 */
 				(mem.holdUntil && mem.holdUntil > Date.now() ? ' · 已先讓出記憶體（到 ' + K.time(mem.holdUntil, 'time') + ' 前不長大）' : '')],
 			['本程式記憶體', sys.rssKB ? (sys.rssKB / 1024).toFixed(1) + ' MB' : '-', memSizes(mem.sizes) +
@@ -910,13 +915,7 @@ var KURO = (function () {
 
 		/* 3.4.0 串接：前面有另一台黑潮（例如主路由器）時自動串接，共用它的評測結果與 CDN 節點 */
 		var ch = api.chain;
-		if (ch && (ch.state !== 'none' || (ch.serving && (ch.serving.downstreams || []).length))) {
-			var sv = ch.serving || {}, ds = sv.downstreams || [];
-			h += K.card('串接', '<p>' + K.badge({ chained: '串接中', backup: '上游暫停，改用自己的上游', none: '沒有串接' }[ch.state] || ch.state, ch.state === 'chained' ? 'ok' : 'info') + ' ' + esc(ch.text || '') + '</p>' +
-				(ch.upstream ? '<p class="tw-small tw-muted">上游 ' + esc(ch.upstream.address || '-') + (ch.upstream.fingerprint ? ' · 指紋 <code>' + esc(ch.upstream.fingerprint) + '</code>' : '') + '</p>' : '') +
-				(ch.reason ? K.note(esc(ch.reason), 'warn') : '') +
-				(sv.text ? '<p class="tw-small tw-muted">' + esc(sv.text) + (ds.length ? '：' + ds.map(function (d) { return esc(d.address || d.ip || d.nodeId || ''); }).join('、') : '') + '</p>' : ''), { id: 'kuroshio-chain' });
-		}
+		if (ch && (ch.state !== 'none' || (ch.serving && (ch.serving.downstreams || []).length))) h += chainCard(ch);
 		h += K.card('上游', '<p class="tw-small tw-muted">' + (api.autoUpstreams ? '自動上游來自 ' + esc(api.autoUpstreams.generatedAt) + ' 的評測' : '還沒有每日評測結果，暫時使用固定上游與備援。') + '</p>' +
 			K.table(['上游', '角色', '成功', '失敗', '平均延遲', ''], (api.upstreams || []).map(function (u) {
 				return ['<span class="kr-break">' + esc(u.id) + '</span>', esc({ pinned: '固定', auto: '自動', fallback: '備援', chain: '串接（上游黑潮）' }[u.role] || u.role), K.fmtNum(u.ok), K.fmtNum(u.fail), u.avgMs != null ? u.avgMs + ' ms' : '-', u.paused ? K.badge('暫停中', 'warn') : ''];
@@ -928,7 +927,9 @@ var KURO = (function () {
 			return [esc(JOBS[n] || n),
 				esc((c.monthDays ? '每月 ' + [].concat(c.monthDays).join(',') + ' 日' + (c.jitterDays ? '起（每台錯開）' : '') + ' ' : '') + [].concat(c.at || []).join(', ') + (c.weekdays ? ' (' + c.weekdays.join(',') + ')' : '') + (c.enabled === false ? ' 已停用' : '')),
 				run ? K.badge('執行中…', 'info') : K.time(s.lastEnd),
-				esc((jobs.detail && jobs.detail[n] && jobs.detail[n].text) || (s.lastCode === 0 ? '成功' : (s.lastCode == null ? '-' : '失敗（' + s.lastCode + '）'))),
+				/* 3.4.0 catchUpWaiting、3.4.2 catchUpProvided（串接中由上游提供的工作不補跑） */
+				esc((jobs.detail && jobs.detail[n] && jobs.detail[n].text) || ((jobs.catchUpProvided || []).indexOf(n) >= 0 ? '由上游黑潮提供，暫不補跑' :
+					(jobs.catchUpWaiting || []).indexOf(n) >= 0 ? '等補跑時段（' + (jobs.catchUpWindow || '-') + '）' : '') || (s.lastCode === 0 ? '成功' : (s.lastCode == null ? '-' : '失敗（' + s.lastCode + '）'))),
 				K.btn('立即執行', 'job', { arg: n, disabled: run })];
 		}), '沒有排程工作') + ((jobs.queue || []).length ? '<p class="tw-small tw-muted">排隊中：' + esc(jobs.queue.map(function (x) { return (JOBS[x.name] || x.name) + (x.reason ? '（' + x.reason + '）' : ''); }).join('、')) + '</p>' : ''));
 
@@ -940,6 +941,59 @@ var KURO = (function () {
 		var errs = (api.errors && api.errors.recent) || [];
 		if (errs.length) h += K.card('最近的錯誤（共 ' + api.errors.count + ' 次）', K.pre(errs.slice(0, 10).map(function (e) { return K.time(e.at, 'sec') + '  ' + e.msg; }).join('\n')));
 		return h;
+	}
+	/* 串接卡片（比照黑潮 LuCI ui-core.js 的 chainView，3.4.4）：句子照 API 的 text 整句顯示，
+	 * 這裡只把狀態做成標籤、把其他欄位整理成「標籤：值」。原因代碼放在句子後面的括號，給回報問題時用 */
+	var CHAIN_CALM = { 'not-allowed': 1, 'upstream-too-old': 1, 'unsupported': 1, 'gone': 1 };
+	var CHAIN_KIND = { upstreams: '上游評測結果', 'cdn-pools': 'CDN 節點池', 'cdn-v6': 'CDN IPv6 節點', 'cdn-ranges': 'CDN 官方範圍', 'filter-copy': '過濾清單副本' };
+	var CHAIN_ERR = {
+		'no-room': '這台留不下副本', 'not-subscribed': '這台沒有訂閱這份清單', 'newer-format': '格式比這台新', 'hash-mismatch': '內容跟清單對不上',
+		'too-large': '太大', 'memory': '記憶體不夠，這次沒有同步', 'no-share': '上游還沒有共用結果', 'no-response': '上游沒有回應', 'no-tcp': '上游不能用 TCP 傳',
+		'key-changed': '上游換了節點金鑰', 'import-failed': '匯入失敗', 'own-newer': '這台自己的比較新（不算失敗）'
+	};
+	function chainCard(c) {
+		var rows = [], u = c.upstream, sv = c.serving || {}, ds = sv.downstreams || [], sh = c.shared, au = c.audit;
+		var row = function (l, v) { if (v !== null && v !== undefined && v !== '') rows.push([l, v]); };
+		var errText = function (e) { return esc(CHAIN_ERR[e] ? CHAIN_ERR[e] + '（' + e + '）' : e); };
+		var keyChanged = !!(u && u.keyChangedAt && Date.now() - u.keyChangedAt < 86400000);
+		var b;
+		if (c.enabled === false) b = ['已關閉', 'off'];
+		else if (c.state === 'chained') b = c.backupActive ? ['串接中（暫時用自己的上游）', 'warn'] : ['串接中', 'ok'];
+		else if (c.state === 'detected' || c.state === 'verifying') b = ['驗證中', 'warn'];
+		else if (c.state === 'released') b = ['沒有串接', CHAIN_CALM[c.reason] ? 'off' : 'warn'];
+		else b = ['沒有偵測到', 'off'];
+		var warn = b[1] === 'warn' || keyChanged || /重複/.test(c.text || '');
+		if (u) {
+			row('上游位址', u.address ? esc(u.address) + (u.via === 'intercept' ? '（經攔截）' : '') + (u.proto ? ' · ' + esc(String(u.proto).toUpperCase()) : '') : null);
+			row('上游版本', u.version ? '黑潮 ' + esc(u.version) : null);
+			row('上游指紋', u.fingerprint ? '<code>' + esc(u.fingerprint) + '</code>' : null);
+			if (keyChanged) row('換過的舊指紋', '<code>' + esc(u.previousFingerprint || '?') + '</code>（' + K.time(u.keyChangedAt) + ' 換過）');
+			if (c.state === 'chained') {
+				row('串接層數', (u.depth || 2) + ' 層（上限 4 層）' + (u.viaNat ? ' · 經 NAT' : ''));
+				row('串接開始', u.since ? K.time(u.since) : null);
+				row('上游最後確認（心跳）', u.lastOkAt ? K.time(u.lastOkAt, 'sec') : null);
+			}
+			if (u.failures) row('連續失敗', u.failures + ' 次');
+			/* 3.4.4：鎖定的指紋（chain_pin）不符時不會向上游登記 */
+			var r = u.registered;
+			if (r) row('向上游登記', r.ok ? '已登記 ' + K.fmtNum(r.names || 0) + ' 個主機名稱，到期 ' + K.time(r.expiresAt) : '登記失敗' + (r.error ? '：' + esc(r.error) : ''));
+		}
+		if (c.backupActive) row('目前的上游', '暫時用自己的加密上游');
+		if (c.retryAt) row('下次重試', K.time(c.retryAt, 'sec'));
+		if (sh) {
+			row('共用結果上次同步', sh.lastSyncAt ? K.time(sh.lastSyncAt) + (sh.error ? ' · ' + errText(sh.error) : '') : (sh.error ? errText(sh.error) : '還沒同步'));
+			var objs = (sh.objects || []).map(function (o) {
+				return esc(CHAIN_KIND[o.kind] || o.kind) + ' ' + (o.error ? K.badge('沒有匯入', 'warn') + ' ' + errText(o.error) : (o.fresh ? K.badge('新鮮', 'ok') : K.badge('過期（照排程自己做）', 'off')));
+			});
+			if (objs.length) row('共用的內容', objs.join('<br>'));
+			if ((sh.skippedJobs || []).length) row('這台跳過的工作', esc(sh.skippedJobs.map(function (j) { return JOBS[j] || j; }).join('、')) + '（由上游提供）');
+		}
+		/* 3.4.2：抽查上游給的 CDN 節點 */
+		if (au && au.sampled) row('抽查上游的答案', '抽查 ' + K.fmtNum(au.sampled) + ' 筆：正確 ' + K.fmtNum(au.valid) + ' · 無法驗證 ' + K.fmtNum(au.unverified) +
+			(au.siteInvalid ? ' · 網站本身異常 ' + K.fmtNum(au.siteInvalid) : '') + ' · 可疑 ' + K.fmtNum(au.suspicious) + (au.releases ? ' · 因此解除串接 ' + K.fmtNum(au.releases) + ' 次' : ''));
+		var text = esc(c.text || '沒有串接的資料') + (c.reason ? ' <span class="tw-small tw-muted">（' + esc(c.reason) + '）</span>' : '');
+		return K.card('串接', '<p>' + K.badge(b[0], b[1]) + '</p>' + (warn ? K.note(text, 'warn') : '<p>' + text + '</p>') + (rows.length ? K.kv(rows) : '') +
+			(sv.text ? '<p class="tw-small tw-muted">' + esc(sv.text) + (ds.length ? '：' + ds.map(function (d) { return esc(d.address || d.ip || d.nodeId || ''); }).join('、') : '') + '</p>' : ''), { id: 'kuroshio-chain' });
 	}
 	function listenerTable(detail) {
 		var P = { doh: 'DoH（TCP）', doh3: 'DoH3（UDP）', dot: 'DoT（TCP）', doq: 'DoQ（UDP）' };

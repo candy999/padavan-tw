@@ -676,7 +676,9 @@
 				{ k: 'upstream.last_resort', t: 'list', l: '最後手段', d: '所有上游都沒回應時。' },
 				num('upstream', 'auto_max', '自動上游最多幾台', 'upstream.autoMax'),
 				{ k: 'upstream.auto_type', t: 'multi', l: '自動上游可用協定', def: K.def('upstream.autoTypes') || ['udp', 'doh', 'dot'], opts: [['udp', 'UDP'], ['doh', 'DoH'], ['dot', 'DoT']] },
-				flag('upstream', 'chain', '自動串接上游的黑潮', 'upstream.chain', '前面的路由器也跑黑潮（3.4.0 起）時，直接問它並共用它的評測結果、CDN 節點與清單副本，這台不用再自己跑評測與 CDN 掃描。關閉 = 自己重做，重複使用網路。'),
+				flag('upstream', 'chain', '自動串接上游的黑潮', 'upstream.chain', '前面的路由器也跑黑潮（3.4.0 起）時，直接問它並共用它的評測結果與 CDN 節點，這台不用再自己跑評測與 CDN 掃描（過濾清單由這台自己下載）。關閉 = 自己重做，重複使用網路。'),
+				/* 3.4.3：只跟指定的那一台串接；3.4.4 起指紋不符就不串接、也不向它登記主機名稱 */
+				{ k: 'upstream.chain_pin', t: 'text', l: '只串接這個指紋的上游', pro: 1, d: '空白 = 不限定。填上游黑潮狀態頁「這台的指紋」；大小寫、冒號、空格都可以。指紋不符時不串接、用自己的上游，也不會把這台的主機名稱登記給它。' },
 				flag('upstream', 'allow_downstream', '提供資料給下游的黑潮', 'upstream.allowDownstream', '後面接的路由器也跑黑潮時，提供評測結果與 CDN 節點給它。關閉 = 下游自己重做評測與掃描。有啟用「繞過防護」清單時建議關閉。')
 			]));
 			h += K.card('解析行為', K.fields([

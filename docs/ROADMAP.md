@@ -191,7 +191,7 @@
 
 ## G. 黑潮 DNS 整合
 
-使用官方 Release 的「Linux 通用包」（目前 v3.4.0，ace2df1；串接模式預設開，執行檔＋`data/`＋預設 UCI 設定，核對 SHA256）；Release 附黑潮 DNS 原始碼包（核對 SHA256）；憑證用 acme.sh（Cloudflare DNS 驗證）。
+使用官方 Release 的「Linux 通用包」（目前 v3.4.4；串接模式預設開，執行檔＋`data/`＋預設 UCI 設定，核對 SHA256）；Release 附黑潮 DNS 原始碼包（核對 SHA256）；憑證用 acme.sh（Cloudflare DNS 驗證）。
 設定用 OpenWrt 版同一套 UCI 格式，由 padavan-tw 的設定頁管理（黑潮 DNS 的管理網頁只接受本機連線）。**預設開啟**。
 
 | # | 項目 | 狀態 |
