@@ -7,10 +7,16 @@
 #   tw-wifi-acs now
 #
 # 做法：只處理「頻道設為自動、單純 AP 模式、Wi-Fi 有開」的頻段；
-# Wi-Fi 60 秒內流量低於 2 MB 才動作，否則等下一次。
-# 重選的方式跟在後台按「套用」一樣（radio2_restart／radio5_restart 重新啟動 Wi-Fi），
-# 驅動啟動時會掃描並選擇最乾淨的頻道；裝置會斷線幾秒後自動重連。
-# 完成後寫入 tw_acs_day（暫存，不寫 Flash），當天不再執行。
+# Wi-Fi 60 秒內流量低於 2 MB 才動作，否則等下一次。完成後寫入 tw_acs_day（暫存，不寫 Flash），當天不再執行。
+#
+# 2026-11-23 起改成「不斷線優先」，依 5G → 2.4G 的順序：
+#   1. 先量測：被動掃描鄰居，跟目前的頻道比分數；沒有明顯更乾淨的頻道就什麼都不做（多數晚上停在這裡，不斷線）
+#   2. 要換頻道：先請漫遊中控用 11v 把這個頻段上的裝置請到另一個頻段（tw-roamd 的 /tmp/tw-roamd.evacuate，
+#      只對同名的主網路、支援 11v 的裝置有效；之後由「回 5G」請回來），再 iwpriv set Channel 直接換，不重新啟動 Wi-Fi。
+#      這顆驅動換頻道沒有 CSA，留在這個頻段的裝置（不支援 11v、IoT 網路）會斷線幾秒後自己連回來
+#   3. 換不過去（頻道沒變）才重新啟動那個頻段
+# 以前（到 2026-11-22）每天直接重新啟動兩個頻段讓驅動重選，頻道沒變也會讓所有裝置斷線幾秒。
+# DBDC 機型（MT7915）的掃描與換頻道指令還沒在實機驗證，維持舊做法（重新啟動）。
 #
 # 5 GHz 鄰頻檢查（ROADMAP I13）：驅動只看「同一個頻道」的鄰居，看不到緊鄰頻段溢出的干擾
 # （例：鄰居在 144（132–144），我們用 80 MHz 的 149–161，兩段緊貼著）。
@@ -24,7 +30,7 @@
 # 改頻道只在執行當下生效（iwpriv set Channel），不寫設定；下次重啟 Wi-Fi 由驅動重新選、隔天再檢查。
 # 2.4 GHz 不做：驅動已經會把鄰居左右各 4 個頻道算進干擾（1／6／11 的重疊）。
 # DBDC 機型（MT7915）的掃描與換頻道指令還沒在實機驗證，先不做。
-# nvram tw_acs_adj=0 可關閉這項檢查（回到只用驅動選頻道）。出廠預設 1（2026-11-21 D3 實機驗證：掃描期間換頻道表 13 次都正常換回、
+# nvram tw_acs_adj=0：每日檢查不掃描、不換頻道（2026-11-23 起兩個頻段都是；以前是「只用驅動重選」）。出廠預設 1（2026-11-21 D3 實機驗證：掃描期間換頻道表 13 次都正常換回、
 # 整夜 11 次掃描的判斷都沒有來回換、80 MHz 下 iwpriv set Channel 換頻道正常）。
 
 TAG="Wi-Fi 頻道"
@@ -35,6 +41,7 @@ IDLE_BYTES=2000000
 SYS=${TW_SYS:-/sys/class/net}
 ADJ_DBM=-70	# 緊鄰頻段的鄰居要強於這個才算
 ADJ_MARGIN=10	# 分數至少要少這麼多才換，避免為了一點差距多斷線一次
+MARGIN2=15	# 2.4G 換頻道的門檻（2.4G 鄰居多，分數起伏大，門檻高一點）
 WIDE_REGION=13	# 掃描時暫用的 5G 頻道表：36–64、100–144、149–165（驅動 Region 13）
 
 log() {
@@ -243,7 +250,7 @@ pick5() {
 		cur += 0
 		cands = "36 40 44 48 149 153 157 161" (bw == 20 ? " 165" : "")
 		m = split(cands, cl, " ")
-		scur = score(cur); acur = nadj; why = adjs
+		scur = score(cur); acur = nadj; ocur = nov; why = adjs
 		best = 0; sbest = 0
 		for (i = 1; i <= m; i++) {
 			c = cl[i] + 0
@@ -252,22 +259,147 @@ pick5() {
 			s = score(c)
 			t = "表 " lbl(c, bw) "：分數 " s "（重疊 " nov "、緊鄰 " nadj "）"
 			mine = (blo(c, bw) == blo(cur, bw))
-			if (hot(c)) { print t "，驅動量到干擾，不選"; continue }
-			print t "" ((mine) ? "，驅動選的" : "")
-			# 分數最低的；同分時維持驅動的選擇，其次選頻道號小的
+			if (hot(c) && !mine) { print t "，驅動量到干擾，不選"; continue }
+			print t "" ((mine) ? "，目前的" : "")
+			# 分數最低的；同分時維持目前的，其次選頻道號小的
 			if (!best || s < sbest || (s == sbest && mine)) { best = c; sbest = s }
 		}
-		if (acur == 0) { print "keep\t" cur "\t"; exit }
 		if (acur > 2) why = why " 等 " acur " 個"
-		head = "驅動選的 " chb(cur, bw) (blo(cur, bw) == bhi(cur, bw) ? " " : "") "緊鄰 " why
+		head = "目前 " chb(cur, bw) " 分數 " scur "（重疊 " ocur "、緊鄰 " acur "）"
 		if (!best || blo(best, bw) == blo(cur, bw) || scur - sbest < margin) {
-			r = head "；沒有明顯更乾淨的頻段"
-			if (best && blo(best, bw) != blo(cur, bw)) r = r "（次佳 " lbl(best, bw) "，分數 " sbest " 對 " scur "）"
-			print "keep\t" cur "\t" r "，維持"
+			r = head
+			if (best && blo(best, bw) != blo(cur, bw)) r = r "；最好的 " lbl(best, bw) " 分數 " sbest "，差距不到 " margin "，維持"
+			else r = r "；目前的頻段就是最乾淨的，維持"
+			print "keep	" cur "	" r
 			exit
 		}
-		print "switch\t" best "\t" head "；改用 " chb(best, bw) "，分數 " sbest " 對 " scur
+		print "switch	" best "	" head "" ((acur) ? "，緊鄰 " why : "") "；改用 " chb(best, bw) "，分數 " sbest
 	}' "$TMP.cca" "$TMP.scan"
+}
+
+# 被動掃描 2.4G，結果寫到 $TMP.scan
+survey2() {
+	iwpriv "$if2" set SiteSurvey= >/dev/null 2>&1 || return 1
+	sleep 4
+	iwpriv "$if2" get_site_survey > "$TMP.scan" 2>/dev/null || return 1
+	grep -q ':..:..:..:..:' "$TMP.scan"
+}
+
+# 2.4G 評分（只在 20 MHz 時做）：$1＝目前頻道；候選 1／6／11 加上目前的頻道
+# 每個鄰居的強度分＝dBm＋100；頻道距離 d（0～4）的重疊比例＝(5－d)/5，乘 2（同頻滿分）
+pick2() {
+	awk -v cur="$1" -v margin="$MARGIN2" '
+	function dbm(p) {
+		if (p >= 100) return -50
+		if (p >= 24) return int((p - 24) * 10 / 26) - 80
+		return int(p * 10 / 26) - 90
+	}
+	function score(c,   k, d, w, s) {
+		s = 0; nn = 0
+		for (k = 1; k <= n; k++) {
+			d = (c < nlo[k]) ? nlo[k] - c : ((c > nhi[k]) ? c - nhi[k] : 0)
+			if (d > 4) continue
+			w = dbm(pct[k]) + 100
+			if (w < 1) w = 1
+			s += 2 * w * (5 - d) / 5; nn++
+		}
+		return int(s)
+	}
+	BEGIN { h = "[0-9A-Fa-f][0-9A-Fa-f]"; mac = "^" h ":" h ":" h ":" h ":" h ":" h "$"; n = 0; hdrno = 0 }
+	/BSSID/ { hdrno = ($1 == "No"); next }
+	{
+		b = 0
+		for (i = 2; i <= NF; i++) if ($i ~ mac) { b = i; break }
+		if (!b || b + 4 > NF) next
+		c = (hdrno ? $2 : $1) + 0
+		p = $(b + 2) + 0
+		if (c < 1 || c > 14 || $(b + 2) !~ /^[0-9]+$/) next
+		key = c "-" substr($b, 4, 11)
+		if (key in seen) { k = seen[key]; if (p <= pct[k]) next } else { k = ++n; seen[key] = k }
+		pct[k] = p
+		ext = $(b + 4)
+		if (ext ~ /ABOVE/) { nlo[k] = c; nhi[k] = c + 4 }
+		else if (ext ~ /BELOW/) { nlo[k] = c - 4; nhi[k] = c }
+		else { nlo[k] = c; nhi[k] = c }
+	}
+	END {
+		if (cur !~ /^[0-9]+$/ || cur + 0 < 1 || cur + 0 > 14) { print "none"; exit }
+		cur += 0
+		scur = score(cur); ncur = nn
+		best = 0; sbest = 0
+		m = split("1 6 11", cl, " ")
+		if (cur != 1 && cur != 6 && cur != 11) cl[++m] = cur
+		for (i = 1; i <= m; i++) {
+			c = cl[i] + 0; s = score(c)
+			print "表 頻道 " c "：分數 " s "（" nn " 個鄰居）" ((c == cur) ? "，目前的" : "")
+			if (!best || s < sbest || (s == sbest && c == cur)) { best = c; sbest = s }
+		}
+		head = "目前 " cur " 分數 " scur "（" ncur " 個鄰居）"
+		if (best == cur || scur - sbest < margin) {
+			print "keep	" cur "	" head "" ((best != cur) ? "；最好的 " best " 分數 " sbest "，差距不到 " margin "，維持" : "；目前的頻道就是最乾淨的，維持")
+			exit
+		}
+		print "switch	" best "	" head "；改用 " best "，分數 " sbest
+	}' "$TMP.scan"
+}
+
+# 重新啟動某個頻段前，請漫遊中控先把這個頻段上支援 11v 的裝置移到另一個頻段（最多等 70 秒）
+# $1＝2 或 5；漫遊中控沒在跑就直接回來
+evacuate() {
+	pidof tw-roamd >/dev/null 2>&1 || return 0
+	rm -f /tmp/tw-roamd.evacuated
+	echo "$1" > /tmp/tw-roamd.evacuate
+	i=0
+	while [ ! -f /tmp/tw-roamd.evacuated ] && [ $i -lt 70 ]; do sleep 1; i=$((i + 1)); done
+	if [ -f /tmp/tw-roamd.evacuated ]; then
+		set -- $(cat /tmp/tw-roamd.evacuated)
+		[ "$2" -gt 0 ] 2>/dev/null && { log "重新啟動前請 $2 台裝置先移到另一個頻段（不接受 $3 台、沒送到 $4 台）"; sleep 8; }
+	fi
+	rm -f /tmp/tw-roamd.evacuate /tmp/tw-roamd.evacuated
+}
+
+# 量測 → 換頻道（不重啟）→ 換不過去才重啟；$1＝2 或 5。輸出「頻道 → 頻道」
+retune() {
+	band=$1
+	if [ "$band" = 5 ]; then ifn=$if5; lbl="5 GHz"; else ifn=$if2; lbl="2.4 GHz"; fi
+	cur=$(channel_of "$ifn")
+	case "$cur" in ''|*[!0-9]*) echo "$cur（讀不到頻道，不處理）"; return ;; esac
+	# nvram tw_acs_adj=0：不掃描、不換頻道（兩個頻段都是）
+	[ "$(nvram get tw_acs_adj)" = "0" ] && { echo "$cur（tw_acs_adj=0，不檢查）"; return; }
+	if [ "$band" = 5 ]; then
+		if ! survey5; then log "$lbl：掃描失敗，維持頻道 $cur"; echo "$cur（掃描失敗）"; return; fi
+		cca5
+		pick5 "$(bw5)" "$cur" > "$TMP.pick"
+	else
+		case "$(nvram get rt_HT_BW)" in ""|0) ;; *) echo "$cur（40 MHz，不自動換）"; return ;; esac
+		if ! survey2; then log "$lbl：掃描失敗，維持頻道 $cur"; echo "$cur（掃描失敗）"; return; fi
+		pick2 "$cur" > "$TMP.pick"
+	fi
+	[ -t 1 ] && sed -n 's/^表 /  /p' "$TMP.pick" >&2
+	line=$(grep -v '^表 ' "$TMP.pick" | head -n 1)
+	act=${line%%	*}; rest=${line#*	}; ch=${rest%%	*}; why=${rest#*	}
+	if [ "$act" != switch ]; then
+		[ -n "$why" ] && [ "$act" = keep ] && log "$lbl：$why"
+		echo "$cur（維持）"
+		return
+	fi
+	log "$lbl：$why"
+	# 這顆驅動換頻道時沒有頻道切換公告（CSA）：裝置一定會斷線重連（2026-11-23 D3 實測：iwpriv set Channel
+	# 後電腦、手機都斷線；開 IEEE80211H 也一樣，而且驅動在中斷裡停 AP，核心出現 WARNING，不能用）。
+	# 所以換之前先請這個頻段支援 11v 的裝置移到另一個頻段，換完再由「回 5G」請回來
+	evacuate "$band"
+	iwpriv "$ifn" set Channel="$ch" >/dev/null 2>&1
+	sleep 5
+	now=$(channel_of "$ifn")
+	if [ "$now" = "$ch" ]; then
+		echo "$cur → $now（直接換）"
+		return
+	fi
+	# 換不過去：重新啟動這個頻段（驅動重新選；裝置剛才已經請到另一個頻段）
+	log "$lbl：直接換頻道沒有成功（還是 $now），重新啟動這個頻段"
+	if [ "$band" = 5 ]; then restart_radio radio5_restart; else restart_radio radio2_restart; fi
+	sleep 20
+	echo "$cur → $(channel_of "$ifn")（重新啟動）"
 }
 
 # 驅動選好 5G 頻道後的鄰頻檢查（說明見檔頭）
@@ -331,25 +463,18 @@ if [ $force = 0 ]; then
 	fi
 fi
 
-old2=$(channel_of "$if2")
-[ "$if5" != "-" ] && old5=$(channel_of "$if5")
-
 if [ "$dbdc" = "1" ]; then
+	old2=$(channel_of "$if2"); old5=$(channel_of "$if5")
 	restart_radio radio5_restart	# DBDC：5G 重新載入設定時兩個頻段一起重啟
+	sleep 20
+	log "每日重選頻道（重新啟動）：2.4 GHz $old2 → $(channel_of "$if2")；5 GHz $old5 → $(channel_of "$if5")"
 else
-	[ $todo2 = 1 ] && restart_radio radio2_restart
-	[ $todo5 = 1 ] && restart_radio radio5_restart
+	# 順序：先 5G 再 2.4G（5G 要重啟時，裝置可以先移到 2.4G）
+	msg=""
+	[ $todo5 = 1 ] && msg="5 GHz $(retune 5)"
+	[ $todo2 = 1 ] && msg="${msg:+$msg；}2.4 GHz $(retune 2)"
+	log "每日檢查頻道：$msg"
 fi
-
-# 等驅動掃描、選好頻道（5G 掃描較久）
-sleep 20
-
-[ $todo5 = 1 ] && adj5
-
-msg=""
-[ $todo2 = 1 ] && msg="2.4 GHz $old2 → $(channel_of "$if2")"
-[ $todo5 = 1 ] && msg="${msg:+$msg；}5 GHz $old5 → $(channel_of "$if5")"
-log "每日重選頻道：$msg"
 
 nvram set tw_acs_day="$day"
 exit 0

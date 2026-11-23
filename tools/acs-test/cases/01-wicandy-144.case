@@ -2,7 +2,7 @@ DESC="維護者的實例：WiCandy（主網＋訪客兩個 BSSID，只算一次�
 BW=2
 PICK5=149
 EXPECT5=36
-EXPECT_LOG="避開緊鄰的強訊號"
+EXPECT_LOG="直接換"
 SCAN='
 144|WiCandy|3C:52:A1:11:22:30|WPA2PSK/AES|100|11a/n/ac|BELOW
 144|WiCandy-Guest|3E:52:A1:11:22:31|WPA2PSK/AES|100|11a/n/ac|BELOW

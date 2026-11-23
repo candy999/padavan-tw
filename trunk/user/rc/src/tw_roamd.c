@@ -66,10 +66,14 @@
 #ifndef TWR_TEST
 #define TWR_STATUS_FILE		"/tmp/tw-roamd.status"
 #define TWR_EVENTS_FILE		"/tmp/tw-roamd.events"
+#define TWR_EVAC_REQ		"/tmp/tw-roamd.evacuate"	/* tw-wifi-acs 要重啟某個頻段前寫：內容「2」或「5」 */
+#define TWR_EVAC_DONE		"/tmp/tw-roamd.evacuated"	/* 結果：done 送出 N 不支援 N 未送 N */
 #define TWR_PID_FILE		"/var/run/tw-roamd.pid"
 #else
 #define TWR_STATUS_FILE		"tw-roamd.status"	/* 測試：寫在目前目錄 */
 #define TWR_EVENTS_FILE		"tw-roamd.events"
+#define TWR_EVAC_REQ		"tw-roamd.evacuate"
+#define TWR_EVAC_DONE		"tw-roamd.evacuated"
 #define TWR_PID_FILE		"tw-roamd.pid"
 #endif
 
@@ -1710,6 +1714,91 @@ decide_one(struct twr_local *c, long now)
 	}
 }
 
+/*
+ * 每日自動選頻要重新啟動某個頻段前（tw-wifi-acs），先請這個頻段上支援 11v 的裝置移到本機另一個頻段，
+ * 重啟時才不會斷線；之後由平常的「回 5G」把裝置請回來。只對同名（SSID 相同）的主網路有效，IoT 網路不動。
+ * 驅動一次只能等一個 BTM 回覆（g_btm_busy），所以每輪送一台，最多 60 秒；做完寫 TWR_EVAC_DONE。
+ */
+static int g_evac_band;
+static long g_evac_until;
+static unsigned char g_evac_sent[TWR_MAX_LOCAL][6];
+static int g_evac_n, g_evac_skip;
+
+static void
+evacuate_step(long now)
+{
+	const struct twr_radio *from, *to;
+	struct twr_nbr cand;
+	char name[64];
+	FILE *fp;
+	int i, j, left = 0;
+
+	if (!g_evac_band) {
+		int band = 0;
+		if (!(fp = fopen(TWR_EVAC_REQ, "r")))
+			return;
+		if (fscanf(fp, "%d", &band) != 1)
+			band = 0;
+		fclose(fp);
+		unlink(TWR_EVAC_REQ);
+		unlink(TWR_EVAC_DONE);
+		if (band != 2 && band != 5)
+			return;
+		g_evac_band = band;
+		g_evac_until = now + 60;
+		g_evac_n = g_evac_skip = 0;
+	}
+	from = own_radio(g_evac_band);
+	to = own_radio(g_evac_band == 5 ? 2 : 5);
+	if (from && to && from->ssid_hash == to->ssid_hash && g_caps.btm[bidx(g_evac_band)] && now < g_evac_until) {
+		for (i = 0; i < TWR_MAX_LOCAL; i++) {
+			struct twr_local *c = &g_local[i];
+			struct twr_hist *h;
+			int done = 0;
+			if (!c->used || c->guest || c->band != g_evac_band)
+				continue;
+			for (j = 0; j < g_evac_n; j++)
+				if (!memcmp(g_evac_sent[j], c->mac, 6))
+					done = 1;
+			if (done)
+				continue;
+			h = hist_find(c->mac, 0, now);
+			if (!h || h->v != 1)
+				continue;		/* 不支援 11v：重啟時會斷線幾秒，之後自己連回來 */
+			left++;
+			if (now < g_btm_busy[bidx(g_evac_band)] || g_evac_n >= TWR_MAX_LOCAL)
+				continue;
+			memset(&cand, 0, sizeof(cand));
+			memcpy(cand.bssid, to->bssid, 6);
+			cand.band = to->band;
+			cand.ch = to->ch;
+			cand.bw = to->bw;
+			cand.pref = 255;
+			cand.ft = strchr(from->cap, 'r') && strchr(to->cap, 'r');
+			client_name(c->mac, name, sizeof(name));
+			if (twr_drv_btm_req(c->band, c->mac, &cand, 1, next_token()) == 0) {
+				g_btm_busy[bidx(g_evac_band)] = now + 6;
+				memcpy(g_evac_sent[g_evac_n++], c->mac, 6);
+				left--;
+				roam_log("每日選頻：%s 要重新啟動，請 %s 先移到 %s", band_str(g_evac_band), name, band_str(to->band));
+			} else {
+				memcpy(g_evac_sent[g_evac_n++], c->mac, 6);
+				g_evac_skip++;
+				left--;
+			}
+		}
+		if (left > 0)
+			return;		/* 還有裝置要送，下一輪再送 */
+	}
+	/* 做完、逾時，或兩個頻段不同名、驅動不能送：都算結束 */
+	if ((fp = fopen(TWR_EVAC_DONE, "w"))) {
+		fprintf(fp, "done %d %d %d
+", g_evac_n - g_evac_skip, g_evac_skip, left);
+		fclose(fp);
+	}
+	g_evac_band = 0;
+}
+
 static void
 decide_all(long now)
 {
@@ -2258,8 +2347,10 @@ tw_roamd_main(int argc, char **argv)
 					note_gone(&g_local[i], now);
 					dev_gone(&g_local[i]);
 				}
-			if (g_nradio)
+			if (g_nradio) {
 				decide_all(now);
+				evacuate_step(now);
+			}
 			next_poll = now + TWR_POLL_SEC;
 		}
 		if (s >= 0 && now >= next_report) {

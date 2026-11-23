@@ -2,7 +2,7 @@ DESC="同 01，但驅動量到 40 的 False CCA 很高（非 Wi-Fi 干擾）：3
 BW=2
 PICK5=149
 EXPECT5=149
-EXPECT_LOG="沒有明顯更乾淨"
+EXPECT_LOG="維持"
 DMESG='[  301.120000] Channel 36 : Dirty = 0, False CCA = 12, Busy Time = 0, Skip Channel = FALSE
 [  301.120000] Channel 40 : Dirty = 0, False CCA = 520, Busy Time = 0, Skip Channel = FALSE
 [  301.120000] Channel 149 : Dirty = 0, False CCA = 8, Busy Time = 0, Skip Channel = FALSE

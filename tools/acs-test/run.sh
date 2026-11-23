@@ -28,9 +28,11 @@ for sh in $SHELLS; do
 	for c in "$@"; do
 		# 每個案例在子 shell 裡跑，變數互不影響
 		(
-			DESC= BW=2 PICK5=149 OLD5=149 EXPECT5= ADJ= COUNTRY=TW REGION_OK=1 REGION_RESTORE_FAIL=
+			DESC= BW=2 PICK5=149 OLD5= EXPECT5= ADJ= COUNTRY=TW REGION_OK=1 REGION_RESTORE_FAIL=
 			SURVEY_FAIL= SCAN= DMESG= EXPECT_LOG= EXPECT_NOLOG= EXPECT_NOSCAN= EXPECT_NOREGION=
 			. "$c"
+			# 2026-11-23 起不重新啟動 Wi-Fi：PICK5 當作「目前的頻道」（重啟的退路才會用到驅動重選）
+			[ -n "$OLD5" ] || OLD5=$PICK5
 			ACS_T=$(mktemp -d)
 			trap 'rm -rf "$ACS_T"' EXIT
 			export ACS_T PICK5 SCAN DMESG REGION_OK REGION_RESTORE_FAIL SURVEY_FAIL
@@ -43,6 +45,7 @@ for sh in $SHELLS; do
 			rt_channel=0
 			rt_mode_x=0
 			rt_radio_x=1
+			rt_HT_BW=0
 			wl_channel=0
 			wl_mode_x=0
 			wl_radio_x=1
