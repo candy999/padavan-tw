@@ -1792,8 +1792,7 @@ evacuate_step(long now)
 	}
 	/* 做完、逾時，或兩個頻段不同名、驅動不能送：都算結束 */
 	if ((fp = fopen(TWR_EVAC_DONE, "w"))) {
-		fprintf(fp, "done %d %d %d
-", g_evac_n - g_evac_skip, g_evac_skip, left);
+		fprintf(fp, "done %d %d %d\n", g_evac_n - g_evac_skip, g_evac_skip, left);
 		fclose(fp);
 	}
 	g_evac_band = 0;
