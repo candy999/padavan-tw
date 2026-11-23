@@ -212,6 +212,16 @@ rcpi_dbm(int rcpi)
 /* BTM Request 本體（Category／Action／Dialog Token 之後）：給「原始」版 ioctl（MT7603、MT7612）
  * Request Mode＝候選清單＋Abridged（0x03，不含 0x04 Disassociation Imminent）、Disassociation Timer 0、
  * Validity 200 TBTT，每個候選一個 Neighbor Report 元素（ID 52）＋偏好值子元素（ID 3）放在元素裡面。 */
+/* 每日選頻移轉裝置時（tw-roamd evacuate）：加上 Disassociation Imminent（0x04）與 2 秒左右的倒數，
+ * 告訴裝置這個 AP 馬上要斷了。2026-11-23 D3 實測：一般建議（0x03）手機不理會、也不肯從 5G 換到 2.4G */
+static int g_imminent;
+
+void
+twr_drv_btm_imminent(int on)
+{
+	g_imminent = on;
+}
+
 static TWR_UNUSED int
 btm_body(unsigned char *p, int max, const struct twr_nbr *c, int n)
 {
@@ -219,8 +229,8 @@ btm_body(unsigned char *p, int max, const struct twr_nbr *c, int n)
 
 	if (max < 4)
 		return -1;
-	p[0] = 0x03;
-	put16(p + 1, 0);
+	p[0] = g_imminent ? 0x07 : 0x03;
+	put16(p + 1, g_imminent ? 20 : 0);	/* Disassociation Timer（TBTT，約 2 秒） */
 	p[3] = 200;
 	for (i = 0; i < n && len + 18 <= max; i++) {
 		unsigned int info = 0x3;		/* AP 可達 */

@@ -50,6 +50,7 @@ void twr_drv_close(void);
 int twr_drv_bcn_req(int band, const unsigned char *sta, int ch, const unsigned char *bssid, int token);
 /* 送 BTM 建議（Request Mode：Preferred Candidate List Included＋Abridged，不設 Disassociation Imminent） */
 int twr_drv_btm_req(int band, const unsigned char *sta, const struct twr_nbr *cand, int n, int token);
+void twr_drv_btm_imminent(int on);	/* 1＝之後的 BTM 加上 Disassociation Imminent（D3 的原始版本體才有效） */
 /* 設定 11k 鄰居清單（驅動回答裝置的 Neighbor Report Request 時用） */
 int twr_drv_set_nbr(int band, const struct twr_nbr *list, int n);
 /* 查裝置能力：*k、*v 為 1＝支援、0＝不支援、-1＝不知道 */

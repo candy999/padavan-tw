@@ -1777,7 +1777,10 @@ evacuate_step(long now)
 			cand.pref = 255;
 			cand.ft = strchr(from->cap, 'r') && strchr(to->cap, 'r');
 			client_name(c->mac, name, sizeof(name));
-			if (twr_drv_btm_req(c->band, c->mac, &cand, 1, next_token()) == 0) {
+			twr_drv_btm_imminent(1);
+			j = twr_drv_btm_req(c->band, c->mac, &cand, 1, next_token());
+			twr_drv_btm_imminent(0);
+			if (j == 0) {
 				g_btm_busy[bidx(g_evac_band)] = now + 6;
 				memcpy(g_evac_sent[g_evac_n++], c->mac, 6);
 				left--;
