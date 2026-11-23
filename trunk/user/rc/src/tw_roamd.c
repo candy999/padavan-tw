@@ -1763,8 +1763,9 @@ evacuate_step(long now)
 			if (done)
 				continue;
 			h = hist_find(c->mac, 0, now);
-			if (!h || h->v != 1)
-				continue;		/* 不支援 11v：重啟時會斷線幾秒，之後自己連回來 */
+			if (h && h->v == 0)
+				continue;		/* 確定不支援 11v：換頻道時會斷線幾秒，之後自己連回來 */
+			/* 不知道（-1）也送：MT7612 的驅動不回報裝置能力；BTM 只是建議，不支援的裝置會忽略 */
 			left++;
 			if (now < g_btm_busy[bidx(g_evac_band)] || g_evac_n >= TWR_MAX_LOCAL)
 				continue;
