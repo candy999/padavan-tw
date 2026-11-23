@@ -802,11 +802,14 @@ api_fetch() {
 	else echo '{"ok":false,"error":"黑潮 DNS 沒有回應"}'; fi
 }
 
-# 白名單以 OpenWrt 版（openwrt/kuroshio/files/rpcd.sh）為準；韌體另外多了 /api/chain（串接狀態，黑潮 3.4.4 作者要的）
-# 與 /api/backup/last-import，少了 /api/memory/trim
+# 白名單以 OpenWrt 版（openwrt/kuroshio/files/rpcd.sh）為準：黑潮 3.5.0 的 docs/integration.md「給整合者的建議」
+# 列的路徑都開（/api/chain、/api/cdn/domain、/api/cdn/cross、/api/cdn/explain、/api/querylog、/api/cdn/status、
+# /api/protocols、/api/backup/last-import；動作 /api/chain/recheck、/api/querylog/enable）。刻意不開：/api/memory/simulate（只給測試）。
+# 舊版黑潮沒有的路徑會回「找不到」，不影響。韌體少了 /api/memory/trim
 api_view() {
 	case "$1" in
-	/api/chain) ;;
+	/api/chain|/api/cdn/domain|/api/cdn/cross|/api/cdn/explain|/api/cdn/status|/api/protocols) ;;
+	/api/querylog) ;;	# 含裝置位址與網域：httpd 只給區網／VPN 登入的人（kuroshio_view_needs_safe）
 	/api/status|/api/access|/api/sysinfo|/api/upstreams|/api/benchmark|/api/cdn/pools|/api/cdn/v6nodes|/api/cdn/summary|/api/cdn/domains|/api/jobs|/api/trace|/api/filter/check|/api/routing|/api/ddns|/api/paths|/api/interfaces) ;;
 	/api/dashboard|/api/backup/last-import) ;;
 	/api/community/status|/api/community/peers|/api/community/events|/api/community/invite) ;;
@@ -833,6 +836,7 @@ api_action() {
 	case "$1" in
 	/api/cache/flush|/api/filter/update|/api/jobs/run|/api/cdn/verify|/api/cdn/policy|/api/cdn/ecs|/api/ddns/update) ;;
 	/api/filter/reset-rules|/api/persist/flush) ;;
+	/api/chain/recheck|/api/querylog/enable) ;;	# 黑潮 3.5.0（querylog/enable 最長 60 分鐘、只在記憶體）
 	/api/community/check|/api/community/add|/api/community/accept|/api/community/reject|/api/community/block|/api/community/unblock|/api/community/delete|/api/community/sync) ;;
 	/api/community/invite/refresh|/api/community/invite/use) ;;
 	/api/community/rotate|/api/community/accept-key|/api/community/channel) ;;

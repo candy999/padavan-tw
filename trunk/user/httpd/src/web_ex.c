@@ -4378,7 +4378,7 @@ static int
 kuroshio_view_needs_safe(const char *path)
 {
 	static const char *const paths[] = {
-		"/api/trace", "/api/community/invite", "/api/paths", "/api/interfaces", NULL
+		"/api/trace", "/api/community/invite", "/api/paths", "/api/interfaces", "/api/querylog", NULL
 	};
 	int i;
 
