@@ -285,10 +285,20 @@ survey2() {
 	grep -q ':..:..:..:..:' "$TMP.scan"
 }
 
+# 驅動最近一次 2.4G 自動選頻（開機或重新啟動時）量到的「Dirty」（驅動自己選頻道用的分數，含實際的空中忙碌）
+dirty2() {
+	dmesg 2>/dev/null | awk '{
+		for (i = 1; i <= NF; i++)
+			if ($i == "Channel" && $(i + 2) == ":" && $(i + 3) == "Dirty" && $(i + 1) + 0 >= 1 && $(i + 1) + 0 <= 14) {
+				v = $(i + 5); sub(/,.*/, "", v); d[$(i + 1) + 0] = v + 0
+			}
+	} END { for (c in d) print c, d[c] }' > "$TMP.dirty2"
+}
+
 # 2.4G 評分（只在 20 MHz 時做）：$1＝目前頻道；候選 1／6／11 加上目前的頻道
 # 每個鄰居的強度分＝dBm＋100；頻道距離 d（0～4）的重疊比例＝(5－d)/5，乘 2（同頻滿分）
 pick2() {
-	awk -v cur="$1" -v margin="$MARGIN2" '
+	awk -v cur="$1" -v margin="$MARGIN2" -v dfile="$TMP.dirty2" '
 	function dbm(p) {
 		if (p >= 100) return -50
 		if (p >= 24) return int((p - 24) * 10 / 26) - 80
@@ -306,6 +316,7 @@ pick2() {
 		return int(s)
 	}
 	BEGIN { h = "[0-9A-Fa-f][0-9A-Fa-f]"; mac = "^" h ":" h ":" h ":" h ":" h ":" h "$"; n = 0; hdrno = 0 }
+	FILENAME == dfile { dirty[$1 + 0] = $2 + 0; next }
 	/BSSID/ { hdrno = ($1 == "No"); next }
 	{
 		b = 0
@@ -339,8 +350,13 @@ pick2() {
 			print "keep	" cur "	" head "" ((best != cur) ? "；最好的 " best " 分數 " sbest "，差距不到 " margin "，維持" : "；目前的頻道就是最乾淨的，維持")
 			exit
 		}
-		print "switch	" best "	" head "；改用 " best "，分數 " sbest
-	}' "$TMP.scan"
+		# 驅動實際量過空中忙碌（Dirty）時，目標頻道不比目前空才換：鄰居的訊號強弱不等於它們真的在傳資料
+		if ((cur in dirty) && (best in dirty) && dirty[best] >= dirty[cur]) {
+			print "keep	" cur "	" head "；鄰居訊號看起來 " best " 比較好（分數 " sbest "），但驅動量到的忙碌程度 " best " 是 " dirty[best] "、目前 " dirty[cur] "，維持"
+			exit
+		}
+		print "switch	" best "	" head "；改用 " best "，分數 " sbest "" ((best in dirty) ? "（驅動量到的忙碌程度 " dirty[best] " 對目前 " dirty[cur] "）" : "")
+	}' "$TMP.dirty2" "$TMP.scan"
 }
 
 # 重新啟動某個頻段前，請漫遊中控先把這個頻段上支援 11v 的裝置移到另一個頻段（最多等 70 秒）
@@ -373,6 +389,7 @@ retune() {
 	else
 		case "$(nvram get rt_HT_BW)" in ""|0) ;; *) echo "$cur（40 MHz，不自動換）"; return ;; esac
 		if ! survey2; then log "$lbl：掃描失敗，維持頻道 $cur"; echo "$cur（掃描失敗）"; return; fi
+		dirty2
 		pick2 "$cur" > "$TMP.pick"
 	fi
 	[ -t 1 ] && sed -n 's/^表 /  /p' "$TMP.pick" >&2
