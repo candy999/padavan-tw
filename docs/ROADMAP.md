@@ -27,6 +27,7 @@
 | ~~igmpproxy 0.3 當機~~：`internAgeRoute()` 在 `removeRoute()` free 之後還寫 `croute->ageVifBits`（use-after-free；上游 issue #90、PR #98 未合併）。**任何群組老化移除都會當**（tw-roamd 的 239.255.77.77 每 5 秒觸發，最先被看見；MOD 轉台後舊頻道也會）。修法：採用上游 PR #98 的兩行修正（`trunk/user/igmpproxy/patches/001-…`）；另外修正 rc 產生的 `altnet 0.0.0.0/0`（MOD 需要，保留）讓區網送出的群播被當成上游來源、建出錯誤路由的問題：核心要求啟用路由時先檢查來源是不是下游介面（`patches/002-…`） | ✅ 下游來源修補已實測；use-after-free 修補還沒實際觸發過（MOD 走交換器橋接、不經過 igmpproxy，MOD 測試不算驗證它） | 0.5 |
 | ~~第一個正式 Release（B6，v2026.11.20）~~ | ✅ 2026-11-20（PR #2 合併、v2026.11.20 標籤與 Release） | |
 | ~~v2026.11.22（黑潮 DNS 3.4.4）~~ | ✅ 2026-11-22（標籤在開發分支 d5434a2，main 沒有再合併；B7） | |
+| ~~v2026.11.23（整晚壓測後的修正）~~ | ✅ 2026-11-23（標籤在開發分支 5ffa3e2；B8） | |
 | 整晚 Wi-Fi 壓測（2026-11-22 晚～11-23 08:00） | 🔧 結果待整理（已知現象見 WIFI-STABILITY「USB 網卡的已知現象」） | |
 | Wi-Fi 參數還沒有證據的項目：5G `wl_stbc` 0／1、5G `wl_HT_AMSDU` 0／1、2.4G `rt_HT_AMSDU` 1／0、LDPC、DTIM 1／3、2.4G 開 11v 的 IoT 過夜、11r 手機實際 FT 換 AP、7 天長測 | 📋 待實測（I16） | |
 | ~~2.4G 自動選頻避開 12、13~~（國碼 TW 時本來就跳過；D3 是 3.4 留下的 CN）、~~igmpproxy 自動重啟實測~~（4 秒重啟）、~~D3 nvram 對齊出廠預設~~、~~TxBF 沒有校正資料時不顯示~~ | ✅ 2026-11-19 | |
@@ -69,6 +70,7 @@
 | B5 | Actions 升級到 Node 24 版本（checkout v7、upload-artifact v7、download-artifact v8、action-gh-release v3、ccache-action v1.2.25；toolchain.yml 改成固定版本） | ✅ 8ca57dc（編譯通過；v2026.11.20、v2026.11.22 都由 Actions 發布成功） |
 | B6 | 第一個正式 Release v2026.11.20：PR #2 合併到 main、推送 `v2026.11.20` 標籤（同時驗證 B5 的兩個發布用 action）、發布說明 `docs/RELEASE-NOTES-v2026.11.20.md`、附 SHA256。D3 實機與夜間長測已通過，CR6608 尚未實機（發布說明有註明） | ✅ 2026-11-20 |
 | B7 | v2026.11.22：黑潮 DNS 3.4.4、AP 互助漫遊、11k／v／r 驅動、IoT 網路、連不出去時自動重新連線；發布說明只在 GitHub Release；標籤打在開發分支 d5434a2（main 停在 PR #2，要不要再合併由使用者決定） | ✅ 2026-11-22 |
+| B8 | v2026.11.23：開機 dnsmasq 綁不到連接埠時重試、每日自動選頻先量測不必要就不換、Wi-Fi 出廠預設整理與升級遷移（tw_migrate.c）、後台接上黑潮統計與事件時間軸、JS／CSS 版本參數、黑潮 3.5.0 的 API 白名單；發布說明只在 GitHub Release；標籤在開發分支 5ffa3e2 | ✅ |
 
 ## C. 後台介面（細節見 UI-PLAN.md）
 
