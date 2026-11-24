@@ -18,7 +18,7 @@
 | `docs/ROAM-COOP.md` | AP 互助漫遊：交換協定、決策規則、回 5G、D3／CR6608 驅動狀況、OpenWrt 對照 | 動漫遊、11k／v、tw-roamd 前 |
 | `docs/COMPAT.md` | 社群機型相容度預測（`tools/compat/predict.py` 產生）與移植指南 | 有人問其他機型、改了跟硬體有關的程式後 |
 | `docs/WIFI-STABILITY.md` | Wi-Fi 穩定性調查、STP 根因、5G／2.4G 參數測試、夜間長測 | 動 Wi-Fi、網橋、hw_nat 前 |
-| `docs/RELEASE-NOTES-v2026.11.20.md` | 第一個正式版的發布說明（v2026.11.22、v2026.11.23 的說明只在 GitHub Release：`gh release view <標籤>`） | 發布時 |
+| `docs/RELEASE-NOTES-v2026.11.20.md` | 第一個正式版的發布說明（v2026.11.22～v2026.11.24 的說明只在 GitHub Release：`gh release view <標籤>`） | 發布時 |
 | `docs/VERIFY-*.md` | 每一版的實機驗證單與結果 | 寫新的驗證單時當範本 |
 | `docs/PATCH-REVIEW.md` | 各分支修補的取捨 | 同步上游、評估別人的修補時 |
 | `docs/KVR-3.4-REVIEW.md` | 3.4 版「KVR」做法調查（結論：對 D3 無效，4.4 比較完整） | 有人提 3.4 時 |
@@ -151,7 +151,7 @@ git pull
 | Wi-Fi 參數還沒有證據的項目 | 5G `wl_stbc`、`wl_HT_AMSDU`，2.4G `rt_HT_AMSDU`，LDPC、DTIM，2.4G 開 11v 的 IoT 過夜，11r 手機實際 FT 換 AP（WIFI-STABILITY「無線進階頁預設值整理」）；有實測結果才改預設 |
 | D3 交換器 bug 回報上游 TurBoTse | 2026-11-18 使用者同意後已發 [TurBoTse/padavan#32](https://github.com/TurBoTse/padavan/issues/32)（繁體中文；連同無法重開機） |
 | 硬體 NAT 殘留標記（STP 誤判根因）回報上游 | 2026-11-19 使用者同意後已發 [TurBoTse/padavan#33](https://github.com/TurBoTse/padavan/issues/33)、[hanwckf/padavan-4.4#73](https://github.com/hanwckf/padavan-4.4/issues/73)（繁體中文；3.4 的 `__alloc_skb` 有 `DO_FAST_CLEAR_FOE`，4.4 漏掉；雙 GMAC 機型的影響是推論、沒實測，請社群幫忙確認） |
-| 正式 Release | ✅ v2026.11.20（2026-11-20，PR #2 合併 main）、✅ v2026.11.22（2026-11-22，黑潮 3.4.4，標籤在開發分支 d5434a2）、✅ v2026.11.23（2026-11-23，標籤在開發分支 5ffa3e2）。 |
+| 正式 Release | ✅ v2026.11.20（2026-11-20，PR #2 合併 main）、✅ v2026.11.22（2026-11-22，黑潮 3.4.4，標籤在開發分支 d5434a2）、✅ v2026.11.23（2026-11-23，標籤在開發分支 5ffa3e2）、✅ v2026.11.24（2026-11-24，黑潮 3.5.0＋安全修正，標籤在開發分支 f8c88e2）。 |
 | MI-MINI | 暫緩（第 5.9 節） |
 
 ---
