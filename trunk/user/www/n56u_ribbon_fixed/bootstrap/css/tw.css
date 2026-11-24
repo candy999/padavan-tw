@@ -1105,3 +1105,5 @@ div.main_itoggle label.disabled span { background: var(--surface-2) !important; 
 }
 /* 網路流量頁的介面選單：中文名稱比原本的英文長，給足寬度 */
 #sel_netif { width: auto !important; min-width: 240px; max-width: 100%; }
+/* 時:分 這類 2 位數小欄位：上游寫死 width: 20px，加上新樣式的內距後幾乎看不到數字（D3 實機，Wi-Fi 排程） */
+.tw-main input[type="text"]:is([maxlength="1"], [maxlength="2"]) { width: 52px !important; min-width: 52px; text-align: center; padding-left: 4px !important; padding-right: 4px !important; }
