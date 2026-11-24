@@ -4,25 +4,25 @@ var tabs = [];
 var tabs_desc = [
 	[  0, "VPNC",      "<#VPNC_Desc#>" ],
 	[  1, "WWAN",      "3G/LTE <#USB_Modem#>" ],
-	[  2, "WAN",       "Wired: WAN" ],
-	[  3, "LAN",       "Wired: LAN" ],
-	[  4, "WLAN2_MII", "Wireless 2.4GHz: iNIC" ],
-	[  5, "WLAN2_AP0", "Wireless 2.4GHz: AP Main" ],
-	[  6, "WLAN2_AP1", "Wireless 2.4GHz: AP Guest" ],
-	[  7, "WLAN2_APC", "Wireless 2.4GHz: AP-Client" ],
-	[  8, "WLAN2_WDS", "Wireless 2.4GHz: WDS" ],
-	[  9, "WLAN5_AP0", "Wireless 5GHz: AP Main" ],
-	[ 10, "WLAN5_AP1", "Wireless 5GHz: AP Guest" ],
-	[ 11, "WLAN5_APC", "Wireless 5GHz: AP-Client" ],
-	[ 12, "WLAN5_WDS", "Wireless 5GHz: WDS" ],
-	[ 13, "ESW_P0",    "Ethernet port: WAN" ],
-	[ 14, "ESW_P1",    "Ethernet port: LAN1" ],
-	[ 15, "ESW_P2",    "Ethernet port: LAN2" ],
-	[ 16, "ESW_P3",    "Ethernet port: LAN3" ],
-	[ 17, "ESW_P4",    "Ethernet port: LAN4" ],
-	[ 18, "ESW_P5",    "Ethernet port: LAN5" ],
-	[ 19, "ESW_P6",    "Ethernet port: LAN6" ],
-	[ 20, "ESW_P7",    "Ethernet port: LAN7" ]
+	[  2, "WAN",       "有線：網際網路（WAN）" ],
+	[  3, "LAN",       "有線：區域網路（LAN）" ],
+	[  4, "WLAN2_MII", "Wi-Fi 2.4GHz：內部介面" ],
+	[  5, "WLAN2_AP0", "Wi-Fi 2.4GHz：主網路" ],
+	[  6, "WLAN2_AP1", "Wi-Fi 2.4GHz：IoT／訪客網路" ],
+	[  7, "WLAN2_APC", "Wi-Fi 2.4GHz：無線橋接用戶端" ],
+	[  8, "WLAN2_WDS", "Wi-Fi 2.4GHz：WDS" ],
+	[  9, "WLAN5_AP0", "Wi-Fi 5GHz：主網路" ],
+	[ 10, "WLAN5_AP1", "Wi-Fi 5GHz：IoT／訪客網路" ],
+	[ 11, "WLAN5_APC", "Wi-Fi 5GHz：無線橋接用戶端" ],
+	[ 12, "WLAN5_WDS", "Wi-Fi 5GHz：WDS" ],
+	[ 13, "ESW_P0",    "網路孔：WAN" ],
+	[ 14, "ESW_P1",    "網路孔：LAN1" ],
+	[ 15, "ESW_P2",    "網路孔：LAN2" ],
+	[ 16, "ESW_P3",    "網路孔：LAN3" ],
+	[ 17, "ESW_P4",    "網路孔：LAN4" ],
+	[ 18, "ESW_P5",    "網路孔：LAN5" ],
+	[ 19, "ESW_P6",    "網路孔：LAN6" ],
+	[ 20, "ESW_P7",    "網路孔：LAN7" ]
 ];
 
 Highcharts.locale = {
@@ -76,8 +76,8 @@ function bytesToBitrate(bytes, precision){
 
 function initTab()
 {
-	E('rx-sel').style.background = '#FF9000';
-	E('tx-sel').style.background = '#003EBA';
+	E('rx-sel').style.background = window.tw_chart_color ? tw_chart_color('#FF9000') : '#FF9000';
+	E('tx-sel').style.background = window.tw_chart_color ? tw_chart_color('#003EBA') : '#003EBA';
 
 	E('rx-current').innerHTML = bytesToBitrate(0, 2);
 	E('rx-avg').innerHTML = bytesToBitrate(0, 2);

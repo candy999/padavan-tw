@@ -27,8 +27,8 @@ var months_s = ['<#MS_Jan#>', '<#MS_Feb#>', '<#MS_Mar#>', '<#MS_Apr#>', '<#MS_Ma
 var months_f = ['<#MF_Jan#>', '<#MF_Feb#>', '<#MF_Mar#>', '<#MF_Apr#>', '<#MF_May#>', '<#MF_Jun#>', '<#MF_Jul#>', '<#MF_Aug#>', '<#MF_Sep#>', '<#MF_Oct#>', '<#MF_Nov#>', '<#MF_Dec#>'];
 var snames = [' KiB', ' MiB', ' GiB', ' TiB'];
 var tabs_desc = [
-	[ "WAN",  "Wired: WAN" ],
-	[ "WISP", "Wireless: WISP" ],
+	[ "WAN",  "有線：網際網路（WAN）" ],
+	[ "WISP", "Wi-Fi：無線網際網路（WISP）" ],
 	[ "WWAN", "3G/LTE <#USB_Modem#>" ]
 ];
 

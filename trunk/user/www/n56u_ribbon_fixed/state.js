@@ -769,8 +769,8 @@ function show_footer(){
 	footer_code = '<div align="center" class="bottom-image"></div>\n';
 	footer_code +='<div align="center" class="copyright"><#footer_copyright_desc#></div>\n';
 	footer_code +='<div align="center">\n';
-	footer_code +='  <span>Developed by © <a href="https://bitbucket.org/padavan/rt-n56u/">Andy Padavan</a> &amp; <a href="https://github.com/hanwckf/padavan-4.4">hanwckf</a> &amp; <a href="https://github.com/MeIsReallyBa/padavan-4.4">MeIsReallyBa</a> &amp; <a href="https://github.com/tsl0922/padavan">tsl0922</a> &amp; <a href="https://github.com/TurBoTse/padavan">TurBoTse</a></span></br>\n';
-	footer_code +='  <span>Firmware distribution is prohibited , Non-Commercial Use Only</span></br>\n';
+	footer_code +='  <span>開發者 © <a href="https://bitbucket.org/padavan/rt-n56u/">Andy Padavan</a>、<a href="https://github.com/hanwckf/padavan-4.4">hanwckf</a>、<a href="https://github.com/MeIsReallyBa/padavan-4.4">MeIsReallyBa</a>、<a href="https://github.com/tsl0922/padavan">tsl0922</a>、<a href="https://github.com/TurBoTse/padavan">TurBoTse</a></span></br>\n';
+	footer_code +='  <span>禁止散布韌體，僅限非商業用途（Firmware distribution is prohibited, Non-Commercial Use Only）</span></br>\n';
 	footer_code +='</div>\n';
 
 	$("footer").innerHTML = footer_code;
@@ -1727,15 +1727,20 @@ function tw_tabbar(){
 	document.body.appendChild(scrim);
 }
 
-function tw_header_labels(row, n){
+function tw_header_labels(row, n, loose){
 	// 一列全是 th、且欄數符合時，回傳欄位名稱
+	// loose：上游清單表（table-list）有些用 td 當表頭（例如連接埠轉送），整列沒有欄位、文字都很短也算
 	if (!row || !row.cells || row.cells.length < 3 || (n && row.cells.length != n)) return null;
+	if (loose && row.querySelector('input, select, textarea, img, button')) return null;
 	var labels = [];
 	for (var c = 0; c < row.cells.length; c++) {
 		var cell = row.cells[c];
-		if (cell.tagName != 'TH' || cell.colSpan > 1) return null;
-		labels.push((cell.textContent || '').replace(/\s+/g, ' ').trim());
+		if ((cell.tagName != 'TH' && !loose) || cell.colSpan > 1) return null;
+		var t = (cell.textContent || '').replace(/\s+/g, ' ').trim();
+		if (loose && t.length > 24) return null;
+		labels.push(t);
 	}
+	if (loose && labels.filter(function(x){ return x; }).length < 2) return null;
 	return labels;
 }
 
@@ -1769,6 +1774,10 @@ function tw_table_cards(root){
 		var own = null, start = 0;
 		for (var r = 0; r < rows.length && r < 3; r++) {
 			own = tw_header_labels(rows[r]);
+			// td 寫的表頭：要接著一列同欄數、有輸入欄位的新增列，才當成表頭
+			if (!own && /table-list/.test(tb.className) && rows[r + 1] && rows[r + 1].cells.length == rows[r].cells.length &&
+			    rows[r + 1].querySelector('input, select'))
+				own = tw_header_labels(rows[r], 0, true);
 			if (own) { start = r + 1; break; }
 		}
 		if (own && rows.length > start) {

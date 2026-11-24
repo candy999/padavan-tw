@@ -100,9 +100,10 @@ hr { border-color: var(--line); }
 .wrapper > .container-fluid > .row-fluid::before, .wrapper form > .container-fluid > .row-fluid::before { display: none; }
 
 /* 頂部：隱藏舊 logo 欄，TopBanner 成為全寬頂部列 */
-.wrapper > div.container-fluid:first-of-type { position: sticky; top: 0; z-index: 30; }
-.wrapper > div.container-fluid:first-of-type > .row-fluid > .span3 { display: none !important; }
-.wrapper > div.container-fluid:first-of-type > .row-fluid > .span9 { width: 100% !important; float: none; }
+/* 頂部那一格通常是 wrapper 的第一個 div；韌體更新頁前面多了上傳進度遮罩，用 :has(#TopBanner) 也認得 */
+.wrapper > div.container-fluid:first-of-type, .wrapper > div.container-fluid:has(#TopBanner) { position: sticky; top: 0; z-index: 30; }
+.wrapper > div.container-fluid:first-of-type > .row-fluid > .span3, .wrapper > div.container-fluid:has(#TopBanner) > .row-fluid > .span3 { display: none !important; }
+.wrapper > div.container-fluid:first-of-type > .row-fluid > .span9, .wrapper > div.container-fluid:has(#TopBanner) > .row-fluid > .span9 { width: 100% !important; float: none; }
 #logo { display: none !important; }
 .wrapper > br { display: none; }
 
@@ -1034,3 +1035,73 @@ textarea.kr-mono, textarea.kr-rules { width: 100%; max-width: none; box-sizing: 
 }
 /* 同一排並列（.tw-fields 格狀）的欄位不加上下間距，避免錯開 */
 .tw-fields > .tw-field + .tw-field { margin-top: 0; }
+
+/* ---------- 2026-11-24 全頁巡查修正 ---------- */
+/* 勾選框、單選鈕帶了 class="input"（上游常見）：不要被當成文字欄位（變成大方框、標籤掉到下一行） */
+input[type="checkbox"].input, input[type="radio"].input {
+  min-height: 0 !important; padding: 0 !important; border: 0 !important; border-radius: 0 !important;
+  background: none !important; box-shadow: none !important; width: 16px !important; height: 16px !important;
+}
+/* 星期、是／否這類並排的選項：勾選框與文字同一行，選項之間留間距 */
+label.checkbox.inline, label.radio.inline {
+  display: inline-flex !important; align-items: center; gap: 6px; margin: 0 14px 6px 0 !important; padding: 0 !important;
+  min-height: 28px; vertical-align: middle;
+}
+label.checkbox.inline input, label.radio.inline input { margin: 0 !important; float: none !important; }
+label.radio.inline > div { display: inline-flex; align-items: center; gap: 6px; }
+/* 檔案上傳欄位：配合按鈕樣式，不超出版面（韌體更新頁在手機上整頁被撐寬） */
+input[type="file"] { max-width: 100%; font: 14px var(--font); color: var(--muted); }
+input[type="file"]::file-selector-button {
+  font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm); padding: 7px 14px; margin-right: 10px; cursor: pointer;
+}
+input[type="file"]::file-selector-button:hover { border-color: var(--accent); color: var(--accent); }
+/* USB 分享：「所有人都能存取」時蓋在帳號欄的遮罩，原本是灰色斜紋圖 */
+#accountMask { background: var(--surface-2) !important; opacity: .75 !important; border-radius: var(--r-sm); }
+div.main_itoggle label.disabled span { background: var(--surface-2) !important; }
+.accountName { background-color: transparent !important; padding: 6px 6px 6px 24px; border-radius: var(--r-sm); }
+.machineName { color: var(--text); }
+/* USB 分享的帳號／資料夾按鈕（舊 GIF 圖示）：給一致的按鈕外框 */
+#createAccountBtn, #deleteAccountBtn, #modifyAccountBtn, #createFolderBtn, #deleteFolderBtn, #modifyFolderBtn {
+  box-sizing: content-box; width: 22px; height: 22px; padding: 6px; margin: 0 4px 0 0;
+  border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--surface); cursor: pointer; vertical-align: middle;
+}
+@media (prefers-color-scheme: dark) {
+  #createAccountBtn, #deleteAccountBtn, #modifyAccountBtn, #createFolderBtn, #deleteFolderBtn, #modifyFolderBtn { background: #E8EBEF; }
+}
+/* 系統記錄頁的「系統時間」：標籤與時間同一行，不重疊 */
+#system_time { display: inline-block; margin: 0 0 0 8px !important; padding: 2px 10px !important; border-radius: var(--r-sm); font-variant-numeric: tabular-nums; }
+@media (max-width: 640px) {
+  .tw-main input[type="checkbox"].input, .tw-main input[type="radio"].input { width: 20px !important; height: 20px !important; }
+  /* 同一格裡的幾個小欄位（時間 時:分－時:分、主機:連接埠）：維持同一行，不要每個都撐滿一整行 */
+  .tw-main td:has(> input[type="text"] ~ input[type="text"]) {
+    display: flex !important; flex-wrap: wrap; align-items: center; gap: 6px;
+  }
+  .tw-main td:has(> input[type="text"] ~ input[type="text"]) > input[type="text"] { flex: 1 1 150px; width: auto !important; min-width: 0; }
+  .tw-main td:has(> input[type="text"] ~ input[type="text"]) > input[type="text"]:is([maxlength="1"], [maxlength="2"], [maxlength="3"], [maxlength="4"], [maxlength="5"]) {
+    flex: 0 0 52px; width: 52px !important;
+  }
+  .tw-main td:has(> input[type="text"] ~ input[type="text"]) > :is(.help-block, br, div, span.label) { flex-basis: 100%; }
+  /* 網路流量頁：介面選單原本用負邊距疊在分頁列右側，手機上會蓋住分頁 */
+  .tw-main div[align="right"]:has(> #sel_netif) { margin: 0 0 8px !important; }
+  .tw-main div[align="right"]:has(> #sel_netif) + div { margin: 0 !important; }
+  .tw-main #sel_netif { width: 100% !important; }
+}
+/* th 跨欄但同一列還有欄位（例如 DHCP「啟用手動指定」）：是設定的標籤，不是區段標題 */
+.table th[colspan]:not(:only-child) { background: none !important; font-weight: 500 !important; }
+@media (max-width: 640px) {
+  .tw-main .table:not(.tw-cards) > tbody > tr > th[colspan]:not(:only-child) {
+    border-top: 1px solid var(--line) !important; border-radius: 0; padding: 12px 4px 4px !important;
+  }
+  .tw-main .table:not(.tw-cards) > tbody > tr > th[colspan]:not(:only-child) + td { border-top: 0 !important; padding: 0 4px 12px !important; }
+}
+/* 網路流量頁的下行／上行顏色圖例：小色塊，不是整條（手機卡片會把 span12 撐滿） */
+#rx-sel, #tx-sel { width: 14px !important; height: 14px !important; min-height: 0 !important; border-radius: 4px !important; display: inline-block; flex: none; float: none !important; margin: 0 !important; }
+/* 網路地圖的裝置類型圖示是黑色 GIF：暗色模式反白，不然看不到 */
+@media (prefers-color-scheme: dark) { img[src*="/wl_device/"] { filter: invert(.88); } }
+@media (max-width: 640px) {
+  /* 新增列（欄位名稱在格子左側）裡的時間欄位：名稱獨佔一行，欄位排在下一行 */
+  .tw-main tr.tw-labeled > td:has(> input[type="text"] ~ input[type="text"])::before { flex-basis: 100%; margin-bottom: 0; }
+}
+/* 網路流量頁的介面選單：中文名稱比原本的英文長，給足寬度 */
+#sel_netif { width: auto !important; min-width: 240px; max-width: 100%; }
