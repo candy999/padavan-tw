@@ -493,7 +493,7 @@ ww_check(int ext_ok)
 	g_ww.ev[0].has_ip = g_ww.has_ip;
 	if (g_ww.nev < WW_MAX_EV)
 		g_ww.nev++;
-	logmessage("連外偵測", "%s已 %d 秒（HiNet DNS、TWNIC、Cloudflare 都沒有回應），重新連線 WAN（開機以來第 %d 次；%d 分鐘內不會再重撥）",
+	logmessage("連外偵測", "%s，已 %d 秒（HiNet DNS、TWNIC、Cloudflare 都沒有回應），重新連線 WAN（開機以來第 %d 次；%d 分鐘內不會再重撥）",
 		   g_ww.has_ip ? "拿著 IP 但連不出去" : "WAN 沒有拿到 IP", g_ww.ev[0].secs, g_ww.total, gap / 60);
 	g_ww.next_ok = now + gap;
 	g_ww.bad_since = 0;
