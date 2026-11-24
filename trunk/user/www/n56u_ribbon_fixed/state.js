@@ -770,6 +770,7 @@ function show_footer(){
 	footer_code +='<div align="center" class="copyright"><#footer_copyright_desc#></div>\n';
 	footer_code +='<div align="center">\n';
 	footer_code +='  <span>開發者 © <a href="https://bitbucket.org/padavan/rt-n56u/">Andy Padavan</a>、<a href="https://github.com/hanwckf/padavan-4.4">hanwckf</a>、<a href="https://github.com/MeIsReallyBa/padavan-4.4">MeIsReallyBa</a>、<a href="https://github.com/tsl0922/padavan">tsl0922</a>、<a href="https://github.com/TurBoTse/padavan">TurBoTse</a></span></br>\n';
+	footer_code +='  <span>台灣版 <a href="https://github.com/candy999/padavan-tw">padavan-tw</a> © candy999、Claude</span></br>\n';
 	footer_code +='  <span>禁止散布韌體，僅限非商業用途（Firmware distribution is prohibited, Non-Commercial Use Only）</span></br>\n';
 	footer_code +='</div>\n';
 

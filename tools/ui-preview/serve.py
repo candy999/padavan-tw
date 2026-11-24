@@ -315,7 +315,7 @@ def render(text, dct):
         return ''.join(out)
     text = ASP_BLOCK.sub(block, text)
     text = DICT_TOKEN.sub(lambda m: dct.get(m.group(1), m.group(1)), text)
-    text = text.replace('ZVMODELVZ', 'NEWIFI3').replace('ZVCOPYRVZ', '2026 padavan-tw')
+    text = text.replace('ZVMODELVZ', 'NEWIFI3').replace('ZVCOPYRVZ', '© 2011-2026 Padavan 與 N56U 專案社群・編譯時間 2026.11.24 19:30')
     return text
 
 

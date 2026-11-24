@@ -9,7 +9,8 @@ include $(BOARD_CONFIG)
 PROJECT_HOME_URL="https:\/\/github.com\/hanwckf\/padavan-4.4\/"
 PROJECT_HOME_URL_MOD="https:\/\/github.com\/TurBoTse\/padavan\/"
 
-LABEL_COPYRIGHT_TEXT="© 2011-`date +'%Y'` Padavan \& N56U Project Community \, Compilation Time: `TZ='Asia/Shanghai' date +'%Y.%m.%d %H:%M:%S'`"
+# padavan-tw：頁尾第一行改成中文（台灣時間）
+LABEL_COPYRIGHT_TEXT="© 2011-`date +'%Y'` Padavan 與 N56U 專案社群・編譯時間 `TZ='Asia/Taipei' date +'%Y.%m.%d %H:%M'`"
 
 BOARD_PATTERN=s/ZVMODELVZ/$(CONFIG_FIRMWARE_PRODUCT_ID)/g
 COPYR_PATTERN=s/ZVCOPYRVZ/$(LABEL_COPYRIGHT_TEXT)/g
