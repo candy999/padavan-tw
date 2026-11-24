@@ -3151,9 +3151,38 @@ static int login_state_hook(int eid, webs_t wp, int argc, char **argv) {
 	return 0;
 }
 
+/* padavan-tw：清單的值放進頁面 <script> 裡的 JS 字串。上游原樣輸出，值含 " 或 \ 時整段 JS 語法錯誤
+ * （D3 實測：WireGuard 裝置名稱含引號，「遠端與分享」頁顯示 NV is not defined），含 </script> 時還能跳出 script。
+ * 引號、反斜線、控制字元跳脫，< > & 轉成 \u00XX；JS 讀到的仍是原本的字串，各頁行為不變。UTF-8 中文原樣輸出 */
+static void
+tw_js_str(webs_t wp, const char *s)
+{
+	const unsigned char *p = (const unsigned char *)(s ? s : "");
+
+	fputc('"', wp);
+	for (; *p; p++) {
+		switch (*p) {
+		case '"':  fputs("\\\"", wp); break;
+		case '\\': fputs("\\\\", wp); break;
+		case '\n': fputs("\\n", wp); break;
+		case '\r': fputs("\\r", wp); break;
+		case '\t': fputs("\\t", wp); break;
+		case '<': case '>': case '&':
+			fprintf(wp, "\\u%04x", *p);
+			break;
+		default:
+			if (*p < 0x20 || *p == 0x7f)
+				fprintf(wp, "\\u%04x", *p);
+			else
+				fputc(*p, wp);
+		}
+	}
+	fputc('"', wp);
+	fflush(wp);
+}
+
 static int ej_get_nvram_list(int eid, webs_t wp, int argc, char **argv) {
 	struct variable *v, *gv;
-	char buf[NVRAM_MAX_VALUE_LEN];
 	char *serviceId, *groupName, *hiddenVar;
 	int i, groupCount, sid;
 	int firstRow, firstItem;
@@ -3198,10 +3227,9 @@ static int ej_get_nvram_list(int eid, webs_t wp, int argc, char **argv) {
 				websWrite(wp, ", ");
 			
 			if (hiddenVar && strcmp(hiddenVar, gv->name) == 0)
-				sprintf(buf, "\"%s\"", "*");
+				websWrite(wp, "\"*\"");
 			else
-				snprintf(buf, sizeof(buf), "\"%s\"", nvram_get_list_x(gv->name, i));
-			websWrite(wp, "%s", buf);
+				tw_js_str(wp, nvram_get_list_x(gv->name, i));
 		}
 		
 		websWrite(wp, "]");
@@ -3246,7 +3274,7 @@ static int ej_get_static_client(int eid, webs_t wp, int argc, char **argv)
 					websWrite(wp, ", ");
 				
 				if (strlen(field) > 0)
-					websWrite(wp, "\"%s\"", field);
+					tw_js_str(wp, field);	/* padavan-tw：名稱來自裝置本身，跳脫後再放進 JS */
 				else
 					websWrite(wp, "null");
 				
@@ -3316,7 +3344,10 @@ static int ej_get_vpns_client(int eid, webs_t wp, int argc, char **argv)
 		else
 			websWrite(wp, ", ");
 		
-		websWrite(wp, "[\"%s\", \"%s\", \"%s\", \"%s\"]", addr_l, addr_r, peer_name, ifname);
+		/* padavan-tw：VPN 帳號名稱跳脫後再放進 JS */
+		websWrite(wp, "[\"%s\", \"%s\", ", addr_l, addr_r);
+		tw_js_str(wp, peer_name);
+		websWrite(wp, ", \"%s\"]", ifname);
 	}
 
 	fclose(fp);
