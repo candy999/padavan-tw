@@ -34,6 +34,14 @@
 #include "upnpglobalvars.h"
 #endif /* RANDOMIZE_URLS */
 
+#ifndef CONTENT_LENGTH_LIMIT
+#define CONTENT_LENGTH_LIMIT (1024*1024)
+#endif
+
+#ifndef HEADERS_LENGTH_LIMIT
+#define HEADERS_LENGTH_LIMIT (64*1024)
+#endif
+
 #ifdef ENABLE_HTTPS
 #include <openssl/err.h>
 #include <openssl/engine.h>
@@ -146,6 +154,7 @@ New_upnphttp(int s)
 	ret->socket = s;
 	if(!set_non_blocking(s))
 		syslog(LOG_WARNING, "New_upnphttp::set_non_blocking(): %m");
+	memcpy(ret->HttpVer, "HTTP/0.9", 9);	/* HTTP/0.9 by default */
 	return ret;
 }
 
@@ -242,10 +251,15 @@ ParseHttpHeaders(struct upnphttp * h)
 				p = colon;
 				while((*p < '0' || *p > '9') && (*p != '\r') && (*p != '\n'))
 					p++;
-				h->req_contentlen = atoi(p);
-				if(h->req_contentlen < 0) {
-					syslog(LOG_WARNING, "ParseHttpHeaders() invalid Content-Length %d", h->req_contentlen);
-					h->req_contentlen = 0;
+				if (*p >= '0' && *p <= '9') {
+					unsigned long ul;
+					ul = strtoul(p, NULL, 10);
+					if(ul > INT_MAX) {
+						h->req_contentlen = INT_MAX;
+						syslog(LOG_WARNING, "ParseHttpHeaders() Content-Length overflow : %lu", ul);
+					} else {
+						h->req_contentlen = (int)ul;
+					}
 				}
 				/*printf("*** Content-Lenght = %d ***\n", h->req_contentlen);
 				printf("    readbufflen=%d contentoff = %d\n",
@@ -270,9 +284,10 @@ ParseHttpHeaders(struct upnphttp * h)
 					p++;
 				while(p[n]>=' ')
 					n++;
-				if((p[0] == '"' && p[n-1] == '"')
-				  || (p[0] == '\'' && p[n-1] == '\''))
+				if((n >= 2) && ((p[0] == '"' && p[n-1] == '"')
+				             || (p[0] == '\'' && p[n-1] == '\'')))
 				{
+					/* remove the quotes */
 					p++; n -= 2;
 				}
 				h->req_soapActionOff = p - h->req_buf;
@@ -360,8 +375,15 @@ intervening space) by either an integer or the keyword "infinite". */
 				p = colon + 1;
 				while((*p == ' ') || (*p == '\t'))
 					p++;
-				if(strncasecmp(p, "Second-", 7)==0) {
-					h->req_Timeout = atoi(p+7);
+				if((p + 8) < (h->req_buf + h->req_contentoff)
+				   && (strncasecmp(p, "Second-", 7) == 0)) {
+					p += 7;
+					if((p + 8) < (h->req_buf + h->req_contentoff)
+					   && (strncasecmp(p, "infinite", 8) == 0)) {
+						h->req_Timeout = 0;
+					} else if(*p >= '0' && *p <= '9') {
+						h->req_Timeout = atoi(p);
+					}
 				}
 			}
 #ifdef UPNP_STRICT
@@ -386,6 +408,17 @@ intervening space) by either an integer or the keyword "infinite". */
 			line++;
 		line += 2;
 	}
+}
+
+static void
+Send400(struct upnphttp * h)
+{
+	static const char err400str[] =
+		"<html><body>Bad request</body></html>";
+	h->respflags = FLAG_HTML;
+	BuildResp2_upnphttp(h, 400, "Bad Request",
+	                    err400str, sizeof(err400str) - 1);
+	SendRespAndClose_upnphttp(h);
 }
 
 /* very minimalistic 404 error message */
@@ -414,6 +447,17 @@ Send405(struct upnphttp * h)
 	h->respflags |= FLAG_HTML;
 	BuildResp2_upnphttp(h, 405, "Method Not Allowed",
 	                    body405, sizeof(body405) - 1);
+	SendRespAndClose_upnphttp(h);
+}
+
+static void
+Send500(struct upnphttp * h)
+{
+	static const char error500[] = "<HTML><HEAD><TITLE>Error 500</TITLE>"
+	   "</HEAD><BODY>Internal Server Error</BODY></HTML>\r\n";
+	h->respflags = FLAG_HTML;
+	BuildResp2_upnphttp(h, 500, "Internal Server Error",
+	                    error500, sizeof(error500)-1);
 	SendRespAndClose_upnphttp(h);
 }
 
@@ -482,17 +526,11 @@ sendXMLdesc(struct upnphttp * h, char * (f)(int *, int))
 #endif
 	if(!desc)
 	{
-		static const char error500[] = "<HTML><HEAD><TITLE>Error 500</TITLE>"
-		   "</HEAD><BODY>Internal Server Error</BODY></HTML>\r\n";
 		syslog(LOG_ERR, "Failed to generate XML description");
-		h->respflags = FLAG_HTML;
-		BuildResp2_upnphttp(h, 500, "Internal Server Error",
-		                    error500, sizeof(error500)-1);
+		Send500(h);
+		return;
 	}
-	else
-	{
-		BuildResp_upnphttp(h, desc, len);
-	}
+	BuildResp_upnphttp(h, desc, len);
 	SendRespAndClose_upnphttp(h);
 	free(desc);
 }
@@ -516,13 +554,8 @@ ProcessHTTPPOST_upnphttp(struct upnphttp * h)
 		}
 		else
 		{
-			static const char err400str[] =
-				"<html><body>Bad request</body></html>";
 			syslog(LOG_INFO, "No SOAPAction in HTTP headers");
-			h->respflags = FLAG_HTML;
-			BuildResp2_upnphttp(h, 400, "Bad Request",
-			                    err400str, sizeof(err400str) - 1);
-			SendRespAndClose_upnphttp(h);
+			Send400(h);
 		}
 	}
 	else if(h->respflags & FLAG_CONTINUE)
@@ -530,6 +563,11 @@ ProcessHTTPPOST_upnphttp(struct upnphttp * h)
 		/* Sending the 100 Continue response */
 		if(!h->res_buf) {
 			h->res_buf = malloc(256);
+			if(!h->res_buf) {
+				syslog(LOG_ERR, "malloc error in ProcessHTTPPOST_upnphttp()");
+				Send500(h);
+				return;
+			}
 			h->res_buf_alloclen = 256;
 		}
 		h->res_buflen = snprintf(h->res_buf, h->res_buf_alloclen,
@@ -816,6 +854,12 @@ ProcessHttpQuery_upnphttp(struct upnphttp * h)
 	syslog(LOG_INFO, "HTTP REQUEST from %s : %s %s (%s)",
 	       h->clientaddr_str, HttpCommand, HttpUrl, HttpVer);
 	ParseHttpHeaders(h);
+	if(h->req_contentlen > CONTENT_LENGTH_LIMIT) {
+		syslog(LOG_WARNING, "Content-Length over limit : %d", h->req_contentlen);
+		BuildResp2_upnphttp(h, 413, "Content Too Large", 0, 0);
+		SendRespAndClose_upnphttp(h);
+		return;
+	}
 	if(h->req_HostOff > 0 && h->req_HostLen > 0) {
 		syslog(LOG_DEBUG, "Host: %.*s", h->req_HostLen, h->req_buf + h->req_HostOff);
 		p = h->req_buf + h->req_HostOff;
@@ -922,11 +966,40 @@ ProcessHttpQuery_upnphttp(struct upnphttp * h)
 }
 
 
+/*! make sure we have at least 2048 bytes available for receiving
+ * \return 0 for error
+ */
+static int
+upnphttp_adjust_buffer(struct upnphttp * h)
+{
+	if(h->req_bufalloc < (h->req_buflen + 2048)) {
+		char * h_tmp;
+		int old_bufalloc = h->req_bufalloc;
+		if(h->req_bufalloc == 0) {
+			h->req_bufalloc = 4096;
+		} else if (h->req_bufalloc < 256*1024) {
+			h->req_bufalloc += h->req_bufalloc;	/* double the buffer */
+		} else {
+			h->req_bufalloc += 256*1024;
+		}
+		/* if 1st arg of realloc() is null,
+		 * realloc behaves the same as malloc() */
+		h_tmp = (char *)realloc(h->req_buf, h->req_bufalloc);
+		if (h_tmp == NULL) {
+			syslog(LOG_WARNING, "Unable to allocate new memory for h->req_buf (%d bytes)", h->req_bufalloc);
+			h->req_bufalloc = old_bufalloc;
+			Send500(h);
+			return 0;
+		} else {
+			h->req_buf = h_tmp;
+		}
+	}
+	return 1;
+}
+
 void
 Process_upnphttp(struct upnphttp * h)
 {
-	char * h_tmp;
-	char buf[2048];
 	int n;
 
 	if(!h)
@@ -934,14 +1007,19 @@ Process_upnphttp(struct upnphttp * h)
 	switch(h->state)
 	{
 	case EWaitingForHttpRequest:
+		if(!upnphttp_adjust_buffer(h)) {
+			h->state = EToDelete;
+			return;
+		}
+		/* keep at least one byte free at the end of the buffer - to null terminate it */
 #ifdef ENABLE_HTTPS
 		if(h->ssl) {
-			n = SSL_read(h->ssl, buf, sizeof(buf));
+			n = SSL_read(h->ssl, h->req_buf + h->req_buflen, h->req_bufalloc - h->req_buflen - 1);
 		} else {
-			n = recv(h->socket, buf, sizeof(buf), 0);
+			n = recv(h->socket, h->req_buf + h->req_buflen, h->req_bufalloc - h->req_buflen - 1, 0);
 		}
 #else
-		n = recv(h->socket, buf, sizeof(buf), 0);
+		n = recv(h->socket, h->req_buf + h->req_buflen, h->req_bufalloc - h->req_buflen - 1, 0);
 #endif
 		if(n<0)
 		{
@@ -989,41 +1067,54 @@ Process_upnphttp(struct upnphttp * h)
 		else
 		{
 			const char * endheaders;
-			/* if 1st arg of realloc() is null,
-			 * realloc behaves the same as malloc() */
-			h_tmp = (char *)realloc(h->req_buf, n + h->req_buflen + 1);
-			if (h_tmp == NULL)
-			{
-				syslog(LOG_WARNING, "Unable to allocate new memory for h->req_buf)");
-				h->state = EToDelete;
-			}
-			else
-			{
-				h->req_buf = h_tmp;
-				memcpy(h->req_buf + h->req_buflen, buf, n);
-				h->req_buflen += n;
+			h->req_buflen += n;
+			if(h->req_buflen < h->req_bufalloc)
 				h->req_buf[h->req_buflen] = '\0';
-			}
 			/* search for the string "\r\n\r\n" */
 			endheaders = findendheaders(h->req_buf, h->req_buflen);
-			if(endheaders)
-			{
+			if(endheaders) {
 				/* at this point, the request buffer (h->req_buf)
 				 * is guaranteed to contain the \r\n\r\n character sequence */
 				h->req_contentoff = endheaders - h->req_buf + 4;
+			}
+			if ((h->req_contentoff >= HEADERS_LENGTH_LIMIT)
+			    || (!endheaders && h->req_buflen >= HEADERS_LENGTH_LIMIT)) {
+				/* the headers are over limit */
+				char * p;
+				/* we need to know the HTTP version to answer properly */
+				h->req_buf[h->req_buflen-1] = '\0';
+				p = strstr(h->req_buf, "\r\n");
+				if(p) {
+					int i;
+					while(p > h->req_buf && p[-1] != ' ') {
+						p--;
+					}
+					for(i = 0; i < 15 && p[i] != '\r'; i++) {
+						h->HttpVer[i] = p[i];
+					}
+					h->HttpVer[i] = '\0';
+				}
+				Send400(h);
+				return;
+			}
+			if(endheaders) {
 				ProcessHttpQuery_upnphttp(h);
 			}
 		}
 		break;
 	case EWaitingForHttpContent:
+		if(!upnphttp_adjust_buffer(h)) {
+			h->state = EToDelete;
+			return;
+		}
 #ifdef ENABLE_HTTPS
 		if(h->ssl) {
-			n = SSL_read(h->ssl, buf, sizeof(buf));
+			n = SSL_read(h->ssl, h->req_buf + h->req_buflen, h->req_bufalloc - h->req_buflen);
 		} else {
-			n = recv(h->socket, buf, sizeof(buf), 0);
+			n = recv(h->socket, h->req_buf + h->req_buflen, h->req_bufalloc - h->req_buflen, 0);
 		}
 #else
-		n = recv(h->socket, buf, sizeof(buf), 0);
+		n = recv(h->socket, h->req_buf + h->req_buflen, h->req_bufalloc - h->req_buflen, 0);
 #endif
 		if(n<0)
 		{
@@ -1070,21 +1161,10 @@ Process_upnphttp(struct upnphttp * h)
 		}
 		else
 		{
-			void * tmp = realloc(h->req_buf, n + h->req_buflen);
-			if(!tmp)
+			h->req_buflen += n;
+			if((h->req_buflen - h->req_contentoff) >= h->req_contentlen)
 			{
-				syslog(LOG_ERR, "memory allocation error %m");
-				h->state = EToDelete;
-			}
-			else
-			{
-				h->req_buf = tmp;
-				memcpy(h->req_buf + h->req_buflen, buf, n);
-				h->req_buflen += n;
-				if((h->req_buflen - h->req_contentoff) >= h->req_contentlen)
-				{
-					ProcessHTTPPOST_upnphttp(h);
-				}
+				ProcessHTTPPOST_upnphttp(h);
 			}
 		}
 		break;
@@ -1228,7 +1308,7 @@ BuildResp2_upnphttp(struct upnphttp * h, int respcode,
                     const char * body, int bodylen)
 {
 	int r = BuildHeader_upnphttp(h, respcode, respmsg, bodylen);
-	if(body && (r >= 0)) {
+	if(body && (bodylen > 0) && (r >= 0)) {
 		memcpy(h->res_buf + h->res_buflen, body, bodylen);
 		h->res_buflen += bodylen;
 	}

@@ -62,6 +62,7 @@ struct upnphttp {
 	/* request */
 	char * req_buf;
 	char accept_language[8];
+	int req_bufalloc;
 	int req_buflen;
 	int req_contentlen;
 	int req_contentoff;     /* header length */

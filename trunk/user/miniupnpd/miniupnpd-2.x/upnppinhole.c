@@ -159,16 +159,29 @@ lease_file6_add(const char * rem_client,
 	if (timestamp != 0) {
 		timestamp -= upnp_time();
 	}
-	if (rem_client == NULL) {
-		rem_client = "";
-	}
-	if (desc == NULL) {
-		desc = "";
+
+	fprintf(fd, "%s;%s;%hu;",
+	        proto_itoa(proto), int_client, int_port);
+
+	if (rem_client != NULL) {
+		while (*rem_client) {
+			if (*rem_client >= ' ' && *rem_client != ';')
+				fputc(*rem_client, fd);
+			rem_client++;
+		}
 	}
 
-	fprintf(fd, "%s;%s;%hu;%s;%hu;%u;%u;%s\n",
-	        proto_itoa(proto), int_client, int_port, rem_client, rem_port,
-	        uid, timestamp, desc);
+	fprintf(fd, ";%hu;%u;%u;",
+	        rem_port, uid, timestamp);
+
+	if (desc != NULL) {
+		while (*desc) {
+			if (*desc >= ' ')
+				fputc(*desc, fd);
+			desc++;
+		}
+	}
+	fputc('\n', fd);
 	fclose(fd);
 
 	return 0;

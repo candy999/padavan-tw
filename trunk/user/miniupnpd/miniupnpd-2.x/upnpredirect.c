@@ -118,9 +118,16 @@ lease_file_add(unsigned short eport,
 #endif
 	}
 
-	fprintf(fd, "%s:%hu:%s:%hu:%u:%s\n",
+	fprintf(fd, "%s:%hu:%s:%hu:%u:",
 	        proto_itoa(proto), eport, iaddr, iport,
-	        timestamp, desc);
+	        timestamp);
+	while(*desc) {
+		/* skip non-printable characters, including CR and LF */
+		if (*desc >= ' ')
+			fputc(*desc, fd);
+		desc++;
+	}
+	fputc('\n', fd);
 	fclose(fd);
 
 	return 0;

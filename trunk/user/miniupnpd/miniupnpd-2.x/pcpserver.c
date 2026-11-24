@@ -492,6 +492,14 @@ static int parsePCPOption(uint8_t* pcp_buf, int remain, pcp_info_t *pcp_msg_info
 			pcp_msg_info->result_code = PCP_ERR_MALFORMED_OPTION;
 			return 0;
 		}
+		/* RFC 6887 section 13.3: IPv4 prefixes include the 96-bit
+		 * IPv4-mapped prefix; IPv6 prefixes range from 0 to 128. */
+		if (pcp_buf[5] > 128 ||
+		    (memcmp(pcp_buf + 8, "\0\0\0\0\0\0\0\0\0\0\xff\xff", 12) == 0 &&
+		     pcp_buf[5] < 96)) {
+			pcp_msg_info->result_code = PCP_ERR_MALFORMED_OPTION;
+			return 0;
+		}
 #ifdef DEBUG
 		syslog(LOG_DEBUG, "PCP OPTION: \t Filter\n");
 #endif
@@ -1592,10 +1600,15 @@ int ProcessIncomingPCPPacket(int s, unsigned char *buff, int len,
 		syslog(LOG_DEBUG, "PCP request received from %s %dbytes",
 		       addr_str, len);
 
-	if(buff[1] & 128) {
-		/* discarding PCP responses silently */
+	if(len < 2 || buff[1] & 128) {
+		/* discarding messages shorter than 2 bytes and PCP responses silently */
 		return 0;
 	}
+	/* Preserve the request header even when the packet is too short for
+	 * processPCPRequest() to parse the common PCP header. Error responses for
+	 * malformed requests still need to identify the request's version/opcode. */
+	pcp_msg_info.version = buff[0];
+	pcp_msg_info.opcode = buff[1] & 0x7f;
 
 	/* If we're in allow third party-mode, we probably don't care
 	 * about locality either. Let's hope firewall is ok. */
@@ -1614,6 +1627,8 @@ int ProcessIncomingPCPPacket(int s, unsigned char *buff, int len,
 
 		if(len < PCP_MIN_LEN)
 			len = PCP_MIN_LEN;
+		else if(len > PCP_MAX_LEN)
+			len = PCP_MAX_LEN;
 		else
 			len = (len + 3) & ~3;	/* round up resp. length to multiple of 4 */
 		len = sendto_or_schedule2(s, buff, len, 0, senderaddr,

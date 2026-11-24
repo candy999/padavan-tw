@@ -994,7 +994,7 @@ ProcessSSDPData(int s, const char *bufr, int n,
 #endif
 #endif
 #if defined(UPNP_STRICT) || defined(DELAY_MSEARCH_RESPONSE)
-	int mx_value = -1;
+	int mx_value = -1;	/* -1 => not set, -2 => invalid value (0 or negative) */
 #endif
 	unsigned int delay = 50; /* Non-zero default delay to prevent flooding */
 	/* UPnP Device Architecture v1.1.  1.3.3 Search response :
@@ -1092,7 +1092,16 @@ ProcessSSDPData(int s, const char *bufr, int n,
 				memset(atoi_buffer, 0, sizeof(atoi_buffer));
 				memcpy(atoi_buffer, mx, MIN((int)(sizeof(atoi_buffer) - 1), mx_len));
 				mx_value = atoi(atoi_buffer);
-				syslog(LOG_DEBUG, "MX: %.*s (value=%d)", mx_len, mx, mx_value);
+				/* UPnP Device Architechture v2.0 :
+				 * MX
+				 * Required. Field value contains maximum wait time in seconds.
+				 * shall be greater than or equal to 1 and should be less than
+				 * 5 inclusive. */
+				if (mx_value <= 0) {
+					syslog(LOG_WARNING, "MX: %.*s (value=%d) INVALID (must be between 1 and 5 incl.)", mx_len, mx, mx_value);
+				} else {
+					syslog(LOG_DEBUG, "MX: %.*s (value=%d)", mx_len, mx, mx_value);
+				}
 			}
 #endif /* defined(UPNP_STRICT) || defined(DELAY_MSEARCH_RESPONSE) */
 #if defined(UPNP_STRICT)
@@ -1119,8 +1128,11 @@ ProcessSSDPData(int s, const char *bufr, int n,
 		/* For multicast M-SEARCH requests, if the search request does
 		 * not contain an MX header field, the device MUST silently
 		 * discard and ignore the search request. */
-		if(mx_value < 0) {
+		if(mx_value == -1) {
 			syslog(LOG_INFO, "ignoring SSDP packet missing MX: header");
+			return;
+		} else if(mx_value <= 0) {
+			syslog(LOG_WARNING, "ignoring SSDP packet with invalid value for MX: header");
 			return;
 		} else if(mx_value > 5) {
 			/* If the MX header field specifies a field value greater
@@ -1129,7 +1141,7 @@ ProcessSSDPData(int s, const char *bufr, int n,
 			mx_value = 5;
 		}
 #elif defined(DELAY_MSEARCH_RESPONSE)
-		if(mx_value < 0) {
+		if(mx_value <= 0) {
 			mx_value = 1;
 		} else if(mx_value > 5) {
 			/* If the MX header field specifies a field value greater

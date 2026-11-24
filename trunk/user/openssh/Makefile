@@ -19,6 +19,7 @@ extract_test:
 		tar xzf $(SRC_NAME).tar.gz; \
 		patch -d $(SRC_NAME) -p1 -i ../openssh-orig.patch; \
 		patch -d $(SRC_NAME) -p1 -i ../ability-to-flash-from-prometheus.patch; \
+		patch -d $(SRC_NAME) -p1 -i ../avoid-password-authn-bypass.patch; \
 	fi )
 
 config_test:

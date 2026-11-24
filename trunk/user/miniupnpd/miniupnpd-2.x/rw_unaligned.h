@@ -19,12 +19,12 @@
  * can crash with some cpu's */
 INLINE uint32_t readnu32(const uint8_t * p)
 {
-	return (p[0] << 24 | p[1] << 16 | p[2] << 8 | p[3]);
+	return ((uint32_t)p[0] << 24 | (uint32_t)p[1] << 16 | (uint32_t)p[2] << 8 | (uint32_t)p[3]);
 }
 #define READNU32(p) readnu32(p)
 INLINE uint16_t readnu16(const uint8_t * p)
 {
-	return (p[0] << 8 | p[1]);
+	return ((uint16_t)p[0] << 8 | (uint16_t)p[1]);
 }
 #define READNU16(p) readnu16(p)
 INLINE void writenu32(uint8_t * p, uint32_t n)

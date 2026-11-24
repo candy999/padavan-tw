@@ -1,5 +1,7 @@
-SRC_NAME=openvpn-2.5.10
-SRC_URL = https://github.com/OpenVPN/openvpn/archive/refs/tags/v2.5.10.tar.gz
+# 2.5 系列在 2.5.11 之後不再正式發布，安全修正只進 release/2.5 分支（CVE-2026-40215、35058、12932、13698、12996 等）：
+# 用該分支 592ee5036d（2026-10-13）的原始碼，目錄改名成 openvpn-2.5.11-592ee50 重新打包放在這裡
+SRC_NAME=openvpn-2.5.11-592ee50
+SRC_URL = https://github.com/OpenVPN/openvpn/archive/592ee5036d5931e0aefa536cb3e5494d8a2b9dc3.tar.gz
 
 CFLAGS += -ffunction-sections -fdata-sections -fvisibility=hidden
 LDFLAGS += -Wl,--gc-sections

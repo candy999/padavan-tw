@@ -990,6 +990,10 @@ get_tcp_match(unsigned short dport, unsigned short sport)
 	size =   IPT_ALIGN(sizeof(struct ipt_entry_match))
 	       + IPT_ALIGN(sizeof(struct ipt_tcp));
 	match = calloc(1, size);
+	if(!match) {
+		syslog(LOG_ERR, "%s: calloc(%d) error", "get_tcp_match", (int)size);
+		return NULL;
+	}
 	match->u.match_size = size;
 	strncpy(match->u.user.name, "tcp", sizeof(match->u.user.name));
 	tcpinfo = (struct ipt_tcp *)match->data;
@@ -1019,6 +1023,10 @@ get_udp_match(unsigned short dport, unsigned short sport)
 	size =   IPT_ALIGN(sizeof(struct ipt_entry_match))
 	       + IPT_ALIGN(sizeof(struct ipt_udp));
 	match = calloc(1, size);
+	if(!match) {
+		syslog(LOG_ERR, "%s: calloc(%d) error", "get_udp_match", (int)size);
+		return NULL;
+	}
 	match->u.match_size = size;
 	strncpy(match->u.user.name, "udp", sizeof(match->u.user.name));
 	udpinfo = (struct ipt_udp *)match->data;
@@ -1050,6 +1058,10 @@ get_dnat_target(const char * daddr, unsigned short dport)
 	size =   IPT_ALIGN(sizeof(struct ipt_entry_target))
 	       + IPT_ALIGN(sizeof(struct ip_nat_multi_range));
 	target = calloc(1, size);
+	if(!target) {
+		syslog(LOG_ERR, "%s: calloc(%d) error", "get_dnat_target", (int)size);
+		return NULL;
+	}
 	target->u.target_size = size;
 	strncpy(target->u.user.name, "DNAT", sizeof(target->u.user.name));
 	/* one ip_nat_range already included in ip_nat_multi_range */
@@ -1074,6 +1086,10 @@ get_snat_target(const char * saddr, unsigned short sport)
 	size =   IPT_ALIGN(sizeof(struct ipt_entry_target))
 	       + IPT_ALIGN(sizeof(struct ip_nat_multi_range));
 	target = calloc(1, size);
+	if(!target) {
+		syslog(LOG_ERR, "%s: calloc(%d) error", "get_snat_target", (int)size);
+		return NULL;
+	}
 	target->u.target_size = size;
 	strncpy(target->u.user.name, "SNAT", sizeof(target->u.user.name));
 	/* one ip_nat_range already included in ip_nat_multi_range */
@@ -1097,6 +1113,10 @@ get_dscp_target(unsigned char dscp)
 	size =   IPT_ALIGN(sizeof(struct ipt_entry_target))
 	       + IPT_ALIGN(sizeof(struct xt_DSCP_info));
 	target = calloc(1, size);
+	if(!target) {
+		syslog(LOG_ERR, "%s: calloc(%d) error", "get_dscp_target", (int)size);
+		return NULL;
+	}
 	target->u.target_size = size;
 	strncpy(target->u.user.name, "DSCP", sizeof(target->u.user.name));
 	/* one ip_nat_range already included in ip_nat_multi_range */
@@ -1117,6 +1137,10 @@ get_masquerade_target(unsigned short port)
 	size =   IPT_ALIGN(sizeof(struct ipt_entry_target))
 	       + IPT_ALIGN(sizeof(struct ip_nat_multi_range));
 	target = calloc(1, size);
+	if(!target) {
+		syslog(LOG_ERR, "%s: calloc(%d) error", "get_masquerade_target", (int)size);
+		return NULL;
+	}
 	target->u.target_size = size;
 	strncpy(target->u.user.name, "MASQUERADE", sizeof(target->u.user.name));
 	/* one ip_nat_range already included in ip_nat_multi_range */
@@ -1230,6 +1254,13 @@ addnatrule(int proto, unsigned short eport,
 	e->nfcache = NFC_UNKNOWN;
 #endif
 	target = get_dnat_target(iaddr, iport);
+	if(!match || !target) {
+		syslog(LOG_ERR, "%s: failed to build match/target", "addnatrule");
+		free(match);
+		free(target);
+		free(e);
+		return -1;
+	}
 #ifdef NFC_IP_DST_PT
 	e->nfcache |= NFC_IP_DST_PT;
 #endif
@@ -1304,6 +1335,13 @@ addmasqueraderule(int proto,
 	e->nfcache = NFC_UNKNOWN;
 #endif
 	target = get_masquerade_target(eport);
+	if(!match || !target) {
+		syslog(LOG_ERR, "%s: failed to build match/target", "addmasqueraderule");
+		free(match);
+		free(target);
+		free(e);
+		return -1;
+	}
 #ifdef NFC_IP_DST_PT
 	e->nfcache |= NFC_IP_DST_PT;
 #endif
@@ -1388,6 +1426,13 @@ addpeernatrule(int proto,
 	e->nfcache = NFC_UNKNOWN;
 #endif
 	target = get_snat_target(eaddr, eport);
+	if(!match || !target) {
+		syslog(LOG_ERR, "%s: failed to build match/target", "addpeernatrule");
+		free(match);
+		free(target);
+		free(e);
+		return -1;
+	}
 #ifdef NFC_IP_DST_PT
 	e->nfcache |= NFC_IP_DST_PT;
 #endif
@@ -1466,6 +1511,13 @@ addpeerdscprule(int proto, unsigned char dscp,
 	e->nfcache = NFC_UNKNOWN;
 #endif
 	target = get_dscp_target(dscp);
+	if(!match || !target) {
+		syslog(LOG_ERR, "%s: failed to build match/target", "addpeerdscprule");
+		free(match);
+		free(target);
+		free(e);
+		return -1;
+	}
 #ifdef NFC_IP_DST_PT
 	e->nfcache |= NFC_IP_DST_PT;
 #endif
@@ -1523,6 +1575,10 @@ get_accept_target(void)
 	size =   IPT_ALIGN(sizeof(struct ipt_entry_target))
 	       + IPT_ALIGN(sizeof(int));
 	target = calloc(1, size);
+	if(!target) {
+		syslog(LOG_ERR, "%s: calloc(%d) error", "get_accept_target", (int)size);
+		return NULL;
+	}
 	target->u.user.target_size = size;
 	strncpy(target->u.user.name, "ACCEPT", sizeof(target->u.user.name));
 	return target;
@@ -1558,6 +1614,13 @@ add_filter_rule(int proto, const char * rhost,
 	e->nfcache = NFC_UNKNOWN;
 #endif
 	target = get_accept_target();
+	if(!match || !target) {
+		syslog(LOG_ERR, "%s: failed to build match/target", "add_filter_rule");
+		free(match);
+		free(target);
+		free(e);
+		return -1;
+	}
 #ifdef NFC_IP_DST_PT
 	e->nfcache |= NFC_IP_DST_PT;
 #endif

@@ -317,13 +317,19 @@ upnp_event_notify_connect(struct upnp_event_notify * obj)
 		return;
 	}
 	p = obj->sub->callback;
-	p += 7;	/* http:// */
+	if(strncmp(p, "http://", 7) != 0) {
+		syslog(LOG_WARNING, "%s: wrong callback URL : \"%s\"",
+		       "upnp_event_notify_connect", p);
+		obj->state = EError;
+		return;
+	}
+	p += 7;	/* skip http:// */
 #ifdef ENABLE_IPV6
 	if(*p == '[') {	/* ip v6 */
 		obj->addrstr[i++] = '[';
 		p++;
 		obj->ipv6 = 1;
-		while(*p != ']' && i < (sizeof(obj->addrstr)-1))
+		while(*p != '\0' && *p != ']' && i < (sizeof(obj->addrstr)-1))
 			obj->addrstr[i++] = *(p++);
 		if(*p == ']')
 			p++;
@@ -331,7 +337,7 @@ upnp_event_notify_connect(struct upnp_event_notify * obj)
 			obj->addrstr[i++] = ']';
 	} else {
 #endif
-		while(*p != '/' && *p != ':' && i < (sizeof(obj->addrstr)-1))
+		while(*p != '\0' && *p != '/' && *p != ':' && i < (sizeof(obj->addrstr)-1))
 			obj->addrstr[i++] = *(p++);
 #ifdef ENABLE_IPV6
 	}
@@ -341,8 +347,9 @@ upnp_event_notify_connect(struct upnp_event_notify * obj)
 		obj->portstr[0] = *p;
 		i = 1;
 		p++;
-		port = (unsigned short)atoi(p);
-		while(*p != '\0' && *p != '/') {
+		port = 0;
+		while('0' <= *p && *p <= '9') {
+			port = port * 10 + *p - '0';
 			if(i<7) obj->portstr[i++] = *p;
 			p++;
 		}
