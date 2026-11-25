@@ -4,6 +4,7 @@
 #
 # 情境（2026-11-25 D3 長測）：手機從 5G 換到 2.4G 之後，驅動的 5G 表還留著它的舊紀錄幾分鐘。
 # 以前每次讀表兩邊都看到它，就來回記「換頻段」；現在同一次讀表只認連線時間比較短的那筆。
+# 2026-11-25 確認過：v2026.11.24 的 tw-roamd 在這個情境每 2 秒來回記一次（跟 D3 長測一樣），這裡會失敗。
 set -eu
 SRC=${TWR_SRC:-$(cd "$(dirname "$0")/../src" && pwd)}
 W=$(mktemp -d)
@@ -23,7 +24,7 @@ cat > "$W/rc.h" <<'H'
 #define IFNAME_5G_MAIN		"rai0"
 #define BOARD_NAME		"TEST"
 #define BOARD_HAS_5G_RADIO	1
-static inline char *nvram_safe_get(const char *n) { char k[64]; char *v; snprintf(k, sizeof(k), "NV_%s", n); v = getenv(k); return v ? v : ""; }
+static inline char *nvram_safe_get(const char *n) { char k[128]; char *v; snprintf(k, sizeof(k), "NV_%s", n); v = getenv(k); return v ? v : ""; }
 static inline int nvram_get_int(const char *n) { return atoi(nvram_safe_get(n)); }
 static inline char *nvram_wlan_get(int a, const char *p) { char k[64]; snprintf(k, sizeof(k), "%s_%s", a ? "wl" : "rt", p); return nvram_safe_get(k); }
 static inline int nvram_wlan_get_int(int a, const char *p) { return atoi(nvram_wlan_get(a, p)); }

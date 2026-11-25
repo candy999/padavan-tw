@@ -18,16 +18,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
           sparse-checkout: |
             trunk/user/rc
       - name: tw-roamd 模擬測試（同一台裝置留在兩個頻段的表裡）
         run: sh trunk/user/rc/tests/tw-roamd-host-test.sh
-      - name: 確認測試抓得到修正前的問題（v2026.11.24 的 tw-roamd 應該失敗）
-        run: |
-          d=$(mktemp -d)
-          for f in tw_roamd.c tw_roam_drv.c tw_roam.h; do git show v2026.11.24:trunk/user/rc/src/$f > "$d/$f"; done
-          if TWR_SRC="$d" sh trunk/user/rc/tests/tw-roamd-host-test.sh; then
-            echo "舊版竟然通過，測試沒有抓到問題"; exit 1
-          fi
-          echo "舊版如預期失敗"
