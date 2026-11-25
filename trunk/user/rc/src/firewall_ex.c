@@ -1378,7 +1378,9 @@ ipt_raw_rules(char *lan_if, char *lan_ip)
 	 * 這裡只拿掉前兩個：lo 上的封包，以及區網送到「路由器自己的 IP」的 UDP 53 與回覆。
 	 * INPUT 鏈對 lo 與區網介面本來就全部放行（不看連線狀態）；送到外部 DNS 的查詢、
 	 * 「強制 DNS」轉址（目的地不是路由器）照樣追蹤，NAT 不受影響。 */
-	int i_notrack = nvram_safe_get_int("fw_dns_notrack", 1, 0, 1);
+	/* nvram_safe_get_int 沒設定時讀到 0（atoi("")），不會用預設值：沒設定就當 1。
+	 * b440d0c 刷進 D3 後才發現規則沒有加上（預設值也補進 defaults.c） */
+	int i_notrack = (*nvram_safe_get("fw_dns_notrack")) ? nvram_safe_get_int("fw_dns_notrack", 1, 0, 1) : 1;
 
 	if (i_notrack) {
 		module_smart_load("iptable_raw", NULL);

@@ -1104,6 +1104,7 @@ struct nvram_pair router_defaults[] = {
 	{ "sfe_enable", "2" },		/* Software Offload Routing IPv4/IPv6 */
 #endif
 	{ "fw_syn_cook", "0" },		/* Prevent SYN Flood Attack */
+	{ "fw_dns_notrack", "1" },	/* 路由器自己的 DNS 不進連線追蹤（raw 表 CT --notrack） */
 	{ "fw_mac_drop", "0" },
 	{ "nf_nat_type", "1" },
 	{ "nf_nat_loop", "1" },
