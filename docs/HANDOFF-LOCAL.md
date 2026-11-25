@@ -64,7 +64,7 @@ git pull
 - 台灣版設定的套用方式：頂層 `Makefile` 把 `configs/templates/<機型>.config` 複製成 `.config`，再接上 `configs/tw/common.config` 與 `configs/tw/<機型>.config`（後面覆蓋前面）；核心設定由 `trunk/configure` 套用 `configs/tw/kernel-<機型>.config`（機型設定裡沒有的選項會補上）
 
 ### 1.5 實機
-- 測試機：**Newifi D3**，後台目前在 `http://192.168.1.1/`（預設是 192.168.2.1，這台被改過；跟 ONU 的 192.168.1.x 同網段，開機日誌會出現 MAN 位址衝突的錯誤，PPPoE 不受影響），SSH 開啟（帳號 admin），Breed 可以救磚（拔電、按住 Reset 插電、`http://192.168.1.1`）
+- 測試機：**Newifi D3**，後台目前在 `http://192.168.1.1/`（預設是 192.168.2.1，這台被改過；跟 ONU 的 192.168.1.x 同網段，開機日誌會出現 MAN 位址衝突的記錄，PPPoE 不受影響；0558a3d 起記錄是中文、網際網路頁也會提示。要不要改回 192.168.2.1 等黑潮長測結束由使用者決定），SSH 開啟（帳號 admin），Breed 可以救磚（拔電、按住 Reset 插電、`http://192.168.1.1`）
 - 刷機：這幾版重開機正常，可以用後台「韌體更新」，或 SSH 走同一條路（`/tmp/linux.trx`＋rc 的 `flash_firmware`，見 HANDOFF-UI 第 13.10 節）。刷之前核對 SHA256。2026-11-20 刷 aa56cfc 時寫入成功但沒自己重開起來（偶發，拔電重插後正常），刷完 5 分鐘沒回來就請使用者重插
 - **小米 CR6608 是使用者正在用的主路由器，不能動**；要等 D3 能接手後才刷（第 5.4 節）
 - 使用者的網路：上游路由器發私有 IPv4（10.0.0.x），有部分 IPv6
@@ -103,7 +103,7 @@ git pull
 | **每日自動選頻** | `tw_acs_daily`、`tw_acs_hour`（預設 4 點起、Wi-Fi 閒置才換）；實測 04:01 執行，頻道沒變也會重啟 2.4G 約 5 秒。5G 選頻後避開強的緊鄰頻道 `tw_acs_adj`（0de393d 起出廠 1；ROADMAP I13） | `tw-wifi-acs` |
 | **後台讀黑潮統計** | 總覽、網際網路、遠端頁經 `/kuroshio_api.cgi` 讀 `/api/status` 精簡版（`lite=1`，`tw_ui.js` 的 `kuroStatus()`，25 秒內重用）：今天查詢、擋下、CDN 置換、回應中位數、上游狀態、憑證到期日；診斷頁事件時間軸＝`latency.json` 的 `wan_watch.events`＋tw-roamd 的漫遊／換頻段紀錄（7 天內），不是另外的取樣器（076d405） | `www/.../tw_ui.js` |
 | **中華電信 MOD** | `tw_mod.c`（`tw_mod_auto` 預設 1）：看門狗每 10 秒用 BPF 收區網 DHCP 封包，Vendor Class `CHT-` 開頭就是機上盒，比對各 LAN 孔收到的廣播計數（`phy_status_port_rx_bcast()`），連續 3 次只剩同一孔就設成 MOD 專用孔（`wan_stb_x`、`wan_stb_iso=1`）並寫系統記錄；已有 MOD 孔或 AP 模式時不監聽、不會自動取消。有 MOD 孔時 WAN 設成交換器 IGMP 的固定上游孔（1f7ff9e，修正直播黑畫面）。MOD 走交換器橋接，**不經過 igmpproxy**。限制：機上盒沒重新要位址就偵測不到（要重開機上盒）。文件與紀錄不要寫機上盒的 MAC、序號、位址 | `rc/src/tw_mod.c`、`rc/src/switch_mtk_esw.c`、`www/.../tw_p_internet.js` |
-| **igmpproxy 0.3** | 兩個修補：`patches/001-…`（上游 PR #98，`internAgeRoute()` use-after-free；還沒實際觸發驗證）、`patches/002-…`（核心要求啟用路由時來源在下游介面就略過；已實測）；當掉時 watchdog 會重啟。IGMP 代理預設開 | `trunk/user/igmpproxy/patches/` |
+| **igmpproxy 0.3** | 兩個修補：`patches/001-…`（上游 PR #98，`internAgeRoute()` use-after-free；還沒實際觸發驗證）、`patches/002-…`（核心要求啟用路由時來源在下游介面就略過；已實測）；當掉時 watchdog 會重啟。IGMP 代理預設開；上游（PPPoE 時是 MAN）沒有 IPv4 位址時不啟動（0558a3d；以前會讓 watchdog 一直重啟一個起不來的 igmpproxy）。PPPoE 的群播照原設計只走 MAN，不走 ppp0 | `trunk/user/igmpproxy/patches/` |
 | **連外中斷自動重新連線** | tw-stats 每 10 秒 ping HiNet DNS、TWNIC、Cloudflare（D1 同一份）；三個都不通 `tw_wan_watch_sec` 秒（預設 30）＋TCP（1.1.1.1:443、168.95.1.1:53、8.8.8.8:53）也不通才走 rc `auto_wan_reconnect`；沒有 IPv4 至少 90 秒；退避 2／5／10／30 分鐘、恢復 10 分鐘歸零；ping 不通但 TCP 通＝只是 ping 被擋，60 秒後再確認、ping 恢復就清掉。狀態在 latency.json 的 `wan_watch`，診斷頁卡片。測試法：`iptables -I OUTPUT -o ppp0 -j DROP`（重撥時防火牆重建會清掉；要測退避就迴圈加回去） | `rc/src/tw_stats.c`、`tw_p_diag.js` |
 | **暫停上網定時恢復** | MAC 過濾封鎖清單（MFList）的時段是每週重複的，不能做一次性暫停；另記 `tw_pause_until`（「MAC=到期 Unix 秒」），watchdog 每 30 秒到期就從清單拿掉、`nvram_commit`、重新載入防火牆。**注意 commit 會把其他沒存的 nvram 一起存進去**（例如測試時暫時關掉的 kuroshio_enable） | `rc/src/tw_pause.c`、`tw_p_devices.js` |
 | **Wi-Fi 裝置明細** | httpd `tw_wl_detail`（tw_status.asp 的 `tw_wl2`）：頻段、訊號、協商速率（getRate，跟 Wi-Fi 狀態頁同一套）、已連線秒數、IoT；DBDC 依 ApIdx 分頻段 | `httpd/src/ralink.c` |
@@ -183,6 +183,7 @@ git pull
 
 ### 5.5 Wi-Fi 與漫遊（ROADMAP I 章）
 - **AP 互助漫遊（2026-11-20 程式完成；2026-11-21～22 D3＋手機實機，見 ROAM-COOP 12.1）**：設計與驅動查證全在 `docs/ROAM-COOP.md`。兩個頻段問 Beacon Report 手機都同一秒回（5G 是 4cfd01a 修好的）、手機會回 BTM（目前回狀態 7 拒絕）；多台 AP（H4）、CR6608 還沒測。
+  - 模擬測試：`trunk/user/rc/tests/tw-roamd-host-test.sh`（TWR_TEST 假訊號表；Actions 的 Host Tests 在改到 `tw_roam*` 時自動跑）。同一台裝置同時在兩個頻段的表裡時只認連線時間比較短的那筆（aa7d509；驅動換頻段後會留舊紀錄幾分鐘）
   - 程式：`trunk/user/rc/src/tw_roamd.c`（TWR2 交換＋決定層）、`tw_roam_drv.c`／`tw_roam.h`（各晶片 ioctl 與事件）；`watchdog.c` 改模式時重新啟動 tw-roamd；Wi-Fi 頁「多台 AP 與漫遊」切換關閉／觀察／建議（`tw_roam_enable` 0／1／2，預設 1）。
   - 驅動：D3 2.4G／5G 都開 11k＋11v；MT7612 補 Beacon Report 事件 0x0950、修漏記憶體；MT7603 修 `WNMEnable=0` 無效。
   - 實機要看：`tw-roamd status` 的「驅動」那行（各頻段能不能問／收回報／建議）、每台裝置的 11k／11v、`/etc/storage/tw-diag/roam.log`；驗證步驟照 ROAM-COOP 第 11 節（D3＋Android 手機先做回 5G）。
