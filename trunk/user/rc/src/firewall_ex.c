@@ -1368,10 +1368,24 @@ ipt_mangle_rules(const char *man_if, const char *wan_if, int use_man)
 }
 
 static void
-ipt_raw_rules(void)
+ipt_raw_rules(char *lan_if, char *lan_ip)
 {
 	FILE *fp;
 	const char *ipt_file = "/tmp/ipt_raw.rules";
+	/* 路由器自己的 DNS 不進連線追蹤（nvram fw_dns_notrack，預設 1）
+	 * 2026-11-25 壓測：每秒數百筆不重複網域時，每筆查詢在 nf_conntrack 佔 3 個位置
+	 * （用戶端↔dnsmasq、dnsmasq↔黑潮 DNS（lo）、黑潮 DNS↔上游），表先滿、開始丟封包，接著整台卡住。
+	 * 這裡只拿掉前兩個：lo 上的封包，以及區網送到「路由器自己的 IP」的 UDP 53 與回覆。
+	 * INPUT 鏈對 lo 與區網介面本來就全部放行（不看連線狀態）；送到外部 DNS 的查詢、
+	 * 「強制 DNS」轉址（目的地不是路由器）照樣追蹤，NAT 不受影響。 */
+	int i_notrack = nvram_safe_get_int("fw_dns_notrack", 1, 0, 1);
+
+	if (i_notrack) {
+		module_smart_load("iptable_raw", NULL);
+		module_smart_load("xt_CT", NULL);
+		if (!is_module_loaded("xt_CT"))
+			i_notrack = 0;
+	}
 
 	if (!(fp=fopen(ipt_file, "w")))
 		return;
@@ -1379,6 +1393,15 @@ ipt_raw_rules(void)
 	fprintf(fp, "*%s\n", "raw");
 	fprintf(fp, ":%s %s [0:0]\n", "PREROUTING", "ACCEPT");
 	fprintf(fp, ":%s %s [0:0]\n", "OUTPUT", "ACCEPT");
+
+	if (i_notrack) {
+		fprintf(fp, "-A %s -i %s -j CT --notrack\n", "PREROUTING", "lo");
+		fprintf(fp, "-A %s -o %s -j CT --notrack\n", "OUTPUT", "lo");
+		if (lan_ip && is_valid_ipv4(lan_ip)) {
+			fprintf(fp, "-A %s -i %s -d %s -p udp --dport %d -j CT --notrack\n", "PREROUTING", lan_if, lan_ip, 53);
+			fprintf(fp, "-A %s -o %s -s %s -p udp --sport %d -j CT --notrack\n", "OUTPUT", lan_if, lan_ip, 53);
+		}
+	}
 
 	fprintf(fp, "COMMIT\n\n");
 	fclose(fp);
@@ -2258,7 +2281,7 @@ start_firewall_ex(void)
 		strcpy(logdrop, "DROP");
 
 	/* IPv4 Raw rules */
-	ipt_raw_rules();
+	ipt_raw_rules(lan_if, lan_ip);
 
 	/* IPv4 Mangle rules */
 	ipt_mangle_rules(man_if, wan_if, i_use_man);

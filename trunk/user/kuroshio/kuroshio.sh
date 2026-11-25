@@ -420,6 +420,11 @@ dnsmasq_extra() {
 			;;
 		esac
 	fi
+	# dnsmasq 同時轉送的查詢上限：預設 150，黑潮 DNS 一慢就頂滿、新的查詢被丟掉
+	# （2026-11-25 壓測：每次卡住都先出現「Maximum number of concurrent DNS queries reached (max: 150)」）。
+	# 改成 rc.h 原本定義的 512。使用者在自己的 dnsmasq.conf 設過就不加：同一個選項寫兩次 dnsmasq 會起不來
+	# （rc 產生的主設定檔因此沒有寫這一行）
+	grep -q '^[[:space:]]*dns-forward-max' /etc/storage/dnsmasq/dnsmasq.conf 2>/dev/null || echo "dns-forward-max=512" >> "$new"
 	# 路由器的 busybox 沒有 cmp：以前每次比對都當成「不同」，每次啟動都重新啟動一次 DHCP／dnsmasq
 	if [ "$(md5sum < "$new")" != "$([ -f "$DNSMASQ_EXTRA" ] && md5sum < "$DNSMASQ_EXTRA")" ]; then
 		mv "$new" "$DNSMASQ_EXTRA"
@@ -434,8 +439,43 @@ dnsmasq_extra() {
 
 # ---------- 啟停 ----------
 
+# 黑潮 DNS 的記憶體上限（nvram kuroshio_mem_limit，單位 MB；空白或 0＝自動：實體記憶體的 60%，最少 64 MB；-1＝不限）
+# 2026-11-25 壓測：每秒數百筆不重複網域時，黑潮 DNS 一路長到 350 MB（D3 全機 448 MB），整台記憶體耗盡、
+# 一直在等 I/O：DNS、ssh、看門狗都卡住 3～8 分鐘，備援也切不過去。放進記憶體 cgroup 之後，
+# 超過上限時核心只在黑潮 DNS 身上回收、必要時只停掉它（守護程序 2 秒後重啟、這段期間改用業者 DNS），其他程式不受影響。
+mem_limit_mb() {
+	local v total
+	v=$(nv kuroshio_mem_limit)
+	case "$v" in
+	-1) echo 0; return ;;
+	''|0|*[!0-9]*) ;;
+	*) echo "$v"; return ;;
+	esac
+	total=$(awk '/^MemTotal:/ {print int($2 / 1024)}' /proc/meminfo 2>/dev/null)
+	[ -n "$total" ] || { echo 0; return; }
+	v=$((total * 60 / 100))
+	[ $v -lt 64 ] && v=64
+	echo $v
+}
+
+memcg_join() {
+	local cg=/sys/fs/cgroup/memory/kuroshio mb me rest
+	[ -f /sys/fs/cgroup/memory/memory.limit_in_bytes ] || return 0
+	mb=$(mem_limit_mb)
+	[ "$mb" -gt 0 ] 2>/dev/null || return 0
+	mkdir -p "$cg" 2>/dev/null || return 0
+	echo $((mb * 1024 * 1024)) > "$cg/memory.limit_in_bytes" 2>/dev/null || return 0
+	# run_loop 是「run_loop &」的子 shell：$$ 是父程序，不是自己。read 是內建指令、不另開程序，
+	# 所以 /proc/self 就是這個子 shell；之後啟動的黑潮 DNS 與 logger 都會繼承這個 cgroup
+	read -r me rest < /proc/self/stat 2>/dev/null
+	[ -n "$me" ] || return 0
+	echo "$me" > "$cg/cgroup.procs" 2>/dev/null || return 0
+	log "記憶體上限 ${mb} MB（超過時只重啟黑潮 DNS，不會拖慢整台；nvram kuroshio_mem_limit 可以調整）"
+}
+
 run_loop() {
 	ulimit -n 65535 2>/dev/null
+	memcg_join
 	while [ -f "$RUN/enabled" ]; do
 		# 開機後的背景工作（CDN 節點池、網段掃描、上游評測）很吃 CPU，降低優先權讓 Wi-Fi、後台、dnsmasq 先跑
 		nice -n 10 $BIN run --uci 2>&1 | logger -t "$TAG"
@@ -604,7 +644,7 @@ reload() {
 # ---------- 保護 ----------
 
 guard() {
-	local state="" fails=0 tick=0 day today hm
+	local state="" fails=0 tick=0 day today hm t0
 	trap 'exit 0' TERM INT
 	sleep 2
 	dnsmasq_extra
@@ -615,11 +655,15 @@ guard() {
 			:	# 正在重新載入設定（幾秒內換新的一輪監聽）：不算沒回應，不必改用業者 DNS（最多 2 分鐘）
 		elif [ $((tick % 10)) -eq 0 ] || [ "$state" != kuroshio ] || [ $fails -gt 0 ]; then
 			# 平常每 10 秒問一次；沒回答過一次就每秒問，約 5 秒內決定要不要改用業者 DNS
+			t0=$(date +%s)
 			if alive; then
 				fails=0
 			else
 				fails=$((fails + 1))
 			fi
+			# 檢查本身就花了 5 秒以上（正常不到 1 秒）：整台已經很吃緊，不再等第 2、3 次，直接改用業者 DNS
+			# （2026-11-25 壓測：記憶體耗盡時這個迴圈自己也跑不動，DNS 斷了 3～7 分鐘才切過去）
+			[ $(( $(date +%s) - t0 )) -ge 5 ] && fails=3
 		fi
 		if [ $fails -ge 3 ] && [ "$state" != fallback ]; then
 			use_servers fallback
