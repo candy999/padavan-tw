@@ -350,7 +350,8 @@ read_table(const char *ifname, int fixed_band, twr_entry_cb cb, long now)
 	/* 測試用：從檔案讀假的訊號表（每行「MAC 訊號 ApIdx」），正式韌體不編入 */
 	{
 		char path[128], line[64], ms[24];
-		int r, idx;
+		int r, idx, nf;
+		unsigned int ct;
 		FILE *tf;
 		struct twr_mac_entry fe;
 		snprintf(path, sizeof(path), "%s.%s", getenv("TWR_FAKE") ? getenv("TWR_FAKE") : "/tmp/twr", ifname);
@@ -358,12 +359,15 @@ read_table(const char *ifname, int fixed_band, twr_entry_cb cb, long now)
 		if (!tf)
 			return;
 		while (fgets(line, sizeof(line), tf)) {
-			if (sscanf(line, "%23s %d %d", ms, &r, &idx) != 3)
+			/* 第 4 欄（選填）：連線時間（秒） */
+			nf = sscanf(line, "%23s %d %d %u", ms, &r, &idx, &ct);
+			if (nf < 3)
 				continue;
 			memset(&fe, 0, sizeof(fe));
 			str2mac(ms, fe.Addr);
 			fe.AvgRssi0 = (signed char)r;
 			fe.ApIdx = (unsigned char)idx;
+			fe.ConnectedTime = nf >= 4 ? ct : 0;
 			cb(&fe, fixed_band, idx != 0, now);
 		}
 		fclose(tf);
@@ -502,6 +506,66 @@ on_entry(const struct twr_mac_entry *e, int band, int guest, long now)
 		seen5_note(e->Addr, now);
 }
 
+/* 一次讀表的結果：兩個頻段都讀完才處理，才能挑掉驅動留下的舊紀錄 */
+#define TWR_MAX_POLLED		(TWR_MAX_LOCAL * 2)
+struct twr_polled {
+	struct twr_mac_entry e;
+	int band;
+	int guest;
+};
+static struct twr_polled g_polled[TWR_MAX_POLLED];
+static int g_npolled;
+
+static void
+collect_entry(const struct twr_mac_entry *e, int band, int guest, long now)
+{
+	(void)now;
+	if (g_npolled >= TWR_MAX_POLLED)
+		return;
+	g_polled[g_npolled].e = *e;
+	g_polled[g_npolled].band = band;
+	g_polled[g_npolled].guest = guest;
+	g_npolled++;
+}
+
+/* 同一台裝置同時出現在兩個頻段時，第 i 筆是不是舊紀錄（要略過）。
+ * 2026-11-25 D3 長測：04:01 每日選頻時手機從 5G 快速漫遊到 2.4G 失敗（PMKID is invalid），改用一般連線上 2.4G；
+ * 驅動的 5G 表還留著它的舊紀錄約 5 分鐘，每次讀表兩邊都看到它，就來回記「換頻段」，5 分鐘記了 289 筆。
+ * 規則：連線時間比較長的是舊紀錄；一樣長時留目前記著的頻段（還沒記過就留先讀到的）。
+ * 還沒有訊號樣本的那筆（剛開始連線、-127）不拿來比，照原本 on_entry 的處理。 */
+static int
+polled_is_stale(int i)
+{
+	const struct twr_polled *a = &g_polled[i];
+	struct twr_local *c = NULL;
+	int j, looked = 0;
+
+	if (entry_rssi(&a->e) == -127)
+		return 0;
+	for (j = 0; j < g_npolled; j++) {
+		const struct twr_polled *b = &g_polled[j];
+		if (j == i || b->band == a->band || memcmp(b->e.Addr, a->e.Addr, 6) != 0)
+			continue;
+		if (entry_rssi(&b->e) == -127)
+			continue;
+		if (b->e.ConnectedTime < a->e.ConnectedTime)
+			return 1;
+		if (b->e.ConnectedTime > a->e.ConnectedTime)
+			continue;
+		if (!looked) {
+			c = local_find(a->e.Addr, 0);
+			looked = 1;
+		}
+		if (c && c->first_seen) {
+			if (c->band == b->band)
+				return 1;
+		} else if (j < i) {
+			return 1;
+		}
+	}
+	return 0;
+}
+
 static void
 poll_local(long now)
 {
@@ -512,14 +576,18 @@ poll_local(long now)
 		if (g_local[i].used)
 			g_local[i].missing++;
 
+	g_npolled = 0;
 #if defined (BOARD_MT7915_DBDC)
-	read_table(IFNAME_5G_MAIN, 5, on_entry, now);
+	read_table(IFNAME_5G_MAIN, 5, collect_entry, now);
 #else
-	read_table(IFNAME_2G_MAIN, 2, on_entry, now);
+	read_table(IFNAME_2G_MAIN, 2, collect_entry, now);
 #if BOARD_HAS_5G_RADIO
-	read_table(IFNAME_5G_MAIN, 5, on_entry, now);
+	read_table(IFNAME_5G_MAIN, 5, collect_entry, now);
 #endif
 #endif
+	for (i = 0; i < g_npolled; i++)
+		if (!polled_is_stale(i))
+			on_entry(&g_polled[i].e, g_polled[i].band, g_polled[i].guest, now);
 
 	for (i = 0; i < TWR_MAX_LOCAL; i++) {
 		struct twr_local *c = &g_local[i];
