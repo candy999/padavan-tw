@@ -439,7 +439,8 @@ dnsmasq_extra() {
 
 # ---------- 啟停 ----------
 
-# 黑潮 DNS 的記憶體上限（nvram kuroshio_mem_limit，單位 MB；空白或 0＝自動：實體記憶體的 60%，最少 64 MB；-1＝不限）
+# 黑潮 DNS 的記憶體上限（nvram kuroshio_mem_limit，單位 MB；空白或 0＝自動：實體記憶體的 80%，最少 64 MB；-1＝不限）
+# 黑潮的設計是儘量用 RAM 保護 Flash，3.5.1 起會在接近保留量時自己停止長大；上限設寬一點，只防它拖垮整台（黑潮 7 號單 P3）
 # 2026-11-25 壓測：每秒數百筆不重複網域時，黑潮 DNS 一路長到 350 MB（D3 全機 448 MB），整台記憶體耗盡、
 # 一直在等 I/O：DNS、ssh、看門狗都卡住 3～8 分鐘，備援也切不過去。放進記憶體 cgroup 之後，
 # 超過上限時核心只在黑潮 DNS 身上回收、必要時只停掉它（守護程序 2 秒後重啟、這段期間改用業者 DNS），其他程式不受影響。
@@ -453,7 +454,7 @@ mem_limit_mb() {
 	esac
 	total=$(awk '/^MemTotal:/ {print int($2 / 1024)}' /proc/meminfo 2>/dev/null)
 	[ -n "$total" ] || { echo 0; return; }
-	v=$((total * 60 / 100))
+	v=$((total * 80 / 100))
 	[ $v -lt 64 ] && v=64
 	echo $v
 }
@@ -540,7 +541,8 @@ start() {
 	echo "$KUROSHIO_LOG" > "$RUN/log_level"	# 環境變數：改了要重新啟動（reload 看這個）
 	run_loop &
 	echo $! > "$RUN/loop.pid"
-	"$0" guard &
+	# 看門狗比其他程式優先（黑潮本身是 nice 10）：整台吃緊時它還跑得動，才切得到業者 DNS（7 號單 P2）
+	nice -n -10 "$0" guard &
 	echo $! > "$RUN/guard.pid"
 	log "啟動（學習資料：$sdir）"
 }
@@ -644,19 +646,29 @@ reload() {
 # ---------- 保護 ----------
 
 guard() {
-	local state="" fails=0 tick=0 day today hm t0
+	local state="" fails=0 tick=0 day today hm t0 now gpid="" rl
 	trap 'exit 0' TERM INT
 	sleep 2
 	dnsmasq_extra
+	# 每秒一圈，盡量不開子程序（整台吃緊時開程序本身就慢，2026-11-25 壓測看門狗自己卡住）：
+	# 時間一次 date 取齊；黑潮的 PID 記下來，只在程序不見了或每 10 圈才重找；reloading 用內建 read
 	while [ -f "$RUN/enabled" ]; do
-		if ! main_pid >/dev/null; then
+		set -- $(date '+%s %H%M %Y%m%d')
+		now=$1 hm=$2 today=$3
+		if [ -z "$gpid" ] || [ ! -d "/proc/$gpid" ] || [ $((tick % 10)) -eq 0 ]; then
+			gpid=$(main_pid)
+		fi
+		rl=0
+		[ -f "$RUN/reloading" ] && read -r rl < "$RUN/reloading" 2>/dev/null
+		case "$rl" in ''|*[!0-9]*) rl=0 ;; esac
+		if [ -z "$gpid" ]; then
 			fails=3
-		elif [ $(( $(date +%s) - $(cat "$RUN/reloading" 2>/dev/null || echo 0) )) -lt 120 ]; then
+		elif [ $((now - rl)) -lt 120 ]; then
 			:	# 正在重新載入設定（幾秒內換新的一輪監聽）：不算沒回應，不必改用業者 DNS（最多 2 分鐘）
 		elif [ $((tick % 10)) -eq 0 ] || [ "$state" != kuroshio ] || [ $fails -gt 0 ]; then
 			# 平常每 10 秒問一次；沒回答過一次就每秒問，約 5 秒內決定要不要改用業者 DNS
-			t0=$(date +%s)
-			if alive; then
+			t0=$now
+			if probe health --timeout 800 >/dev/null 2>&1; then	# 同 alive()，PID 上面確認過了
 				fails=0
 			else
 				fails=$((fails + 1))
@@ -675,15 +687,13 @@ guard() {
 			state=kuroshio
 		fi
 
-		# 每天一次：04:23 檢查憑證續期、04:41 學習資料存檔
-		hm=$(date +%H%M)
-		today=$(date +%Y%m%d)
+		# 每天一次：04:23 檢查憑證續期、04:41 學習資料存檔（hm、today 在這圈開頭取過）
 		if [ "$hm" = "0423" ] && [ "$day" != "a$today" ]; then
 			day="a$today"
-			"$0" acme cron >/dev/null 2>&1 &
+			nice -n 10 "$0" acme cron >/dev/null 2>&1 &	# 看門狗是 -10，這兩件回到一般優先權
 		elif [ "$hm" = "0441" ] && [ "$day" != "s$today" ]; then
 			day="s$today"
-			"$0" save >/dev/null 2>&1 &
+			nice -n 10 "$0" save >/dev/null 2>&1 &
 		fi
 
 		tick=$((tick + 1))
