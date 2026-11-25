@@ -423,28 +423,6 @@ stop_igmpproxy(char *wan_ifname)
 	unlink(IGMPPROXY_WANT);
 }
 
-/* padavan-tw：PPPoE／PPTP／L2TP 時群播的上游原本固定是 MAN（例如 eth2.2）。
- * MAN 沒有 IPv4 位址時（沒開 MAN，或數據機給的位址跟區網同一段而沒有套用），igmpproxy 會因為
- * 「There must be at least 1 Vif as upstream」起不來，watchdog 又一直重新啟動它。
- * 2026-11-24 D3 實測：光世代數據機發 192.168.1.x 給 eth2.2，跟區網衝突，PPPoE 時 IGMP 代理永遠沒有在跑。
- * 這時改用已經撥通的撥號介面（ppp0）當上游；MAN 之後拿到位址，man_up 會再換回 MAN。 */
-static char *
-tw_mcast_upstream(char *wan_ifname)
-{
-	int wan_proto;
-
-	if (get_interface_addr4(wan_ifname) != INADDR_ANY)
-		return wan_ifname;
-	wan_proto = get_wan_proto(0);
-	if (wan_proto != IPV4_WAN_PROTO_PPPOE && wan_proto != IPV4_WAN_PROTO_PPTP && wan_proto != IPV4_WAN_PROTO_L2TP)
-		return wan_ifname;
-	if (strcmp(wan_ifname, get_man_ifname(0)) != 0)
-		return wan_ifname;
-	if (get_interface_addr4(IFNAME_PPP) == INADDR_ANY)
-		return wan_ifname;
-	return IFNAME_PPP;
-}
-
 void
 start_igmpproxy(char *wan_ifname)
 {
@@ -460,9 +438,6 @@ start_igmpproxy(char *wan_ifname)
 	/* Always close old instance of igmpproxy and udpxy (interface may changed) */
 	stop_igmpproxy(wan_ifname);
 
-	wan_ifname = tw_mcast_upstream(wan_ifname);
-	nvram_set_temp("tw_mr_upstream", wan_ifname);
-
 	start_udpxy(wan_ifname);
 #if defined(APP_XUPNPD)
 	start_xupnpd(wan_ifname);
@@ -471,9 +446,13 @@ start_igmpproxy(char *wan_ifname)
 	if (nvram_invmatch("mr_enable_x", "1"))
 		return;
 
-	/* padavan-tw：上游沒有位址時 igmpproxy 一定起不來，先不啟動（等介面拿到位址時會再呼叫這裡） */
+	/* padavan-tw：上游沒有 IPv4 位址時 igmpproxy 一定起不來（"There must be at least 1 Vif as upstream"），
+	 * 以前還會留下 IGMPPROXY_WANT，watchdog 就一直重新啟動它。2026-11-24 D3：PPPoE 時 MAN（eth2.2）
+	 * 從數據機拿到的位址跟區網同一段而沒有套用，從 restart_iptv 啟動就是這樣。
+	 * 先不啟動；MAN 拿到位址時 man_up 會再呼叫這裡。PPPoE 的群播照原本設計只走 MAN，不改走 ppp0
+	 * （中華電信 PPPoE 沒有群播，MOD 走交換器橋接；出廠預設 IGMP 代理開，改走 ppp0 會讓每台都多跑一個） */
 	if (get_interface_addr4(wan_ifname) == INADDR_ANY) {
-		logmessage("igmpproxy", "上游 %s 還沒有 IPv4 位址，先不啟動 IGMP 代理（拿到位址或撥號連上後會自動啟動）", wan_ifname);
+		logmessage("igmpproxy", "上游 %s 沒有 IPv4 位址，先不啟動 IGMP 代理（拿到位址後會自動啟動）", wan_ifname);
 		return;
 	}
 

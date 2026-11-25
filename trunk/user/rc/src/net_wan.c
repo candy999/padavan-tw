@@ -1346,9 +1346,6 @@ wan_up(char *wan_ifname, int unit, int is_static)
 	/* start multicast router (for NDIS or IPoE) */
 	if (ppp_ifindex(wan_ifname) < 0)
 		start_igmpproxy(wan_ifname);
-	/* padavan-tw：撥號連上時 MAN 沒有位址（沒開或跟區網衝突），群播改走撥號介面（見 net.c 的 tw_mcast_upstream） */
-	else if (!modem_unit_id && get_interface_addr4(get_man_ifname(unit)) == INADDR_ANY)
-		start_igmpproxy(get_man_ifname(unit));
 
 	/* notify DDNS client */
 	notify_ddns_update();
@@ -1413,9 +1410,6 @@ wan_down(char *wan_ifname, int unit, int is_static)
 	/* Stop multicast router (for NDIS or IPoE) */
 	if (ppp_ifindex(wan_ifname) < 0)
 		stop_igmpproxy(wan_ifname);
-	/* padavan-tw：群播正在走這個撥號介面（MAN 沒有位址時）就一起停 */
-	else if (nvram_match("tw_mr_upstream", wan_ifname))
-		stop_igmpproxy(get_man_ifname(unit));
 
 	/* Stop kabinet authenticator (for IPoE) */
 	if (!modem_unit_id && (wan_proto == IPV4_WAN_PROTO_IPOE_STATIC || wan_proto == IPV4_WAN_PROTO_IPOE_DHCP)) {
@@ -2206,18 +2200,18 @@ udhcpc_bound(char *wan_ifname, int is_renew_mode)
 		
 		i_err = 1;
 		
-		/* padavan-tw：中文、說清楚影響與怎麼改（台灣光世代數據機常發 192.168.1.x，跟預設區網同一段） */
+		/* padavan-tw：中文、說清楚影響與怎麼改（光世代數據機常發 192.168.1.x；區網改成 192.168.1.1 時就會撞到，出廠預設 192.168.2.1 不會） */
 		if (is_man)
 			logmessage(log_prefix,
 				"%s（%s）：數據機給的位址 %s/%s 跟區網 %s/%s 同一段，沒有套用。"
-				"撥號上網不受影響；連不到數據機的管理頁，IGMP 代理（有開的話）改走撥號連線。"
+				"撥號上網不受影響；連不到數據機的管理頁，MAN 上的 IGMP 代理也不會啟動。"
 				"要解決：把區網改成別的網段（例如 192.168.2.1），或把「PPPoE 與 MAN 存取」設為「否」",
-				udhcpc_state, wan_ifname, wan_ip, wan_nm, lan_ip, lan_nm);
+				is_renew_mode ? "續約" : "取得位址", wan_ifname, wan_ip, wan_nm, lan_ip, lan_nm);
 		else
 			logmessage(log_prefix,
 				"%s（%s）：取得的位址 %s/%s 跟區網 %s/%s 同一段，沒有套用，無法上網。"
 				"請把區網改成別的網段（例如 192.168.2.1）",
-				udhcpc_state, wan_ifname, wan_ip, wan_nm, lan_ip, lan_nm);
+				is_renew_mode ? "續約" : "取得位址", wan_ifname, wan_ip, wan_nm, lan_ip, lan_nm);
 	} else {
 		if (is_changed)
 			ifconfig(wan_ifname, IFUP, "0.0.0.0", NULL);
