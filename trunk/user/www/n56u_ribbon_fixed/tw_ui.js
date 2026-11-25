@@ -664,7 +664,9 @@ var TW = (function () {
 					rx_kbps: b.rx_kbps == null ? null : b.rx_kbps,
 					tx_kbps: b.tx_kbps == null ? null : b.tx_kbps,
 					plan_down_kbps: null, plan_up_kbps: null,
-					series: null
+					series: null,
+					/* PPPoE 的 MAN（例如 eth2.2）從數據機拿到跟區網同一段的位址，韌體沒有套用（net_wan.c 的 udhcpc_bound） */
+					man_conflict: (b.nv.man_err == '1' && b.nv.pppoe_man == '1' && /^\d+\.\d+\.\d+\.\d+$/.test(b.nv.man_ip || '') && b.nv.man_ip != '0.0.0.0') ? { ip: b.nv.man_ip, lan: b.nv.lan_ip || '' } : null
 				};
 				return rstats().then(function (r) {
 					/* 同即時速率：WAN 介面與 WAN 孔（ESW_P0）的歷史逐點取大的（硬體 NAT 的流量只在後者） */

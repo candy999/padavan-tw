@@ -10,6 +10,10 @@ var tw_dhcp_static = [<% get_nvram_list("LANHostConfig", "ManualDHCPList"); %>];
 var tw_mf = [<% get_nvram_list("FirewallConfig", "MFList"); %>];
 var tw_nv = {
 link_internet: "<% nvram_get_x("", "link_internet"); %>",
+man_err: "<% nvram_get_x("", "wanx_err"); %>",
+man_ip: "<% nvram_get_x("", "wanx_ipaddr"); %>",
+pppoe_man: "<% nvram_get_x("", "wan_pppoe_man"); %>",
+lan_ip: "<% nvram_get_x("", "lan_ipaddr"); %>",
 macfilter: "<% nvram_get_x("", "macfilter_enable_x"); %>",
 rt_radio: "<% nvram_get_x("", "rt_radio_x"); %>",
 wl_radio: "<% nvram_get_x("", "wl_radio_x"); %>",

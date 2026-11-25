@@ -48,6 +48,9 @@ function in_status(r) {
 	var h = U.conclusion({ state: st, title: t, sub: U.esc(sub.join(' · ')) });
 	if (!r.connected && r.last_error) h += '<div class="tw-note tw-s-bad"><b>原因：</b>' + U.esc(r.last_error) + '<br>檢查下面的帳號密碼；如果剛改過，按「重新連線」。</div>';
 	else if (!r.connected) h += '<div class="tw-note tw-s-bad">先確認網路線接在路由器的 WAN 孔、數據機燈號正常；PPPoE 請檢查帳號密碼。</div>';
+	if (r.man_conflict) h += '<div class="tw-note tw-s-warn"><b>數據機給的位址跟家裡區網同一段：</b>數據機發給這台 ' + U.esc(r.man_conflict.ip) + '，區網也是 ' + U.esc(r.man_conflict.lan) + '，所以這個位址沒有套用。' +
+		'<br>撥號上網不受影響；受影響的是：從家裡連不到數據機的管理頁，IGMP 代理（有開的話）改走撥號連線。' +
+		'<br><b>要解決（擇一）：</b><br>1. <a href="Advanced_LAN_Content.asp">把區網改成別的網段</a>（例如 192.168.2.1，改完裝置要重新連線）<br>2. 用不到數據機時，在<a href="Advanced_WAN_Content.asp">原始 WAN 設定</a>把「PPPoE 與 MAN 存取」設為「否」</div>';
 	if (r.ip6) h += '<div class="tw-small tw-muted">IPv6：' + U.esc(r.ip6) + '</div>';
 	U.set('in-status', h);
 	var s = U.$('in-sub'); if (s) s.textContent = r.connected ? (r.proto_label || '') + ' 已連線 ' + U.fmtDur(r.uptime_s) : '沒有連線';
