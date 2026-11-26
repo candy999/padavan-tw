@@ -1108,7 +1108,9 @@ struct nvram_pair router_defaults[] = {
 	{ "fw_mac_drop", "0" },
 	{ "nf_nat_type", "1" },
 	{ "nf_nat_loop", "1" },
-#if (BOARD_RAM_SIZE > 128)
+#if (BOARD_RAM_SIZE >= 256)
+	{ "nf_max_conn", "65536" },	/* 黑潮 DNS 每秒 200 筆新網域時，往上游的 UDP 53 就有 1 萬多筆追蹤；32768 約每秒 300 筆會滿 */
+#elif (BOARD_RAM_SIZE > 128)
 	{ "nf_max_conn", "32768" },
 #elif (BOARD_RAM_SIZE > 32)
 	{ "nf_max_conn", "16384" },
