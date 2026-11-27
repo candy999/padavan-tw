@@ -1,3 +1,5 @@
+![padavan-tw：為台灣網路打造的路由器韌體（Newifi D3、小米 CR6608）](docs/images/banner.jpg)
+
 # padavan-tw
 
 **為台灣網路環境打造的 Padavan 路由器韌體**，專門支援 **Newifi D3** 與**小米 CR6608**。
