@@ -152,7 +152,7 @@ git pull
 | Wi-Fi 參數還沒有證據的項目 | 5G `wl_stbc`、`wl_HT_AMSDU`，2.4G `rt_HT_AMSDU`，LDPC、DTIM，2.4G 開 11v 的 IoT 過夜，11r 手機實際 FT 換 AP（WIFI-STABILITY「無線進階頁預設值整理」）；有實測結果才改預設 |
 | D3 交換器 bug 回報上游 TurBoTse | 2026-11-18 使用者同意後已發 [TurBoTse/padavan#32](https://github.com/TurBoTse/padavan/issues/32)（繁體中文；連同無法重開機） |
 | 硬體 NAT 殘留標記（STP 誤判根因）回報上游 | 2026-11-19 使用者同意後已發 [TurBoTse/padavan#33](https://github.com/TurBoTse/padavan/issues/33)、[hanwckf/padavan-4.4#73](https://github.com/hanwckf/padavan-4.4/issues/73)（繁體中文；3.4 的 `__alloc_skb` 有 `DO_FAST_CLEAR_FOE`，4.4 漏掉；雙 GMAC 機型的影響是推論、沒實測，請社群幫忙確認） |
-| 正式 Release | ✅ v2026.11.20（2026-11-20，PR #2 合併 main）、✅ v2026.11.22（2026-11-22，黑潮 3.4.4，標籤在開發分支 d5434a2）、✅ v2026.11.23（2026-11-23，標籤在開發分支 5ffa3e2）、✅ v2026.11.24（2026-11-24，黑潮 3.5.0＋安全修正，標籤在開發分支 f8c88e2）。 |
+| 正式 Release | ✅ v2026.11.20（2026-11-20，PR #2 合併 main）、✅ v2026.11.22（2026-11-22，黑潮 3.4.4，標籤在開發分支 d5434a2）、✅ v2026.11.23（2026-11-23，標籤在開發分支 5ffa3e2）、✅ v2026.11.24（2026-11-24，黑潮 3.5.0＋安全修正，標籤在開發分支 f8c88e2）、✅ v2026.11.27（2026-11-27，黑潮 3.5.1＋後台跟上 3.5.1＋壓測後的負載保護，標籤在開發分支）。 |
 | MI-MINI | 暫緩（第 5.9 節） |
 
 ---
@@ -203,7 +203,7 @@ git pull
 - ~~學習資料匯入、UCI 改用 SIGHUP 重新載入~~：2026-11-18 在 `0bb30a1` 完成（黑潮 3.3.2，HANDOFF-UI 第 13.12 節）
 - ~~憑證申請進度 API~~：`8ca57dc` 完成（`op=acme-log`，以前前端借 SystemCmd 讀）
 - ~~黑潮 3.3.3～3.3.7~~：都已整合並在 D3 驗證；3.4.0（ace2df1；黑潮頁面適配串接模式 fdc4446）；3.4.4（2026-11-22：串接卡片照 LuCI 重做、`/api/chain` 加進白名單、補 3.3.6～3.3.7 的舊預設檔 sha256）；目前韌體是 **3.5.0**
-- **黑潮 3.5.1（等正式版）**：後台黑潮頁面已先跟上 LuCI 3.5.1（狀態、日誌、設定欄位，HANDOFF-UI 第 13.17 節），韌體目前是 3.5.0。正式版發布後：改 `Makefile` 的 `KUROSHIO_VER` 與兩個 SHA256；3.5.0 與 3.5.1 的預設檔相同（sha256 2a3eed58…），`UCI_OLD_DEFAULTS` 不用加；在 D3 驗證新頁面對上真正的 3.5.1
+- **黑潮 3.5.1**：2026-11-27 正式版整合（官方 Release v3.5.1；預設設定檔跟 3.5.0 相同、`UCI_OLD_DEFAULTS` 不用加；web 資料跟 D3 測過的測試版相同），v2026.11.27 發布；後台黑潮頁面見 HANDOFF-UI 第 13.17 節
 - 黑潮新版本：照 `trunk/user/kuroshio/Makefile` 開頭的說明升級；預設設定有變時把舊預設檔的 sha256 加進 `kuroshio.sh` 的 `UCI_OLD_DEFAULTS`（改過的設定檔由 `kuroshio uci-migrate` 處理）
 - ~~查看類的 GET 擋跨站與外網登入~~：`5771f9a` 完成（`X-TW-Request` 標頭、登入來源每次請求判斷）
 - J7 Cloudflare 以外的 DDNS（在黑潮專案做）
