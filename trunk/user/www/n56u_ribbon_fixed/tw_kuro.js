@@ -1,6 +1,6 @@
 /*
  * padavan-tw：黑潮 DNS 子頁組（docs/HANDOFF-UI.md 第 13 節）
- * 移植自黑潮 DNS v3.2.0 的 LuCI 介面（openwrt/luci-app-kuroshio，GPL-3.0-or-later）
+ * 移植自黑潮 DNS 的 LuCI 介面（openwrt/luci-app-kuroshio，GPL-3.0-or-later）：3.2.0 起移植，跟到 3.5.1
  *
  * 這支是共用框架：
  * - KURO.api()：/kuroshio_api.cgi（13.3）
@@ -321,7 +321,8 @@ var KURO = (function () {
 	}
 	function placeholder(f) {
 		if (f.ph != null) return f.ph;
-		if (f.dp) { var d = def(f.dp); if (d != null && typeof d != 'object') return String(d); }
+		/* 3.5.1 起有些預設值是 "auto"（resolver.cacheMax、site.minClients、system.maxDohInflight 等）：留空＝自動 */
+		if (f.dp) { var d = def(f.dp); if (d === 'auto') return '自動'; if (d != null && typeof d != 'object') return String(d); }
 		return '';
 	}
 	function depOk(f) {
@@ -561,7 +562,12 @@ var KURO = (function () {
 	function pre(text, id) { return '<pre class="kr-pre"' + (id ? ' id="' + id + '"' : '') + '>' + esc(text) + '</pre>'; }
 	function note(html, kind) { return '<div class="tw-note' + (kind ? ' tw-s-' + kind : '') + '">' + html + '</div>'; }
 	function fmtNum(n) { return n == null || isNaN(n) ? '-' : Number(n).toLocaleString('zh-TW'); }
-	function pct(a, b) { return b ? (100 * a / b).toFixed(1) + '%' : '-'; }
+	/* 百分比：3.5.1 起用 ui-core.js 的 pct（不是全部最多 99.9%、不是 0 最少 <0.1%，跟 LuCI 一樣）；ui-core.js 還沒載入或是舊版時照舊四捨五入 */
+	function pct(a, b) {
+		if (!b) return '-';
+		var c = window.KuroshioUiCore;
+		return c && typeof c.pct === 'function' ? c.pct(a / b, 1) : (100 * a / b).toFixed(1) + '%';
+	}
 	function p2(n) { return (n < 10 ? '0' : '') + n; }
 	/* 日期時間：2026-11-12 10:22（跟黑潮 DNS 的 fmtTime 同一份規則） */
 	function time(t, mode) {
@@ -764,7 +770,7 @@ var KURO = (function () {
 				['核心', esc((a.name || '黑潮 DNS') + ' ' + (a._none ? '未回應' : 'v' + a.version))],
 				['程式語言 / 平台', esc([a.language, a.target].filter(Boolean).join(' · '))],
 				a.features ? ['編入的功能', esc([].concat(a.features).map(function (f) { return FEAT[f] || f; }).join(' · '))] : null,
-				['後台介面', 'padavan-tw（移植自 luci-app-kuroshio 3.2.0）'],
+				['後台介面', 'padavan-tw（移植自 luci-app-kuroshio，跟到 3.5.1）'],
 				['授權', '<a href="' + esc(lic) + '" target="_blank" rel="noopener noreferrer">' + esc(a.license || 'GPL-3.0-or-later') + '</a>'],
 				['原始碼', '<a href="' + esc(src) + '" target="_blank" rel="noopener noreferrer">' + esc(src) + '</a>']
 			]) + '<p class="tw-small tw-muted">黑潮 DNS 是開放原始碼軟體，採用 GPL-3.0-or-later 授權：可以自由使用、修改與分享；如果把修改過的版本散布給別人，必須用同樣的授權一併提供原始碼。</p></div>' + qr + '</div>';
@@ -815,9 +821,34 @@ var KURO = (function () {
 /* =====================================================================
  * 狀態（移植自 LuCI status.js）
  * ===================================================================== */
-var KR_MORE = false, KR_MORE_CH = false;	/* 狀態頁「更多細節」的開合（每次重新整理會重畫） */
+var KR_MORE = false, KR_MORE_CH = false, KR_MORE_POP = false, KR_MORE_HEALTH = false;	/* 狀態頁「更多細節」的開合（每次重新整理會重畫） */
 (function (K) {
 	var U = TW, esc = U.esc;
+	/*
+	 * 黑潮 3.5.0 起的共用顯示函式（ui-core.js：發現、資料新鮮度、線路、CDN 驗證節流與資料、上游的地區與 SERVFAIL、評測範圍、對照組），
+	 * 跟 LuCI 的 status.js 用同一份。ui-core.js 還沒載入、或韌體附的是舊版（沒有這個函式）時回 null，那一塊就不顯示
+	 */
+	function C(fn) { var c = window.KuroshioUiCore; return c && typeof c[fn] === 'function' ? c : null; }
+	function s(x) { return esc(x == null ? '' : String(x)); }
+	/* 時間長度（小時，可以是小數）→ 10 分鐘 / 24 小時 / 1.5 小時（「最久未存」的上限：記憶體或磁碟上是 10 分鐘，3.5.0） */
+	function fmtHours(h) {
+		if (h == null) return '-';
+		var sec = Math.round(h * 3600);
+		if (sec < 3600) return Math.max(1, Math.round(sec / 60)) + ' 分鐘';
+		var x = sec / 3600;
+		return (x % 1 === 0 ? String(x) : x.toFixed(1)) + ' 小時';
+	}
+	/* 每日評測的對照組與評測範圍（3.5.0）：讀 /api/benchmark，只在評測時間變了才重讀（狀態每 10 秒更新，評測一天一次） */
+	var bench = { at: null, ctl: null, scope: null };
+	function benchLine(api) {
+		var at = api && api.autoUpstreams ? api.autoUpstreams.generatedAt || '' : '';
+		if (bench.at === at || !C('controlSummary')) return Promise.resolve();
+		/* K.view 回的是拆好的 result（讀不到是 null） */
+		return K.view('/api/benchmark').then(function (r) {
+			var c = window.KuroshioUiCore;
+			bench = { at: at, ctl: r ? c.controlSummary(r.protected) : null, scope: r && C('benchScope') ? c.benchScope(r) : null };
+		}, function () { bench.at = at; });
+	}
 	var JOBS = { 'dns-benchmark': 'DNS 評測', 'cdn-ranges': 'CDN IP 範圍', 'cdn-scan': 'CDN 網段分類', 'cdn-pool': '台灣節點池', 'tw-ip': '台灣 IP 清單' };
 	var MODE = { jffs2: 'Flash（Kuroshio 分割區）', rwfs: 'Flash（RWFS）', ram: '記憶體（每天備份到 /etc/storage）' };
 	function mb(kb) { return kb != null ? K.fmtNum(Math.round(kb / 1024)) : '-'; }
@@ -866,6 +897,21 @@ var KR_MORE = false, KR_MORE_CH = false;	/* 狀態頁「更多細節」的開合
 			api.chain && api.chain.state === 'chained' ? ['串接時自己解析', K.fmtNum((d.chainBypass || 0) + (d.chainRetry || 0)), '上游擋掉的 ' + K.fmtNum(d.chainBypass || 0) + ' · 上游解析不到的 ' + K.fmtNum(d.chainRetry || 0)] : null
 		]));
 
+		/* 發現與資料新鮮度（3.5.0 E1、E2，ui-core.js 的 findingsView、freshnessView）：舊版核心沒有這兩個欄位時不顯示；跟上面的「需要注意」（warnings）分開 */
+		if (C('findingsView') && Array.isArray(api.findings)) {
+			var finds = window.KuroshioUiCore.findingsView(api.findings);
+			h += K.card('發現', finds.length ? finds.map(function (f) {
+				return '<p class="kr-find"' + (f.dim ? ' style="opacity:.55"' : '') + '>' + K.badge(f.sev === 'warn' ? '注意' : '資訊', f.sev === 'warn' ? 'warn' : 'off') + ' ' + s(f.text) +
+					' <span class="tw-small tw-muted">' + s(f.meta) + '</span></p>';
+			}).join('') : '<p class="tw-muted">目前沒有觀察到特別的現象</p>', { id: 'kuroshio-findings' });
+		}
+		if (C('freshnessView') && Array.isArray(api.freshness)) {
+			var fresh = window.KuroshioUiCore.freshnessView(api.freshness);
+			if (fresh.length) h += K.card('資料新鮮度', K.table(['項目', '上次成功', '狀態', '下次'], fresh.map(function (r) {
+				return [s(r.label + (r.note ? '（' + r.note + '）' : '')), s(r.last), K.badge(r.state, r.kind), s(r.next)];
+			})), { id: 'kuroshio-freshness' });
+		}
+
 		var sys = api.system || {}, per = sys.persist || {}, lat = d.latency || {}, ls = api.listeners || {}, mem = sys.memory || {};
 		var ms = function (x) { return x && x.p50 != null ? x.p50 + ' / ' + (x.p95 != null ? x.p95 : '>1000') + ' ms' : '-'; };
 		var protos = ['doh', 'doh3', 'dot', 'doq'].filter(function (k) { return ls[k]; }).map(function (k) { return { doh: 'DoH', doh3: 'DoH3', dot: 'DoT', doq: 'DoQ' }[k] + ':' + ls[k]; });
@@ -874,7 +920,8 @@ var KR_MORE = false, KR_MORE_CH = false;	/* 狀態頁「更多細節」的開合
 		var memState = mem.enabled ? (mem.stateLabel || mem.state || '') + (mem.pressure && mem.pressure !== 'normal' ? '（當下' + ({ low: '偏低', critical: '嚴重不足' }[mem.pressure] || mem.pressure) + '）' : '') : '';
 		h += K.card('效能', K.tiles([
 			['系統可用記憶體', mem.availKB != null ? mb(mem.availKB) + ' MB' : (sys.memAvailableMB != null ? sys.memAvailableMB + ' MB' : '-'), memState],
-			['黑潮 DNS 記憶體', sys.rssKB ? (sys.rssKB / 1024).toFixed(1) + ' MB' : '-', mem.jobs && mem.jobs.running ? '執行中：' + (JOBS[mem.jobs.running] || mem.jobs.running) : ''],
+			/* system.rssKB 讀不到時退回 memory.rssKB（3.5.0 F6） */
+			['黑潮 DNS 記憶體', (sys.rssKB || mem.rssKB) ? ((sys.rssKB || mem.rssKB) / 1024).toFixed(1) + ' MB' : '-', mem.jobs && mem.jobs.running ? '執行中：' + (JOBS[mem.jobs.running] || mem.jobs.running) : ''],
 			['快取命中率', d.hitRate != null ? d.hitRate + '%' : '-', '預取 ' + K.fmtNum(d.prefetch)],
 			['回應時間 p50 / p95', ms(lat.hit), '問上游 ' + ms(lat.miss)],
 			['Flash 寫入（今天）', per.bytesToday != null ? (per.bytesToday / 1024).toFixed(0) + ' KB' : '-', per.estimatedDailyBytes != null ? '預估每天 ' + (per.estimatedDailyBytes / 1024).toFixed(0) + ' KB' : ''],
@@ -887,14 +934,18 @@ var KR_MORE = false, KR_MORE_CH = false;	/* 狀態頁「更多細節」的開合
 			['黑潮 DNS 記憶體的組成', esc(memSizes(mem.sizes) || '-') + (mem.jobs && mem.jobs.running && mem.jobs.rawBytes ? esc(' · 背景工作原始答案約 ' + (mem.jobs.rawBytes / 1048576).toFixed(1) + ' MB' + (mem.jobs.openConnections ? '、' + K.fmtNum(mem.jobs.openConnections) + ' 條連線' : '')) : '')],
 			['快取', esc('預取 ' + K.fmtNum(d.prefetch) + ' · 斷線回舊資料 ' + K.fmtNum(d.stale))],
 			['儲存學習資料', esc((per.storage || '') + ' · 間隔 ' + (per.effectiveIntervalMin != null ? per.effectiveIntervalMin : (per.intervalMin || '-')) + ' 分 · 最久未存 ' + age(per.oldestUnsavedSec) +
-				(per.maxAgeHours != null ? '（上限 ' + per.maxAgeHours + ' 小時）' : '') + (per.forcedByAge ? ' · 到期強制寫入 ' + K.fmtNum(per.forcedByAge) + ' 次' : '') + (per.lowSpace ? ' · 儲存空間不足（只寫核心資料）' : ''))],
+				(per.maxAgeHours != null ? '（上限 ' + fmtHours(per.maxAgeHours) + '）' : '') + (per.forcedByAge ? ' · 到期強制寫入 ' + K.fmtNum(per.forcedByAge) + ' 次' : '') + (per.lowSpace ? ' · 儲存空間不足（只寫核心資料）' : ''))],
 			sp.reserveBytes != null ? ['儲存空間', esc('保留 ' + K.fmtNum(Math.round(sp.reserveBytes / 1024)) + ' KB（' + (sp.reserveAuto ? '自動' : '設定') + '）' + (sp.optionalBytes ? ' · 可重建的資料 ' + K.fmtNum(Math.round(sp.optionalBytes / 1024)) + ' KB' : ''))] : null,
 			['加密協議', esc(protos.length ? protos.join(' · ') + (ls.ddr ? ' · DDR' : '') : '未開啟')],
 			['過濾', esc(api.filter && api.filter.memoryBytes != null ? '記憶體 ' + (api.filter.memoryBytes / 1048576).toFixed(1) + ' MB' + (api.filter.domains != null ? ' · ' + K.fmtNum(api.filter.domains) + ' 個網域' : '') : '-')]
 		]) + '</details>');
 
-		var shed = mem.shed || [], fl = api.filter || {};
-		if (shed.length || fl.notice || mem.floor) h += K.card('記憶體控制',
+		var shed = mem.shed || [], fl = api.filter || {}, sim = mem.simulated;
+		if (shed.length || fl.notice || mem.floor || sim || mem.futile) h += K.card('記憶體控制',
+			/* 測試開關（3.5.0，system.testHooks）：模擬記憶體不足中 */
+			(sim ? K.note('測試模式：模擬系統可用記憶體只剩 ' + s(sim.availMB) + ' MB（還有 ' + Math.ceil((sim.remainingSec || 0) / 60) + ' 分鐘，到期自動恢復）。不是測試的話請把設定的 system.testHooks 關掉。', 'warn') : '') +
+			/* 退讓於事無補（3.5.0）：缺口是其他程式造成，黑潮全部讓出也補不了 */
+			(mem.futile ? K.note('系統可用記憶體不足是其他程式造成，黑潮讓出也補不了：只停止長大、照樣寫出快照，不縮快取、不停用過濾清單。', 'warn') : '') +
 			(mem.protectedSuspended ? K.note('記憶體嚴重不足：連保護清單（惡意 / 反詐騙）都暫停了，只剩自訂規則；DNS 照常轉送。記憶體回來後自動恢復。', 'bad')
 				: (mem.floor ? K.note('記憶體不足：只轉送 DNS（暫停 CDN 調整、快取最小）。記憶體回來後自動恢復。', 'bad') : '')) +
 			(fl.notice ? K.note(esc(fl.notice), 'warn') : '') +
@@ -910,13 +961,53 @@ var KR_MORE = false, KR_MORE_CH = false;	/* 狀態頁「更多細節」的開合
 		var detail = [].concat(api.listenersDetail || []);
 		if (detail.length) h += K.card('加密監聽', listenerTable(detail), { id: 'kuroshio-listeners' });
 
+		/* 這條線到得了哪些台灣機房（3.5.0 E3～E7，ui-core.js 的 reachView）：一句話＋摺疊的機房表；CDN 關、舊版核心時不顯示 */
+		var rv = C('reachView') && api.cdn ? window.KuroshioUiCore.reachView(api.cdn) : null;
+		if (rv) {
+			var hl = rv.health || { rows: [] };
+			h += K.card('線路', rv.lines.map(function (l) { return '<p>' + s(l) + '</p>'; }).join('') +
+				[rv.note, rv.unconfirmed, rv.audit].filter(function (x) { return !!x; }).map(function (l) { return '<p class="tw-small tw-muted">' + s(l) + '</p>'; }).join('') +
+				(rv.fuse ? K.note(s(rv.fuse), 'warn') : '') +
+				(rv.pops.length ? '<details class="kr-more"' + (KR_MORE_POP ? ' open' : '') + ' ontoggle="KR_MORE_POP=this.open"><summary>機房明細</summary>' +
+					K.table(['家族', '機房', '節點', '網段', 'CDN', '延遲'], rv.pops.map(function (p) {
+						return [s(p.family), s(p.pop + (p.city ? ' ' + p.city : '')), s(p.nodes), s(p.prefixes), s(p.providers), s(p.ms)];
+					}), '', [2, 3, 5]) + '</details>' : '') +
+				(hl.text || (hl.rows || []).length ? '<details class="kr-more"' + (KR_MORE_HEALTH ? ' open' : '') + ' ontoggle="KR_MORE_HEALTH=this.open"><summary>機房健康</summary>' +
+					(hl.text ? '<p class="tw-small tw-muted">' + s(hl.text) + '</p>' : '') +
+					((hl.rows || []).length ? K.table(['CDN', '家族', '機房', '節點', '壞的', '失敗率', '延遲', ''], hl.rows.map(function (x) {
+						return [s(x.provider), s(x.family), s(x.pop), s(x.nodes), s(x.bad), s(x.failRate), s(x.ms), s(x.held)];
+					}), '', [3, 4, 5, 6]) : '') + '</details>' : ''), { id: 'kuroshio-reach' });
+		}
+		/* CDN 驗證節流與網域資料的磁碟用量（3.5.0 F12、F8，ui-core.js 的 paceView、cdnStoreText）：舊版核心沒有這些欄位時不顯示 */
+		var pv = C('paceView') && api.cdn ? window.KuroshioUiCore.paceView(api.cdn.pace) : null;
+		var store = C('cdnStoreText') && api.cdn ? window.KuroshioUiCore.cdnStoreText(api.cdn) : null;
+		if (pv || store) h += K.card('CDN 驗證與資料', (pv ? (pv.warn ? K.note(s(pv.text), 'warn') : '<p>' + s(pv.text) + '</p>') : '') +
+			(store ? '<p class="tw-small tw-muted">' + s(store) + '</p>' : ''), { id: 'kuroshio-cdn-info' });
+
 		/* 3.4.0 串接：前面有另一台黑潮（例如主路由器）時自動串接，共用它的評測結果與 CDN 節點 */
 		var ch = api.chain;
 		if (ch && (ch.state !== 'none' || (ch.serving && (ch.serving.downstreams || []).length))) h += chainCard(ch);
-		h += K.card('上游', '<p class="tw-small tw-muted">' + (api.autoUpstreams ? '自動上游來自 ' + esc(K.time(api.autoUpstreams.generatedAt)) + ' 的評測' : '還沒有每日評測結果，暫時使用固定上游與備援。') + '</p>' +
+		/* 上游（照 LuCI status.js）：角色後面括號放選上的原因與地區（3.5.0：國別是 IP 的註冊地，「鄰近（註冊地 GB）」）；
+		 * 最後一欄：從未成功先不用、暫停中、路徑不通、經由攔截者，以及 SERVFAIL 與來不及回答（3.5.0 F4，成功率照舊用成功 ÷（成功＋失敗）） */
+		var au = api.autoUpstreams, region = C('regionLabel'), extra = C('upstreamExtra');
+		h += K.card('上游', '<p class="tw-small tw-muted">' + (au && au.source === 'default-list' ? '自動上游來自預設名單（還沒評測，' + K.fmtNum(au.count || 0) + ' 台）：第一次評測完成後換成評測結果'
+				: au ? (au.source === 'chain' ? '自動上游來自上游黑潮 ' + esc(K.time(au.generatedAt)) + ' 的評測（串接的共用結果）' : '自動上游來自 ' + esc(K.time(au.generatedAt)) + ' 的評測') + '（最快 = 速度最好；覆蓋 = 補足 CDN 節點涵蓋）'
+				: '還沒有每日評測結果，暫時使用固定上游與備援。') + '</p>' +
 			K.table(['上游', '角色', '成功', '失敗', '平均延遲', ''], (api.upstreams || []).map(function (u) {
-				return ['<span class="kr-break">' + esc(u.id) + '</span>', esc({ pinned: '固定', auto: '自動', fallback: '備援', chain: '串接（上游黑潮）' }[u.role] || u.role), K.fmtNum(u.ok), K.fmtNum(u.fail), u.avgMs != null ? u.avgMs + ' ms' : '-', u.paused ? K.badge('暫停中', 'warn') : ''];
-			}), '沒有上游', [2, 3, 4]));
+				var role = { pinned: '固定', auto: '自動', fallback: '備援', chain: '串接（上游黑潮）' }[u.role] || u.role;
+				var why = [u.reason, region ? region.regionLabel(u) : u.region].filter(function (x) { return !!x; }).join(' · ');
+				var note = [];
+				if (u.benched) note.push(K.badge('從未成功，先不用', 'warn'));
+				else if (u.paused) note.push(K.badge('暫停中', 'warn'));
+				if (u.pathBlocked) note.push(K.badge('路徑不通，先不用', 'warn'));
+				if (u.via === 'interceptor') note.push(s('經由攔截者'));
+				var more = extra ? extra.upstreamExtra(u) : '';
+				if (more) note.push('<span class="tw-small tw-muted">' + s(more) + '</span>');
+				return ['<span class="kr-break">' + esc(u.id) + '</span>', s(role) + (why ? '<div class="tw-small tw-muted">' + s(why) + '</div>' : ''),
+					K.fmtNum(u.ok), K.fmtNum(u.fail), u.avgMs != null ? u.avgMs + ' ms' : '-', note.join(' ')];
+			}), '沒有上游', [2, 3, 4]) +
+			(bench.scope ? '<p class="tw-small tw-muted" id="kuroshio-bench-scope">' + s(bench.scope) + '</p>' : '') +
+			(bench.ctl ? '<p class="tw-small tw-muted" id="kuroshio-control">' + s(bench.ctl) + '（有過濾的大型 DNS，用來確認評測判得出過濾；永遠不選）</p>' : ''), { id: 'kuroshio-upstreams' });
 
 		var jobs = api.jobs || {};
 		h += K.card('排程工作', K.table(['工作', '排程', '上次結束', '結果', ''], Object.keys(jobs.config || {}).map(function (n) {
@@ -992,7 +1083,9 @@ var KR_MORE = false, KR_MORE_CH = false;	/* 狀態頁「更多細節」的開合
 		var text = esc(c.text || '沒有串接的資料') + (c.reason ? ' <span class="tw-small tw-muted">（' + esc(c.reason) + '）</span>' : '');
 		return K.card('串接', '<p>' + K.badge(b[0], b[1]) + '</p>' + (warn ? K.note(text, 'warn') : '<p>' + text + '</p>') + (rows.length ? K.kv(rows) : '') +
 			(more.length ? '<details class="kr-more"' + (KR_MORE_CH ? ' open' : '') + ' ontoggle="KR_MORE_CH=this.open"><summary>更多細節</summary>' + K.kv(more) + '</details>' : '') +
-			(sv.text ? '<p class="tw-small tw-muted">' + esc(sv.text) + (ds.length ? '：' + ds.map(function (d) { return esc(d.address || d.ip || d.nodeId || ''); }).join('、') : '') + '</p>' : ''), { id: 'kuroshio-chain' });
+			(sv.text ? '<p class="tw-small tw-muted">' + esc(sv.text) + (ds.length ? '：' + ds.map(function (d) { return esc(d.address || d.ip || d.nodeId || ''); }).join('、') : '') + '</p>' : '') +
+			/* 3.5.0：立刻重新偵測上游黑潮（跟路徑檢查後的重新偵測一樣），不改任何設定 */
+			'<div class="tw-actions" style="margin-top:8px">' + K.btn('重新檢查上游黑潮', 'chainRecheck', { id: 'kuroshio-chain-recheck' }) + '</div>', { id: 'kuroshio-chain' });
 	}
 	function listenerTable(detail) {
 		var P = { doh: 'DoH（TCP）', doh3: 'DoH3（UDP）', dot: 'DoT（TCP）', doq: 'DoQ（UDP）' };
@@ -1011,9 +1104,12 @@ var KR_MORE = false, KR_MORE_CH = false;	/* 狀態頁「更多細節」的開合
 			'<span class="tw-cost">更新韌體或要斷電前先按一下，學到的資料會馬上寫進儲存空間</span></div><div id="kr-persist-out" class="tw-small" role="status"></div>');
 	}
 	function draw() {
-		return Promise.all([K.api('status'), K.view('/api/status', { lite: 1 })]).then(function (r) {
-			var el = U.$('kr-status');
-			if (el) el.innerHTML = body(r[0], r[1]);
+		/* 3.5.0 起的區塊用 ui-core.js 畫：先等它載入（只載一次）；對照組摘要另外讀 /api/benchmark（評測時間變了才重讀） */
+		return Promise.all([K.api('status'), K.view('/api/status', { lite: 1 }), K.core()]).then(function (r) {
+			return benchLine(r[1]).then(function () {
+				var el = U.$('kr-status');
+				if (el) el.innerHTML = body(r[0], r[1]);
+			});
 		});
 	}
 	K.page('status', {
@@ -1024,6 +1120,7 @@ var KR_MORE = false, KR_MORE_CH = false;	/* 狀態頁「更多細節」的開合
 			flushCache: function () { return K.action('/api/cache/flush').then(function (r) { K.done(r, '快取已清除'); }); },
 			updateLists: function () { return K.updateLists(); },
 			ddns: function () { return K.action('/api/ddns/update').then(function (r) { K.done(r, 'DDNS 已更新'); }); },
+			chainRecheck: function () { return K.action('/api/chain/recheck').then(function (r) { if (K.done(r, '已重新檢查上游黑潮，幾秒後就看得到結果')) setTimeout(draw, 3000); }); },
 			/* 3.2.0：立即儲存學習資料（POST /api/persist/flush），顯示時間、寫了幾份、多大 */
 			persist: function () {
 				return K.action('/api/persist/flush').then(function (r) {
@@ -1098,20 +1195,46 @@ var KR_MORE = false, KR_MORE_CH = false;	/* 狀態頁「更多細節」的開合
 	/* =====================================================================
 	 * 日誌（op=log）
 	 * ===================================================================== */
+	/* 查詢紀錄（3.5.0，照 LuCI log.js）：只在記憶體、不寫 Flash、不進備份；暫時開啟 10 分鐘（最長 60 分鐘，到時間自動關閉） */
+	var QRESULT = { hit: '快取', miss: '上游', blocked: '擋掉', stale: '過期資料' };
+	var QTYPE = { 1: 'A', 2: 'NS', 5: 'CNAME', 6: 'SOA', 12: 'PTR', 15: 'MX', 16: 'TXT', 28: 'AAAA', 33: 'SRV', 64: 'SVCB', 65: 'HTTPS' };
+	function loadQlog() {
+		var q = { limit: 200 }, name = U.$('kr-qlog-name') ? U.$('kr-qlog-name').value.trim() : '';
+		if (name) q.name = name;
+		return K.view('/api/querylog', q).then(function (d) {
+			var st = U.$('kr-qlog-state'), out = U.$('kr-qlog');
+			if (!st || !out) return;
+			if (!d) { st.textContent = '讀不到查詢紀錄（黑潮 DNS 3.5.0 起才有）'; out.innerHTML = ''; return; }
+			st.textContent = d.enabled ? '開啟中' + (d.until ? '，到 ' + K.time(d.until, 'timesec') + ' 自動關閉' : '') + '：' + K.fmtNum(d.size || 0) + ' 筆' : '沒有開啟';
+			out.innerHTML = K.table(['時間', '裝置', '網域', '類型', '結果', '延遲', '答案來源'], (d.entries || []).map(function (e) {
+				return [K.time(e.at, 'timesec'), esc(e.client || ''), '<span class="kr-break">' + esc(e.name || '') + '</span>', esc(QTYPE[e.type] || String(e.type)),
+					esc((QRESULT[e.result] || e.result || '') + (e.rcode ? '（rcode ' + e.rcode + '）' : '')), esc(e.ms != null ? e.ms + ' ms' : '-'), esc(e.source || '')];
+			}), '沒有紀錄', [5]);
+		});
+	}
 	K.page('log', {
 		render: function () {
 			return K.card('最近的執行紀錄', '<div class="tw-toolbar"><label class="tw-switch"><input type="checkbox" id="kr-log-follow" checked><span class="tw-track"></span>自動捲到最新</label>' +
-				'<span class="tw-small tw-muted">系統日誌裡黑潮 DNS 的部分，每 5 秒更新。要看每一筆查詢，請在「基本設定」的專業模式打開「記錄每筆查詢」。</span></div>' + K.pre('讀取中…', 'kr-log'));
+				'<span class="tw-small tw-muted">系統日誌裡黑潮 DNS 的部分，每 5 秒更新。</span></div>' + K.pre('讀取中…', 'kr-log')) +
+				K.card('查詢紀錄', '<p class="tw-lead">每一筆查詢的網域、裝置、結果與延遲，除錯用。只在記憶體、不寫 Flash、不進備份；暫時開啟最長 60 分鐘，到時間自動關閉。</p>' +
+					'<p class="tw-small tw-muted" id="kr-qlog-state" role="status">讀取中…</p>' +
+					'<div class="tw-actions">' + K.btn('開啟 10 分鐘', 'qlogOn', { primary: true, arg: '10' }) + K.btn('關閉', 'qlogOn', { arg: '0' }) +
+					'<input type="search" id="kr-qlog-name" placeholder="網域（包含這段文字）" aria-label="篩選網域" style="max-width:18em">' + K.btn('重新整理', 'qlogLoad') + '</div>' +
+					'<div id="kr-qlog" style="margin-top:12px"></div>', { id: 'kuroshio-querylog' });
 		},
 		after: function () {
 			K.every(function () {
-				return K.api('log', null, null, false, '&n=300').then(function (r) {
+				return Promise.all([K.api('log', null, null, false, '&n=300').then(function (r) {
 					var el = U.$('kr-log');
 					if (!el) return;
 					el.textContent = r && r.ok !== false && (r.lines || []).length ? r.lines.join('\n') : (r && r.error) || '沒有紀錄（服務可能還沒啟動）';
 					if (U.$('kr-log-follow') && U.$('kr-log-follow').checked) el.scrollTop = el.scrollHeight;
-				});
+				}), loadQlog()]);
 			}, 5000);
-		}
+		},
+		hooks: { act: {
+			qlogOn: function (m) { return K.action('/api/querylog/enable', { minutes: m }).then(function (r) { if (K.done(r, m === '0' ? '查詢紀錄已關閉' : '查詢紀錄開啟 ' + m + ' 分鐘')) return loadQlog(); }); },
+			qlogLoad: function () { return loadQlog(); }
+		} }
 	});
 })(KURO);

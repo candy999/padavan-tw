@@ -1,2901 +1,1548 @@
 {
- "ok": true,
- "result": {
-  "access": {
-   "active": true,
-   "applyTo": [
-    "dot",
-    "doh",
-    "doq",
-    "doh3",
-    "site"
-   ],
-   "dataBytes": 20984,
-   "dataOk": true,
-   "denied": {
-    "byListener": {
-     "community": 0,
-     "doh": 0,
-     "doh3": 0,
-     "doq": 0,
-     "dot": 0,
-     "plain": 0,
-     "site": 0
-    },
-    "total": 0
-   },
-   "failClosed": false,
-   "failOpen": false,
-   "generatedAt": "2026-11-11",
-   "memoryBytes": 15808,
-   "mode": "taiwan",
-   "ranges": 998,
-   "topDenied": [],
-   "warning": null
-  },
-  "api": 2,
-  "autoUpstreams": {
-   "count": 4,
-   "generatedAt": "2026-11-21T20:33:17.340Z",
-   "source": "chain"
-  },
-  "cacheBytes": 81868,
-  "cacheEntries": 148,
-  "cdn": {
-   "background": {
-    "cross": 0,
-    "deferred": 0,
-    "ecs": 0,
-    "verify": 0
-   },
-   "domains": 67522,
-   "enabled": true,
-   "lite": false,
-   "stats": {
-    "crossRewrites": 0,
-    "ecsRewrites": 0,
-    "liteCapped": 0,
-    "liteWaited": 0,
-    "rewrites": 6,
-    "trials": 1,
-    "v6dropped": 0
-   }
-  },
-  "chain": {
-   "audit": {
-    "last": null,
-    "recentSuspicious": 0,
-    "releases": 0,
-    "sampled": 7,
-    "siteInvalid": 0,
-    "suspicious": 0,
-    "unverified": 0,
-    "valid": 7
-   },
-   "backupActive": false,
-   "enabled": true,
-   "reason": null,
-   "retryAt": null,
-   "serving": {
-    "allowDownstream": true,
-    "downstreams": [],
-    "fingerprint": "0F1E-2D3C-4B5A-6978-8796-A5B4-C3D2-E1F0",
-    "nodeId": "0123456789abcdef",
-    "note": "區網裡任何會講這個協定的裝置都拿得到資料與放行；有啟用「繞過防護」清單時建議關閉 allow_downstream",
-    "probes": {
-     "count24h": 0,
-     "lastAt": null
-    },
-    "refused": {
-     "notAllowed": 0,
-     "notPrivate": 0,
-     "rate": 0
-    },
-    "share": {
-     "cacheBytes": 38141,
-     "chunks": 0,
-     "lastAt": null,
-     "ready": true,
-     "requests": 0
-    },
-    "text": "提供資料給下游黑潮：目前沒有下游連上來"
-   },
-   "shared": {
-    "enabled": true,
-    "error": null,
-    "lastSyncAt": 1795364426603,
-    "nextSyncAt": 1795385594941,
-    "objects": [
-     {
-      "at": 1795293197000,
-      "bytes": 3520,
-      "error": null,
-      "fresh": true,
-      "importedAt": 1795343354993,
-      "kind": "upstreams"
-     },
-     {
-      "at": 1795364426598,
-      "bytes": 8015,
-      "error": null,
-      "fresh": true,
-      "importedAt": 1795364426549,
-      "kind": "cdn-pools"
-     },
-     {
-      "at": 1795364426598,
-      "bytes": 5162,
-      "error": null,
-      "fresh": true,
-      "importedAt": 1795364426585,
-      "kind": "cdn-v6"
-     },
-     {
-      "at": 1795364426598,
-      "bytes": 11578,
-      "error": null,
-      "fresh": true,
-      "importedAt": 1795343355144,
-      "kind": "cdn-ranges"
-     }
-    ],
-    "ownRuns": {
-     "cdn-pool": {
-      "at": null,
-      "dueAt": 1795415749623
-     },
-     "cdn-ranges": {
-      "at": null,
-      "dueAt": 1795415749623
-     },
-     "cdn-scan": {
-      "at": null,
-      "dueAt": 1795415749623
-     },
-     "dns-benchmark": {
-      "at": null,
-      "dueAt": 1795415749623
-     }
-    },
-    "skippedJobs": [
-     "dns-benchmark",
-     "cdn-pool",
-     "cdn-scan",
-     "cdn-ranges"
-    ]
-   },
-   "state": "chained",
-   "text": "串接中：上游 10.0.0.1（黑潮 3.4.4），評測結果與 CDN 節點由上游提供",
-   "upstream": {
-    "address": "10.0.0.1",
-    "allowDownstream": true,
-    "caps": [
-     "share",
-     "reg"
-    ],
-    "depth": 2,
-    "error": null,
-    "failures": 0,
-    "fingerprint": "A1B2-C3D4-E5F6-0718-293A-4B5C-6D7E-8F90",
-    "keyChangedAt": null,
-    "lastOkAt": 1795364409924,
-    "nodeId": "0123456789abcdef",
-    "path": [
-     "fedcba9876543210"
-    ],
-    "previousFingerprint": null,
-    "proto": "udp",
-    "registered": {
-     "at": 1795364409944,
-     "expiresAt": 1795365309944,
-     "names": 4,
-     "ok": true
-    },
-    "since": 1795364396506,
-    "version": "3.4.4",
-    "via": "gateway",
-    "viaNat": false
-   }
-  },
-  "clock": {
-   "buildEpoch": 1795357109,
-   "synced": true
-  },
-  "data": {
-   "dir": "/usr/share/kuroshio",
-   "expectedFormat": 1,
-   "format": 1,
-   "note": null,
-   "ok": true,
-   "version": "3.4.4",
-   "warning": null
-  },
-  "doh3Provider": null,
-  "dohMode": null,
-  "errors": {
-   "count": 0,
-   "recent": []
-  },
-  "filter": {
-   "byCategory": {
-    "ads": 144937,
-    "malware": 232428,
-    "telemetry": 7686
-   },
-   "complex": 269,
-   "complexDropped": 0,
-   "custom": 213,
-   "customByCategory": {
-    "ads": 9,
-    "custom": 125,
-    "malware": 0,
-    "telemetry": 79
-   },
-   "domains": 384993,
-   "errors": [],
-   "heldCopies": {
-    "bytes": 3775999,
-    "count": 5
-   },
-   "lists": 385051,
-   "maxComplex": 20000,
-   "maxDomains": 10000000,
-   "maxUnindexed": 1000,
-   "memoryBytes": 3548436,
-   "notice": null,
-   "skipped": 9645,
-   "sources": [
-    {
-     "category": "malware",
-     "complexDropped": 0,
-     "hits": 2,
-     "name": "FutaGuard TW165（台灣 165 反詐騙）",
-     "protect": true,
-     "rules": 25205,
-     "status": "loaded",
-     "unindexedDropped": 0
-    },
-    {
-     "category": "malware",
-     "complexDropped": 0,
-     "hits": 0,
-     "name": "FutaGuard TWNIC-RPZ（台灣網路資訊中心停止解析）",
-     "protect": true,
-     "rules": 98,
-     "status": "loaded",
-     "unindexedDropped": 0
-    },
-    {
-     "category": "malware",
-     "complexDropped": 0,
-     "hits": 8303,
-     "name": "HaGeZi TIF 精簡版（威脅情資）",
-     "protect": true,
-     "rules": 207515,
-     "status": "loaded",
-     "unindexedDropped": 0
-    },
-    {
-     "category": "ads",
-     "complexDropped": 0,
-     "hits": 30,
-     "name": "FutaGuard LowTechHost（台灣廣告）",
-     "protect": false,
-     "rules": 660,
-     "status": "loaded",
-     "unindexedDropped": 0
-    },
-    {
-     "category": "ads",
-     "complexDropped": 0,
-     "hits": 15555,
-     "name": "CHN: anti-AD",
-     "protect": false,
-     "rules": 102176,
-     "status": "loaded",
-     "unindexedDropped": 0
-    },
-    {
-     "category": "ads",
-     "complexDropped": 0,
-     "hits": 0,
-     "name": "EasyList China",
-     "protect": false,
-     "rules": 5786,
-     "status": "loaded",
-     "unindexedDropped": 0
-    },
-    {
-     "category": "ads",
-     "complexDropped": 0,
-     "hits": 399,
-     "name": "OISD small",
-     "protect": false,
-     "rules": 62113,
-     "status": "loaded",
-     "unindexedDropped": 0
-    },
-    {
-     "category": "ads",
-     "complexDropped": 0,
-     "hits": 106,
-     "name": "HaGeZi Light",
-     "protect": false,
-     "rules": 94157,
-     "status": "loaded",
-     "unindexedDropped": 0
-    },
-    {
-     "category": "telemetry",
-     "complexDropped": 0,
-     "hits": 0,
-     "name": "a-dove-is-dumb（Adobe 遙測）",
-     "protect": false,
-     "rules": 7610,
-     "status": "loaded",
-     "unindexedDropped": 0
-    },
-    {
-     "category": "telemetry",
-     "complexDropped": 0,
-     "hits": 11,
-     "name": "blocklistproject smart-tv（電視遙測）",
-     "protect": false,
-     "rules": 77,
-     "status": "loaded",
-     "unindexedDropped": 0
-    }
-   ],
-   "unindexed": 0,
-   "unindexedDropped": 0,
-   "unloaded": [],
-   "update": {
-    "changed": null,
-    "error": null,
-    "finishedAt": null,
-    "runId": null,
-    "startedAt": null,
-    "state": "idle"
-   },
-   "updatedAt": 1795363556000
-  },
-  "jobs": {
-   "catchUpProvided": [],
-   "catchUpWaiting": [],
-   "catchUpWindow": null,
-   "config": {
-    "cdn-pool": {
-     "at": [
-      "05:30"
-     ],
-     "enabled": true,
-     "runIfMissing": "state/cdn/pools.json",
-     "startDelaySec": 120,
-     "timeoutMin": 60
-    },
-    "cdn-ranges": {
-     "at": [
-      "03:10"
-     ],
-     "enabled": true,
-     "runIfMissing": "state/cdn/ranges/.done",
-     "startDelaySec": 30,
-     "timeoutMin": 20,
-     "weekdays": [
-      0
-     ]
-    },
-    "cdn-scan": {
-     "at": [
-      "03:20"
-     ],
-     "enabled": true,
-     "startDelaySec": 60,
-     "timeoutMin": 240,
-     "weekdays": [
-      0
-     ]
-    },
-    "dns-benchmark": {
-     "at": [
-      "04:10"
-     ],
-     "enabled": true,
-     "runIfMissing": "state/upstreams.json",
-     "startDelaySec": 300,
-     "timeoutMin": 150
-    },
-    "tw-ip": {
-     "at": "00:50",
-     "deadlineHours": 72,
-     "enabled": true,
-     "jitterDays": 27,
-     "jitterMin": 180,
-     "maxFailures": 6,
-     "maxLoadPerCore": 2,
-     "maxMemKB": 2048,
-     "minAgeDays": 20,
-     "monthDays": [
-      1
-     ],
-     "pauseSec": [
-      5,
-      30
-     ],
-     "retrySec": 300,
-     "startDelaySec": 900,
-     "timeoutMin": 120
-    }
-   },
-   "detail": {
-    "tw-ip": {
-     "eta": null,
-     "lastEnd": null,
-     "lastResult": "",
-     "lastSuccess": null,
-     "listDate": "2026-11-11",
-     "peakMemKB": 0,
-     "progress": "",
-     "reason": "",
-     "resumeAt": null,
-     "source": "公版",
-     "startedAt": null,
-     "state": "idle",
-     "step": {
-      "done": 0,
-      "phase": "",
-      "total": 0
-     },
-     "text": ""
-    }
-   },
-   "nextRun": {
-    "cdn-pool": 1795383000000,
-    "cdn-ranges": 1795893000000,
-    "cdn-scan": 1795893600000,
-    "dns-benchmark": 1795378200000,
-    "tw-ip": 1797013320000
-   },
-   "queue": [],
-   "running": null,
-   "state": {
-    "cdn-pool": {
-     "lastCode": 0,
-     "lastEnd": 1795328530130,
-     "lastOkEnd": 1795328530130,
-     "lastSlot": "2026-11-21 05:30",
-     "lastStart": 1795328529775,
-     "reason": "cloudflare 節點不足"
-    },
-    "cdn-ranges": {
-     "lastCode": 0,
-     "lastEnd": 1795193291645,
-     "lastOkEnd": 1795193291645,
-     "lastStart": 1795193284066,
-     "reason": "補跑（上次成功 無紀錄）"
-    },
-    "cdn-scan": {
-     "lastCode": 0,
-     "lastEnd": 1795198909916,
-     "lastOkEnd": 1795198909916,
-     "lastStart": 1795198909915,
-     "reason": "補跑（上次成功 無紀錄）"
-    },
-    "dns-benchmark": {
-     "lastCode": 0,
-     "lastEnd": 1795314811776,
-     "lastOkEnd": 1795314811776,
-     "lastSlot": "2026-11-21 04:10",
-     "lastStart": 1795312808690,
-     "reason": "手動 (管理介面)"
-    },
-    "tw-ip": {
-     "lastCode": 0,
-     "lastEnd": 1795199931833,
-     "lastOkEnd": 1795199931833,
-     "lastStart": 1795199931832,
-     "reason": "補跑（上次成功 無紀錄）",
-     "seed": 7174326896290559471
-    }
-   }
-  },
-  "listeners": {
-   "ddr": false,
-   "doh": null,
-   "doh3": null,
-   "doq": null,
-   "dot": null
-  },
-  "listenersDetail": [],
-  "memory": {
-   "availKB": 295504,
-   "enabled": true,
-   "events": [],
-   "floor": false,
-   "freedBytes": 0,
-   "freedTotalBytes": 0,
-   "growth": true,
-   "headroomKB": 258640,
-   "holdUntil": null,
-   "jobs": {
-    "lastBenchmark": null,
-    "openConnections": 0,
-    "processPeakRssBytes": null,
-    "processRssBytes": null,
-    "rawBytes": 0,
-    "running": null
-   },
-   "lastChange": null,
-   "marginKB": 18432,
-   "nextRestoreAt": null,
-   "pollSec": 10,
-   "pressure": "normal",
-   "protectedSuspended": false,
-   "psi": null,
-   "reserveAuto": true,
-   "reserveHow": "自動：max(16 MB, min(實體記憶體 5%, 1 GB), min_free_kbytes 12288 KB × 3)",
-   "reserveKB": 36864,
-   "rssKB": 62020,
-   "shed": [],
-   "since": 1795364514000,
-   "sizes": {
-    "accountedBytes": 29974703,
-    "cacheBytes": 81868,
-    "cacheConfiguredMax": 100000,
-    "cacheEntries": 148,
-    "cacheMax": 100000,
-    "cdnBytes": 26355811,
-    "cdnInRam": 67522,
-    "cdnOnDiskOnly": 0,
-    "filterListRules": 385051,
-    "filterListsBytes": 3537024,
-    "filterListsUnloaded": 0,
-    "otherBytes": 33533777
-   },
-   "state": "comfortable",
-   "stateLabel": "寬裕",
-   "totalKB": 448168,
-   "waiting": null
-  },
-  "mode": "cmd",
-  "network": {
-   "path": {
-    "blocked": [],
-    "bootstrapViaDoh": false,
-    "checkedAt": 1795363485585,
-    "enabled": true,
-    "gateway": "10.0.0.1",
-    "interceptor": {
-     "chain": {
-      "allowDownstream": true,
-      "caps": [
-       "share",
-       "reg"
+  "ok": true,
+  "result": {
+    "access": {
+      "active": true,
+      "applyTo": [
+        "dot",
+        "doh",
+        "doq",
+        "doh3",
+        "site"
       ],
-      "error": null,
-      "fingerprint": "A1B2-C3D4-E5F6-0718-293A-4B5C-6D7E-8F90",
-      "nodeId": "0123456789abcdef",
-      "supported": true
-     },
-     "kind": "kuroshio",
-     "version": "3.4.4"
+      "dataBytes": 20984,
+      "dataOk": true,
+      "denied": {
+        "byListener": {
+          "community": 0,
+          "doh": 0,
+          "doh3": 0,
+          "doq": 0,
+          "dot": 0,
+          "plain": 0,
+          "site": 0
+        },
+        "total": 0
+      },
+      "failClosed": false,
+      "failOpen": false,
+      "generatedAt": "2026-11-11",
+      "memoryBytes": 15776,
+      "mode": "taiwan",
+      "ranges": 997,
+      "topDenied": [],
+      "warning": null
     },
-    "interceptorText": "閘道 10.0.0.1 或更上游的路由器上的黑潮（3.4.4）",
-    "ipv6": {
-     "mode": "auto",
-     "reason": null,
-     "route": "global",
-     "usable": true
+    "api": 2,
+    "autoUpstreams": {
+      "count": 5,
+      "generatedAt": "2026-11-26T22:25:28.407Z",
+      "source": "benchmark",
+      "spares": 3
     },
-    "nxRewrite": [],
-    "nxVia": null,
-    "offline": false,
-    "plain": {
-     "intercepted": true,
-     "v4": {
-      "intercepted": true,
-      "tcp": true,
-      "udp": true
-     },
-     "v6": {
-      "intercepted": true,
-      "tcp": true,
-      "udp": true
-     }
-    },
-    "policy": "skip-plain",
-    "protocols": {
-     "doh": {
-      "certErrors": 0,
-      "fail": 0,
-      "lastError": null,
-      "ok": 3
-     },
-     "dot": {
-      "certErrors": 0,
-      "fail": 0,
-      "lastError": null,
-      "ok": 3
-     },
-     "quic": {
-      "certErrors": 0,
-      "fail": 0,
-      "lastError": null,
-      "ok": 3
-     }
-    },
-    "summary": "IPv6 可用，一般 DNS 被閘道 10.0.0.1 或更上游的路由器上的黑潮（3.4.4）接走",
-    "tampered": [],
-    "tlsIntercept": null,
-    "warnings": []
-   }
-  },
-  "ownIp": null,
-  "reload": {
-   "at": null,
-   "error": null,
-   "usingPrevious": false
-  },
-  "stats": {
-   "today": {
-    "backfill": 26,
-    "backfillMismatch": 0,
-    "blocked": 164,
-    "blockedAds": 164,
-    "blockedCustom": 0,
-    "blockedMalware": 0,
-    "blockedTelemetry": 0,
+    "cacheBytes": 304138,
+    "cacheEntries": 846,
     "cdn": {
-     "akamai": 53,
-     "alibaba": 160,
-     "azure": 6,
-     "cloudflare": 23,
-     "cloudfront": 10,
-     "fastly": 2,
-     "line": 3,
-     "microsoft": 6,
-     "tencent": 5
+      "background": {
+        "cross": 0,
+        "deferred": 0,
+        "ecs": 0,
+        "verify": 0
+      },
+      "bg": {
+        "cross": {
+          "done": 4,
+          "started": 4
+        },
+        "ecs": {
+          "done": 10,
+          "started": 10
+        },
+        "latency": {
+          "done": 13,
+          "started": 13
+        },
+        "verify": {
+          "done": 30,
+          "started": 30
+        }
+      },
+      "cdnDirKB": 812,
+      "dbBudgetEntries": 16613,
+      "dbBudgetKB": 2303,
+      "dbDiskEstKB": 663,
+      "dbDiskKB": 331,
+      "dbEntries": 3176,
+      "dbFileKB": 269,
+      "domains": 3176,
+      "enabled": true,
+      "forgotOneShot": 0,
+      "lite": false,
+      "pace": {
+        "capped": 0,
+        "cpuPct": 0,
+        "enabled": true,
+        "lite": false,
+        "maxPerMin": 120,
+        "minPerMin": 15,
+        "paced": false,
+        "perMin": 120,
+        "since": null,
+        "usedLastMin": 0,
+        "usedThisMin": 0,
+        "waited": 0
+      },
+      "popAudit": {
+        "chainPopUnreliable": false,
+        "confirmed": 0,
+        "enabled": true,
+        "lastMismatchAt": null,
+        "lastProbeAt": null,
+        "mismatch": 0,
+        "noTarget": 0,
+        "pending": 0,
+        "pendingServed": 0,
+        "probes24h": 0
+      },
+      "popHealth": [
+        {
+          "bad": 0,
+          "badStreak": 0,
+          "failRate": 0.0,
+          "family": 4,
+          "held": false,
+          "heldUntil": null,
+          "medianMs": 2.8,
+          "nodes": 12,
+          "pop": "TPE",
+          "provider": "cloudflare"
+        },
+        {
+          "bad": 0,
+          "badStreak": 0,
+          "failRate": 0.0,
+          "family": 6,
+          "held": false,
+          "heldUntil": null,
+          "medianMs": 2.8,
+          "nodes": 117,
+          "pop": "TPE",
+          "provider": "cloudflare"
+        },
+        {
+          "bad": 0,
+          "badStreak": 0,
+          "failRate": 0.0,
+          "family": 6,
+          "held": false,
+          "heldUntil": null,
+          "medianMs": 6.5,
+          "nodes": 4,
+          "pop": "KHH",
+          "provider": "cloudflare"
+        },
+        {
+          "bad": 0,
+          "badStreak": 0,
+          "failRate": 0.0,
+          "family": 4,
+          "held": false,
+          "heldUntil": null,
+          "medianMs": 2.8,
+          "nodes": 12,
+          "pop": "TPE",
+          "provider": "cloudfront"
+        },
+        {
+          "bad": 0,
+          "badStreak": 0,
+          "failRate": 0.0,
+          "family": 6,
+          "held": false,
+          "heldUntil": null,
+          "medianMs": 2.8,
+          "nodes": 512,
+          "pop": "TPE",
+          "provider": "cloudfront"
+        },
+        {
+          "bad": 0,
+          "badStreak": 0,
+          "failRate": 0.0,
+          "family": 4,
+          "held": false,
+          "heldUntil": null,
+          "medianMs": 3.8,
+          "nodes": 4,
+          "pop": "TPE",
+          "provider": "azure"
+        },
+        {
+          "bad": 0,
+          "badStreak": 0,
+          "failRate": 0.0,
+          "family": 6,
+          "held": false,
+          "heldUntil": null,
+          "medianMs": 3.7,
+          "nodes": 2,
+          "pop": "TPE",
+          "provider": "azure"
+        }
+      ],
+      "popSwitch": {
+        "eligible": true,
+        "eligibleFamilies": [
+          6
+        ],
+        "enabled": true,
+        "excluded": [
+          {
+            "provider": "fastly",
+            "reason": "nearest-provider"
+          }
+        ],
+        "holds": [],
+        "reason": "ok",
+        "switches24h": 0
+      },
+      "prunedForBudget": 0,
+      "prunedForCap": 0,
+      "prunedForCapGroups": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "prunedRounds": 0,
+      "reach": {
+        "at": 1795743341496,
+        "nearby": [
+          {
+            "pop": "HKG",
+            "prefixes": 15,
+            "provider": "fastly"
+          },
+          {
+            "pop": "NRT",
+            "prefixes": 33,
+            "provider": "fastly"
+          },
+          {
+            "pop": "ITM",
+            "prefixes": 12,
+            "provider": "fastly"
+          },
+          {
+            "pop": "ICN",
+            "prefixes": 4,
+            "provider": "fastly"
+          }
+        ],
+        "stale": false,
+        "unconfirmed": 0,
+        "v4": {
+          "multi": false,
+          "pops": [
+            {
+              "city": "台北",
+              "medianMs": 2.9,
+              "nodes": 28,
+              "pop": "TPE",
+              "prefixes": 28,
+              "providers": 3
+            }
+          ],
+          "text": "這條線目前只到得了台北機房"
+        },
+        "v6": {
+          "multi": true,
+          "pops": [
+            {
+              "city": "台北",
+              "medianMs": 2.8,
+              "nodes": 631,
+              "pop": "TPE",
+              "prefixes": 50,
+              "providers": 3
+            },
+            {
+              "city": "高雄",
+              "medianMs": 6.5,
+              "nodes": 4,
+              "pop": "KHH",
+              "prefixes": 2,
+              "providers": 1
+            }
+          ],
+          "text": "這條線的 IPv6 目前到得了台北、高雄機房"
+        },
+        "wanEpoch": 0
+      },
+      "stats": {
+        "appLayer": 6,
+        "crossRewrites": 0,
+        "dedicated": 0,
+        "ecsRewrites": 13,
+        "essentialKept": 52,
+        "liteCapped": 0,
+        "liteWaited": 0,
+        "multiHeld": 6,
+        "newHeld": 0,
+        "origTw": 1,
+        "rewrites": 25,
+        "slowerFallback": 0,
+        "slowerFirst": 0,
+        "slowerReturned": 0,
+        "srcInvalidated": 0,
+        "trials": 5,
+        "v6dropped": 1,
+        "verifyFail": 1,
+        "verifyOk": 26
+      }
     },
-    "cdnRewrite": 6,
-    "cdnServed": 268,
-    "chainBypass": 27,
-    "chainRetry": 0,
-    "cross": {},
-    "crossRewrite": 0,
-    "date": "2026-11-23",
-    "ecsRewrite": 0,
-    "hit": 696,
-    "hitRate": 70.1,
-    "latency": {
-     "hit": {
-      "n": 696,
-      "p50": 0.5,
-      "p95": 1.0
-     },
-     "miss": {
-      "n": 297,
-      "p50": 100.0,
-      "p95": 1000.0
-     }
+    "chain": {
+      "audit": {
+        "last": null,
+        "recentSuspicious": 0,
+        "releases": 0,
+        "sampled": 0,
+        "siteInvalid": 0,
+        "suspicious": 0,
+        "unverified": 0,
+        "valid": 0
+      },
+      "backupActive": false,
+      "enabled": true,
+      "reason": null,
+      "retryAt": null,
+      "self": {
+        "depth": 1,
+        "fingerprint": "A1B2-C3D4-E5F6-0718-293A-4B5C-6D7E-8F90",
+        "nodeId": "0123456789abcdef",
+        "version": "3.5.1"
+      },
+      "serving": {
+        "allowDownstream": true,
+        "downstreams": [],
+        "fingerprint": "A1B2-C3D4-E5F6-0718-293A-4B5C-6D7E-8F90",
+        "nodeId": "0123456789abcdef",
+        "note": "區網裡任何會講這個協定的裝置都拿得到資料與放行；有啟用「繞過防護」清單時建議關閉 allow_downstream",
+        "probes": {
+          "count24h": 0,
+          "lastAt": null
+        },
+        "refused": {
+          "notAllowed": 0,
+          "notPrivate": 0,
+          "rate": 0
+        },
+        "share": {
+          "cacheBytes": 0,
+          "chunks": 0,
+          "lastAt": null,
+          "ready": true,
+          "requests": 0
+        },
+        "text": "提供資料給下游黑潮：目前沒有下游連上來"
+      },
+      "shared": null,
+      "state": "none",
+      "text": "沒有偵測到上游黑潮",
+      "upstream": null
     },
-    "local": 125,
-    "miss": 297,
-    "prefetch": 277,
-    "query": 1157,
-    "route": {
-     "cloudflare": {
-      "abroad": 6,
-      "acc": 5,
-      "miss": 1,
-      "n": 6,
-      "saved": 625.0,
-      "savedN": 5
-     }
+    "clock": {
+      "buildEpoch": 1795720211,
+      "synced": true
     },
-    "servfail": 0,
-    "stale": 232
-   },
-   "topBlocked": [
-    {
-     "count": 42,
-     "name": "ads.example-adnet.com"
+    "comm": {
+      "builtin": 80,
+      "essential": true,
+      "kinds": {
+        "apns": 1,
+        "fcm": 3,
+        "netcheck": 10,
+        "ntp": 16,
+        "quake": 3,
+        "revocation": 28,
+        "update": 19
+      },
+      "prefetching": 0,
+      "user": 0
     },
-    {
-     "count": 36,
-     "name": "tracker.example-metrics.net"
+    "data": {
+      "dir": "/usr/share/kuroshio",
+      "expectedFormat": 1,
+      "format": 1,
+      "leftovers": [],
+      "note": "data/ 是 3.5.0 版、執行檔是 3.5.1 版（格式相同，可以照常使用）",
+      "ok": true,
+      "version": "3.5.0",
+      "warning": null
     },
-    {
-     "count": 19,
-     "name": "pixel.example-ads.com"
+    "doh3Provider": null,
+    "dohMode": null,
+    "errors": {
+      "count": 0,
+      "recent": []
     },
-    {
-     "count": 11,
-     "name": "telemetry.example.com"
+    "filter": {
+      "byCategory": {
+        "ads": 155476,
+        "malware": 189536,
+        "telemetry": 7688
+      },
+      "commSpared": 0,
+      "commSparedByKind": {},
+      "complex": 269,
+      "complexDropped": 0,
+      "custom": 213,
+      "customByCategory": {
+        "ads": 9,
+        "custom": 125,
+        "malware": 0,
+        "telemetry": 79
+      },
+      "domains": 352642,
+      "errors": [],
+      "heldCopies": {
+        "bytes": 0,
+        "count": 0
+      },
+      "lists": 352700,
+      "maxComplex": 20000,
+      "maxDomains": 10000000,
+      "maxUnindexed": 1000,
+      "memoryBytes": 3257277,
+      "notice": null,
+      "protectComm": true,
+      "skipped": 9645,
+      "sources": [
+        {
+          "category": "malware",
+          "complexDropped": 0,
+          "hits": 121,
+          "name": "FutaGuard TW165（台灣 165 反詐騙）",
+          "protect": true,
+          "rules": 25205,
+          "status": "loaded",
+          "unindexedDropped": 0
+        },
+        {
+          "category": "malware",
+          "complexDropped": 0,
+          "hits": 4,
+          "name": "FutaGuard TWNIC-RPZ（台灣網路資訊中心停止解析）",
+          "protect": true,
+          "rules": 98,
+          "status": "loaded",
+          "unindexedDropped": 0
+        },
+        {
+          "category": "malware",
+          "complexDropped": 0,
+          "hits": 3002,
+          "name": "HaGeZi TIF 精簡版（威脅情資）",
+          "protect": true,
+          "rules": 164623,
+          "status": "loaded",
+          "unindexedDropped": 0
+        },
+        {
+          "category": "ads",
+          "complexDropped": 0,
+          "hits": 238,
+          "name": "FutaGuard LowTechHost（台灣廣告）",
+          "protect": false,
+          "rules": 663,
+          "status": "loaded",
+          "unindexedDropped": 0
+        },
+        {
+          "category": "ads",
+          "complexDropped": 0,
+          "hits": 43556,
+          "name": "CHN: anti-AD",
+          "protect": false,
+          "rules": 102034,
+          "status": "loaded",
+          "unindexedDropped": 0
+        },
+        {
+          "category": "ads",
+          "complexDropped": 0,
+          "hits": 13,
+          "name": "EasyList China",
+          "protect": false,
+          "rules": 5825,
+          "status": "loaded",
+          "unindexedDropped": 0
+        },
+        {
+          "category": "ads",
+          "complexDropped": 0,
+          "hits": 8502,
+          "name": "OISD small",
+          "protect": false,
+          "rules": 63193,
+          "status": "loaded",
+          "unindexedDropped": 0
+        },
+        {
+          "category": "ads",
+          "complexDropped": 0,
+          "hits": 21239,
+          "name": "HaGeZi Light",
+          "protect": false,
+          "rules": 84559,
+          "status": "loaded",
+          "unindexedDropped": 0
+        },
+        {
+          "category": "telemetry",
+          "complexDropped": 0,
+          "hits": 9,
+          "name": "a-dove-is-dumb（Adobe 遙測）",
+          "protect": false,
+          "rules": 7612,
+          "status": "loaded",
+          "unindexedDropped": 0
+        },
+        {
+          "category": "telemetry",
+          "complexDropped": 0,
+          "hits": 45,
+          "name": "blocklistproject smart-tv（電視遙測）",
+          "protect": false,
+          "rules": 77,
+          "status": "loaded",
+          "unindexedDropped": 0
+        }
+      ],
+      "unindexed": 0,
+      "unindexedDropped": 0,
+      "unloaded": [],
+      "update": {
+        "changed": null,
+        "error": null,
+        "finishedAt": null,
+        "runId": null,
+        "startedAt": null,
+        "state": "idle"
+      },
+      "updatedAt": 1795726220000
     },
-    {
-     "count": 10,
-     "name": "ad.example-video.tv"
-    },
-    {
-     "count": 8,
-     "name": "stats.example-app.io"
-    },
-    {
-     "count": 6,
-     "name": "beacon.example.net"
-    },
-    {
-     "count": 4,
-     "name": "adservice.example.com"
-    },
-    {
-     "count": 4,
-     "name": "log.example-sdk.com"
-    }
-   ],
-   "topClients": [
-    {
-     "count": 977,
-     "name": "127.0.0.1"
-    }
-   ],
-   "topDomains": [
-    {
-     "count": 155,
-     "name": "www.google.com"
-    },
-    {
-     "count": 69,
-     "name": "www.youtube.com"
-    },
-    {
-     "count": 61,
-     "name": "i.ytimg.com"
-    },
-    {
-     "count": 42,
-     "name": "line.me"
-    },
-    {
-     "count": 36,
-     "name": "www.facebook.com"
-    },
-    {
-     "count": 31,
-     "name": "graph.instagram.com"
-    },
-    {
-     "count": 30,
-     "name": "tw.yahoo.com"
-    },
-    {
-     "count": 25,
-     "name": "www.pchome.com.tw"
-    },
-    {
-     "count": 19,
-     "name": "shopee.tw"
-    },
-    {
-     "count": 19,
-     "name": "www.momoshop.com.tw"
-    },
-    {
-     "count": 17,
-     "name": "www.ptt.cc"
-    },
-    {
-     "count": 17,
-     "name": "api.github.com"
-    },
-    {
-     "count": 14,
-     "name": "www.netflix.com"
-    },
-    {
-     "count": 13,
-     "name": "cdn.jsdelivr.net"
-    },
-    {
-     "count": 13,
-     "name": "www.apple.com"
-    },
-    {
-     "count": 13,
-     "name": "update.microsoft.com"
-    },
-    {
-     "count": 11,
-     "name": "dns.google"
-    },
-    {
-     "count": 11,
-     "name": "www.wikipedia.org"
-    },
-    {
-     "count": 11,
-     "name": "news.google.com"
-    },
-    {
-     "count": 11,
-     "name": "play.googleapis.com"
-    }
-   ],
-   "uptimeSec": 1049
-  },
-  "system": {
-   "aes": false,
-   "arch": "mips",
-   "cores": 4,
-   "memAvailableMB": 289,
-   "memTotalMB": 437,
-   "memory": {
-    "availKB": 295504,
-    "enabled": true,
-    "events": [],
-    "floor": false,
-    "freedBytes": 0,
-    "freedTotalBytes": 0,
-    "growth": true,
-    "headroomKB": 258640,
-    "holdUntil": null,
+    "findings": [
+      {
+        "active": true,
+        "count": 1,
+        "firstAt": 1795744736812,
+        "key": "data-leftovers",
+        "lastAt": 1795744736812,
+        "sev": "info",
+        "text": "安裝目錄的 data/ 有 1 個舊版留下的檔（seed/upstreams.json），這一版已經不讀，可以刪掉；升級時請整個替換 data/"
+      },
+      {
+        "active": false,
+        "count": 1,
+        "firstAt": 1795741256812,
+        "key": "memory-critical",
+        "lastAt": 1795741556812,
+        "sev": "warn",
+        "text": "記憶體已經恢復（系統可用 296 MB），離進入只轉送滿 3 分鐘後放鬆：已經讓出：縮小診斷緩衝（日誌、熱門排行、查詢紀錄）、縮小 DNS 快取、CDN 網域資料庫冷資料移出記憶體"
+      }
+    ],
+    "freshness": [
+      {
+        "failing": false,
+        "failingItems": null,
+        "fails": 0,
+        "key": "benchmark",
+        "label": "每日評測",
+        "lastOkAt": 1795731929189,
+        "nextAt": 1795810200000,
+        "note": null,
+        "pending": false,
+        "source": "own",
+        "stale": false
+      },
+      {
+        "failing": false,
+        "failingItems": null,
+        "fails": 0,
+        "key": "cdn-ranges",
+        "label": "CDN 範圍",
+        "lastOkAt": 1795523134759,
+        "nextAt": 1795893000000,
+        "note": null,
+        "pending": false,
+        "source": "own",
+        "stale": false
+      },
+      {
+        "failing": false,
+        "failingItems": null,
+        "fails": 0,
+        "key": "cdn-scan",
+        "label": "台灣網段掃描",
+        "lastOkAt": 1795527433418,
+        "nextAt": 1795895100000,
+        "note": null,
+        "pending": false,
+        "source": "own",
+        "stale": false
+      },
+      {
+        "failing": false,
+        "failingItems": null,
+        "fails": 0,
+        "key": "cdn-pool",
+        "label": "節點池",
+        "lastOkAt": 1795728818871,
+        "nextAt": 1795815000000,
+        "note": null,
+        "pending": false,
+        "source": "own",
+        "stale": false
+      },
+      {
+        "failing": false,
+        "failingItems": null,
+        "fails": 0,
+        "key": "tw-ip",
+        "label": "台灣 IP 資料",
+        "lastOkAt": 1795527433419,
+        "nextAt": 1796754660000,
+        "note": "資料產生於 2026-11-11",
+        "pending": false,
+        "source": "own",
+        "stale": false
+      },
+      {
+        "failing": false,
+        "failingItems": 0,
+        "fails": 0,
+        "key": "filter-lists",
+        "label": "過濾清單",
+        "lastOkAt": 1795726220000,
+        "nextAt": 1795812620000,
+        "note": null,
+        "pending": false,
+        "source": "own",
+        "stale": false
+      },
+      {
+        "failing": false,
+        "failingItems": null,
+        "fails": 0,
+        "key": "path-check",
+        "label": "路徑檢查",
+        "lastOkAt": 1795728598511,
+        "nextAt": 1795750198511,
+        "note": null,
+        "pending": false,
+        "source": "own",
+        "stale": false
+      }
+    ],
     "jobs": {
-     "lastBenchmark": null,
-     "openConnections": 0,
-     "processPeakRssBytes": null,
-     "processRssBytes": null,
-     "rawBytes": 0,
-     "running": null
+      "catchUpProvided": [],
+      "catchUpWaiting": [],
+      "catchUpWindow": null,
+      "config": {
+        "cdn-pool": {
+          "at": [
+            "05:30"
+          ],
+          "enabled": true,
+          "runIfMissing": "state/cdn/pools.json",
+          "startDelaySec": 120,
+          "timeoutMin": 60
+        },
+        "cdn-ranges": {
+          "at": [
+            "03:10"
+          ],
+          "enabled": true,
+          "runIfMissing": "state/cdn/ranges/.done",
+          "startDelaySec": 30,
+          "timeoutMin": 20,
+          "weekdays": [
+            0
+          ]
+        },
+        "cdn-scan": {
+          "at": [
+            "03:20"
+          ],
+          "enabled": true,
+          "jitterMin": 30,
+          "startDelaySec": 60,
+          "timeoutMin": 240,
+          "weekdays": [
+            0
+          ]
+        },
+        "dns-benchmark": {
+          "at": [
+            "04:10"
+          ],
+          "enabled": true,
+          "runIfMissing": "state/upstreams.json",
+          "startDelaySec": 300,
+          "timeoutMin": 150
+        },
+        "tw-ip": {
+          "at": "00:50",
+          "deadlineHours": 72,
+          "enabled": true,
+          "jitterDays": 27,
+          "jitterMin": 180,
+          "maxFailures": 6,
+          "maxLoadPerCore": 2,
+          "maxMemKB": 2048,
+          "minAgeDays": 20,
+          "monthDays": [
+            1
+          ],
+          "pauseSec": [
+            5,
+            30
+          ],
+          "retrySec": 300,
+          "startDelaySec": 900,
+          "timeoutMin": 120
+        }
+      },
+      "detail": {
+        "dns-benchmark": {
+          "last": {
+            "durationSec": 3044,
+            "finishedAt": 1795731929000,
+            "ok": true,
+            "processPeakRssBytes": 58085376
+          }
+        },
+        "tw-ip": {
+          "eta": null,
+          "lastEnd": null,
+          "lastResult": "",
+          "lastSuccess": null,
+          "listDate": "2026-11-11",
+          "peakMemKB": 0,
+          "progress": "",
+          "reason": "",
+          "resumeAt": null,
+          "source": "公版",
+          "startedAt": null,
+          "state": "idle",
+          "step": {
+            "done": 0,
+            "phase": "",
+            "total": 0
+          },
+          "text": ""
+        }
+      },
+      "nextRun": {
+        "cdn-pool": 1795815000000,
+        "cdn-ranges": 1795893000000,
+        "cdn-scan": 1795895100000,
+        "dns-benchmark": 1795810200000,
+        "tw-ip": 1796754660000
+      },
+      "queue": [],
+      "running": null,
+      "state": {
+        "cdn-pool": {
+          "lastCode": 0,
+          "lastEnd": 1795728818871,
+          "lastOkEnd": 1795728818871,
+          "lastSlot": "2026-11-27 05:30",
+          "lastStart": 1795728612937,
+          "reason": "排程"
+        },
+        "cdn-ranges": {
+          "lastCode": 0,
+          "lastEnd": 1795523134759,
+          "lastOkEnd": 1795523134759,
+          "lastStart": 1795523127476,
+          "reason": "首次執行（缺少 state/cdn/ranges/.done）"
+        },
+        "cdn-scan": {
+          "lastCode": 0,
+          "lastEnd": 1795527433418,
+          "lastOkEnd": 1795527433418,
+          "lastStart": 1795526579158,
+          "reason": "補跑（上次成功 無紀錄）",
+          "seed": 6555122028893705208
+        },
+        "dns-benchmark": {
+          "lastCode": 0,
+          "lastEnd": 1795731929189,
+          "lastOkEnd": 1795731929189,
+          "lastSlot": "2026-11-25 04:10",
+          "lastStart": 1795728882947,
+          "reason": "補跑（上次成功 2026-11-25 04:59:26）"
+        },
+        "tw-ip": {
+          "lastCode": 0,
+          "lastEnd": 1795527433419,
+          "lastOkEnd": 1795527433419,
+          "lastStart": 1795527433419,
+          "reason": "補跑（上次成功 無紀錄）",
+          "seed": 8423951241025980416
+        }
+      }
     },
-    "lastChange": null,
-    "marginKB": 18432,
-    "nextRestoreAt": null,
-    "pollSec": 10,
-    "pressure": "normal",
-    "protectedSuspended": false,
-    "psi": null,
-    "reserveAuto": true,
-    "reserveHow": "自動：max(16 MB, min(實體記憶體 5%, 1 GB), min_free_kbytes 12288 KB × 3)",
-    "reserveKB": 36864,
-    "rssKB": 62020,
-    "shed": [],
-    "since": 1795364514000,
-    "sizes": {
-     "accountedBytes": 29974703,
-     "cacheBytes": 81868,
-     "cacheConfiguredMax": 100000,
-     "cacheEntries": 148,
-     "cacheMax": 100000,
-     "cdnBytes": 26355811,
-     "cdnInRam": 67522,
-     "cdnOnDiskOnly": 0,
-     "filterListRules": 385051,
-     "filterListsBytes": 3537024,
-     "filterListsUnloaded": 0,
-     "otherBytes": 33533777
+    "listeners": {
+      "ddr": false,
+      "doh": null,
+      "doh3": null,
+      "doq": null,
+      "dot": null
     },
-    "state": "comfortable",
-    "stateLabel": "寬裕",
-    "totalKB": 448168,
-    "waiting": null
-   },
-   "persist": {
-    "bytesToday": 0,
-    "bytesYesterday": 0,
-    "class": "flash",
-    "dailyBudgetKB": 4096,
-    "deferred": 0,
-    "dir": "/media/kuroshio/kuroshio/state",
-    "effectiveIntervalMin": 720,
-    "estimatedDailyBytes": 0,
-    "files": {
-     "cdn/domains/256-000.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324029000,
-      "pendingSince": null,
-      "size": 17456
-     },
-     "cdn/domains/256-001.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795363131000,
-      "pendingSince": null,
-      "size": 16327
-     },
-     "cdn/domains/256-002.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324030000,
-      "pendingSince": null,
-      "size": 18142
-     },
-     "cdn/domains/256-003.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324030000,
-      "pendingSince": null,
-      "size": 16756
-     },
-     "cdn/domains/256-004.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324030000,
-      "pendingSince": null,
-      "size": 19379
-     },
-     "cdn/domains/256-005.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324030000,
-      "pendingSince": null,
-      "size": 15960
-     },
-     "cdn/domains/256-006.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324030000,
-      "pendingSince": null,
-      "size": 18721
-     },
-     "cdn/domains/256-007.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324030000,
-      "pendingSince": null,
-      "size": 17419
-     },
-     "cdn/domains/256-008.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324030000,
-      "pendingSince": null,
-      "size": 16876
-     },
-     "cdn/domains/256-009.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324031000,
-      "pendingSince": null,
-      "size": 16484
-     },
-     "cdn/domains/256-010.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346133000,
-      "pendingSince": null,
-      "size": 16851
-     },
-     "cdn/domains/256-011.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346133000,
-      "pendingSince": null,
-      "size": 16889
-     },
-     "cdn/domains/256-012.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324031000,
-      "pendingSince": null,
-      "size": 16734
-     },
-     "cdn/domains/256-013.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324031000,
-      "pendingSince": null,
-      "size": 17353
-     },
-     "cdn/domains/256-014.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324031000,
-      "pendingSince": null,
-      "size": 18770
-     },
-     "cdn/domains/256-015.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346134000,
-      "pendingSince": null,
-      "size": 17442
-     },
-     "cdn/domains/256-016.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324032000,
-      "pendingSince": null,
-      "size": 16464
-     },
-     "cdn/domains/256-017.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346133000,
-      "pendingSince": null,
-      "size": 16830
-     },
-     "cdn/domains/256-018.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346134000,
-      "pendingSince": null,
-      "size": 17415
-     },
-     "cdn/domains/256-019.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346135000,
-      "pendingSince": null,
-      "size": 18275
-     },
-     "cdn/domains/256-020.json": {
-      "compressed": true,
-      "countersOnly": false,
-      "lastWrite": 1795333316000,
-      "pendingSince": 1795363776000,
-      "size": 16891
-     },
-     "cdn/domains/256-021.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324033000,
-      "pendingSince": null,
-      "size": 16162
-     },
-     "cdn/domains/256-022.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324033000,
-      "pendingSince": null,
-      "size": 18546
-     },
-     "cdn/domains/256-023.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795363126000,
-      "pendingSince": null,
-      "size": 15506
-     },
-     "cdn/domains/256-024.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795329328000,
-      "pendingSince": null,
-      "size": 17224
-     },
-     "cdn/domains/256-025.json": {
-      "compressed": true,
-      "countersOnly": false,
-      "lastWrite": 1795346134000,
-      "pendingSince": 1795364076000,
-      "size": 17570
-     },
-     "cdn/domains/256-026.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324034000,
-      "pendingSince": null,
-      "size": 17749
-     },
-     "cdn/domains/256-027.json": {
-      "compressed": true,
-      "countersOnly": false,
-      "lastWrite": 1795363127000,
-      "pendingSince": 1795363776000,
-      "size": 15998
-     },
-     "cdn/domains/256-028.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324034000,
-      "pendingSince": null,
-      "size": 18118
-     },
-     "cdn/domains/256-029.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346135000,
-      "pendingSince": null,
-      "size": 18114
-     },
-     "cdn/domains/256-030.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324034000,
-      "pendingSince": null,
-      "size": 14950
-     },
-     "cdn/domains/256-031.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324034000,
-      "pendingSince": null,
-      "size": 18095
-     },
-     "cdn/domains/256-032.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346127000,
-      "pendingSince": null,
-      "size": 15074
-     },
-     "cdn/domains/256-033.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346132000,
-      "pendingSince": null,
-      "size": 16796
-     },
-     "cdn/domains/256-034.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324035000,
-      "pendingSince": null,
-      "size": 16599
-     },
-     "cdn/domains/256-035.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324035000,
-      "pendingSince": null,
-      "size": 17171
-     },
-     "cdn/domains/256-036.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324035000,
-      "pendingSince": null,
-      "size": 18189
-     },
-     "cdn/domains/256-037.json": {
-      "compressed": true,
-      "countersOnly": false,
-      "lastWrite": 1795324035000,
-      "pendingSince": 1795363776000,
-      "size": 16782
-     },
-     "cdn/domains/256-038.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324036000,
-      "pendingSince": null,
-      "size": 17868
-     },
-     "cdn/domains/256-039.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324036000,
-      "pendingSince": null,
-      "size": 17121
-     },
-     "cdn/domains/256-040.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346129000,
-      "pendingSince": null,
-      "size": 15946
-     },
-     "cdn/domains/256-041.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795363129000,
-      "pendingSince": null,
-      "size": 16280
-     },
-     "cdn/domains/256-042.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324037000,
-      "pendingSince": null,
-      "size": 16369
-     },
-     "cdn/domains/256-043.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324037000,
-      "pendingSince": null,
-      "size": 16622
-     },
-     "cdn/domains/256-044.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324037000,
-      "pendingSince": null,
-      "size": 15608
-     },
-     "cdn/domains/256-045.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795363130000,
-      "pendingSince": null,
-      "size": 16346
-     },
-     "cdn/domains/256-046.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324037000,
-      "pendingSince": null,
-      "size": 17782
-     },
-     "cdn/domains/256-047.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346131000,
-      "pendingSince": null,
-      "size": 16575
-     },
-     "cdn/domains/256-048.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324038000,
-      "pendingSince": null,
-      "size": 17152
-     },
-     "cdn/domains/256-049.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324038000,
-      "pendingSince": null,
-      "size": 17654
-     },
-     "cdn/domains/256-050.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346134000,
-      "pendingSince": null,
-      "size": 17092
-     },
-     "cdn/domains/256-051.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324038000,
-      "pendingSince": null,
-      "size": 16545
-     },
-     "cdn/domains/256-052.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324038000,
-      "pendingSince": null,
-      "size": 16555
-     },
-     "cdn/domains/256-053.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795328905000,
-      "pendingSince": null,
-      "size": 18791
-     },
-     "cdn/domains/256-054.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324038000,
-      "pendingSince": null,
-      "size": 17699
-     },
-     "cdn/domains/256-055.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324039000,
-      "pendingSince": null,
-      "size": 17359
-     },
-     "cdn/domains/256-056.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346133000,
-      "pendingSince": null,
-      "size": 16961
-     },
-     "cdn/domains/256-057.json": {
-      "compressed": true,
-      "countersOnly": false,
-      "lastWrite": 1795328906000,
-      "pendingSince": 1795364376000,
-      "size": 19562
-     },
-     "cdn/domains/256-058.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346135000,
-      "pendingSince": null,
-      "size": 18054
-     },
-     "cdn/domains/256-059.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324039000,
-      "pendingSince": null,
-      "size": 17349
-     },
-     "cdn/domains/256-060.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324039000,
-      "pendingSince": null,
-      "size": 19297
-     },
-     "cdn/domains/256-061.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324039000,
-      "pendingSince": null,
-      "size": 14953
-     },
-     "cdn/domains/256-062.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346131000,
-      "pendingSince": null,
-      "size": 16541
-     },
-     "cdn/domains/256-063.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324040000,
-      "pendingSince": null,
-      "size": 16582
-     },
-     "cdn/domains/256-064.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324040000,
-      "pendingSince": null,
-      "size": 17534
-     },
-     "cdn/domains/256-065.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795363127000,
-      "pendingSince": null,
-      "size": 15862
-     },
-     "cdn/domains/256-066.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324040000,
-      "pendingSince": null,
-      "size": 18455
-     },
-     "cdn/domains/256-067.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346132000,
-      "pendingSince": null,
-      "size": 16735
-     },
-     "cdn/domains/256-068.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324041000,
-      "pendingSince": null,
-      "size": 16849
-     },
-     "cdn/domains/256-069.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324041000,
-      "pendingSince": null,
-      "size": 18328
-     },
-     "cdn/domains/256-070.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346135000,
-      "pendingSince": null,
-      "size": 18188
-     },
-     "cdn/domains/256-071.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324041000,
-      "pendingSince": null,
-      "size": 19827
-     },
-     "cdn/domains/256-072.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795328906000,
-      "pendingSince": null,
-      "size": 16697
-     },
-     "cdn/domains/256-073.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346128000,
-      "pendingSince": null,
-      "size": 15615
-     },
-     "cdn/domains/256-074.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324042000,
-      "pendingSince": null,
-      "size": 16612
-     },
-     "cdn/domains/256-075.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795363125000,
-      "pendingSince": null,
-      "size": 15373
-     },
-     "cdn/domains/256-076.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324042000,
-      "pendingSince": null,
-      "size": 17764
-     },
-     "cdn/domains/256-077.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324042000,
-      "pendingSince": null,
-      "size": 18321
-     },
-     "cdn/domains/256-078.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346128000,
-      "pendingSince": null,
-      "size": 15490
-     },
-     "cdn/domains/256-079.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795363130000,
-      "pendingSince": null,
-      "size": 16329
-     },
-     "cdn/domains/256-080.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324043000,
-      "pendingSince": null,
-      "size": 18871
-     },
-     "cdn/domains/256-081.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324043000,
-      "pendingSince": null,
-      "size": 18100
-     },
-     "cdn/domains/256-082.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324043000,
-      "pendingSince": null,
-      "size": 14808
-     },
-     "cdn/domains/256-083.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795328906000,
-      "pendingSince": null,
-      "size": 17546
-     },
-     "cdn/domains/256-084.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795328906000,
-      "pendingSince": null,
-      "size": 18666
-     },
-     "cdn/domains/256-085.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324044000,
-      "pendingSince": null,
-      "size": 18005
-     },
-     "cdn/domains/256-086.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346135000,
-      "pendingSince": null,
-      "size": 17898
-     },
-     "cdn/domains/256-087.json": {
-      "compressed": true,
-      "countersOnly": false,
-      "lastWrite": 1795363311000,
-      "pendingSince": 1795363776000,
-      "size": 17156
-     },
-     "cdn/domains/256-088.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324044000,
-      "pendingSince": null,
-      "size": 15539
-     },
-     "cdn/domains/256-089.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324045000,
-      "pendingSince": null,
-      "size": 17419
-     },
-     "cdn/domains/256-090.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795363129000,
-      "pendingSince": null,
-      "size": 16216
-     },
-     "cdn/domains/256-091.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324045000,
-      "pendingSince": null,
-      "size": 17859
-     },
-     "cdn/domains/256-092.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346133000,
-      "pendingSince": null,
-      "size": 16850
-     },
-     "cdn/domains/256-093.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324045000,
-      "pendingSince": null,
-      "size": 17546
-     },
-     "cdn/domains/256-094.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346133000,
-      "pendingSince": null,
-      "size": 17070
-     },
-     "cdn/domains/256-095.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346133000,
-      "pendingSince": null,
-      "size": 16793
-     },
-     "cdn/domains/256-096.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795326554000,
-      "pendingSince": null,
-      "size": 16994
-     },
-     "cdn/domains/256-097.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324046000,
-      "pendingSince": null,
-      "size": 16740
-     },
-     "cdn/domains/256-098.json": {
-      "compressed": true,
-      "countersOnly": false,
-      "lastWrite": 1795346134000,
-      "pendingSince": 1795364376000,
-      "size": 17469
-     },
-     "cdn/domains/256-099.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324047000,
-      "pendingSince": null,
-      "size": 17056
-     },
-     "cdn/domains/256-100.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795328907000,
-      "pendingSince": null,
-      "size": 17506
-     },
-     "cdn/domains/256-101.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346135000,
-      "pendingSince": null,
-      "size": 17736
-     },
-     "cdn/domains/256-102.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346128000,
-      "pendingSince": null,
-      "size": 15517
-     },
-     "cdn/domains/256-103.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795363130000,
-      "pendingSince": null,
-      "size": 16280
-     },
-     "cdn/domains/256-104.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324047000,
-      "pendingSince": null,
-      "size": 17357
-     },
-     "cdn/domains/256-105.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346134000,
-      "pendingSince": null,
-      "size": 17086
-     },
-     "cdn/domains/256-106.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795328907000,
-      "pendingSince": null,
-      "size": 15647
-     },
-     "cdn/domains/256-107.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324048000,
-      "pendingSince": null,
-      "size": 15306
-     },
-     "cdn/domains/256-108.json": {
-      "compressed": true,
-      "countersOnly": false,
-      "lastWrite": 1795346127000,
-      "pendingSince": 1795363776000,
-      "size": 15300
-     },
-     "cdn/domains/256-109.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324048000,
-      "pendingSince": null,
-      "size": 15469
-     },
-     "cdn/domains/256-110.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795328908000,
-      "pendingSince": null,
-      "size": 16229
-     },
-     "cdn/domains/256-111.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795363122000,
-      "pendingSince": null,
-      "size": 14778
-     },
-     "cdn/domains/256-112.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795328908000,
-      "pendingSince": null,
-      "size": 14976
-     },
-     "cdn/domains/256-113.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795328908000,
-      "pendingSince": null,
-      "size": 14965
-     },
-     "cdn/domains/256-114.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795363122000,
-      "pendingSince": null,
-      "size": 14820
-     },
-     "cdn/domains/256-115.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324049000,
-      "pendingSince": null,
-      "size": 16804
-     },
-     "cdn/domains/256-116.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346128000,
-      "pendingSince": null,
-      "size": 15787
-     },
-     "cdn/domains/256-117.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795328908000,
-      "pendingSince": null,
-      "size": 16503
-     },
-     "cdn/domains/256-118.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795363124000,
-      "pendingSince": null,
-      "size": 15302
-     },
-     "cdn/domains/256-119.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795363123000,
-      "pendingSince": null,
-      "size": 14867
-     },
-     "cdn/domains/256-120.json": {
-      "compressed": true,
-      "countersOnly": false,
-      "lastWrite": 1795363123000,
-      "pendingSince": 1795363776000,
-      "size": 15282
-     },
-     "cdn/domains/256-121.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346128000,
-      "pendingSince": null,
-      "size": 15483
-     },
-     "cdn/domains/256-122.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346132000,
-      "pendingSince": null,
-      "size": 16619
-     },
-     "cdn/domains/256-123.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795363121000,
-      "pendingSince": null,
-      "size": 14786
-     },
-     "cdn/domains/256-124.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324050000,
-      "pendingSince": null,
-      "size": 16814
-     },
-     "cdn/domains/256-125.json": {
-      "compressed": true,
-      "countersOnly": false,
-      "lastWrite": 1795363128000,
-      "pendingSince": 1795364376000,
-      "size": 16147
-     },
-     "cdn/domains/256-126.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795328909000,
-      "pendingSince": null,
-      "size": 16832
-     },
-     "cdn/domains/256-127.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795363121000,
-      "pendingSince": null,
-      "size": 14702
-     },
-     "cdn/domains/256-128.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324051000,
-      "pendingSince": null,
-      "size": 16085
-     },
-     "cdn/domains/256-129.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346130000,
-      "pendingSince": null,
-      "size": 16200
-     },
-     "cdn/domains/256-130.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346132000,
-      "pendingSince": null,
-      "size": 16776
-     },
-     "cdn/domains/256-131.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324051000,
-      "pendingSince": null,
-      "size": 14642
-     },
-     "cdn/domains/256-132.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324052000,
-      "pendingSince": null,
-      "size": 14993
-     },
-     "cdn/domains/256-133.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346131000,
-      "pendingSince": null,
-      "size": 16258
-     },
-     "cdn/domains/256-134.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795328909000,
-      "pendingSince": null,
-      "size": 16947
-     },
-     "cdn/domains/256-135.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795328909000,
-      "pendingSince": null,
-      "size": 14680
-     },
-     "cdn/domains/256-136.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795363121000,
-      "pendingSince": null,
-      "size": 14737
-     },
-     "cdn/domains/256-137.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324052000,
-      "pendingSince": null,
-      "size": 15426
-     },
-     "cdn/domains/256-138.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324052000,
-      "pendingSince": null,
-      "size": 14688
-     },
-     "cdn/domains/256-139.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346133000,
-      "pendingSince": null,
-      "size": 16888
-     },
-     "cdn/domains/256-140.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795363128000,
-      "pendingSince": null,
-      "size": 16233
-     },
-     "cdn/domains/256-141.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346131000,
-      "pendingSince": null,
-      "size": 16575
-     },
-     "cdn/domains/256-142.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324053000,
-      "pendingSince": null,
-      "size": 17577
-     },
-     "cdn/domains/256-143.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795363124000,
-      "pendingSince": null,
-      "size": 15331
-     },
-     "cdn/domains/256-144.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795363129000,
-      "pendingSince": null,
-      "size": 16279
-     },
-     "cdn/domains/256-145.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795363125000,
-      "pendingSince": null,
-      "size": 15455
-     },
-     "cdn/domains/256-146.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795363125000,
-      "pendingSince": null,
-      "size": 15377
-     },
-     "cdn/domains/256-147.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346131000,
-      "pendingSince": null,
-      "size": 16306
-     },
-     "cdn/domains/256-148.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324054000,
-      "pendingSince": null,
-      "size": 14892
-     },
-     "cdn/domains/256-149.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795328910000,
-      "pendingSince": null,
-      "size": 15663
-     },
-     "cdn/domains/256-150.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795363128000,
-      "pendingSince": null,
-      "size": 16130
-     },
-     "cdn/domains/256-151.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346127000,
-      "pendingSince": null,
-      "size": 15086
-     },
-     "cdn/domains/256-152.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795363123000,
-      "pendingSince": null,
-      "size": 15109
-     },
-     "cdn/domains/256-153.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346127000,
-      "pendingSince": null,
-      "size": 15113
-     },
-     "cdn/domains/256-154.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795363126000,
-      "pendingSince": null,
-      "size": 15549
-     },
-     "cdn/domains/256-155.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795328911000,
-      "pendingSince": null,
-      "size": 15623
-     },
-     "cdn/domains/256-156.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346132000,
-      "pendingSince": null,
-      "size": 16608
-     },
-     "cdn/domains/256-157.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795363123000,
-      "pendingSince": null,
-      "size": 14853
-     },
-     "cdn/domains/256-158.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795328911000,
-      "pendingSince": null,
-      "size": 15609
-     },
-     "cdn/domains/256-159.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346127000,
-      "pendingSince": null,
-      "size": 15138
-     },
-     "cdn/domains/256-160.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795363126000,
-      "pendingSince": null,
-      "size": 15762
-     },
-     "cdn/domains/256-161.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346129000,
-      "pendingSince": null,
-      "size": 16059
-     },
-     "cdn/domains/256-162.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324056000,
-      "pendingSince": null,
-      "size": 17007
-     },
-     "cdn/domains/256-163.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346131000,
-      "pendingSince": null,
-      "size": 16319
-     },
-     "cdn/domains/256-164.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346131000,
-      "pendingSince": null,
-      "size": 16560
-     },
-     "cdn/domains/256-165.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324057000,
-      "pendingSince": null,
-      "size": 17010
-     },
-     "cdn/domains/256-166.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346130000,
-      "pendingSince": null,
-      "size": 16175
-     },
-     "cdn/domains/256-167.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795363123000,
-      "pendingSince": null,
-      "size": 15018
-     },
-     "cdn/domains/256-168.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346126000,
-      "pendingSince": null,
-      "size": 14803
-     },
-     "cdn/domains/256-169.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795363123000,
-      "pendingSince": null,
-      "size": 14866
-     },
-     "cdn/domains/256-170.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795363122000,
-      "pendingSince": null,
-      "size": 14780
-     },
-     "cdn/domains/256-171.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795328913000,
-      "pendingSince": null,
-      "size": 15135
-     },
-     "cdn/domains/256-172.json": {
-      "compressed": true,
-      "countersOnly": false,
-      "lastWrite": 1795328913000,
-      "pendingSince": 1795364076000,
-      "size": 15682
-     },
-     "cdn/domains/256-173.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795328914000,
-      "pendingSince": null,
-      "size": 16218
-     },
-     "cdn/domains/256-174.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795363122000,
-      "pendingSince": null,
-      "size": 14835
-     },
-     "cdn/domains/256-175.json": {
-      "compressed": true,
-      "countersOnly": false,
-      "lastWrite": 1795328914000,
-      "pendingSince": 1795363776000,
-      "size": 15073
-     },
-     "cdn/domains/256-176.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324058000,
-      "pendingSince": null,
-      "size": 14546
-     },
-     "cdn/domains/256-177.json": {
-      "compressed": true,
-      "countersOnly": false,
-      "lastWrite": 1795328914000,
-      "pendingSince": 1795363776000,
-      "size": 14832
-     },
-     "cdn/domains/256-178.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795363121000,
-      "pendingSince": null,
-      "size": 14679
-     },
-     "cdn/domains/256-179.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324059000,
-      "pendingSince": null,
-      "size": 16570
-     },
-     "cdn/domains/256-180.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795328914000,
-      "pendingSince": null,
-      "size": 15706
-     },
-     "cdn/domains/256-181.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795324059000,
-      "pendingSince": null,
-      "size": 15171
-     },
-     "cdn/domains/256-182.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346129000,
-      "pendingSince": null,
-      "size": 16009
-     },
-     "cdn/domains/256-183.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795363128000,
-      "pendingSince": null,
-      "size": 15955
-     },
-     "cdn/domains/256-184.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346132000,
-      "pendingSince": null,
-      "size": 16730
-     },
-     "cdn/domains/256-185.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795329328000,
-      "pendingSince": null,
-      "size": 15794
-     },
-     "cdn/domains/256-186.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795328914000,
-      "pendingSince": null,
-      "size": 16460
-     },
-     "cdn/domains/256-187.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795363127000,
-      "pendingSince": null,
-      "size": 15840
-     },
-     "cdn/domains/256-188.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346132000,
-      "pendingSince": null,
-      "size": 16726
-     },
-     "cdn/domains/256-189.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346134000,
-      "pendingSince": null,
-      "size": 17247
-     },
-     "cdn/domains/256-190.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346132000,
-      "pendingSince": null,
-      "size": 16551
-     },
-     "cdn/domains/256-191.json": {
-      "compressed": true,
-      "countersOnly": false,
-      "lastWrite": 1795328915000,
-      "pendingSince": 1795363776000,
-      "size": 15421
-     },
-     "cdn/domains/256-192.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346126000,
-      "pendingSince": null,
-      "size": 14769
-     },
-     "cdn/domains/256-193.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795328915000,
-      "pendingSince": null,
-      "size": 17053
-     },
-     "cdn/domains/256-194.json": {
-      "compressed": true,
-      "countersOnly": false,
-      "lastWrite": 1795328916000,
-      "pendingSince": 1795363776000,
-      "size": 16864
-     },
-     "cdn/domains/256-195.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795328916000,
-      "pendingSince": null,
-      "size": 14581
-     },
-     "cdn/domains/256-196.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795328916000,
-      "pendingSince": null,
-      "size": 14500
-     },
-     "cdn/domains/256-197.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795328916000,
-      "pendingSince": null,
-      "size": 14542
-     },
-     "cdn/domains/256-198.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795363129000,
-      "pendingSince": null,
-      "size": 16263
-     },
-     "cdn/domains/256-199.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346129000,
-      "pendingSince": null,
-      "size": 15958
-     },
-     "cdn/domains/256-200.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795363122000,
-      "pendingSince": null,
-      "size": 14839
-     },
-     "cdn/domains/256-201.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795363124000,
-      "pendingSince": null,
-      "size": 15377
-     },
-     "cdn/domains/256-202.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346133000,
-      "pendingSince": null,
-      "size": 17203
-     },
-     "cdn/domains/256-203.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346126000,
-      "pendingSince": null,
-      "size": 14843
-     },
-     "cdn/domains/256-204.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795328918000,
-      "pendingSince": null,
-      "size": 15405
-     },
-     "cdn/domains/256-205.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346134000,
-      "pendingSince": null,
-      "size": 17286
-     },
-     "cdn/domains/256-206.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795328918000,
-      "pendingSince": null,
-      "size": 15402
-     },
-     "cdn/domains/256-207.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795363126000,
-      "pendingSince": null,
-      "size": 15711
-     },
-     "cdn/domains/256-208.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795328918000,
-      "pendingSince": null,
-      "size": 15416
-     },
-     "cdn/domains/256-209.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795328918000,
-      "pendingSince": null,
-      "size": 14970
-     },
-     "cdn/domains/256-210.json": {
-      "compressed": true,
-      "countersOnly": false,
-      "lastWrite": 1795328918000,
-      "pendingSince": 1795364076000,
-      "size": 15964
-     },
-     "cdn/domains/256-211.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795328918000,
-      "pendingSince": null,
-      "size": 15057
-     },
-     "cdn/domains/256-212.json": {
-      "compressed": true,
-      "countersOnly": false,
-      "lastWrite": 1795328919000,
-      "pendingSince": 1795363776000,
-      "size": 14853
-     },
-     "cdn/domains/256-213.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795328919000,
-      "pendingSince": null,
-      "size": 16282
-     },
-     "cdn/domains/256-214.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795328919000,
-      "pendingSince": null,
-      "size": 15762
-     },
-     "cdn/domains/256-215.json": {
-      "compressed": true,
-      "countersOnly": false,
-      "lastWrite": 1795328919000,
-      "pendingSince": 1795363776000,
-      "size": 15232
-     },
-     "cdn/domains/256-216.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795328919000,
-      "pendingSince": null,
-      "size": 14552
-     },
-     "cdn/domains/256-217.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795328919000,
-      "pendingSince": null,
-      "size": 14581
-     },
-     "cdn/domains/256-218.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795328920000,
-      "pendingSince": null,
-      "size": 16101
-     },
-     "cdn/domains/256-219.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346125000,
-      "pendingSince": null,
-      "size": 14693
-     },
-     "cdn/domains/256-220.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795328920000,
-      "pendingSince": null,
-      "size": 14430
-     },
-     "cdn/domains/256-221.json": {
-      "compressed": true,
-      "countersOnly": false,
-      "lastWrite": 1795363122000,
-      "pendingSince": 1795364376000,
-      "size": 14796
-     },
-     "cdn/domains/256-222.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346129000,
-      "pendingSince": null,
-      "size": 16036
-     },
-     "cdn/domains/256-223.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346127000,
-      "pendingSince": null,
-      "size": 15110
-     },
-     "cdn/domains/256-224.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795328921000,
-      "pendingSince": null,
-      "size": 16032
-     },
-     "cdn/domains/256-225.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795363123000,
-      "pendingSince": null,
-      "size": 14998
-     },
-     "cdn/domains/256-226.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795328921000,
-      "pendingSince": null,
-      "size": 14892
-     },
-     "cdn/domains/256-227.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795363128000,
-      "pendingSince": null,
-      "size": 16019
-     },
-     "cdn/domains/256-228.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346130000,
-      "pendingSince": null,
-      "size": 16000
-     },
-     "cdn/domains/256-229.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795363125000,
-      "pendingSince": null,
-      "size": 15378
-     },
-     "cdn/domains/256-230.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795363124000,
-      "pendingSince": null,
-      "size": 15271
-     },
-     "cdn/domains/256-231.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795328922000,
-      "pendingSince": null,
-      "size": 15185
-     },
-     "cdn/domains/256-232.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346129000,
-      "pendingSince": null,
-      "size": 15819
-     },
-     "cdn/domains/256-233.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346126000,
-      "pendingSince": null,
-      "size": 14996
-     },
-     "cdn/domains/256-234.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795363124000,
-      "pendingSince": null,
-      "size": 15329
-     },
-     "cdn/domains/256-235.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795328923000,
-      "pendingSince": null,
-      "size": 16207
-     },
-     "cdn/domains/256-236.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346129000,
-      "pendingSince": null,
-      "size": 15972
-     },
-     "cdn/domains/256-237.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795328923000,
-      "pendingSince": null,
-      "size": 16219
-     },
-     "cdn/domains/256-238.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346130000,
-      "pendingSince": null,
-      "size": 16255
-     },
-     "cdn/domains/256-239.json": {
-      "compressed": true,
-      "countersOnly": false,
-      "lastWrite": 1795346125000,
-      "pendingSince": 1795364076000,
-      "size": 14278
-     },
-     "cdn/domains/256-240.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795328924000,
-      "pendingSince": null,
-      "size": 15760
-     },
-     "cdn/domains/256-241.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795328924000,
-      "pendingSince": null,
-      "size": 15624
-     },
-     "cdn/domains/256-242.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795328924000,
-      "pendingSince": null,
-      "size": 15460
-     },
-     "cdn/domains/256-243.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795328924000,
-      "pendingSince": null,
-      "size": 14646
-     },
-     "cdn/domains/256-244.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346128000,
-      "pendingSince": null,
-      "size": 15802
-     },
-     "cdn/domains/256-245.json": {
-      "compressed": true,
-      "countersOnly": false,
-      "lastWrite": 1795346130000,
-      "pendingSince": 1795363776000,
-      "size": 16142
-     },
-     "cdn/domains/256-246.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795363127000,
-      "pendingSince": null,
-      "size": 15971
-     },
-     "cdn/domains/256-247.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795363121000,
-      "pendingSince": null,
-      "size": 14500
-     },
-     "cdn/domains/256-248.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795363122000,
-      "pendingSince": null,
-      "size": 14836
-     },
-     "cdn/domains/256-249.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346130000,
-      "pendingSince": null,
-      "size": 16213
-     },
-     "cdn/domains/256-250.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346129000,
-      "pendingSince": null,
-      "size": 15910
-     },
-     "cdn/domains/256-251.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346126000,
-      "pendingSince": null,
-      "size": 14738
-     },
-     "cdn/domains/256-252.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346130000,
-      "pendingSince": null,
-      "size": 16154
-     },
-     "cdn/domains/256-253.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795346131000,
-      "pendingSince": null,
-      "size": 16502
-     },
-     "cdn/domains/256-254.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795328926000,
-      "pendingSince": null,
-      "size": 14697
-     },
-     "cdn/domains/256-255.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795328926000,
-      "pendingSince": null,
-      "size": 14461
-     },
-     "cdn/domains/manifest.json": {
-      "compressed": false,
-      "countersOnly": null,
-      "lastWrite": 1794986954000,
-      "pendingSince": null,
-      "size": 58
-     },
-     "cdn/harvest.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795329329000,
-      "pendingSince": null,
-      "size": 4909
-     },
-     "cdn/ip-zone.json": {
-      "compressed": true,
-      "countersOnly": false,
-      "lastWrite": 1795328926000,
-      "pendingSince": 1795364076000,
-      "size": 6470
-     },
-     "cdn/pools.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795363197000,
-      "pendingSince": null,
-      "size": 4352
-     },
-     "cdn/v6-nodes.json": {
-      "compressed": true,
-      "countersOnly": null,
-      "lastWrite": 1795363311000,
-      "pendingSince": null,
-      "size": 2513
-     },
-     "chain-share.json": {
-      "compressed": false,
-      "countersOnly": false,
-      "lastWrite": 1795363197000,
-      "pendingSince": 1795364426000,
-      "size": 2844
-     },
-     "filter-hits.json": {
-      "compressed": false,
-      "countersOnly": true,
-      "lastWrite": 1795363460000,
-      "pendingSince": 1795363776000,
-      "size": 366
-     },
-     "filter-lists/index.json": {
-      "compressed": false,
-      "countersOnly": false,
-      "lastWrite": 1795363311000,
-      "pendingSince": 1795363556000,
-      "size": 2225
-     },
-     "hot-names.json": {
-      "compressed": false,
-      "countersOnly": false,
-      "lastWrite": 1795363460000,
-      "pendingSince": 1795364076000,
-      "size": 283
-     },
-     "jobs.json": {
-      "compressed": false,
-      "countersOnly": null,
-      "lastWrite": 1795328926000,
-      "pendingSince": null,
-      "size": 1012
-     },
-     "stats.json": {
-      "compressed": false,
-      "countersOnly": false,
-      "lastWrite": 1795363460000,
-      "pendingSince": 1795363776000,
-      "size": 44447
-     }
+    "listenersDetail": [],
+    "memory": {
+      "availKB": 304944,
+      "deficitBytes": 0,
+      "enabled": true,
+      "events": [],
+      "floor": false,
+      "freedBytes": 0,
+      "freedTotalBytes": 0,
+      "futile": false,
+      "growth": true,
+      "headroomKB": 287075,
+      "holdUntil": null,
+      "jobs": {
+        "lastBenchmark": {
+          "durationSec": 3044,
+          "finishedAt": 1795731929000,
+          "ok": true,
+          "processPeakRssBytes": 58085376
+        },
+        "openConnections": 0,
+        "processPeakRssBytes": null,
+        "processRssBytes": null,
+        "rawBytes": 0,
+        "running": null
+      },
+      "lastChange": null,
+      "marginKB": 8934,
+      "nextRestoreAt": null,
+      "ownBytes": 39383040,
+      "pollSec": 10,
+      "pressure": "normal",
+      "protectedSuspended": false,
+      "psi": null,
+      "reserveAuto": true,
+      "reserveHow": "自動（在 cgroup 的上限裡）：max(16 MB, min(上限的 5%, 1 GB))，不看整台機器的 min_free_kbytes",
+      "reserveKB": 17868,
+      "restartBlockedUntil": null,
+      "rssKB": 38460,
+      "shed": [],
+      "simulated": null,
+      "since": 1795744829000,
+      "sizes": {
+        "accountedBytes": 4533981,
+        "cacheBytes": 304138,
+        "cacheConfiguredMax": 48793,
+        "cacheEntries": 846,
+        "cacheMax": 48793,
+        "cdnBytes": 983978,
+        "cdnInRam": 3176,
+        "cdnOnDiskOnly": 0,
+        "filterListRules": 352700,
+        "filterListsBytes": 3245865,
+        "filterListsUnloaded": 0,
+        "otherBytes": 34849059
+      },
+      "state": "comfortable",
+      "stateLabel": "寬裕",
+      "totalKB": 357376,
+      "waiting": null
     },
-    "forcedByAge": 0,
-    "freeBytes": 2347008,
-    "freedBytes": 0,
-    "intervalMin": 360,
-    "lowSpace": false,
-    "maxAgeHours": 24.0,
-    "minFreeBytes": 1048576,
-    "oldestUnsavedSec": 958,
-    "pending": 27,
-    "skipped": 0,
-    "space": {
-     "deleted": [],
-     "freeBytes": 2347008,
-     "headroomBytes": 1298432,
-     "keepingOptional": true,
-     "marginBytes": 1048576,
-     "optionalBytes": 1209758,
-     "optionalFiles": 33,
-     "reserveAuto": true,
-     "reserveBytes": 1048576,
-     "reserveHow": "自動（Flash）：max(1 MB, 10%, 最大待寫 × 2)",
-     "totalBytes": 7864320
+    "mode": "cmd",
+    "network": {
+      "path": {
+        "blocked": [],
+        "bootstrapViaDoh": false,
+        "checkedAt": 1795728598511,
+        "enabled": true,
+        "gateway": "168.95.98.254",
+        "interceptor": null,
+        "interceptorText": null,
+        "ipv6": {
+          "mode": "auto",
+          "reason": null,
+          "route": "global",
+          "usable": true
+        },
+        "nxRewrite": [],
+        "nxVia": null,
+        "offline": false,
+        "plain": {
+          "intercepted": false,
+          "v4": {
+            "intercepted": false,
+            "tcp": false,
+            "udp": false
+          },
+          "v6": {
+            "intercepted": false,
+            "tcp": false,
+            "udp": false
+          }
+        },
+        "policy": "skip-plain",
+        "protocols": {
+          "doh": {
+            "certErrors": 0,
+            "fail": 0,
+            "lastError": null,
+            "ok": 3
+          },
+          "dot": {
+            "certErrors": 0,
+            "fail": 0,
+            "lastError": null,
+            "ok": 3
+          },
+          "quic": {
+            "certErrors": 0,
+            "fail": 0,
+            "lastError": null,
+            "ok": 3
+          }
+        },
+        "summary": "IPv6 可用，一般 DNS 沒有被接走",
+        "tampered": [],
+        "tlsIntercept": null,
+        "warnings": []
+      }
     },
-    "storage": "flash",
-    "writesToday": 0
-   },
-   "pressure": "normal",
-   "rssKB": 62088
-  },
-  "uci": true,
-  "upstreams": [
-   {
-    "avgMs": 4.5,
-    "fail": 2,
-    "id": "udp://10.0.0.1:53",
-    "ok": 29,
-    "pathBlocked": false,
-    "paused": false,
-    "reason": null,
-    "region": null,
-    "role": "chain",
-    "type": "udp",
-    "via": null
-   },
-   {
-    "avgMs": 315.4,
-    "fail": 0,
-    "id": "tls://dns.nextdns.io:853",
-    "ok": 175,
-    "pathBlocked": false,
-    "paused": false,
-    "reason": "最快",
-    "region": "TW",
-    "role": "auto",
-    "type": "dot",
-    "via": null
-   },
-   {
-    "avgMs": 120.4,
-    "fail": 0,
-    "id": "https://sg-w-p-1.nashkan.net/dns-query",
-    "ok": 53,
-    "pathBlocked": false,
-    "paused": false,
-    "reason": "覆蓋",
-    "region": "SG",
-    "role": "auto",
-    "type": "doh",
-    "via": null
-   },
-   {
-    "avgMs": null,
-    "fail": 6,
-    "id": "https://doh.funil.de/dns-query",
-    "ok": 0,
-    "pathBlocked": false,
-    "paused": false,
-    "reason": "覆蓋",
-    "region": "DE",
-    "role": "auto",
-    "type": "doh",
-    "via": null
-   },
-   {
-    "avgMs": 104.4,
-    "fail": 0,
-    "id": "https://freedns.controld.com/dns-query",
-    "ok": 73,
-    "pathBlocked": false,
-    "paused": false,
-    "reason": "覆蓋",
-    "region": "CA",
-    "role": "auto",
-    "type": "doh",
-    "via": null
-   },
-   {
-    "avgMs": null,
-    "fail": 0,
-    "id": "udp://45.90.30.126:53",
-    "ok": 0,
-    "pathBlocked": false,
-    "paused": false,
-    "reason": null,
-    "region": null,
-    "role": "fallback",
-    "type": "udp",
-    "via": "interceptor"
-   },
-   {
-    "avgMs": null,
-    "fail": 0,
-    "id": "udp://1.0.0.2:53",
-    "ok": 0,
-    "pathBlocked": false,
-    "paused": false,
-    "reason": null,
-    "region": null,
-    "role": "fallback",
-    "type": "udp",
-    "via": "interceptor"
-   },
-   {
-    "avgMs": null,
-    "fail": 0,
-    "id": "udp://8.8.4.4:53",
-    "ok": 0,
-    "pathBlocked": false,
-    "paused": false,
-    "reason": null,
-    "region": null,
-    "role": "fallback",
-    "type": "udp",
-    "via": "interceptor"
-   }
-  ],
-  "version": "3.4.4",
-  "warnings": []
- }
+    "ownIp": null,
+    "queryLog": {
+      "bytes": 0,
+      "capacity": 5000,
+      "dropped": 0,
+      "enabled": false,
+      "permanent": false,
+      "size": 0,
+      "until": null
+    },
+    "reload": {
+      "at": null,
+      "error": null,
+      "usingPrevious": false
+    },
+    "stale": {
+      "rate15m": 0.2403,
+      "rate1h": 0.2519,
+      "rateToday": 0.0749,
+      "refreshFail15m": 0,
+      "today": 3062
+    },
+    "stats": {
+      "today": {
+        "backfill": 1469,
+        "backfillMismatch": 0,
+        "blocked": 1602,
+        "blockedAds": 1573,
+        "blockedCustom": 0,
+        "blockedMalware": 25,
+        "blockedTelemetry": 4,
+        "cdn": {
+          "akamai": 748,
+          "alibaba": 67,
+          "aliwaf": 4,
+          "azure": 75,
+          "baidu": 26,
+          "baishan": 15,
+          "bunny": 5,
+          "bytedance": 7,
+          "cloudflare": 4229,
+          "cloudfront": 1005,
+          "f5xc": 6,
+          "fastly": 313,
+          "gcore": 6,
+          "google": 63,
+          "hinet": 138,
+          "huawei": 8,
+          "huaweiwaf": 2,
+          "imperva": 91,
+          "line": 2,
+          "microsoft": 92,
+          "netlify": 4,
+          "radware": 207,
+          "shopify": 101,
+          "tencent": 68,
+          "vercel": 14,
+          "wangsu": 28
+        },
+        "cdnRewrite": 161,
+        "cdnServed": 7324,
+        "chainBypass": 0,
+        "chainRetry": 0,
+        "cross": {
+          "bunny>cloudflare": 1,
+          "fastly>cloudflare": 1,
+          "wangsu>cloudflare": 3
+        },
+        "crossRewrite": 5,
+        "date": "2026-11-27",
+        "ecsRewrite": 31,
+        "hit": 32442,
+        "hitRate": 82.5,
+        "latency": {
+          "hit": {
+            "n": 32442,
+            "p50": 0.5,
+            "p95": 1.0
+          },
+          "miss": {
+            "n": 6864,
+            "p50": 100.0,
+            "p95": 500.0
+          }
+        },
+        "local": 1990,
+        "miss": 6864,
+        "prefetch": 4692,
+        "query": 40906,
+        "route": {
+          "akamai": {
+            "abroad": 22,
+            "acc": 22,
+            "cross": 0,
+            "miss": 0,
+            "n": 22,
+            "saved": 1384.0,
+            "savedN": 22
+          },
+          "alibaba": {
+            "abroad": 5,
+            "acc": 5,
+            "cross": 0,
+            "miss": 0,
+            "n": 5,
+            "saved": 1058.0,
+            "savedN": 5
+          },
+          "azure": {
+            "abroad": 34,
+            "acc": 0,
+            "cross": 0,
+            "miss": 34,
+            "n": 34,
+            "saved": 0.0,
+            "savedN": 0
+          },
+          "cloudflare": {
+            "abroad": 940,
+            "acc": 59,
+            "cross": 0,
+            "miss": 881,
+            "n": 2195,
+            "saved": 8200.0,
+            "savedN": 44
+          },
+          "cloudfront": {
+            "abroad": 227,
+            "acc": 137,
+            "cross": 0,
+            "miss": 90,
+            "n": 539,
+            "saved": 1415.0,
+            "savedN": 64
+          },
+          "tencent": {
+            "abroad": 4,
+            "acc": 4,
+            "cross": 0,
+            "miss": 0,
+            "n": 4,
+            "saved": 475.0,
+            "savedN": 4
+          }
+        },
+        "servfail": 4,
+        "stale": 3062
+      },
+      "topBlocked": [
+        {
+          "count": 530,
+          "name": "ads.example-adnet.com"
+        },
+        {
+          "count": 520,
+          "name": "tracker.example-metrics.net"
+        },
+        {
+          "count": 161,
+          "name": "pixel.example-ads.com"
+        },
+        {
+          "count": 9,
+          "name": "telemetry.example.com"
+        },
+        {
+          "count": 8,
+          "name": "ad.example-video.tv"
+        },
+        {
+          "count": 8,
+          "name": "stats.example-app.io"
+        },
+        {
+          "count": 8,
+          "name": "beacon.example.net"
+        },
+        {
+          "count": 6,
+          "name": "adservice.example.com"
+        },
+        {
+          "count": 6,
+          "name": "log.example-sdk.com"
+        },
+        {
+          "count": 6,
+          "name": "item9.example.com"
+        },
+        {
+          "count": 6,
+          "name": "item10.example.com"
+        },
+        {
+          "count": 6,
+          "name": "item11.example.com"
+        },
+        {
+          "count": 1,
+          "name": "item12.example.com"
+        }
+      ],
+      "topClients": [
+        {
+          "count": 2791,
+          "name": "127.0.0.1"
+        }
+      ],
+      "topDomains": [
+        {
+          "count": 530,
+          "name": "www.google.com"
+        },
+        {
+          "count": 520,
+          "name": "www.youtube.com"
+        },
+        {
+          "count": 348,
+          "name": "i.ytimg.com"
+        },
+        {
+          "count": 313,
+          "name": "line.me"
+        },
+        {
+          "count": 161,
+          "name": "www.facebook.com"
+        },
+        {
+          "count": 108,
+          "name": "graph.instagram.com"
+        },
+        {
+          "count": 86,
+          "name": "tw.yahoo.com"
+        },
+        {
+          "count": 58,
+          "name": "www.pchome.com.tw"
+        },
+        {
+          "count": 54,
+          "name": "shopee.tw"
+        },
+        {
+          "count": 54,
+          "name": "www.momoshop.com.tw"
+        },
+        {
+          "count": 41,
+          "name": "www.ptt.cc"
+        },
+        {
+          "count": 36,
+          "name": "api.github.com"
+        },
+        {
+          "count": 35,
+          "name": "www.netflix.com"
+        },
+        {
+          "count": 28,
+          "name": "cdn.jsdelivr.net"
+        },
+        {
+          "count": 20,
+          "name": "www.apple.com"
+        },
+        {
+          "count": 16,
+          "name": "update.microsoft.com"
+        },
+        {
+          "count": 16,
+          "name": "dns.google"
+        },
+        {
+          "count": 16,
+          "name": "www.wikipedia.org"
+        },
+        {
+          "count": 16,
+          "name": "news.google.com"
+        },
+        {
+          "count": 12,
+          "name": "play.googleapis.com"
+        }
+      ],
+      "uptimeSec": 16246
+    },
+    "system": {
+      "aes": false,
+      "arch": "mips",
+      "cores": 4,
+      "memAvailableMB": 296,
+      "memTotalMB": 349,
+      "memory": {
+        "availKB": 304944,
+        "deficitBytes": 0,
+        "enabled": true,
+        "events": [],
+        "floor": false,
+        "freedBytes": 0,
+        "freedTotalBytes": 0,
+        "futile": false,
+        "growth": true,
+        "headroomKB": 287075,
+        "holdUntil": null,
+        "jobs": {
+          "lastBenchmark": {
+            "durationSec": 3044,
+            "finishedAt": 1795731929000,
+            "ok": true,
+            "processPeakRssBytes": 58085376
+          },
+          "openConnections": 0,
+          "processPeakRssBytes": null,
+          "processRssBytes": null,
+          "rawBytes": 0,
+          "running": null
+        },
+        "lastChange": null,
+        "marginKB": 8934,
+        "nextRestoreAt": null,
+        "ownBytes": 39383040,
+        "pollSec": 10,
+        "pressure": "normal",
+        "protectedSuspended": false,
+        "psi": null,
+        "reserveAuto": true,
+        "reserveHow": "自動（在 cgroup 的上限裡）：max(16 MB, min(上限的 5%, 1 GB))，不看整台機器的 min_free_kbytes",
+        "reserveKB": 17868,
+        "restartBlockedUntil": null,
+        "rssKB": 38460,
+        "shed": [],
+        "simulated": null,
+        "since": 1795744829000,
+        "sizes": {
+          "accountedBytes": 4533981,
+          "cacheBytes": 304138,
+          "cacheConfiguredMax": 48793,
+          "cacheEntries": 846,
+          "cacheMax": 48793,
+          "cdnBytes": 983978,
+          "cdnInRam": 3176,
+          "cdnOnDiskOnly": 0,
+          "filterListRules": 352700,
+          "filterListsBytes": 3245865,
+          "filterListsUnloaded": 0,
+          "otherBytes": 34849059
+        },
+        "state": "comfortable",
+        "stateLabel": "寬裕",
+        "totalKB": 357376,
+        "waiting": null
+      },
+      "persist": {
+        "bytesToday": 0,
+        "bytesYesterday": 149,
+        "class": "flash",
+        "dailyBudgetKB": 4096,
+        "deferred": 0,
+        "dir": "/media/kuroshio/kuroshio/state",
+        "effectiveIntervalMin": 1440,
+        "estimatedDailyBytes": 149,
+        "filesSummary": {
+          "bytes": 392230,
+          "compressed": 260,
+          "count": 267,
+          "oldestWriteAt": 1795523410000,
+          "pending": 63
+        },
+        "forcedByAge": 0,
+        "freeBytes": 4100096,
+        "freedBytes": 0,
+        "intervalMin": 360,
+        "lowSpace": false,
+        "maxAgeHours": 24.0,
+        "minFreeBytes": 1048576,
+        "oldestUnsavedSec": 16217,
+        "pending": 63,
+        "pendingCountersOnly": 1,
+        "pendingImportant": 62,
+        "skipped": 0,
+        "space": {
+          "deleted": [],
+          "freeBytes": 4100096,
+          "headroomBytes": 3051520,
+          "keepingOptional": true,
+          "marginBytes": 1048576,
+          "optionalBytes": 3342378,
+          "optionalFiles": 38,
+          "reserveAuto": true,
+          "reserveBytes": 1048576,
+          "reserveHow": "自動（Flash）：max(1 MB, 10%, 最大待寫 × 2)",
+          "totalBytes": 7864320
+        },
+        "storage": "flash",
+        "writesToday": 0
+      },
+      "pressure": "normal",
+      "rssKB": 38460
+    },
+    "uci": true,
+    "upstreams": [
+      {
+        "avgMs": 4.7,
+        "benched": false,
+        "fail": 0,
+        "id": "udp://172.64.37.148:53",
+        "late": 0,
+        "near": true,
+        "ok": 898,
+        "pathBlocked": false,
+        "paused": false,
+        "reason": "最快",
+        "region": "CA",
+        "regionSource": "registered",
+        "role": "auto",
+        "servfail": 0,
+        "type": "udp",
+        "unanswered": 0,
+        "via": null
+      },
+      {
+        "avgMs": 106.4,
+        "benched": false,
+        "fail": 0,
+        "id": "https://sg-w-f-1.nashkan.net/dns-query",
+        "late": 128,
+        "near": true,
+        "ok": 254,
+        "pathBlocked": false,
+        "paused": false,
+        "reason": "覆蓋",
+        "region": "SG",
+        "regionSource": "registered",
+        "role": "auto",
+        "servfail": 0,
+        "type": "doh",
+        "unanswered": 0,
+        "via": null
+      },
+      {
+        "avgMs": 202.1,
+        "benched": false,
+        "fail": 0,
+        "id": "tls://tyo03.dnscry.pt:853",
+        "late": 132,
+        "near": true,
+        "ok": 214,
+        "pathBlocked": false,
+        "paused": false,
+        "reason": "覆蓋",
+        "region": "JP",
+        "regionSource": "registered",
+        "role": "auto",
+        "servfail": 0,
+        "type": "dot",
+        "unanswered": 0,
+        "via": null
+      },
+      {
+        "avgMs": 380.3,
+        "benched": false,
+        "fail": 0,
+        "id": "tls://hkg02.dnscry.pt:853",
+        "late": 69,
+        "near": true,
+        "ok": 139,
+        "pathBlocked": false,
+        "paused": false,
+        "reason": "覆蓋",
+        "region": "HK",
+        "regionSource": "registered",
+        "role": "auto",
+        "servfail": 0,
+        "type": "dot",
+        "unanswered": 0,
+        "via": null
+      },
+      {
+        "avgMs": 136.1,
+        "benched": false,
+        "fail": 0,
+        "id": "udp://134.195.4.2:53",
+        "late": 37,
+        "near": true,
+        "ok": 589,
+        "pathBlocked": false,
+        "paused": false,
+        "reason": "覆蓋",
+        "region": "US",
+        "regionSource": "registered",
+        "role": "auto",
+        "servfail": 0,
+        "type": "udp",
+        "unanswered": 0,
+        "via": null
+      },
+      {
+        "avgMs": null,
+        "benched": false,
+        "fail": 0,
+        "id": "tls://anycast.dns.nextdns.io:853",
+        "late": 0,
+        "near": true,
+        "ok": 0,
+        "pathBlocked": false,
+        "paused": false,
+        "reason": "候補",
+        "region": "US",
+        "regionSource": "registered",
+        "role": "auto",
+        "servfail": 0,
+        "spare": true,
+        "type": "dot",
+        "unanswered": 0,
+        "via": null
+      },
+      {
+        "avgMs": null,
+        "benched": false,
+        "fail": 0,
+        "id": "https://firefox.dns.nextdns.io/dns-query",
+        "late": 0,
+        "near": true,
+        "ok": 0,
+        "pathBlocked": false,
+        "paused": false,
+        "reason": "候補",
+        "region": "TW",
+        "regionSource": "registered",
+        "role": "auto",
+        "servfail": 0,
+        "spare": true,
+        "type": "doh",
+        "unanswered": 0,
+        "via": null
+      },
+      {
+        "avgMs": null,
+        "benched": false,
+        "fail": 0,
+        "id": "udp://168.95.1.1:53",
+        "late": 0,
+        "near": true,
+        "ok": 0,
+        "pathBlocked": false,
+        "paused": false,
+        "reason": "候補",
+        "region": "TW",
+        "regionSource": "tw-net",
+        "role": "auto",
+        "servfail": 0,
+        "spare": true,
+        "type": "udp",
+        "unanswered": 0,
+        "via": null
+      },
+      {
+        "avgMs": null,
+        "benched": false,
+        "fail": 0,
+        "id": "udp://45.90.30.126:53",
+        "late": 0,
+        "near": null,
+        "ok": 0,
+        "pathBlocked": false,
+        "paused": false,
+        "reason": null,
+        "region": null,
+        "regionSource": null,
+        "role": "fallback",
+        "servfail": 0,
+        "type": "udp",
+        "unanswered": 0,
+        "via": null
+      },
+      {
+        "avgMs": null,
+        "benched": false,
+        "fail": 0,
+        "id": "udp://1.0.0.2:53",
+        "late": 0,
+        "near": null,
+        "ok": 0,
+        "pathBlocked": false,
+        "paused": false,
+        "reason": null,
+        "region": null,
+        "regionSource": null,
+        "role": "fallback",
+        "servfail": 0,
+        "type": "udp",
+        "unanswered": 0,
+        "via": null
+      },
+      {
+        "avgMs": null,
+        "benched": false,
+        "fail": 0,
+        "id": "udp://8.8.4.4:53",
+        "late": 0,
+        "near": null,
+        "ok": 0,
+        "pathBlocked": false,
+        "paused": false,
+        "reason": null,
+        "region": null,
+        "regionSource": null,
+        "role": "fallback",
+        "servfail": 0,
+        "type": "udp",
+        "unanswered": 0,
+        "via": null
+      }
+    ],
+    "version": "3.5.1",
+    "warnings": []
+  }
 }

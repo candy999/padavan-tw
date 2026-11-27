@@ -1,1 +1,5510 @@
-{"ok":true,"result":{"azure":{"ranges":{"v4":119,"v6":100},"scan":{"dead":106,"global":11,"tw":3},"v4":[{"checkedAt":1794611246135,"ip":"13.107.213.73","ms":3.73,"pop":"TPE","speed":null},{"checkedAt":1794611246135,"ip":"150.171.84.52","ms":4.08,"peakAt":1794581816853,"peakMs":4.02,"pop":"TPE","speed":null},{"checkedAt":1794611246135,"ip":"13.107.246.76","ms":4.51,"peakAt":1794581816853,"peakMs":4.31,"pop":"TPE","speed":null},{"checkedAt":1794611246135,"ip":"150.171.85.30","ms":4.52,"pop":"TPE","speed":null}],"v6":[{"checkedAt":1794611246157,"ip":"2620:1ec:bdf::73","ms":3.95,"pop":"TPE"},{"checkedAt":1794611246157,"ip":"2603:1061:14:143::1","ms":4.2,"pop":"TPE"}]},"cloudflare":{"ranges":{"v4":14,"v6":7},"scan":{"dead":102,"global":60,"tw":76},"v4":[{"ip":"104.16.209.252","ms":3.37,"pop":"TPE","speed":2.18},{"ip":"104.18.2.86","ms":3.51,"pop":"TPE","speed":2.17},{"ip":"104.17.33.125","ms":3.89,"pop":"TPE","speed":2.17},{"ip":"104.19.60.217","ms":7.17,"pop":"KHH","speed":2.17},{"ip":"104.17.82.73","ms":3.5,"pop":"TPE","speed":2.15},{"ip":"104.19.45.15","ms":6.81,"pop":"KHH","speed":2.11},{"ip":"172.67.71.251","ms":3.36,"pop":"TPE","speed":null},{"ip":"162.159.251.34","ms":3.47,"pop":"TPE","speed":null},{"ip":"104.27.76.159","ms":3.52,"pop":"TPE","speed":null},{"ip":"104.20.51.27","ms":3.53,"pop":"TPE","speed":null},{"ip":"104.16.19.138","ms":3.54,"pop":"TPE","speed":null},{"ip":"162.159.4.19","ms":3.56,"pop":"TPE","speed":null}],"v6":[{"ip":"2a06:98c1:3100::6812:2755","ms":3.61,"pop":"TPE"},{"ip":"2606:4700:4400::ac40:910a","ms":3.91,"pop":"TPE"},{"ip":"2803:f800:53::3","ms":4.04,"pop":"TPE"},{"ip":"2606:4700:4405::6812:2ae3","ms":4.06,"pop":"TPE"},{"ip":"2606:4700:4402::6812:21d2","ms":4.09,"pop":"TPE"},{"ip":"2606:4700:440a::6812:2019","ms":4.19,"pop":"TPE"},{"ip":"2606:4700:7::35d","ms":4.22,"pop":"TPE"},{"ip":"2606:4700:4401::6812:2a99","ms":4.48,"pop":"TPE"},{"ip":"2606:4700:4700::1001","ms":4.57,"pop":"TPE"},{"ip":"2a06:98c1:3101::6812:202f","ms":4.61,"pop":"TPE"},{"ip":"2a06:98c1:3104::ac40:9936","ms":4.67,"pop":"TPE"},{"ip":"2a06:98c1:3101::6812:25b9","ms":4.67,"permanent":true,"pop":"TPE"},{"ip":"2606:4700:10f::a29f:c43d","ms":4.73,"pop":"TPE"},{"ip":"2a06:98c1:3102::6812:2057","ms":4.76,"permanent":true,"pop":"TPE"},{"ip":"2606:4700:440c::ac40:9ad3","ms":4.78,"permanent":true,"pop":"TPE"},{"ip":"2a06:98c1:310b::ac40:92d7","ms":4.84,"permanent":true,"pop":"TPE"},{"ip":"2606:4700:4403::ac40:9045","ms":5,"permanent":true,"pop":"TPE"},{"ip":"2606:4700:4408::ac40:985a","ms":5.35,"permanent":true,"pop":"TPE"},{"ip":"2606:4700:3108::ac42:2b36","ms":5.65,"permanent":true,"pop":"TPE"},{"ip":"2606:4700:440a::6812:21d9","ms":5.9,"permanent":true,"pop":"TPE"},{"ip":"2606:4700:4404::ac40:9b60","ms":6.02,"permanent":true,"pop":"TPE"},{"ip":"2a06:98c1:3105::ac40:9517","ms":6.39,"permanent":true,"pop":"TPE"},{"ip":"2606:4700:4406::6812:21ce","ms":6.68,"permanent":true,"pop":"TPE"},{"ip":"2606:4700:4403::ac40:94eb","ms":6.69,"permanent":true,"pop":"TPE"},{"ip":"2606:4700:7::35c","ms":6.73,"permanent":true,"pop":"TPE"}]},"cloudfront":{"ranges":{"v4":138,"v6":16},"scan":{"dead":1120,"global":1035,"tw":22},"v4":[{"checkedAt":1794611245217,"ip":"3.169.120.68","ms":3.13,"pop":"TPE","speed":2.49},{"checkedAt":1794611245217,"ip":"23.228.220.138","ms":3.22,"pop":"TPE","speed":2.45},{"checkedAt":1794611245217,"ip":"3.169.116.123","ms":3.24,"pop":"TPE","speed":2.49},{"checkedAt":1794611245217,"ip":"23.228.221.205","ms":3.26,"pop":"TPE","speed":2.39},{"checkedAt":1794611245217,"ip":"65.9.182.212","ms":3.44,"pop":"TPE","speed":2.41},{"checkedAt":1794611245217,"ip":"3.169.52.70","ms":3.63,"pop":"TPE","speed":2.4},{"checkedAt":1794611245217,"ip":"3.173.23.193","ms":3.65,"pop":"TPE","speed":2.51},{"checkedAt":1794611245217,"ip":"3.169.134.35","ms":3.79,"pop":"TPE","speed":2.5},{"checkedAt":1794611245217,"ip":"3.169.113.168","ms":3.88,"pop":"TPE","speed":2.4},{"checkedAt":1794611245217,"ip":"3.169.115.220","ms":3.94,"pop":"TPE","speed":2.48},{"checkedAt":1794611245217,"ip":"3.169.122.185","ms":4.13,"pop":"TPE","speed":2.5},{"checkedAt":1794611245217,"ip":"3.169.141.4","ms":4.34,"pop":"TPE","speed":2.51}],"v6":[{"checkedAt":1794611245830,"ip":"2600:9000:284f:2200:13:7da8:e380:93a1","ms":2.55,"permanent":true,"pop":"TPE"},{"checkedAt":1794611245830,"ip":"2600:9000:284f:4400:17:b174:6d00:93a1","ms":2.71,"permanent":true,"pop":"TPE"},{"checkedAt":1794611245830,"ip":"2600:9000:202f:d200:4:e131:5cc0:93a1","ms":2.72,"permanent":true,"pop":"TPE"},{"checkedAt":1794611245830,"ip":"2600:9000:202b:1200:e:1684:6580:93a1","ms":2.73,"permanent":true,"pop":"TPE"},{"checkedAt":1794611245830,"ip":"2600:9000:2834:cc00:e:159e:9f80:93a1","ms":2.8,"permanent":true,"pop":"TPE"},{"checkedAt":1794611245830,"ip":"2600:9000:2834:2e00:9:4855:aac0:93a1","ms":2.81,"pop":"TPE"},{"checkedAt":1794611245830,"ip":"2600:9000:202b:9200:9:6fca:6bc0:93a1","ms":2.82,"permanent":true,"pop":"TPE"},{"checkedAt":1794611245830,"ip":"2600:9000:284f:e600:6:4565:580:93a1","ms":2.82,"permanent":true,"pop":"TPE"},{"checkedAt":1794611245830,"ip":"2600:9000:284f:2200:19:faf0:e440:93a1","ms":2.92,"permanent":true,"pop":"TPE"},{"checkedAt":1794611245830,"ip":"2600:9000:202b:b800:1c:b22f:ad00:93a1","ms":2.93,"permanent":true,"pop":"TPE"},{"checkedAt":1794611245830,"ip":"2600:9000:284f:6600:16:bd7f:6200:93a1","ms":2.95,"permanent":true,"pop":"TPE"},{"checkedAt":1794611245830,"ip":"2600:9000:202f:ac00:4:e131:5cc0:93a1","ms":2.96,"permanent":true,"pop":"TPE"},{"checkedAt":1794611245830,"ip":"2600:9000:2834:6e00:e:159e:9f80:93a1","ms":2.98,"permanent":true,"pop":"TPE"},{"checkedAt":1794611245830,"ip":"2600:9000:284f:2200:17:b174:6d00:93a1","ms":2.98,"permanent":true,"pop":"TPE"},{"checkedAt":1794611245830,"ip":"2600:9000:202b:1000:4:8918:21c8:8e61","ms":2.99,"permanent":true,"pop":"TPE"},{"checkedAt":1794611245830,"ip":"2600:9000:202f:4200:2:b72:c9c0:93a1","ms":2.99,"permanent":true,"pop":"TPE"},{"checkedAt":1794611245830,"ip":"2600:9000:2834:a600:19:fa33:18c0:21","ms":3,"permanent":true,"pop":"TPE"},{"checkedAt":1794611245830,"ip":"2600:9000:2834:ce00:e:159e:9f80:93a1","ms":3,"permanent":true,"pop":"TPE"},{"checkedAt":1794611245830,"ip":"2600:9000:2834:c600:e:159e:9f80:93a1","ms":3.01,"permanent":true,"pop":"TPE"},{"checkedAt":1794611245830,"ip":"2600:9000:2834:3a00:f:633b:eec0:93a1","ms":3.03,"permanent":true,"pop":"TPE"},{"checkedAt":1794611245830,"ip":"2600:9000:202f:5e00:a:8f4b:53c0:93a1","ms":3.04,"permanent":true,"pop":"TPE"},{"checkedAt":1794611245830,"ip":"2600:9000:284f:ec00:17:b174:6d00:93a1","ms":3.05,"permanent":true,"pop":"TPE"},{"checkedAt":1794611245830,"ip":"2600:9000:202f:9200:19:7d10:bd80:93a1","ms":3.06,"permanent":true,"pop":"TPE"},{"checkedAt":1794611245830,"ip":"2600:9000:202f:a600:10:474e:104a:2961","ms":3.07,"permanent":true,"pop":"TPE"},{"checkedAt":1794611245830,"ip":"2600:9000:202f:8600:15:64f8:4200:93a1","ms":3.07,"permanent":true,"pop":"TPE"}]},"fastly":{"ranges":{"v4":18,"v6":3},"scan":{"dead":23,"global":14,"tw":0},"v4":[{"checkedAt":1794611890250,"ip":"167.82.22.32","jitter":1.11,"loss":0,"ms":23.52,"peakAt":1794581940256,"peakJitter":1.82,"peakLoss":0,"peakMs":23.16,"pop":"HKG","score":26.4,"speed":3.9},{"checkedAt":1794611890250,"ip":"167.82.21.125","jitter":0.66,"loss":0,"ms":25.24,"pop":"HKG","score":26.6,"speed":33.6},{"checkedAt":1794611890250,"ip":"167.82.20.85","jitter":1.09,"loss":0,"ms":25.27,"peakAt":1794581940256,"peakJitter":1.82,"peakLoss":0,"peakMs":23.24,"pop":"HKG","score":27.1,"speed":null},{"checkedAt":1794611890250,"ip":"199.232.161.188","jitter":0.45,"loss":0,"ms":33.51,"pop":"NRT","score":34.4,"speed":2.48},{"checkedAt":1794611890250,"ip":"151.101.66.198","jitter":0.62,"loss":0,"ms":33.86,"pop":"NRT","score":35.1,"speed":null},{"checkedAt":1794611890250,"ip":"167.82.82.83","jitter":5.05,"loss":0,"ms":25.42,"pop":"ITM","score":35.5,"speed":36.76},{"checkedAt":1794611890250,"ip":"199.232.163.119","jitter":0.9,"loss":0,"ms":33.95,"peakAt":1794581940256,"peakJitter":0.75,"peakLoss":0,"peakMs":34.17,"pop":"NRT","score":35.7,"speed":32.17},{"checkedAt":1794611890250,"ip":"146.75.20.186","jitter":5.99,"loss":0,"ms":34.63,"pop":"MNL","score":46.6,"speed":null},{"checkedAt":1794611890250,"ip":"146.75.51.79","jitter":0.48,"loss":0,"ms":46.01,"peakAt":1794581940256,"peakJitter":0.17,"peakLoss":0,"peakMs":46.58,"pop":"ICN","score":46.9,"speed":null},{"checkedAt":1794611890250,"ip":"146.75.49.94","jitter":0.35,"loss":0,"ms":46.48,"peakAt":1794581940256,"peakJitter":0.3,"peakLoss":0,"peakMs":46.6,"pop":"ICN","score":47.2,"speed":3.17},{"checkedAt":1794611890250,"ip":"146.75.48.97","jitter":0.64,"loss":0,"ms":46.14,"pop":"ICN","score":47.4,"speed":26.9},{"checkedAt":1794611890250,"ip":"146.75.22.98","jitter":13.5,"loss":0,"ms":34.91,"pop":"MNL","score":61.9,"speed":null},{"checkedAt":1794611890250,"ip":"146.75.23.58","jitter":10.31,"loss":0,"ms":54.69,"pop":"MNL","score":75.3,"speed":null},{"checkedAt":1794611890250,"ip":"199.232.219.27","jitter":19.56,"loss":0,"ms":37.81,"pop":"ITM","score":76.9,"speed":null},{"bad":"POP=HKG","checkedAt":1794611890250,"ip":"167.82.81.63","jitter":0.97,"loss":0,"ms":25.64,"peakAt":1794581940256,"peakJitter":3.13,"peakLoss":0,"peakMs":36.16,"pop":"ITM","score":37.5,"speed":null}],"v6":[]},"gcore":{"ranges":{"v4":416,"v6":337},"scan":{"dead":228,"global":172,"tw":0},"v4":[],"v6":[]}}}
+{"ok":true,"result":{
+  "azure": {
+    "quickRef": null,
+    "ranges": {
+      "v4": 119,
+      "v6": 100
+    },
+    "restricted": [
+      {
+        "hit": 0,
+        "inPool": true,
+        "ip": "2603:1061:14:143::1",
+        "missAt": 1795744301126,
+        "sites": 2,
+        "until": 1796349101126
+      },
+      {
+        "hit": 0,
+        "inPool": true,
+        "ip": "2620:1ec:bdf::73",
+        "missAt": 1795744300707,
+        "sites": 2,
+        "until": 1796349100707
+      }
+    ],
+    "restrictedTotal": 2,
+    "scan": {
+      "dead": 106,
+      "global": 11,
+      "tw": 3
+    },
+    "speedRef": null,
+    "speedRefWhy": "量到速度的節點只有 0 個（要 3 個）",
+    "v4": [
+      {
+        "checkedAt": 1795743341368,
+        "ip": "13.107.213.57",
+        "ms": 3.47,
+        "pop": "TPE",
+        "speed": null
+      },
+      {
+        "checkedAt": 1795743341368,
+        "ip": "150.171.84.14",
+        "ms": 3.82,
+        "pop": "TPE",
+        "speed": null
+      },
+      {
+        "checkedAt": 1795743341368,
+        "ip": "150.171.85.43",
+        "ms": 3.79,
+        "peakAt": 1795618441370,
+        "peakMs": 4.38,
+        "pop": "TPE",
+        "speed": null
+      },
+      {
+        "checkedAt": 1795743341368,
+        "ip": "13.107.246.59",
+        "ms": 4.28,
+        "pop": "TPE",
+        "speed": null
+      }
+    ],
+    "v6": [
+      {
+        "checkedAt": 1795743341496,
+        "ip": "2620:1ec:bdf::73",
+        "ms": 3.34,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743341496,
+        "ip": "2603:1061:14:143::1",
+        "ms": 4.05,
+        "pop": "TPE"
+      }
+    ]
+  },
+  "cloudflare": {
+    "quickRef": 2.12,
+    "ranges": {
+      "v4": 14,
+      "v6": 7
+    },
+    "restricted": [
+      {
+        "hit": 1,
+        "inPool": true,
+        "ip": "2803:f800:53::3",
+        "missAt": 1795523222590,
+        "sites": 6,
+        "until": 1796128022590
+      },
+      {
+        "hit": 0,
+        "inPool": true,
+        "ip": "2606:4700:7::35c",
+        "missAt": 1795523220819,
+        "sites": 4,
+        "until": 1796128020819
+      },
+      {
+        "hit": 0,
+        "inPool": true,
+        "ip": "2606:4700:3056::ac40:4542",
+        "missAt": 1795541222810,
+        "sites": 4,
+        "until": 1796146022810
+      },
+      {
+        "hit": 1,
+        "inPool": false,
+        "ip": "108.162.193.109",
+        "missAt": 1795526821098,
+        "sites": 3,
+        "until": 1796131621098
+      },
+      {
+        "hit": 0,
+        "inPool": true,
+        "ip": "162.159.23.103",
+        "missAt": 1795739505095,
+        "sites": 3,
+        "until": 1796344305095
+      },
+      {
+        "hit": 1,
+        "inPool": false,
+        "ip": "162.159.48.47",
+        "missAt": 1795562820192,
+        "sites": 3,
+        "until": 1796167620192
+      },
+      {
+        "hit": 0,
+        "inPool": true,
+        "ip": "162.159.142.250",
+        "missAt": 1795732305446,
+        "sites": 3,
+        "until": 1796337105446
+      },
+      {
+        "hit": 0,
+        "inPool": true,
+        "ip": "2606:4700:3055::ac40:4442",
+        "missAt": 1795582093790,
+        "sites": 2,
+        "until": 1796186893790
+      },
+      {
+        "hit": 0,
+        "inPool": true,
+        "ip": "2a06:98c1:52::3",
+        "missAt": 1795530427152,
+        "sites": 2,
+        "until": 1796135227152
+      }
+    ],
+    "restrictedTotal": 9,
+    "scan": {
+      "dead": 102,
+      "global": 59,
+      "tw": 76
+    },
+    "speedRef": 2.16,
+    "speedRefWhy": null,
+    "v4": [
+      {
+        "checkedAt": 1795743305123,
+        "ip": "104.18.24.139",
+        "ms": 2.39,
+        "pop": "TPE",
+        "sample": {
+          "bytes": 4651543,
+          "connectMs": 150.3,
+          "headSecs": 0.467,
+          "secs": 2.013,
+          "ttfbMs": 59
+        },
+        "slow": false,
+        "speed": 2.2
+      },
+      {
+        "checkedAt": 1795743305123,
+        "ip": "162.159.142.250",
+        "ms": 2.5,
+        "pop": "TPE",
+        "speed": null
+      },
+      {
+        "checkedAt": 1795743305123,
+        "ip": "104.16.17.61",
+        "ms": 2.55,
+        "pop": "TPE",
+        "sample": {
+          "bytes": 4520464,
+          "connectMs": 149.7,
+          "headSecs": 0.487,
+          "secs": 2.03,
+          "ttfbMs": 68.7
+        },
+        "slow": false,
+        "speed": 2.12
+      },
+      {
+        "checkedAt": 1795743305123,
+        "ip": "162.159.23.103",
+        "ms": 2.56,
+        "pop": "TPE",
+        "sample": {
+          "bytes": 1112602,
+          "connectMs": 151.5,
+          "headSecs": 0.463,
+          "quick": true,
+          "secs": 0.463,
+          "ttfbMs": 68.3
+        },
+        "slow": false,
+        "speed": 2.16
+      },
+      {
+        "checkedAt": 1795743305123,
+        "ip": "172.67.73.8",
+        "ms": 2.66,
+        "pop": "TPE",
+        "sample": {
+          "bytes": 1049803,
+          "connectMs": 150.1,
+          "headSecs": 0.481,
+          "quick": true,
+          "secs": 0.481,
+          "ttfbMs": 37.4
+        },
+        "slow": false,
+        "speed": 2.16
+      },
+      {
+        "checkedAt": 1795743305123,
+        "ip": "172.67.71.73",
+        "ms": 2.74,
+        "pop": "TPE",
+        "sample": {
+          "bytes": 1112596,
+          "connectMs": 150.9,
+          "headSecs": 0.492,
+          "quick": true,
+          "secs": 0.493,
+          "ttfbMs": 63.2
+        },
+        "slow": false,
+        "speed": 2.16
+      },
+      {
+        "checkedAt": 1795743305123,
+        "ip": "104.17.69.174",
+        "ms": 2.89,
+        "peakAt": 1795618403813,
+        "peakMs": 2.72,
+        "pop": "TPE",
+        "sample": {
+          "bytes": 1112599,
+          "connectMs": 151,
+          "headSecs": 0.498,
+          "quick": true,
+          "secs": 0.498,
+          "ttfbMs": 68.3
+        },
+        "slow": false,
+        "speed": 2.16
+      },
+      {
+        "checkedAt": 1795743305123,
+        "ip": "104.18.78.67",
+        "ms": 2.84,
+        "pop": "TPE",
+        "sample": {
+          "bytes": 4389404,
+          "connectMs": 151.6,
+          "headSecs": 0.49,
+          "secs": 2.02,
+          "ttfbMs": 62.4
+        },
+        "slow": false,
+        "speed": 2.07
+      },
+      {
+        "checkedAt": 1795743305123,
+        "ip": "172.66.44.247",
+        "ms": 2.89,
+        "pop": "TPE",
+        "sample": {
+          "bytes": 4586011,
+          "connectMs": 182.1,
+          "headSecs": 0.471,
+          "secs": 2.024,
+          "ttfbMs": 58
+        },
+        "slow": false,
+        "speed": 2.16
+      },
+      {
+        "checkedAt": 1795743305123,
+        "ip": "172.66.158.70",
+        "ms": 2.92,
+        "pop": "TPE",
+        "sample": {
+          "bytes": 1112608,
+          "connectMs": 153.2,
+          "headSecs": 0.487,
+          "quick": true,
+          "secs": 0.488,
+          "ttfbMs": 64.8
+        },
+        "slow": false,
+        "speed": 2.16
+      },
+      {
+        "checkedAt": 1795743305123,
+        "ip": "104.24.250.231",
+        "ms": 3.02,
+        "pop": "TPE",
+        "sample": {
+          "bytes": 1112601,
+          "connectMs": 151.4,
+          "headSecs": 0.481,
+          "quick": true,
+          "secs": 0.481,
+          "ttfbMs": 837.2
+        },
+        "slow": false,
+        "speed": 2.16
+      },
+      {
+        "checkedAt": 1795743305123,
+        "ip": "104.18.94.198",
+        "ms": 3.1,
+        "pop": "TPE",
+        "sample": {
+          "bytes": 1112603,
+          "connectMs": 149.9,
+          "headSecs": 0.483,
+          "quick": true,
+          "secs": 0.483,
+          "ttfbMs": 70.9
+        },
+        "slow": false,
+        "speed": 2.16
+      }
+    ],
+    "v6": [
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2a06:98c1:3101::ac40:9bd6",
+        "ms": 2.18,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:101::a29f:c23d",
+        "ms": 2.39,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700::6812:4139",
+        "ms": 2.41,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:10f::a29f:c440",
+        "ms": 2.42,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:3055::ac40:443d",
+        "ms": 2.42,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:4401::ac40:9647",
+        "ms": 2.43,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700::6812:df3",
+        "ms": 2.45,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2a06:98c1:310d::6812:2bcc",
+        "ms": 2.47,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2a06:98c1:3105::ac40:9517",
+        "ms": 2.49,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2a06:98c1:58::77",
+        "ms": 2.51,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:310c::ac42:2d13",
+        "ms": 2.51,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:4407::6812:28fa",
+        "ms": 2.51,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700::6810:b8f1",
+        "ms": 2.51,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2a06:98c1:3108::6812:2bbb",
+        "ms": 2.52,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:10f::a29f:c442",
+        "ms": 2.52,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:440a::6812:2019",
+        "ms": 2.52,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:440c::ac40:9ad3",
+        "ms": 2.53,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2a06:98c1:3108::6812:2894",
+        "ms": 2.55,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:4403::ac40:94eb",
+        "ms": 2.55,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2a06:98c1:3101::6812:25b9",
+        "ms": 2.55,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2a06:98c1:3103::ac40:94ab",
+        "ms": 2.55,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:4401::6812:2a99",
+        "ms": 2.55,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:4406::ac40:936c",
+        "ms": 2.55,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:4404::6812:2844",
+        "ms": 2.58,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2a06:98c1:58::35c",
+        "ms": 2.58,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2a06:98c1:3101::6812:202f",
+        "ms": 2.58,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:4406::6812:25b6",
+        "ms": 2.59,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:4400::ac40:911d",
+        "ms": 2.59,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2a06:98c1:3104::ac40:9936",
+        "ms": 2.59,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:3055::ac40:4442",
+        "ms": 2.6,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2a06:98c1:3102::6812:254a",
+        "ms": 2.61,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2a06:98c1:3109::6812:23a6",
+        "ms": 2.62,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:4403::ac40:9045",
+        "ms": 2.62,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:4404::6812:20a0",
+        "ms": 2.62,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2a06:98c1:3106::6812:26e9",
+        "ms": 2.63,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:440d::ac40:9167",
+        "ms": 2.63,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2a06:98c1:310d::6812:2542",
+        "ms": 2.63,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2a06:98c1:3107::ac40:9a0c",
+        "ms": 2.65,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2a06:98c1:58::f3",
+        "ms": 2.66,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:440b::6812:24f4",
+        "ms": 2.66,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:130:436c:6f75:6466:6c61:7265",
+        "ms": 2.66,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700::6812:5e29",
+        "ms": 2.68,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:4407::ac40:96b6",
+        "ms": 2.69,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:90:0:d07b:9ee:98f9:e98",
+        "ms": 2.7,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:440c::ac40:90ca",
+        "ms": 2.7,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:440a::6812:22ca",
+        "ms": 2.72,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2a06:98c1:58::1fd",
+        "ms": 2.73,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:4409::ac40:961c",
+        "ms": 2.73,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:4407::ac40:9be7",
+        "ms": 2.75,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2a06:98c1:310c::ac40:9838",
+        "ms": 2.75,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:20::ac43:44b9",
+        "ms": 2.75,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:4406::6812:21ce",
+        "ms": 2.77,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:4402::6812:21d2",
+        "ms": 2.78,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:3108::ac42:28ca",
+        "ms": 2.79,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:7::35d",
+        "ms": 2.79,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:4409::ac40:94f0",
+        "ms": 2.79,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:440a::6812:21d9",
+        "ms": 2.79,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:4401::ac40:9a2e",
+        "ms": 2.8,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2a06:98c1:3102::6812:2057",
+        "ms": 2.81,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:4409::ac40:970c",
+        "ms": 2.83,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:20::681a:8b1",
+        "ms": 2.83,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:90:0:f22e:fbec:5bed:a9b9",
+        "ms": 2.84,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2a06:98c1:310b::ac40:9262",
+        "ms": 2.84,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:4405::6812:2ae3",
+        "ms": 2.85,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:440d::6812:2bdb",
+        "ms": 2.85,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:7::f3",
+        "ms": 2.86,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2a06:98c1:3109::6812:2159",
+        "ms": 2.86,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2a06:98c1:3105::6812:247a",
+        "ms": 2.87,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:4408::ac40:9bd1",
+        "ms": 2.87,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:20::681a:195",
+        "ms": 2.88,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:3056::ac40:453d",
+        "ms": 2.88,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:4402::6812:25e4",
+        "ms": 2.88,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:310c::ac42:2fb3",
+        "ms": 2.89,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2a06:98c1:52::4",
+        "ms": 2.9,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:20::681a:9b1",
+        "ms": 2.91,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:440d::6812:2710",
+        "ms": 2.91,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:49::",
+        "ms": 2.91,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2803:f800:53::4",
+        "ms": 2.91,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:4700::1111",
+        "ms": 2.92,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2a06:98c1:3102::6812:21f4",
+        "ms": 2.92,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:4404::ac40:9b60",
+        "ms": 2.92,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:7::35c",
+        "ms": 2.92,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:440b::ac40:9034",
+        "ms": 2.92,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2a06:98c1:3105::6812:2af6",
+        "ms": 2.93,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:3108::ac42:2b36",
+        "ms": 2.93,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:4403::6812:2089",
+        "ms": 2.94,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2a06:98c1:52::3",
+        "ms": 2.96,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:440c::ac40:9a32",
+        "ms": 2.97,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700::6812:cf3",
+        "ms": 2.98,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2a06:98c1:310c::ac40:920f",
+        "ms": 2.98,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:440b::6812:2715",
+        "ms": 2.98,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:101::a29f:c240",
+        "ms": 2.98,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700::6812:4239",
+        "ms": 2.98,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2a06:98c1:3100::6812:2755",
+        "ms": 2.98,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:20::ac43:4741",
+        "ms": 3,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2a06:98c1:3103::ac40:9b77",
+        "ms": 3.01,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2a06:98c1:3103::ac40:9ba9",
+        "ms": 3.01,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:4400::ac40:910a",
+        "ms": 3.01,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:7::1fd",
+        "ms": 3.01,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2803:f800:53::3",
+        "ms": 3.01,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2a06:98c1:310d::6812:212d",
+        "ms": 3.02,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:3056::ac40:4540",
+        "ms": 3.03,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:4400::6812:29f1",
+        "ms": 3.03,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:4408::ac40:985a",
+        "ms": 3.05,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:10f::a29f:c43d",
+        "ms": 3.05,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2a06:98c1:310c::6812:202a",
+        "ms": 3.06,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:20::681a:95",
+        "ms": 3.06,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:101::a29f:c242",
+        "ms": 3.06,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2a06:98c1:3109::ac40:9aa7",
+        "ms": 3.07,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2a06:98c1:3108::6812:299e",
+        "ms": 3.09,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:3108::ac42:288b",
+        "ms": 3.13,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:4402::ac40:947d",
+        "ms": 3.16,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:3056::ac40:4542",
+        "ms": 3.21,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:310c::ac42:2c4d",
+        "ms": 3.22,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2a06:98c1:310b::ac40:92d7",
+        "ms": 3.25,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:4700::1001",
+        "ms": 3.35,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2a06:98c1:3107::6812:23b4",
+        "ms": 3.46,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:300a::6813:c21d",
+        "ms": 5.93,
+        "permanent": true,
+        "pop": "KHH"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:a0::10",
+        "ms": 6.05,
+        "permanent": true,
+        "pop": "KHH"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:a0::3",
+        "ms": 7.02,
+        "permanent": true,
+        "pop": "KHH"
+      },
+      {
+        "checkedAt": 1795743312191,
+        "ip": "2606:4700:a0::1",
+        "ms": 7.27,
+        "permanent": true,
+        "pop": "KHH"
+      }
+    ]
+  },
+  "cloudfront": {
+    "quickRef": 1.0,
+    "ranges": {
+      "v4": 139,
+      "v6": 16
+    },
+    "restricted": [],
+    "restrictedTotal": 0,
+    "scan": {
+      "dead": 1114,
+      "global": 1028,
+      "tw": 24
+    },
+    "speedRef": 1.77,
+    "speedRefWhy": null,
+    "v4": [
+      {
+        "checkedAt": 1795743313268,
+        "ip": "3.169.53.109",
+        "ms": 2.3,
+        "pop": "TPE",
+        "sample": {
+          "bytes": 1063448,
+          "connectMs": 39.5,
+          "headSecs": 1.108,
+          "quick": true,
+          "secs": 1.108,
+          "ttfbMs": 570.4
+        },
+        "slow": false,
+        "speed": 1.77
+      },
+      {
+        "checkedAt": 1795743313268,
+        "ip": "3.169.117.200",
+        "ms": 2.5,
+        "pop": "TPE",
+        "sample": {
+          "bytes": 1110572,
+          "connectMs": 38.6,
+          "headSecs": 1.022,
+          "quick": true,
+          "secs": 1.022,
+          "ttfbMs": 588.7
+        },
+        "slow": false,
+        "speed": 1.77
+      },
+      {
+        "checkedAt": 1795743313268,
+        "ip": "3.169.51.181",
+        "ms": 2.57,
+        "pop": "TPE",
+        "sample": {
+          "bytes": 1075736,
+          "connectMs": 37.6,
+          "headSecs": 1.006,
+          "quick": true,
+          "secs": 1.006,
+          "ttfbMs": 588.4
+        },
+        "slow": false,
+        "speed": 1.77
+      },
+      {
+        "checkedAt": 1795743313268,
+        "ip": "3.169.137.2",
+        "ms": 2.63,
+        "pop": "TPE",
+        "sample": {
+          "bytes": 1084952,
+          "connectMs": 38.6,
+          "headSecs": 1.078,
+          "quick": true,
+          "secs": 1.078,
+          "ttfbMs": 590.6
+        },
+        "slow": false,
+        "speed": 1.77
+      },
+      {
+        "checkedAt": 1795743313268,
+        "ip": "3.169.132.26",
+        "ms": 2.65,
+        "pop": "TPE",
+        "sample": {
+          "bytes": 3575320,
+          "connectMs": 37.6,
+          "headSecs": 1.063,
+          "secs": 2.014,
+          "ttfbMs": 569.8
+        },
+        "slow": false,
+        "speed": 1.69
+      },
+      {
+        "checkedAt": 1795743313268,
+        "ip": "3.169.49.157",
+        "ms": 2.8,
+        "pop": "TPE",
+        "sample": {
+          "bytes": 3762712,
+          "connectMs": 37.3,
+          "headSecs": 1.012,
+          "secs": 2.022,
+          "ttfbMs": 636.8
+        },
+        "slow": false,
+        "speed": 1.77
+      },
+      {
+        "checkedAt": 1795743313268,
+        "ip": "3.169.58.106",
+        "ms": 2.86,
+        "pop": "TPE",
+        "sample": {
+          "bytes": 1075736,
+          "connectMs": 40,
+          "headSecs": 0.987,
+          "quick": true,
+          "secs": 0.987,
+          "ttfbMs": 565.6
+        },
+        "slow": false,
+        "speed": 1.77
+      },
+      {
+        "checkedAt": 1795743313268,
+        "ip": "3.169.61.192",
+        "ms": 2.92,
+        "pop": "TPE",
+        "sample": {
+          "bytes": 1075736,
+          "connectMs": 38.6,
+          "headSecs": 1.008,
+          "quick": true,
+          "secs": 1.008,
+          "ttfbMs": 578.4
+        },
+        "slow": false,
+        "speed": 1.77
+      },
+      {
+        "checkedAt": 1795743313268,
+        "ip": "54.192.255.207",
+        "ms": 2.94,
+        "pop": "TPE",
+        "sample": {
+          "bytes": 3762712,
+          "connectMs": 39.5,
+          "headSecs": 0.998,
+          "secs": 2.02,
+          "ttfbMs": 576.1
+        },
+        "slow": false,
+        "speed": 1.78
+      },
+      {
+        "checkedAt": 1795743313268,
+        "ip": "3.169.59.76",
+        "ms": 2.98,
+        "pop": "TPE",
+        "sample": {
+          "bytes": 1075736,
+          "connectMs": 39.2,
+          "headSecs": 1,
+          "quick": true,
+          "secs": 1,
+          "ttfbMs": 567.7
+        },
+        "slow": false,
+        "speed": 1.77
+      },
+      {
+        "checkedAt": 1795743313268,
+        "ip": "3.169.55.91",
+        "ms": 2.99,
+        "pop": "TPE",
+        "sample": {
+          "bytes": 3666476,
+          "connectMs": 37.9,
+          "headSecs": 0.985,
+          "secs": 2.025,
+          "ttfbMs": 570.7
+        },
+        "slow": false,
+        "speed": 1.73
+      },
+      {
+        "checkedAt": 1795743313268,
+        "ip": "65.9.178.20",
+        "ms": 3.05,
+        "pop": "TPE",
+        "sample": {
+          "bytes": 1075736,
+          "connectMs": 37.7,
+          "headSecs": 1.014,
+          "quick": true,
+          "secs": 1.014,
+          "ttfbMs": 587.8
+        },
+        "slow": false,
+        "speed": 1.77
+      }
+    ],
+    "v6": [
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:2834:b800:e:159e:9f80:93a1",
+        "ms": 2.27,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:5400:17:b174:6d00:93a1",
+        "ms": 2.34,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:ae00:18:f77e:6800:93a1",
+        "ms": 2.35,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:8a00:1a:34da:380:93a1",
+        "ms": 2.53,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:2834:f400:15:1ea0:2240:93a1",
+        "ms": 2.34,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:2834:6e00:e:159e:9f80:93a1",
+        "ms": 2.35,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:f000:4:8e3b:dd40:93a1",
+        "ms": 2.37,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:8c00:1b:c68a:a80:93a1",
+        "ms": 2.37,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:d000:16:bd7f:6200:93a1",
+        "ms": 2.4,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:c800:13:7da8:e380:93a1",
+        "ms": 2.4,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:2834:3400:e:159e:9f80:93a1",
+        "ms": 2.4,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:1400:13:7da8:e380:93a1",
+        "ms": 2.4,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:a00:1c:fb44:3380:93a1",
+        "ms": 2.41,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:4400:17:b174:6d00:93a1",
+        "ms": 2.41,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:2834:1e00:e:159e:9f80:93a1",
+        "ms": 2.42,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:2200:13:7da8:e380:93a1",
+        "ms": 2.42,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:2000:19:7d10:bd80:93a1",
+        "ms": 2.44,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:3e00:13:7da8:e380:93a1",
+        "ms": 2.44,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:c00:1c:bc7a:5e00:93a1",
+        "ms": 2.44,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:fe00:1:39f6:5680:21",
+        "ms": 2.45,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:4400:11:4855:ec00:93a1",
+        "ms": 2.46,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:f800:17:b174:6d00:93a1",
+        "ms": 2.46,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:1e00:1b:c68a:a80:93a1",
+        "ms": 2.46,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:2834:fe00:e:159e:9f80:93a1",
+        "ms": 2.47,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:2200:17:b174:6d00:93a1",
+        "ms": 2.47,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:8600:15:415:cc40:93a1",
+        "ms": 2.47,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:7600:19:faf0:e440:93a1",
+        "ms": 2.47,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:2200:4:ad59:d700:93a1",
+        "ms": 2.48,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:2834:c600:e:159e:9f80:93a1",
+        "ms": 2.49,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:2834:3200:19:fa33:18c0:21",
+        "ms": 2.49,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:2834:2e00:9:4855:aac0:93a1",
+        "ms": 2.5,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:fc00:16:bd7f:6200:93a1",
+        "ms": 2.5,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:7000:17:b174:6d00:93a1",
+        "ms": 2.5,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:c00:7:2398:3e00:21",
+        "ms": 2.51,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:a00:10:474e:104a:2961",
+        "ms": 2.51,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:3000:10:474e:104a:2961",
+        "ms": 2.51,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:2834:a400:19:fa33:18c0:21",
+        "ms": 2.52,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:9000:1f:8fbc:3940:93a1",
+        "ms": 2.52,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:2834:de00:e:159e:9f80:93a1",
+        "ms": 2.52,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:3e00:4:e131:5cc0:93a1",
+        "ms": 2.52,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:9c00:15:415:cc40:93a1",
+        "ms": 2.52,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:6e00:19:7d10:bd80:93a1",
+        "ms": 2.53,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284c:7800:c:35e7:f300:93a1",
+        "ms": 2.53,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:ac00:4:e131:5cc0:93a1",
+        "ms": 2.53,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:3e00:1f:2bfa:6c40:93a1",
+        "ms": 2.53,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:a200:17:b174:6d00:93a1",
+        "ms": 2.53,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:9e00:17:b174:6d00:93a1",
+        "ms": 2.53,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:cc00:f:9b8:8140:93a1",
+        "ms": 2.54,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:2834:c800:e:159e:9f80:93a1",
+        "ms": 2.54,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:2800:1c:fb44:3380:93a1",
+        "ms": 2.54,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:2834:c800:15:1ea0:2240:93a1",
+        "ms": 2.55,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:f800:13:7da8:e380:93a1",
+        "ms": 2.55,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:f200:a:be49:6240:93a1",
+        "ms": 2.55,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:d000:c:6410:b940:93a1",
+        "ms": 2.55,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:e400:9:6bcc:55c0:93a1",
+        "ms": 2.55,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:a600:7:2398:3e00:21",
+        "ms": 2.56,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:6e00:f:9b8:8140:93a1",
+        "ms": 2.56,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:2834:6400:19:fa33:18c0:21",
+        "ms": 2.56,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:8400:15:64f8:4200:93a1",
+        "ms": 2.56,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:3a00:f:27a3:fbc0:93a1",
+        "ms": 2.56,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:be00:12:e175:aec0:93a1",
+        "ms": 2.56,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:2834:2c00:e:159e:9f80:93a1",
+        "ms": 2.56,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:5c00:17:b174:6d00:93a1",
+        "ms": 2.57,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:9000:7:2398:3e00:21",
+        "ms": 2.57,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:fa00:4:e131:5cc0:93a1",
+        "ms": 2.57,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:2200:7:2398:3e00:21",
+        "ms": 2.57,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:4e00:17:b174:6d00:93a1",
+        "ms": 2.58,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:b600:10:474e:104a:2961",
+        "ms": 2.58,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:d400:11:4855:ec00:93a1",
+        "ms": 2.58,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:ec00:10:474e:104a:2961",
+        "ms": 2.58,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:1a00:1c:b22f:ad00:93a1",
+        "ms": 2.58,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:ec00:7:2398:3e00:21",
+        "ms": 2.58,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:9400:19:faf0:e440:93a1",
+        "ms": 2.58,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:d200:b:3cbe:7740:93a1",
+        "ms": 2.58,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:e400:11:5299:1c00:93a1",
+        "ms": 2.58,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:7800:2:52f7:ea40:93a1",
+        "ms": 2.59,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:3200:c:6410:b940:93a1",
+        "ms": 2.59,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:4e00:4:e131:5cc0:93a1",
+        "ms": 2.59,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:da00:4:e131:5cc0:93a1",
+        "ms": 2.59,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:d800:7:7595:4a80:93a1",
+        "ms": 2.59,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:b000:4:e131:5cc0:93a1",
+        "ms": 2.59,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:8a00:f:7d85:1040:21",
+        "ms": 2.59,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:5600:6:4565:580:93a1",
+        "ms": 2.59,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:c400:7:2398:3e00:21",
+        "ms": 2.59,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:3a00:b:3cbe:7740:93a1",
+        "ms": 2.6,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:6000:1a:34da:380:93a1",
+        "ms": 2.6,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:2c00:13:7da8:e380:93a1",
+        "ms": 2.6,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:7000:7:49a5:5fd6:da1",
+        "ms": 2.61,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:ca00:9:6bcc:55c0:93a1",
+        "ms": 2.61,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:4c00:6:4565:580:93a1",
+        "ms": 2.61,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:7600:1c:70ca:66c0:93a1",
+        "ms": 2.62,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:6400:4:e131:5cc0:93a1",
+        "ms": 2.62,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:3600:19:7d10:bd80:93a1",
+        "ms": 2.62,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:1000:16:b7c1:cd80:93a1",
+        "ms": 2.62,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:ee00:17:b174:6d00:93a1",
+        "ms": 2.62,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:5000:7:49a5:5fd6:da1",
+        "ms": 2.63,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:3400:1f:2bfa:6c40:93a1",
+        "ms": 2.63,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:600:1:39f6:5680:21",
+        "ms": 2.64,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:ca00:18:c55a:9580:93a1",
+        "ms": 2.64,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:9e00:d:5e12:aa80:93a1",
+        "ms": 2.64,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:4200:15:415:cc40:93a1",
+        "ms": 2.65,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:de00:6:6352:27c0:93a1",
+        "ms": 2.65,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:bc00:1c:70ca:66c0:93a1",
+        "ms": 2.65,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:2a00:b:3cbe:7740:93a1",
+        "ms": 2.65,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:7800:c:6410:b940:93a1",
+        "ms": 2.65,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:b600:f:7d85:1040:21",
+        "ms": 2.66,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:d000:7:2398:3e00:21",
+        "ms": 2.66,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:bc00:1:39f6:5680:21",
+        "ms": 2.66,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:2a00:9:6fca:6bc0:93a1",
+        "ms": 2.66,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:3e00:1a:34da:380:93a1",
+        "ms": 2.66,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:ea00:10:474e:104a:2961",
+        "ms": 2.66,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:2400:9:6fca:6bc0:93a1",
+        "ms": 2.67,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:5c00:12:e175:aec0:93a1",
+        "ms": 2.67,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:1a00:4:e131:5cc0:93a1",
+        "ms": 2.67,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:8a00:11:5299:1c00:93a1",
+        "ms": 2.67,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:9000:18:c55a:9580:93a1",
+        "ms": 2.67,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:c800:12:e175:aec0:93a1",
+        "ms": 2.67,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:e800:1:39f6:5680:21",
+        "ms": 2.67,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:9a00:a:be49:6240:93a1",
+        "ms": 2.67,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:2834:f800:e:159e:9f80:93a1",
+        "ms": 2.67,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:8400:16:b7c1:cd80:93a1",
+        "ms": 2.67,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:d000:17:27c0:c200:93a1",
+        "ms": 2.67,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:d600:17:b174:6d00:93a1",
+        "ms": 2.68,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:be00:9:a3a2:37c0:93a1",
+        "ms": 2.68,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:2200:8:2309:a9c0:93a1",
+        "ms": 2.68,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:a000:1b:9fda:ce00:93a1",
+        "ms": 2.68,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:9200:a:be49:6240:93a1",
+        "ms": 2.68,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:3000:4:11e9:cac0:93a1",
+        "ms": 2.68,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:6c00:c:6410:b940:93a1",
+        "ms": 2.68,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:7000:b:a278:700:93a1",
+        "ms": 2.69,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:4000:1c:70ca:66c0:93a1",
+        "ms": 2.69,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:3000:1:39f6:5680:21",
+        "ms": 2.69,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:ca00:15:38ec:1c00:93a1",
+        "ms": 2.69,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:d800:1c:b22f:ad00:93a1",
+        "ms": 2.69,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:3c00:15:64f8:4200:93a1",
+        "ms": 2.69,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:2834:a800:9:4855:aac0:93a1",
+        "ms": 2.7,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:5000:b:3cbe:7740:93a1",
+        "ms": 2.7,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:2800:1:39f6:5680:21",
+        "ms": 2.7,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:5000:1c:df99:ffc0:93a1",
+        "ms": 2.7,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:fa00:1a:34da:380:93a1",
+        "ms": 2.7,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:fe00:1c:b22f:ad00:93a1",
+        "ms": 2.7,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:7400:13:7da8:e380:93a1",
+        "ms": 2.7,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:c00:10:474e:104a:2961",
+        "ms": 2.71,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:ba00:1a:34da:380:93a1",
+        "ms": 2.71,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:fc00:1a:34da:380:93a1",
+        "ms": 2.71,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:ce00:4:8918:21c8:8e61",
+        "ms": 2.72,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:da00:7:2398:3e00:21",
+        "ms": 2.72,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:3000:e:68cb:b280:21",
+        "ms": 2.72,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:9200:19:7d10:bd80:93a1",
+        "ms": 2.73,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:8a00:17:bd8a:c9c0:21",
+        "ms": 2.73,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:de00:1b:63a9:5900:93a1",
+        "ms": 2.73,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:3600:1b:63a9:5900:93a1",
+        "ms": 2.73,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:1000:9:6bcc:55c0:93a1",
+        "ms": 2.73,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:ee00:b:3cbe:7740:93a1",
+        "ms": 2.73,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:f800:1f:8fbc:3940:93a1",
+        "ms": 2.73,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:c000:1f:2bfa:6c40:93a1",
+        "ms": 2.73,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:f000:1f:8fbc:3940:93a1",
+        "ms": 2.74,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:ba00:4:8918:21c8:8e61",
+        "ms": 2.74,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:ac00:10:474e:104a:2961",
+        "ms": 2.74,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:1000:1c:b22f:ad00:93a1",
+        "ms": 2.74,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:9600:4:8918:21c8:8e61",
+        "ms": 2.74,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:f200:17:27c0:c200:93a1",
+        "ms": 2.74,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:9400:17:5213:680:21",
+        "ms": 2.74,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:2834:ce00:e:159e:9f80:93a1",
+        "ms": 2.75,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:e200:15:38ec:1c00:93a1",
+        "ms": 2.75,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:f800:4:8918:21c8:8e61",
+        "ms": 2.75,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:2834:1a00:1:39f6:5680:21",
+        "ms": 2.75,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:9c00:1b:c68a:a80:93a1",
+        "ms": 2.75,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:3400:b:3cbe:7740:93a1",
+        "ms": 2.75,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:c400:2:8419:4140:93a1",
+        "ms": 2.75,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:ce00:7:2398:3e00:21",
+        "ms": 2.75,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:a400:1a:25e4:5c80:93a1",
+        "ms": 2.76,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:8600:1c:70ca:66c0:93a1",
+        "ms": 2.76,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:de00:4:8918:21c8:8e61",
+        "ms": 2.76,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:d600:10:474e:104a:2961",
+        "ms": 2.76,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:d600:1b:c68a:a80:93a1",
+        "ms": 2.76,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:200:f:7d85:1040:21",
+        "ms": 2.76,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:5c00:1c:b22f:ad00:93a1",
+        "ms": 2.77,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:3800:c:6410:b940:93a1",
+        "ms": 2.77,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:d200:9:a3a2:37c0:93a1",
+        "ms": 2.77,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:b200:16:b7c1:cd80:93a1",
+        "ms": 2.77,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284c:bc00:a:c66a:55c0:93a1",
+        "ms": 2.77,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:c200:10:474e:104a:2961",
+        "ms": 2.77,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284c:ea00:c:35e7:f300:93a1",
+        "ms": 2.77,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:2e00:f:7d85:1040:21",
+        "ms": 2.77,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:d800:1:39f6:5680:21",
+        "ms": 2.77,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:4e00:f:27a3:fbc0:93a1",
+        "ms": 2.77,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:c00:15:415:cc40:93a1",
+        "ms": 2.78,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:2834:de00:1:39f6:5680:21",
+        "ms": 2.78,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:7400:17:27c0:c200:93a1",
+        "ms": 2.78,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:ea00:17:b174:6d00:93a1",
+        "ms": 2.78,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:2834:3600:1:39f6:5680:21",
+        "ms": 2.78,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:a400:9:6bcc:55c0:93a1",
+        "ms": 2.78,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:2e00:9:6bcc:55c0:93a1",
+        "ms": 2.78,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:d200:9:6bcc:55c0:93a1",
+        "ms": 2.78,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:ca00:b:e23f:140:93a1",
+        "ms": 2.79,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:7c00:10:474e:104a:2961",
+        "ms": 2.79,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:1000:a:b89d:a6c0:93a1",
+        "ms": 2.79,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:5600:4:e131:5cc0:93a1",
+        "ms": 2.79,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:b400:18:f77e:6800:93a1",
+        "ms": 2.79,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:d400:4:8918:21c8:8e61",
+        "ms": 2.79,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:c800:10:474e:104a:2961",
+        "ms": 2.79,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:9200:9:6fca:6bc0:93a1",
+        "ms": 2.79,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:d800:4:e131:5cc0:93a1",
+        "ms": 2.79,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:800:4:8918:21c8:8e61",
+        "ms": 2.79,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:9800:1c:fb44:3380:93a1",
+        "ms": 2.79,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:ae00:4:e131:5cc0:93a1",
+        "ms": 2.79,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:ea00:4:8918:21c8:8e61",
+        "ms": 2.79,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:7400:4:8918:21c8:8e61",
+        "ms": 2.79,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:2834:d800:19:fa33:18c0:21",
+        "ms": 2.8,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:7e00:1c:b22f:ad00:93a1",
+        "ms": 2.8,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:fe00:f:936:7b40:93a1",
+        "ms": 2.8,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:b000:2:1958:ab00:93a1",
+        "ms": 2.8,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284c:3400:10:18d5:5480:93a1",
+        "ms": 2.8,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:4a00:11:17f0:7d80:93a1",
+        "ms": 2.8,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:6a00:4:8918:21c8:8e61",
+        "ms": 2.8,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:fa00:4:8918:21c8:8e61",
+        "ms": 2.8,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:5800:19:c6d0:8a00:93a1",
+        "ms": 2.8,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:f600:17:b174:6d00:93a1",
+        "ms": 2.8,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284c:3c00:10:18d5:5480:93a1",
+        "ms": 2.8,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:e000:12:e175:aec0:93a1",
+        "ms": 2.8,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:9a00:1e:b249:fc0:93a1",
+        "ms": 2.8,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:dc00:4:8918:21c8:8e61",
+        "ms": 2.8,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284c:4600:10:18d5:5480:93a1",
+        "ms": 2.8,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:0:17:b174:6d00:93a1",
+        "ms": 2.81,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:5e00:1:6feb:fdc0:93a1",
+        "ms": 2.81,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:200:16:6f31:b980:93a1",
+        "ms": 2.81,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:2834:5a00:19:fa33:18c0:21",
+        "ms": 2.81,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:ec00:2:8419:4140:93a1",
+        "ms": 2.81,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:be00:3:db06:4200:93a1",
+        "ms": 2.81,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:0:1a:34da:380:93a1",
+        "ms": 2.81,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:e00:1f:8fbc:3940:93a1",
+        "ms": 2.81,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:7c00:a:be49:6240:93a1",
+        "ms": 2.81,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:ee00:1a:34da:380:93a1",
+        "ms": 2.81,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:6000:9:a3a2:37c0:93a1",
+        "ms": 2.82,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:7400:7:2398:3e00:21",
+        "ms": 2.82,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:a000:b:e23f:140:93a1",
+        "ms": 2.82,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:ba00:1:6feb:fdc0:93a1",
+        "ms": 2.82,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:c600:7:2398:3e00:21",
+        "ms": 2.82,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:2c00:f:936:7b40:93a1",
+        "ms": 2.82,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:2834:de00:16:7463:9c0:93a1",
+        "ms": 2.82,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:2600:4:e131:5cc0:93a1",
+        "ms": 2.82,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:a400:f:9b8:8140:93a1",
+        "ms": 2.82,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:fe00:16:b7c1:cd80:93a1",
+        "ms": 2.82,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:e200:9:6fca:6bc0:93a1",
+        "ms": 2.82,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:5200:15:64f8:4200:93a1",
+        "ms": 2.83,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:2400:13:7da8:e380:93a1",
+        "ms": 2.83,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:e000:7:2398:3e00:21",
+        "ms": 2.83,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:8000:1a:34da:380:93a1",
+        "ms": 2.83,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:6600:16:bd7f:6200:93a1",
+        "ms": 2.83,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:c800:a:8f4b:53c0:93a1",
+        "ms": 2.83,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:1800:1b:c68a:a80:93a1",
+        "ms": 2.83,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:fe00:2:8419:4140:93a1",
+        "ms": 2.83,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:d400:1a:34da:380:93a1",
+        "ms": 2.83,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:ee00:7:2398:3e00:21",
+        "ms": 2.83,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:b400:2:8419:4140:93a1",
+        "ms": 2.83,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:1200:e:1684:6580:93a1",
+        "ms": 2.83,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:4400:4:8918:21c8:8e61",
+        "ms": 2.83,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:9400:a:be49:6240:93a1",
+        "ms": 2.84,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:4200:2:8419:4140:93a1",
+        "ms": 2.84,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:0:17:b174:6d00:93a1",
+        "ms": 2.84,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:7400:19:faf0:e440:93a1",
+        "ms": 2.84,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:4e00:a:c66a:55c0:93a1",
+        "ms": 2.84,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:7c00:1a:34da:380:93a1",
+        "ms": 2.84,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:ce00:9:6bcc:55c0:93a1",
+        "ms": 2.84,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:2834:6200:19:7d10:bd80:93a1",
+        "ms": 2.84,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:7a00:1c:df99:ffc0:93a1",
+        "ms": 2.84,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:d600:1:39f6:5680:21",
+        "ms": 2.84,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:ee00:4:8e3b:dd40:93a1",
+        "ms": 2.84,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:be00:10:474e:104a:2961",
+        "ms": 2.84,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:4600:16:bd7f:6200:93a1",
+        "ms": 2.84,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:2a00:7:2398:3e00:21",
+        "ms": 2.84,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:9800:2:b72:c9c0:93a1",
+        "ms": 2.84,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:9c00:17:b174:6d00:93a1",
+        "ms": 2.85,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:3a00:a:c66a:55c0:93a1",
+        "ms": 2.85,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:4800:4:ad59:d700:93a1",
+        "ms": 2.85,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:4a00:7:2398:3e00:21",
+        "ms": 2.85,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:ec00:17:b174:6d00:93a1",
+        "ms": 2.85,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:4c00:10:474e:104a:2961",
+        "ms": 2.85,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:0:9:6fca:6bc0:93a1",
+        "ms": 2.85,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:2834:6200:f:633b:eec0:93a1",
+        "ms": 2.85,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:5c00:13:7da8:e380:93a1",
+        "ms": 2.85,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:ca00:7:2398:3e00:21",
+        "ms": 2.85,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:8e00:18:c55a:9580:93a1",
+        "ms": 2.85,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:f200:1f:8fbc:3940:93a1",
+        "ms": 2.85,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:be00:19:7d10:bd80:93a1",
+        "ms": 2.85,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:2000:16:b7c1:cd80:93a1",
+        "ms": 2.85,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:2000:1f:8fbc:3940:93a1",
+        "ms": 2.86,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:2834:5800:e:159e:9f80:93a1",
+        "ms": 2.86,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:d200:4:e131:5cc0:93a1",
+        "ms": 2.86,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:1000:13:83b2:dd80:93a1",
+        "ms": 2.86,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:0:1b:c68a:a80:93a1",
+        "ms": 2.86,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:3800:f:936:7b40:93a1",
+        "ms": 2.86,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:6c00:15:64f8:4200:93a1",
+        "ms": 2.86,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:7600:1b:c68a:a80:93a1",
+        "ms": 2.86,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:c800:4:8918:21c8:8e61",
+        "ms": 2.86,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:4e00:13:7da8:e380:93a1",
+        "ms": 2.86,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:7e00:7:2398:3e00:21",
+        "ms": 2.86,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:2200:19:faf0:e440:93a1",
+        "ms": 2.86,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:1000:17:3f5c:f800:21",
+        "ms": 2.86,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:a800:17:b174:6d00:93a1",
+        "ms": 2.86,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:2400:a:c66a:55c0:93a1",
+        "ms": 2.86,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:3600:17:b174:6d00:93a1",
+        "ms": 2.86,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:2834:a600:19:fa33:18c0:21",
+        "ms": 2.87,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:7800:19:faf0:e440:93a1",
+        "ms": 2.87,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:2834:b000:19:fa33:18c0:21",
+        "ms": 2.87,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:6200:9:6fca:6bc0:93a1",
+        "ms": 2.87,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:a00:19:7d10:bd80:93a1",
+        "ms": 2.87,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:2e00:1c:df99:ffc0:93a1",
+        "ms": 2.87,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:8800:19:7d10:bd80:93a1",
+        "ms": 2.87,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:7200:1e:b99d:d4c0:93a1",
+        "ms": 2.87,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:ae00:1b:c68a:a80:93a1",
+        "ms": 2.87,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:2600:1c:b22f:ad00:93a1",
+        "ms": 2.87,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:4600:4:8918:21c8:8e61",
+        "ms": 2.87,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:4200:8:2309:a9c0:93a1",
+        "ms": 2.87,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:3a00:4:11e9:cac0:93a1",
+        "ms": 2.87,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:a400:16:b7c1:cd80:93a1",
+        "ms": 2.87,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:e600:6:4565:580:93a1",
+        "ms": 2.87,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:3200:4:8918:21c8:8e61",
+        "ms": 2.87,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:1000:f:7d85:1040:21",
+        "ms": 2.88,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:2834:a00:e:159e:9f80:93a1",
+        "ms": 2.88,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:2c00:1c:70ca:66c0:93a1",
+        "ms": 2.88,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:2c00:19:c6d0:8a00:93a1",
+        "ms": 2.88,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:fa00:10:474e:104a:2961",
+        "ms": 2.88,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:1c00:1c:df99:ffc0:93a1",
+        "ms": 2.88,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:5600:1b:63a9:5900:93a1",
+        "ms": 2.88,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:b600:1a:34da:380:93a1",
+        "ms": 2.88,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:5a00:2:b8a4:e480:93a1",
+        "ms": 2.88,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284c:1400:c:35e7:f300:93a1",
+        "ms": 2.88,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:8a00:15:64f8:4200:93a1",
+        "ms": 2.89,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:9000:4:8918:21c8:8e61",
+        "ms": 2.89,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284c:400:a:c66a:55c0:93a1",
+        "ms": 2.89,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:a200:1a:34da:380:93a1",
+        "ms": 2.89,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:c200:1f:2bfa:6c40:93a1",
+        "ms": 2.89,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:2000:10:474e:104a:2961",
+        "ms": 2.89,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:2c00:1a:34da:380:93a1",
+        "ms": 2.89,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:ba00:1c:b22f:ad00:93a1",
+        "ms": 2.89,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:8a00:19:7d10:bd80:93a1",
+        "ms": 2.89,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:8a00:4:8918:21c8:8e61",
+        "ms": 2.89,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:6400:b:3cbe:7740:93a1",
+        "ms": 2.89,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:0:2:1958:ab00:93a1",
+        "ms": 2.89,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:f400:17:b174:6d00:93a1",
+        "ms": 2.9,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:8800:2:8419:4140:93a1",
+        "ms": 2.9,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:2600:1f:2bfa:6c40:93a1",
+        "ms": 2.9,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:2400:16:b7c1:cd80:93a1",
+        "ms": 2.9,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:dc00:b:e23f:140:93a1",
+        "ms": 2.9,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:2834:b400:1:39f6:5680:21",
+        "ms": 2.9,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:2834:8400:19:fa33:18c0:21",
+        "ms": 2.9,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:ea00:1f:8fbc:3940:93a1",
+        "ms": 2.9,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:a600:10:474e:104a:2961",
+        "ms": 2.9,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:7a00:1e:b249:fc0:93a1",
+        "ms": 2.9,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:2834:de00:19:fa33:18c0:21",
+        "ms": 2.91,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:2834:c400:1:39f6:5680:21",
+        "ms": 2.91,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:9400:10:474e:104a:2961",
+        "ms": 2.91,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:b400:11:4855:ec00:93a1",
+        "ms": 2.91,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:3a00:4:e131:5cc0:93a1",
+        "ms": 2.91,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:1400:b:a278:700:93a1",
+        "ms": 2.91,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:6400:6:6352:27c0:93a1",
+        "ms": 2.91,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:2e00:1a:25e4:5c80:93a1",
+        "ms": 2.91,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:3400:1c:70ca:66c0:93a1",
+        "ms": 2.91,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:cc00:17:b174:6d00:93a1",
+        "ms": 2.91,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:5600:9:a3a2:37c0:93a1",
+        "ms": 2.91,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:5600:15:38ec:1c00:93a1",
+        "ms": 2.91,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:2834:b000:e:159e:9f80:93a1",
+        "ms": 2.92,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:9c00:4:11e9:cac0:93a1",
+        "ms": 2.92,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:7000:4:e131:5cc0:93a1",
+        "ms": 2.92,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284c:9a00:19:7d10:bd80:93a1",
+        "ms": 2.92,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:400:1a:34da:380:93a1",
+        "ms": 2.92,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:6a00:1c:bc7a:5e00:93a1",
+        "ms": 2.92,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:5800:4:8918:21c8:8e61",
+        "ms": 2.92,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:d200:4:8918:21c8:8e61",
+        "ms": 2.92,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:c000:4:8918:21c8:8e61",
+        "ms": 2.92,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:c400:1c:70ca:66c0:93a1",
+        "ms": 2.92,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:6e00:11:17f0:7d80:93a1",
+        "ms": 2.92,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:b800:1c:b22f:ad00:93a1",
+        "ms": 2.92,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:d800:13:7da8:e380:93a1",
+        "ms": 2.92,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:b600:4:e131:5cc0:93a1",
+        "ms": 2.92,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:3a00:4:8918:21c8:8e61",
+        "ms": 2.92,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:1c00:19:faf0:e440:93a1",
+        "ms": 2.93,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:2834:be00:1:39f6:5680:21",
+        "ms": 2.93,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:c00:13:7da8:e380:93a1",
+        "ms": 2.93,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:9c00:15:64f8:4200:93a1",
+        "ms": 2.93,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:8e00:1a:34da:380:93a1",
+        "ms": 2.93,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:1800:10:474e:104a:2961",
+        "ms": 2.93,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:6e00:4:e131:5cc0:93a1",
+        "ms": 2.93,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:2400:17:b174:6d00:93a1",
+        "ms": 2.93,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:aa00:13:7da8:e380:93a1",
+        "ms": 2.93,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:ea00:a:be49:6240:93a1",
+        "ms": 2.93,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:9e00:4:ad59:d700:93a1",
+        "ms": 2.93,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:6200:15:64f8:4200:93a1",
+        "ms": 2.93,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:9800:9:6fca:6bc0:93a1",
+        "ms": 2.93,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:3c00:17:b174:6d00:93a1",
+        "ms": 2.94,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:2834:3a00:f:633b:eec0:93a1",
+        "ms": 2.94,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:9c00:17:5213:680:21",
+        "ms": 2.94,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:9400:1a:34da:380:93a1",
+        "ms": 2.94,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:1e00:1c:bc7a:5e00:93a1",
+        "ms": 2.94,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:5e00:7:2398:3e00:21",
+        "ms": 2.94,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:2e00:17:b174:6d00:93a1",
+        "ms": 2.94,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:ae00:b:3cbe:7740:93a1",
+        "ms": 2.94,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:4600:17:b174:6d00:93a1",
+        "ms": 2.95,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:be00:16:b7c1:cd80:93a1",
+        "ms": 2.95,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:5200:9:6fca:6bc0:93a1",
+        "ms": 2.95,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:6000:7:2398:3e00:21",
+        "ms": 2.95,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:9200:b:3cbe:7740:93a1",
+        "ms": 2.95,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:1e00:3:fd7a:c5c0:93a1",
+        "ms": 2.95,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:a000:7:2398:3e00:21",
+        "ms": 2.95,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:5a00:10:474e:104a:2961",
+        "ms": 2.95,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:1400:4:8918:21c8:8e61",
+        "ms": 2.95,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:8e00:f:7d85:1040:21",
+        "ms": 2.95,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:1a00:10:474e:104a:2961",
+        "ms": 2.95,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:f400:19:faf0:e440:93a1",
+        "ms": 2.96,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:1600:c:6410:b940:93a1",
+        "ms": 2.96,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:1e00:19:7d10:bd80:93a1",
+        "ms": 2.96,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:7e00:a:be49:6240:93a1",
+        "ms": 2.96,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:bc00:15:38ec:1c00:93a1",
+        "ms": 2.96,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:2600:7:2398:3e00:21",
+        "ms": 2.96,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:ac00:1c:b22f:ad00:93a1",
+        "ms": 2.96,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:0:4:e131:5cc0:93a1",
+        "ms": 2.96,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:2000:a:be49:6240:93a1",
+        "ms": 2.97,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:4200:2:b72:c9c0:93a1",
+        "ms": 2.97,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284c:c200:19:7d10:bd80:93a1",
+        "ms": 2.97,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:f000:1c:b22f:ad00:93a1",
+        "ms": 2.97,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:9e00:9:6fca:6bc0:93a1",
+        "ms": 2.97,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:8800:1c:df99:ffc0:93a1",
+        "ms": 2.97,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:8a00:9:6fca:6bc0:93a1",
+        "ms": 2.97,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:1000:4:8918:21c8:8e61",
+        "ms": 2.97,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:2834:a400:e:159e:9f80:93a1",
+        "ms": 2.98,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:3a00:17:b174:6d00:93a1",
+        "ms": 2.98,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:8400:2:1958:ab00:93a1",
+        "ms": 2.98,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:c00:4:8e3b:dd40:93a1",
+        "ms": 2.98,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:1000:7:2398:3e00:21",
+        "ms": 2.98,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:3a00:9:a3a2:37c0:93a1",
+        "ms": 2.98,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:1400:c:c0e6:eac0:93a1",
+        "ms": 2.98,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:6200:6:6352:27c0:93a1",
+        "ms": 2.98,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:c400:1c:b22f:ad00:93a1",
+        "ms": 2.98,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:ca00:b:3cbe:7740:93a1",
+        "ms": 2.98,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:d400:13:7da8:e380:93a1",
+        "ms": 2.99,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:a000:19:7d10:bd80:93a1",
+        "ms": 2.99,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:5400:2:52f7:ea40:93a1",
+        "ms": 2.99,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:6800:17:b174:6d00:93a1",
+        "ms": 2.99,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:7800:4:8918:21c8:8e61",
+        "ms": 2.99,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:2834:c200:9:4855:aac0:93a1",
+        "ms": 3,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:c00:4:8918:21c8:8e61",
+        "ms": 3,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:6400:19:7d10:bd80:93a1",
+        "ms": 3,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284c:6e00:a:c66a:55c0:93a1",
+        "ms": 3,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:800:7:2398:3e00:21",
+        "ms": 3,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:2834:4a00:16:7463:9c0:93a1",
+        "ms": 3,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:fa00:1e:b249:fc0:93a1",
+        "ms": 3,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:7600:17:3f5c:f800:21",
+        "ms": 3,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:fe00:9:a3a2:37c0:93a1",
+        "ms": 3,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:e400:1f:2bfa:6c40:93a1",
+        "ms": 3,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:8200:17:b174:6d00:93a1",
+        "ms": 3,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:2400:a:be49:6240:93a1",
+        "ms": 3,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:bc00:13:7da8:e380:93a1",
+        "ms": 3.01,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:2834:2000:e:159e:9f80:93a1",
+        "ms": 3.01,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:2834:cc00:e:159e:9f80:93a1",
+        "ms": 3.01,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:1800:4:ad59:d700:93a1",
+        "ms": 3.01,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:6600:a:8f4b:53c0:93a1",
+        "ms": 3.02,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:bc00:11:5299:1c00:93a1",
+        "ms": 3.02,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:2600:15:415:cc40:93a1",
+        "ms": 3.02,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:b600:13:7da8:e380:93a1",
+        "ms": 3.03,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:6c00:1c:b22f:ad00:93a1",
+        "ms": 3.03,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:5c00:1b:c68a:a80:93a1",
+        "ms": 3.03,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:9a00:16:b7c1:cd80:93a1",
+        "ms": 3.04,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:9a00:2:8419:4140:93a1",
+        "ms": 3.04,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:8c00:13:7da8:e380:93a1",
+        "ms": 3.04,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:fa00:b:3cbe:7740:93a1",
+        "ms": 3.04,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:2834:9600:e:159e:9f80:93a1",
+        "ms": 3.04,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:d600:19:c6d0:8a00:93a1",
+        "ms": 3.04,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:4000:3:db06:4200:93a1",
+        "ms": 3.04,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:1a00:7:2398:3e00:21",
+        "ms": 3.05,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:1c00:f:27a3:fbc0:93a1",
+        "ms": 3.06,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:6a00:7:49a5:5fd6:da1",
+        "ms": 3.06,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:7200:1c:df99:ffc0:93a1",
+        "ms": 3.06,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:fa00:b:a278:700:93a1",
+        "ms": 3.06,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:600:12:e175:aec0:93a1",
+        "ms": 3.07,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:a600:d:5e12:aa80:93a1",
+        "ms": 3.09,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:6000:19:c6d0:8a00:93a1",
+        "ms": 3.1,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:6200:2:b72:c9c0:93a1",
+        "ms": 3.1,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:5e00:a:8f4b:53c0:93a1",
+        "ms": 3.11,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:7400:c:c0e6:eac0:93a1",
+        "ms": 3.11,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:fe00:1f:2bfa:6c40:93a1",
+        "ms": 3.11,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:7400:1b:c68a:a80:93a1",
+        "ms": 3.12,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:2834:2c00:19:7d10:bd80:93a1",
+        "ms": 3.13,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:c00:1:39f6:5680:21",
+        "ms": 3.14,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:8600:1b:c68a:a80:93a1",
+        "ms": 3.15,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:5000:1c:b22f:ad00:93a1",
+        "ms": 3.15,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:9e00:4:8918:21c8:8e61",
+        "ms": 3.15,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:4c00:17:b174:6d00:93a1",
+        "ms": 3.15,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:f600:9:6bcc:55c0:93a1",
+        "ms": 3.16,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:e000:13:7da8:e380:93a1",
+        "ms": 3.16,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:9200:7:2398:3e00:21",
+        "ms": 3.16,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:c400:1f:2bfa:6c40:93a1",
+        "ms": 3.17,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:7400:11:4855:ec00:93a1",
+        "ms": 3.17,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284f:3e00:1b:c68a:a80:93a1",
+        "ms": 3.2,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:4600:7:2398:3e00:21",
+        "ms": 3.21,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:2400:4:ad59:d700:93a1",
+        "ms": 3.22,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:8400:4:11e9:cac0:93a1",
+        "ms": 3.24,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:8800:4:e131:5cc0:93a1",
+        "ms": 3.27,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:ee00:4:8918:21c8:8e61",
+        "ms": 3.28,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:9200:17:27c0:c200:93a1",
+        "ms": 3.32,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:8600:15:64f8:4200:93a1",
+        "ms": 3.32,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:b000:1c:b22f:ad00:93a1",
+        "ms": 3.33,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:8800:18:f77e:6800:93a1",
+        "ms": 3.4,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:284c:2000:19:7d10:bd80:93a1",
+        "ms": 3.41,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:a00:e:68cb:b280:21",
+        "ms": 3.41,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:7c00:1:6feb:fdc0:93a1",
+        "ms": 3.42,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:8200:7:2398:3e00:21",
+        "ms": 3.44,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:3200:7:2398:3e00:21",
+        "ms": 3.54,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:6200:10:474e:104a:2961",
+        "ms": 3.61,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202f:2c00:1:39f6:5680:21",
+        "ms": 3.76,
+        "permanent": true,
+        "pop": "TPE"
+      },
+      {
+        "checkedAt": 1795743339441,
+        "ip": "2600:9000:202b:a600:4:8918:21c8:8e61",
+        "ms": 3.98,
+        "permanent": true,
+        "pop": "TPE"
+      }
+    ]
+  },
+  "fastly": {
+    "quickRef": null,
+    "ranges": {
+      "v4": 18,
+      "v6": 3
+    },
+    "restricted": [
+      {
+        "hit": 0,
+        "inPool": false,
+        "ip": "140.248.167.32",
+        "missAt": 1795573629206,
+        "sites": 4,
+        "until": 1796178429206
+      },
+      {
+        "hit": 1,
+        "inPool": false,
+        "ip": "140.248.166.133",
+        "missAt": 1795548423313,
+        "sites": 3,
+        "until": 1796153223313
+      },
+      {
+        "hit": 1,
+        "inPool": false,
+        "ip": "167.82.22.133",
+        "missAt": 1795548422771,
+        "sites": 3,
+        "until": 1796153222771
+      },
+      {
+        "hit": 1,
+        "inPool": false,
+        "ip": "167.82.82.133",
+        "missAt": 1795555622285,
+        "sites": 3,
+        "until": 1796160422285
+      },
+      {
+        "hit": 0,
+        "inPool": false,
+        "ip": "199.232.232.153",
+        "missAt": 1795610685628,
+        "sites": 3,
+        "until": 1796215485628
+      },
+      {
+        "hit": 0,
+        "inPool": false,
+        "ip": "23.235.37.153",
+        "missAt": 1795609121921,
+        "sites": 2,
+        "until": 1796213921921
+      },
+      {
+        "hit": 0,
+        "inPool": false,
+        "ip": "23.235.42.153",
+        "missAt": 1795608432216,
+        "sites": 2,
+        "until": 1796213232216
+      },
+      {
+        "hit": 0,
+        "inPool": false,
+        "ip": "104.156.81.153",
+        "missAt": 1795609051782,
+        "sites": 2,
+        "until": 1796213851782
+      },
+      {
+        "hit": 0,
+        "inPool": false,
+        "ip": "104.156.85.153",
+        "missAt": 1795609429217,
+        "sites": 2,
+        "until": 1796214229217
+      },
+      {
+        "hit": 0,
+        "inPool": false,
+        "ip": "140.248.164.153",
+        "missAt": 1795607412150,
+        "sites": 2,
+        "until": 1796212212150
+      },
+      {
+        "hit": 0,
+        "inPool": false,
+        "ip": "140.248.165.153",
+        "missAt": 1795608031013,
+        "sites": 2,
+        "until": 1796212831013
+      },
+      {
+        "hit": 0,
+        "inPool": false,
+        "ip": "140.248.165.155",
+        "missAt": 1795724945923,
+        "sites": 2,
+        "until": 1796329745923
+      },
+      {
+        "hit": 0,
+        "inPool": false,
+        "ip": "140.248.166.153",
+        "missAt": 1795608031204,
+        "sites": 2,
+        "until": 1796212831204
+      },
+      {
+        "hit": 0,
+        "inPool": false,
+        "ip": "140.248.167.27",
+        "missAt": 1795559237985,
+        "sites": 2,
+        "until": 1796164037985
+      },
+      {
+        "hit": 0,
+        "inPool": false,
+        "ip": "140.248.167.193",
+        "missAt": 1795559253051,
+        "sites": 2,
+        "until": 1796164053051
+      },
+      {
+        "hit": 0,
+        "inPool": false,
+        "ip": "146.75.44.153",
+        "missAt": 1795610635455,
+        "sites": 2,
+        "until": 1796215435455
+      },
+      {
+        "hit": 0,
+        "inPool": false,
+        "ip": "146.75.46.153",
+        "missAt": 1795610316885,
+        "sites": 2,
+        "until": 1796215116885
+      },
+      {
+        "hit": 0,
+        "inPool": false,
+        "ip": "146.75.48.153",
+        "missAt": 1795607414734,
+        "sites": 2,
+        "until": 1796212214734
+      },
+      {
+        "hit": 0,
+        "inPool": false,
+        "ip": "146.75.49.153",
+        "missAt": 1795608031467,
+        "sites": 2,
+        "until": 1796212831467
+      },
+      {
+        "hit": 0,
+        "inPool": false,
+        "ip": "146.75.50.153",
+        "missAt": 1795607415048,
+        "sites": 2,
+        "until": 1796212215048
+      },
+      {
+        "hit": 0,
+        "inPool": false,
+        "ip": "146.75.112.153",
+        "missAt": 1795610681048,
+        "sites": 2,
+        "until": 1796215481048
+      },
+      {
+        "hit": 0,
+        "inPool": false,
+        "ip": "146.75.113.153",
+        "missAt": 1795610692717,
+        "sites": 2,
+        "until": 1796215492717
+      },
+      {
+        "hit": 0,
+        "inPool": false,
+        "ip": "146.75.114.153",
+        "missAt": 1795610674293,
+        "sites": 2,
+        "until": 1796215474293
+      },
+      {
+        "hit": 0,
+        "inPool": false,
+        "ip": "151.101.0.153",
+        "missAt": 1795609715442,
+        "sites": 2,
+        "until": 1796214515442
+      },
+      {
+        "hit": 0,
+        "inPool": false,
+        "ip": "151.101.1.153",
+        "missAt": 1795608430457,
+        "sites": 2,
+        "until": 1796213230457
+      },
+      {
+        "hit": 0,
+        "inPool": false,
+        "ip": "151.101.2.153",
+        "missAt": 1795610072824,
+        "sites": 2,
+        "until": 1796214872824
+      },
+      {
+        "hit": 0,
+        "inPool": false,
+        "ip": "151.101.64.153",
+        "missAt": 1795608962213,
+        "sites": 2,
+        "until": 1796213762213
+      },
+      {
+        "hit": 0,
+        "inPool": false,
+        "ip": "151.101.65.153",
+        "missAt": 1795609498213,
+        "sites": 2,
+        "until": 1796214298213
+      },
+      {
+        "hit": 0,
+        "inPool": false,
+        "ip": "151.101.66.153",
+        "missAt": 1795609120285,
+        "sites": 2,
+        "until": 1796213920285
+      },
+      {
+        "hit": 0,
+        "inPool": false,
+        "ip": "151.101.88.153",
+        "missAt": 1795620859349,
+        "sites": 2,
+        "until": 1796225659349
+      },
+      {
+        "hit": 0,
+        "inPool": false,
+        "ip": "151.101.128.153",
+        "missAt": 1795609715957,
+        "sites": 2,
+        "until": 1796214515957
+      },
+      {
+        "hit": 0,
+        "inPool": false,
+        "ip": "151.101.129.153",
+        "missAt": 1795608028375,
+        "sites": 2,
+        "until": 1796212828375
+      }
+    ],
+    "restrictedTotal": 131,
+    "scan": {
+      "dead": 23,
+      "global": 14,
+      "tw": 0
+    },
+    "speedRef": 23.11,
+    "speedRefWhy": null,
+    "v4": [
+      {
+        "checkedAt": 1795744637619,
+        "ip": "167.82.23.106",
+        "jitter": 0.91,
+        "loss": 0,
+        "ms": 23.12,
+        "peakAt": 1795618441046,
+        "peakJitter": 0.44,
+        "peakLoss": 0,
+        "peakMs": 22.81,
+        "pop": "HKG",
+        "sample": {
+          "bytes": 8424224,
+          "connectMs": 42.7,
+          "headSecs": 0.111,
+          "secs": 0.294,
+          "ttfbMs": 24.1
+        },
+        "score": 24.1,
+        "slow": false,
+        "speed": 27.35
+      },
+      {
+        "checkedAt": 1795744637619,
+        "ip": "167.82.22.32",
+        "jitter": 1.49,
+        "loss": 0,
+        "ms": 22.66,
+        "pop": "HKG",
+        "score": 25.6,
+        "speed": null
+      },
+      {
+        "checkedAt": 1795744637619,
+        "ip": "167.82.20.68",
+        "jitter": 2.5,
+        "loss": 0,
+        "ms": 22.77,
+        "pop": "HKG",
+        "sample": {
+          "bytes": 8441792,
+          "connectMs": 22.7,
+          "headSecs": 0.105,
+          "secs": 0.273,
+          "ttfbMs": 23.8
+        },
+        "score": 27.8,
+        "slow": false,
+        "speed": 29.45
+      },
+      {
+        "checkedAt": 1795744637619,
+        "ip": "151.101.192.81",
+        "jitter": 0.28,
+        "loss": 0,
+        "ms": 33.07,
+        "pop": "NRT",
+        "sample": {
+          "bytes": 8451968,
+          "connectMs": 32.5,
+          "headSecs": 0.171,
+          "secs": 0.343,
+          "ttfbMs": 35.5
+        },
+        "score": 33.6,
+        "slow": false,
+        "speed": 23.53
+      },
+      {
+        "checkedAt": 1795744637619,
+        "ip": "151.101.131.146",
+        "jitter": 0.46,
+        "loss": 0,
+        "ms": 32.78,
+        "pop": "NRT",
+        "sample": {
+          "bytes": 8444736,
+          "connectMs": 81.7,
+          "headSecs": 0.159,
+          "secs": 0.348,
+          "ttfbMs": 35.3
+        },
+        "score": 33.7,
+        "slow": false,
+        "speed": 23.12
+      },
+      {
+        "checkedAt": 1795744637619,
+        "ip": "151.101.130.46",
+        "jitter": 0.64,
+        "loss": 0,
+        "ms": 33.6,
+        "pop": "NRT",
+        "score": 34.9,
+        "speed": null
+      },
+      {
+        "checkedAt": 1795744637619,
+        "ip": "167.82.0.206",
+        "jitter": 0.48,
+        "loss": 0,
+        "ms": 36.34,
+        "pop": "ITM",
+        "sample": {
+          "bytes": 8396800,
+          "connectMs": 57.6,
+          "headSecs": 0.178,
+          "secs": 0.372,
+          "ttfbMs": 37.2
+        },
+        "score": 37.3,
+        "slow": false,
+        "speed": 21.52
+      },
+      {
+        "checkedAt": 1795744637619,
+        "ip": "167.82.3.101",
+        "jitter": 0.76,
+        "loss": 0,
+        "ms": 35.94,
+        "pop": "ITM",
+        "sample": {
+          "bytes": 8419296,
+          "connectMs": 35.5,
+          "headSecs": 0.175,
+          "secs": 0.348,
+          "ttfbMs": 35.7
+        },
+        "score": 37.5,
+        "slow": false,
+        "speed": 23.11
+      },
+      {
+        "checkedAt": 1795744637619,
+        "ip": "146.75.48.168",
+        "jitter": 0.37,
+        "loss": 0,
+        "ms": 46.27,
+        "pop": "ICN",
+        "sample": {
+          "bytes": 8404736,
+          "connectMs": 94.7,
+          "headSecs": 0.215,
+          "secs": 0.405,
+          "ttfbMs": 49.6
+        },
+        "score": 47,
+        "slow": false,
+        "speed": 19.78
+      },
+      {
+        "checkedAt": 1795744637619,
+        "ip": "146.75.49.119",
+        "jitter": 0.31,
+        "loss": 0,
+        "ms": 46.55,
+        "pop": "ICN",
+        "sample": {
+          "bytes": 8396096,
+          "connectMs": 46.5,
+          "headSecs": 0.217,
+          "secs": 0.412,
+          "ttfbMs": 49.1
+        },
+        "score": 47.2,
+        "slow": false,
+        "speed": 19.43
+      },
+      {
+        "checkedAt": 1795744637619,
+        "ip": "167.82.92.142",
+        "jitter": 12.37,
+        "loss": 0,
+        "ms": 36.14,
+        "pop": "SIN",
+        "sample": {
+          "bytes": 8440544,
+          "connectMs": 106.7,
+          "headSecs": 0.275,
+          "secs": 0.479,
+          "ttfbMs": 56.4
+        },
+        "score": 60.9,
+        "slow": false,
+        "speed": 16.81
+      },
+      {
+        "checkedAt": 1795744637619,
+        "ip": "199.232.241.59",
+        "jitter": 18.44,
+        "loss": 0,
+        "ms": 25.77,
+        "pop": "SIN",
+        "score": 62.6,
+        "speed": null
+      },
+      {
+        "checkedAt": 1795744637619,
+        "ip": "199.232.216.143",
+        "jitter": 8.12,
+        "loss": 0,
+        "ms": 55.45,
+        "pop": "SIN",
+        "sample": {
+          "bytes": 8397920,
+          "connectMs": 36.5,
+          "headSecs": 0.175,
+          "secs": 0.351,
+          "ttfbMs": 38.9
+        },
+        "score": 71.7,
+        "slow": false,
+        "speed": 22.85
+      },
+      {
+        "checkedAt": 1795744637619,
+        "ip": "146.75.51.173",
+        "jitter": 0.29,
+        "loss": 0,
+        "ms": 46.31,
+        "peakAt": 1795618441046,
+        "peakJitter": 47.5,
+        "peakLoss": 0,
+        "peakMs": 46.08,
+        "pop": "ICN",
+        "score": 109.7,
+        "speed": null
+      },
+      {
+        "bad": "POP=HKG",
+        "checkedAt": 1795744637619,
+        "ip": "167.82.80.33",
+        "jitter": 6.54,
+        "loss": 0,
+        "ms": 25.54,
+        "pop": "ITM",
+        "score": 38.6,
+        "speed": null
+      }
+    ],
+    "v6": []
+  },
+  "gcore": {
+    "quickRef": null,
+    "ranges": {
+      "v4": 411,
+      "v6": 334
+    },
+    "restricted": [],
+    "restrictedTotal": 0,
+    "scan": {
+      "dead": 228,
+      "global": 172,
+      "tw": 0
+    },
+    "speedRef": null,
+    "speedRefWhy": null,
+    "v4": [],
+    "v6": []
+  }
+}}

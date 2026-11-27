@@ -1,0 +1,50 @@
+{"ok":true,"result":{
+  "best": "cross",
+  "c1": "map.fastly.net",
+  "cname": "mlb-tls.map.fastly.net",
+  "decision": "cross",
+  "hits": 3,
+  "known": true,
+  "multi": false,
+  "name": "www.mlb.com",
+  "policy": "auto",
+  "provider": "fastly",
+  "providerLabel": "Fastly",
+  "provs": [
+    {
+      "lastSeen": 1795724983643,
+      "provider": "fastly",
+      "verified": true
+    }
+  ],
+  "steps": [
+    {
+      "at": 1795724926482,
+      "ms": 2136.1,
+      "pop": "HKG",
+      "reason": null,
+      "result": "ok",
+      "until": 1795811326482,
+      "verdict": "ok",
+      "what": "v4"
+    },
+    {
+      "result": "none",
+      "what": "v6"
+    },
+    {
+      "at": 1795724953709,
+      "ms": 23.5,
+      "origMs": 237.2,
+      "origScore": 323.5,
+      "reason": null,
+      "result": "ok",
+      "score": 60.3,
+      "to": "cloudflare",
+      "until": 1795984146172,
+      "what": "cross"
+    }
+  ],
+  "text": "這個網域用 Fastly，同一個網站也放在別家 CDN 上，已經換成那家的台灣節點（換到 Cloudflare）。",
+  "via": "ip"
+}}

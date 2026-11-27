@@ -1,0 +1,44 @@
+{
+  "ok": true,
+  "result": {
+    "bytes": 512,
+    "capacity": 5000,
+    "dropped": 0,
+    "enabled": true,
+    "permanent": false,
+    "size": 3,
+    "until": 1795745396812,
+    "entries": [
+      {
+        "at": 1795744851812,
+        "client": "192.168.2.100",
+        "name": "www.google.com",
+        "type": 1,
+        "result": "hit",
+        "rcode": 0,
+        "ms": 1,
+        "source": "cache"
+      },
+      {
+        "at": 1795744852812,
+        "client": "192.168.2.100",
+        "name": "ads.doubleclick.net",
+        "type": 1,
+        "result": "blocked",
+        "rcode": 0,
+        "ms": 0,
+        "source": "filter"
+      },
+      {
+        "at": 1795744854812,
+        "client": "192.168.2.105",
+        "name": "www.cloudflare.com",
+        "type": 28,
+        "result": "miss",
+        "rcode": 0,
+        "ms": 38,
+        "source": "udp://172.64.37.148"
+      }
+    ]
+  }
+}

@@ -734,3 +734,12 @@ trim 把 CDN 冷資料移出記憶體（1.7 MB），RSS 只降 1 MB；評測後�
 - 版面（076d405）：「服務」卡片收成結論下面一行；「硬體與效能」改成「效能」，其餘收進「更多細節」（重新整理時記住開合）；串接卡片常看的（上游、心跳、登記、重試）留在外面，指紋、層數、共用內容、抽查收進「更多細節」；磚塊最小寬度 168px（手機固定兩欄）
 - 預覽：`tools/ui-preview/mock/kuroshio` 換成 D3 實機 3.4.4 的回應（指紋、節點 ID、網域、IPv6 前綴都已換掉）
 - D3 實機（主路由器也是 3.4.4）：鎖錯指紋原因 `pin-mismatch`、不向上游登記，改回正確指紋重新串接；D3 關 CDN 置換時上游不再幫它換；主路由器關 `allow_downstream`、黑潮短重啟的結果見 HANDOFF-LOCAL 5.7
+
+### 13.17 黑潮頁面跟上 LuCI 3.5.1（2026-11-27，本機預覽；韌體仍是 3.5.0，等 3.5.1 正式版一起整合）
+- 對照 D3 測試版 3.5.1（v7 a4269c7）的 LuCI 頁面與 `ui-core.js`，把 3.5.1 新增的狀態與設定補進 `tw_kuro.js`、`tw_kuro_conf.js`、`tw_kuro_comm.js`；有 `KuroshioUiCore` 的函式就直接用（`pct`、`freshnessView`、`findingsView`、`reachView`、`paceView`、`cdnStoreText`、`upstreamExtra`、`regionLabel`、`controlSummary`、`benchScope`、`ispGroupText`、`restorePlan`），句子跟 LuCI 一致
+- 狀態頁：新增「發現」「資料新鮮度」「線路」（機房明細、機房健康收進更多細節）「CDN 驗證與資料」卡片；上游卡片加角色與原因、暫停／路徑被擋／攔截等註記、評測範圍；串接卡片加「重新檢查上游黑潮」（`/api/chain/recheck`）；記憶體卡片加模擬與無效回收的說明
+- 日誌頁：新增「查詢紀錄」卡片（`/api/querylog`，開啟 10 分鐘＝`/api/querylog/enable`，可依網域篩選）
+- 設定：過濾的封鎖 TTL、保護社群、清單的 bypass／probe 兩欄（還原時照 `restorePlan` 的 raw 寫回或清掉）；CDN 的驗證節奏、每分鐘驗證數、跨請求評分、多 CDN、應用層、資料庫磁碟額度與「為什麼沒換到台灣」（`/api/cdn/explain`）；進階的上游、解析、評測、掃描、資源池新欄位；`site.min_clients`、`resolver.cache_max` 的「自動」；社群的「分享業者群組」
+- `kuroshio.sh`：`api_action` 白名單加 `/api/memory/trim`
+- 預覽：`tools/ui-preview/mock/kuroshio` 換成 D3 測試版的回應（公網位址換成文件用位址），新增 `api_querylog.json`、`api_cdn_explain.json`；用 `--kuroshio-data` 指向 3.5.1 套件的 `data/dashboard` 看。桌機／手機 × 淺色／深色共 24 張截圖：沒有橫向溢出、沒有 JS 錯誤
+- 還沒做：在 D3 對上真正的 3.5.1 正式版驗證（正式版發布後跟韌體升級一起做）

@@ -119,6 +119,11 @@
 			C.peers = r[1] && r[1].ok !== false ? r[1].result : null;
 			C.events = r[2] && r[2].ok !== false ? r[2].result : null;
 			set('kr-comm-status', statusHtml()); set('kr-comm-peers', peersHtml()); set('kr-comm-events', eventsHtml());
+			/* 業者群組（3.5.0 E10）：沒開分享、ui-core.js 是舊版時不顯示 */
+			return K.core().then(function (core) {
+				var t = core && typeof core.ispGroupText === 'function' && C.status ? core.ispGroupText(C.status.ispGroup) : null;
+				set('kr-comm-isp', t ? ' ' + esc(t) : '');
+			});
 		});
 	}
 	function loadInvite() { return K.api('api', '/api/community/invite').then(function (r) { C.invite = r; set('kuroshio-invite-box', inviteHtml()); }); }
@@ -156,6 +161,8 @@
 				/* 3.4.3 */
 				{ k: 'community.use_hints', t: 'flag', l: '使用好友的 CDN 資料', def: K.def('community.useHints') === false ? '0' : '1', d: '好友給的網站驗證結果、跨 CDN 結果、台灣節點只當候選，本機驗證通過才使用。關掉 = 只靠自己找。' },
 				{ k: 'community.use_upstreams', t: 'flag', l: '使用好友的上游 DNS', def: K.def('community.useUpstreams') === false ? '0' : '1', d: '好友給的上游只當每日評測的候選（合計最多 100 個），照常經過汙染、封殺、速度檢查。' },
+				/* 3.5.0 E10（預設關）：開關下面顯示「你的群組：○○」（ui-core.js 的 ispGroupText，refresh() 填） */
+				{ k: 'community.share_isp_group', t: 'flag', l: '跟好友說我用哪一家業者（業者群組）', def: K.def('community.shareIspGroup') ? '1' : '0', d: '開了之後好友會知道你用哪一家業者（群組，例如 cht），不含 IP；身分文件不放，只有好友拿得到。收到的群組只用來決定好友提示的先後（同一家業者的先驗證），信任一律來自本機驗證。<span id="kr-comm-isp"></span>' },
 				{ k: 'community.stale_days', t: 'text', l: '好友幾天連不上就自動刪除', v: 'uint', dp: 'community.staleDays' },
 				{ k: 'community.reject_days', t: 'text', l: '拒絕後幾天才能再請求', v: 'uint', dp: 'community.rejectDays', pro: 1 },
 				{ k: 'community.sync_interval', t: 'text', l: '多久向好友拉一次資料（分鐘）', v: 'uint', dp: 'community.syncIntervalMin', pro: 1 },

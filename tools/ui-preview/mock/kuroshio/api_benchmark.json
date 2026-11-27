@@ -1,1 +1,1089 @@
-{"ok":true,"result":{"blocked":[{"dns":"https://ad.tzockt.beer/dns-query","domain":"adashx.m.taobao.com","pinned":false,"reason":"導向 0.0.0.0"},{"dns":"https://adblock.krctech.dev/dns-query","domain":"adashx.m.taobao.com","pinned":false,"reason":"導向 0.0.0.0"},{"dns":"https://adblock.mydns.network/dns-query","domain":"adashx.m.taobao.com","pinned":false,"reason":"導向 0.0.0.0"},{"dns":"https://addns1.m-it.ro/dns-query","domain":"adashx.m.taobao.com","pinned":false,"reason":"導向 0.0.0.0"}],"counts":{"eliminated":1254,"survivors":431,"total":1685,"verified":1152},"coverage":0.0694,"date":"2026-11-14","generatedAt":"2026-11-13T20:50:57.089Z","pinned":[],"reportDir":"/tmp/kuroshio/benchmark/2026-11-14","selected":[{"avgMs":7.26,"id":"https://1dot1dot1dot1.cloudflare-dns.com/dns-query","newItems":384,"owner":"Cloudflare,_Inc__AS13335_Cloudflare,_Inc.","reason":"最快","type":"doh"},{"avgMs":92.09,"id":"https://public.dns.iij.jp/dns-query","newItems":146,"owner":"Internet_Initiative_Japan_Inc.__AS2497_Internet_Initiative_Japan_Inc.","reason":"覆蓋","type":"doh"},{"avgMs":152.13,"id":"https://kr-sel.doh.sb/dns-query","newItems":129,"owner":"Amazon.com,_Inc.__AS16509_Amazon.com,_Inc.","reason":"覆蓋","type":"doh"},{"avgMs":87.31,"id":"https://doh.sb/dns-query","newItems":119,"owner":"DNS.SB__AS24013_SB_Professional_Services","reason":"覆蓋","type":"doh"},{"avgMs":51.88,"id":"https://dns.alidns.com/dns-query","newItems":112,"owner":"Hangzhou_Alibaba_Advertising_Co__AS37963_Hangzhou_Alibaba_Advertising_Co.,Ltd.","reason":"覆蓋","type":"doh"}],"skippedTypes":{"dnscrypt":43},"universe":12825}}
+{"ok":true,"result":{
+  "blocked": [
+    {
+      "dns": "https://family.adguard-dns.com/dns-query",
+      "domain": "video.example.com",
+      "pinned": false,
+      "protected": true,
+      "reason": "導向 94.140.14.35"
+    },
+    {
+      "dns": "https://family.cloudflare-dns.com/dns-query",
+      "domain": "video.example.com",
+      "pinned": false,
+      "protected": true,
+      "reason": "導向 0.0.0.0"
+    },
+    {
+      "dns": "https://doh.safesurfer.io/dns-query",
+      "domain": "video.example.com",
+      "pinned": false,
+      "protected": true,
+      "reason": "NXDOMAIN"
+    },
+    {
+      "dns": "quic://family.adguard-dns.com",
+      "domain": "video.example.com",
+      "pinned": false,
+      "protected": true,
+      "reason": "導向 94.140.14.35"
+    },
+    {
+      "dns": "62.217.77.45",
+      "domain": "video.example.com",
+      "pinned": false,
+      "protected": false,
+      "reason": "導向 0.0.0.0"
+    },
+    {
+      "dns": "https://dns-telkominfra.disacloud.com/dns-query",
+      "domain": "video.example.com",
+      "pinned": false,
+      "protected": false,
+      "reason": "導向 94.140.14.35"
+    },
+    {
+      "dns": "https://webpurify.com.br/dns-query",
+      "domain": "video.example.com",
+      "pinned": false,
+      "protected": false,
+      "reason": "導向 94.140.14.35"
+    },
+    {
+      "dns": "https://adg.3k.work/dns-query",
+      "domain": "video.example.com",
+      "pinned": false,
+      "protected": false,
+      "reason": "導向 94.140.14.35"
+    },
+    {
+      "dns": "https://doh.greenwood.eu.org/dns-query",
+      "domain": "video.example.com",
+      "pinned": false,
+      "protected": false,
+      "reason": "導向 94.140.14.33"
+    },
+    {
+      "dns": "quic://dns-telkominfra.disacloud.com",
+      "domain": "video.example.com",
+      "pinned": false,
+      "protected": false,
+      "reason": "導向 94.140.14.35"
+    },
+    {
+      "dns": "tls://dns-telkominfra.disacloud.com",
+      "domain": "video.example.com",
+      "pinned": false,
+      "protected": false,
+      "reason": "導向 94.140.14.35"
+    },
+    {
+      "dns": "h3://adg.3k.work/dns-query",
+      "domain": "video.example.com",
+      "pinned": false,
+      "protected": false,
+      "reason": "導向 94.140.14.35"
+    },
+    {
+      "dns": "h3://doh.greenwood.eu.org/dns-query",
+      "domain": "video.example.com",
+      "pinned": false,
+      "protected": false,
+      "reason": "導向 94.140.14.33"
+    },
+    {
+      "dns": "1.12.13.53",
+      "domain": "media.example.net",
+      "pinned": false,
+      "protected": false,
+      "reason": "導向 0.0.0.0"
+    },
+    {
+      "dns": "https://doh.pub/dns-query",
+      "domain": "media.example.net",
+      "pinned": false,
+      "protected": false,
+      "reason": "導向 0.0.0.0"
+    },
+    {
+      "dns": "https://dns.pub/dns-query",
+      "domain": "media.example.net",
+      "pinned": false,
+      "protected": false,
+      "reason": "導向 0.0.0.0"
+    },
+    {
+      "dns": "tls://dot.pub",
+      "domain": "media.example.net",
+      "pinned": false,
+      "protected": false,
+      "reason": "導向 0.0.0.0"
+    },
+    {
+      "dns": "https://dns.adguard-dns.com/dns-query",
+      "domain": "adashx.m.taobao.com",
+      "pinned": false,
+      "protected": true,
+      "reason": "導向 0.0.0.0"
+    },
+    {
+      "dns": "quic://dns.adguard-dns.com",
+      "domain": "adashx.m.taobao.com",
+      "pinned": false,
+      "protected": true,
+      "reason": "導向 0.0.0.0"
+    },
+    {
+      "dns": "94.140.14.14",
+      "domain": "adashx.m.taobao.com",
+      "pinned": false,
+      "protected": true,
+      "reason": "導向 0.0.0.0"
+    },
+    {
+      "dns": "76.76.2.2",
+      "domain": "adashx.m.taobao.com",
+      "pinned": false,
+      "protected": true,
+      "reason": "導向 0.0.0.0"
+    },
+    {
+      "dns": "https://dns.yuzia.cc/dns-query",
+      "domain": "adashx.m.taobao.com",
+      "pinned": false,
+      "protected": false,
+      "reason": "無 A 記錄"
+    },
+    {
+      "dns": "https://dns.enzomtp.party/dns-query",
+      "domain": "adashx.m.taobao.com",
+      "pinned": false,
+      "protected": false,
+      "reason": "導向 0.0.0.0"
+    },
+    {
+      "dns": "quic://doh.kekew.info",
+      "domain": "adashx.m.taobao.com",
+      "pinned": false,
+      "protected": false,
+      "reason": "導向 0.0.0.0"
+    },
+    {
+      "dns": "quic://adguard.adrianofrongillo.ovh",
+      "domain": "adashx.m.taobao.com",
+      "pinned": false,
+      "protected": false,
+      "reason": "導向 94.140.14.33"
+    },
+    {
+      "dns": "h3://dns.enzomtp.party/dns-query",
+      "domain": "adashx.m.taobao.com",
+      "pinned": false,
+      "protected": false,
+      "reason": "導向 0.0.0.0"
+    },
+    {
+      "dns": "tls://noads.joindns4.eu",
+      "domain": "s-gm.mmstat.com",
+      "pinned": false,
+      "protected": true,
+      "reason": "導向 0.0.0.0"
+    },
+    {
+      "dns": "https://doh.tiar.app/dns-query",
+      "domain": "s-gm.mmstat.com",
+      "pinned": false,
+      "protected": false,
+      "reason": "導向 0.0.0.0"
+    },
+    {
+      "dns": "https://dot.tiar.app/dns-query",
+      "domain": "s-gm.mmstat.com",
+      "pinned": false,
+      "protected": false,
+      "reason": "導向 0.0.0.0"
+    },
+    {
+      "dns": "https://doh.tiarap.org/dns-query",
+      "domain": "s-gm.mmstat.com",
+      "pinned": false,
+      "protected": false,
+      "reason": "導向 0.0.0.0"
+    },
+    {
+      "dns": "quic://doh.tiar.app",
+      "domain": "s-gm.mmstat.com",
+      "pinned": false,
+      "protected": false,
+      "reason": "導向 0.0.0.0"
+    },
+    {
+      "dns": "quic://10.ln7371.top",
+      "domain": "s-gm.mmstat.com",
+      "pinned": false,
+      "protected": false,
+      "reason": "導向 0.0.0.0"
+    },
+    {
+      "dns": "tls://10.ln7371.top",
+      "domain": "s-gm.mmstat.com",
+      "pinned": false,
+      "protected": false,
+      "reason": "導向 0.0.0.0"
+    },
+    {
+      "dns": "h3://doh.tiar.app/dns-query",
+      "domain": "s-gm.mmstat.com",
+      "pinned": false,
+      "protected": false,
+      "reason": "導向 0.0.0.0"
+    },
+    {
+      "dns": "h3://dot.tiar.app/dns-query",
+      "domain": "s-gm.mmstat.com",
+      "pinned": false,
+      "protected": false,
+      "reason": "導向 0.0.0.0"
+    },
+    {
+      "dns": "h3://doh.tiarap.org/dns-query",
+      "domain": "s-gm.mmstat.com",
+      "pinned": false,
+      "protected": false,
+      "reason": "導向 0.0.0.0"
+    },
+    {
+      "dns": "quic://dns.yuzia.cc",
+      "domain": "gw.alicdn.com",
+      "pinned": false,
+      "protected": false,
+      "reason": "無 A 記錄"
+    },
+    {
+      "dns": "h3://dns.yuzia.cc/dns-query",
+      "domain": "gw.alicdn.com",
+      "pinned": false,
+      "protected": false,
+      "reason": "無 A 記錄"
+    },
+    {
+      "dns": "76.76.2.1",
+      "domain": "cdn-mum.alibabachengdun.com",
+      "pinned": false,
+      "protected": true,
+      "reason": "導向 0.0.0.0"
+    },
+    {
+      "dns": "177.37.38.225",
+      "domain": "cdn-mum.alibabachengdun.com",
+      "pinned": false,
+      "protected": false,
+      "reason": "NXDOMAIN"
+    },
+    {
+      "dns": "https://dns.floriantinney.de/dns-query",
+      "domain": "graph.facebook.com",
+      "pinned": false,
+      "protected": false,
+      "reason": "導向 0.0.0.0"
+    },
+    {
+      "dns": "https://doh.rezhajul.io/dns-query",
+      "domain": "ocsp2.apple.com",
+      "pinned": false,
+      "protected": false,
+      "reason": "導向 0.0.0.0"
+    },
+    {
+      "dns": "h3://doh.rezhajul.io/dns-query",
+      "domain": "ocsp2.apple.com",
+      "pinned": false,
+      "protected": false,
+      "reason": "導向 0.0.0.0"
+    },
+    {
+      "dns": "https://carolinareaper.heeremans.net/dns-query",
+      "domain": "shopee.tw",
+      "pinned": false,
+      "protected": false,
+      "reason": "導向 0.0.0.0"
+    },
+    {
+      "dns": "tls://carolinareaper.heeremans.net",
+      "domain": "shopee.tw",
+      "pinned": false,
+      "protected": false,
+      "reason": "導向 0.0.0.0"
+    },
+    {
+      "dns": "27.126.155.1",
+      "domain": "www.youtube.com",
+      "pinned": false,
+      "protected": false,
+      "reason": "導向 127.0.0.1"
+    },
+    {
+      "dns": "41.139.226.83",
+      "domain": "www.youtube.com",
+      "pinned": false,
+      "protected": false,
+      "reason": "導向 146.112.61.104"
+    },
+    {
+      "dns": "88.210.29.61",
+      "domain": "edge-chat.facebook.com",
+      "pinned": false,
+      "protected": false,
+      "reason": "NXDOMAIN"
+    },
+    {
+      "dns": "https://adguard.greenbridge.ai/dns-query",
+      "domain": "www.wikipedia.org",
+      "pinned": false,
+      "protected": false,
+      "reason": "導向 0.0.0.0"
+    },
+    {
+      "dns": "tls://adguard.greenbridge.ai",
+      "domain": "www.wikipedia.org",
+      "pinned": false,
+      "protected": false,
+      "reason": "導向 0.0.0.0"
+    }
+  ],
+  "counts": {
+    "byTier": {
+      "A": 371,
+      "B": 1091
+    },
+    "eliminated": 295,
+    "malwareFilter": 53,
+    "protected": 37,
+    "survivors": 1194,
+    "total": 1552,
+    "verified": 1476
+  },
+  "coverage": 0.0442,
+  "date": "2026-11-27",
+  "generatedAt": "2026-11-26T22:25:28.407Z",
+  "path": {
+    "blocked": [],
+    "bootstrapViaDoh": false,
+    "checkedAt": 1795728891870,
+    "gateway": "168.95.98.254",
+    "interceptor": null,
+    "interceptorText": null,
+    "ipv6": {
+      "mode": "auto",
+      "reason": null,
+      "route": "global",
+      "usable": true
+    },
+    "nxRewrite": [],
+    "nxVia": null,
+    "offline": false,
+    "plain": {
+      "intercepted": false,
+      "v4": {
+        "intercepted": false,
+        "tcp": false,
+        "udp": false
+      },
+      "v6": {
+        "intercepted": false,
+        "tcp": false,
+        "udp": false
+      }
+    },
+    "policy": "skip-plain",
+    "protocols": {
+      "doh": {
+        "certErrors": 0,
+        "fail": 0,
+        "lastError": null,
+        "ok": 3
+      },
+      "dot": {
+        "certErrors": 0,
+        "fail": 0,
+        "lastError": null,
+        "ok": 3
+      },
+      "quic": {
+        "certErrors": 0,
+        "fail": 0,
+        "lastError": null,
+        "ok": 3
+      }
+    },
+    "tampered": [],
+    "tlsIntercept": null
+  },
+  "pathSkipped": {},
+  "pinned": [],
+  "probe": {
+    "malware": {
+      "blockedBy": 53,
+      "domains": 30,
+      "filtering": [
+        "169.47.157.77",
+        "169.55.102.246",
+        "213.179.228.4",
+        "177.93.44.53",
+        "161.200.96.9",
+        "2a0d:2a00:2::2",
+        "2a0d:2a00:1::2",
+        "81.22.26.6",
+        "62.217.77.45",
+        "177.37.38.225",
+        "https://jpdns.cola16.app/dns-query",
+        "https://doh.rezhajul.io/dns-query",
+        "https://doh.tiar.app/dns-query",
+        "https://dot.tiar.app/dns-query",
+        "https://dns-sgx1.itsec.my.id/dns-query",
+        "https://dns-idx2.itsec.my.id/dns-query",
+        "https://dns-telkominfra.disacloud.com/dns-query",
+        "https://us.aab.im/dns-query",
+        "https://dns.oryxlabs.com/dns-query",
+        "https://dns-idx1.itsec.my.id/dns-query",
+        "https://carolinareaper.heeremans.net/dns-query",
+        "https://agh.mihanentalpo.me/dns-query",
+        "https://webpurify.com.br/dns-query",
+        "https://dns.schmidt-zoarn.de/dns-query",
+        "https://dns.floriantinney.de/dns-query",
+        "https://ns.00dani.me/dns-query",
+        "https://hebe.freedynamicdns.org/dns-query",
+        "https://dns.chenu.ch/dns-query",
+        "https://d.svc.ultratop.icu/dns-query",
+        "https://adguard.shutgaming.net/dns-query",
+        "https://adg.3k.work/dns-query",
+        "https://doh.greenwood.eu.org/dns-query",
+        "https://doh.tiarap.org/dns-query",
+        "quic://doh.tiar.app",
+        "quic://dns-idx2.itsec.my.id",
+        "quic://dns-telkominfra.disacloud.com",
+        "quic://us.aab.im",
+        "quic://10.ln7371.top",
+        "quic://agh.mihanentalpo.me",
+        "quic://adguard.adrianofrongillo.ovh",
+        "tls://dns-idx2.itsec.my.id",
+        "tls://dns-telkominfra.disacloud.com",
+        "tls://us.aab.im",
+        "tls://res.zijji.com",
+        "tls://dns.ipoac.nl",
+        "tls://agh.mihanentalpo.me",
+        "tls://carolinareaper.heeremans.net",
+        "h3://doh.rezhajul.io/dns-query",
+        "h3://doh.tiar.app/dns-query",
+        "h3://dot.tiar.app/dns-query",
+        "h3://adg.3k.work/dns-query",
+        "h3://doh.greenwood.eu.org/dns-query",
+        "h3://doh.tiarap.org/dns-query"
+      ],
+      "probed": 1267,
+      "queries": 15866,
+      "rule": "ratio",
+      "source": {
+        "alive": 30,
+        "lists": 1,
+        "manual": 0,
+        "sampled": 60
+      },
+      "state": "ok",
+      "used": 12,
+      "valid": 12
+    }
+  },
+  "protected": [
+    {
+      "expect": "ads",
+      "expectMet": true,
+      "id": "https://dns.adguard-dns.com/dns-query",
+      "preflight": null,
+      "reason": "封殺 adashx.m.taobao.com (導向 0.0.0.0)",
+      "recent": "dddd",
+      "regress": false,
+      "result": "detected",
+      "stage": "domain",
+      "type": "doh"
+    },
+    {
+      "expect": "ads,adult",
+      "expectMet": true,
+      "id": "https://family.adguard-dns.com/dns-query",
+      "preflight": null,
+      "reason": "封殺 video.example.com (導向 94.140.14.35)",
+      "recent": "dddd",
+      "regress": false,
+      "result": "detected",
+      "stage": "domain",
+      "type": "doh"
+    },
+    {
+      "expect": "malware",
+      "expectMet": true,
+      "id": "https://security.cloudflare-dns.com/dns-query",
+      "preflight": null,
+      "reason": "封殺 惡意網站探測",
+      "recent": "dddd",
+      "regress": false,
+      "result": "detected",
+      "stage": "probe",
+      "type": "doh"
+    },
+    {
+      "expect": "adult,malware",
+      "expectMet": true,
+      "id": "https://family.cloudflare-dns.com/dns-query",
+      "preflight": null,
+      "reason": "封殺 video.example.com (導向 0.0.0.0)",
+      "recent": "dddd",
+      "regress": false,
+      "result": "detected",
+      "stage": "domain",
+      "type": "doh"
+    },
+    {
+      "expect": "malware",
+      "expectMet": true,
+      "id": "https://doh.cleanbrowsing.org/doh/security-filter",
+      "preflight": null,
+      "reason": "封殺 惡意網站探測",
+      "recent": "dddd",
+      "regress": false,
+      "result": "detected",
+      "stage": "probe",
+      "type": "doh"
+    },
+    {
+      "expect": "adult,malware",
+      "expectMet": true,
+      "id": "https://doh.safesurfer.io/dns-query",
+      "preflight": "封殺 one.one.one.one（資格賽：NXDOMAIN）",
+      "reason": "封殺 video.example.com (NXDOMAIN)",
+      "recent": "dddd",
+      "regress": false,
+      "result": "detected",
+      "stage": "domain",
+      "type": "doh"
+    },
+    {
+      "expect": "malware",
+      "expectMet": true,
+      "id": "tls://dns.quad9.net",
+      "preflight": null,
+      "reason": "封殺 惡意網站探測",
+      "recent": "dddd",
+      "regress": false,
+      "result": "detected",
+      "stage": "probe",
+      "type": "dot"
+    },
+    {
+      "expect": "malware",
+      "expectMet": true,
+      "id": "tls://dns9.quad9.net",
+      "preflight": null,
+      "reason": "封殺 惡意網站探測",
+      "recent": "dddd",
+      "regress": false,
+      "result": "detected",
+      "stage": "probe",
+      "type": "dot"
+    },
+    {
+      "expect": "malware",
+      "expectMet": true,
+      "id": "tls://dns11.quad9.net",
+      "preflight": null,
+      "reason": "封殺 惡意網站探測",
+      "recent": "dddd",
+      "regress": false,
+      "result": "detected",
+      "stage": "probe",
+      "type": "dot"
+    },
+    {
+      "expect": "?",
+      "expectMet": null,
+      "id": "tls://dns13.quad9.net",
+      "preflight": null,
+      "reason": "",
+      "recent": "pppp",
+      "regress": false,
+      "result": "passed",
+      "stage": "domain",
+      "type": "dot"
+    },
+    {
+      "expect": "malware",
+      "expectMet": true,
+      "id": "tls://alpha-dns.quad9.net",
+      "preflight": null,
+      "reason": "封殺 惡意網站探測",
+      "recent": "dddd",
+      "regress": false,
+      "result": "detected",
+      "stage": "probe",
+      "type": "dot"
+    },
+    {
+      "expect": "?",
+      "expectMet": null,
+      "id": "tls://doh-mullvad.quad9.net",
+      "preflight": null,
+      "reason": "",
+      "recent": "pppp",
+      "regress": false,
+      "result": "passed",
+      "stage": "domain",
+      "type": "dot"
+    },
+    {
+      "expect": "?",
+      "expectMet": null,
+      "id": "tls://protective.joindns4.eu",
+      "preflight": null,
+      "reason": "",
+      "recent": "pppp",
+      "regress": false,
+      "result": "passed",
+      "stage": "domain",
+      "type": "dot"
+    },
+    {
+      "expect": "adult,malware",
+      "expectMet": true,
+      "id": "tls://child.joindns4.eu",
+      "preflight": null,
+      "reason": "汙染 video.example.com (判定為 SCALEWAY__AS12876_Scaleway_SAS，憑證不符 ERR_TLS_CERT_ALTNAME_INVALID)",
+      "recent": "dddd",
+      "regress": false,
+      "result": "detected",
+      "stage": "domain",
+      "type": "dot"
+    },
+    {
+      "expect": "ads,malware",
+      "expectMet": true,
+      "id": "tls://noads.joindns4.eu",
+      "preflight": null,
+      "reason": "封殺 s-gm.mmstat.com (導向 0.0.0.0)",
+      "recent": "dddd",
+      "regress": false,
+      "result": "detected",
+      "stage": "domain",
+      "type": "dot"
+    },
+    {
+      "expect": "ads,adult,malware",
+      "expectMet": true,
+      "id": "tls://child-noads.joindns4.eu",
+      "preflight": null,
+      "reason": "汙染 video.example.com (判定為 SCALEWAY__AS12876_Scaleway_SAS，憑證不符 ERR_TLS_CERT_ALTNAME_INVALID)",
+      "recent": "dddd",
+      "regress": false,
+      "result": "detected",
+      "stage": "domain",
+      "type": "dot"
+    },
+    {
+      "expect": "ads",
+      "expectMet": true,
+      "id": "quic://dns.adguard-dns.com",
+      "preflight": null,
+      "reason": "封殺 adashx.m.taobao.com (導向 0.0.0.0)",
+      "recent": "dddd",
+      "regress": false,
+      "result": "detected",
+      "stage": "domain",
+      "type": "doq"
+    },
+    {
+      "expect": "ads,adult",
+      "expectMet": true,
+      "id": "quic://family.adguard-dns.com",
+      "preflight": null,
+      "reason": "封殺 video.example.com (導向 94.140.14.35)",
+      "recent": "dddd",
+      "regress": false,
+      "result": "detected",
+      "stage": "domain",
+      "type": "doq"
+    },
+    {
+      "expect": "malware",
+      "expectMet": true,
+      "id": "quic://dns.quad9.net",
+      "preflight": null,
+      "reason": "封殺 惡意網站探測",
+      "recent": "dddd",
+      "regress": false,
+      "result": "detected",
+      "stage": "probe",
+      "type": "doq"
+    },
+    {
+      "expect": "malware",
+      "expectMet": true,
+      "id": "quic://dns9.quad9.net",
+      "preflight": null,
+      "reason": "封殺 惡意網站探測",
+      "recent": "dddd",
+      "regress": false,
+      "result": "detected",
+      "stage": "probe",
+      "type": "doq"
+    },
+    {
+      "expect": "malware",
+      "expectMet": true,
+      "id": "quic://dns11.quad9.net",
+      "preflight": null,
+      "reason": "封殺 惡意網站探測",
+      "recent": "dddd",
+      "regress": false,
+      "result": "detected",
+      "stage": "probe",
+      "type": "doq"
+    },
+    {
+      "expect": "?",
+      "expectMet": null,
+      "id": "quic://dns13.quad9.net",
+      "preflight": null,
+      "reason": "",
+      "recent": "pppp",
+      "regress": false,
+      "result": "passed",
+      "stage": "domain",
+      "type": "doq"
+    },
+    {
+      "expect": "malware",
+      "expectMet": true,
+      "id": "quic://alpha-dns.quad9.net",
+      "preflight": null,
+      "reason": "封殺 惡意網站探測",
+      "recent": "dddd",
+      "regress": false,
+      "result": "detected",
+      "stage": "probe",
+      "type": "doq"
+    },
+    {
+      "expect": "?",
+      "expectMet": null,
+      "id": "quic://doh-mullvad.quad9.net",
+      "preflight": null,
+      "reason": "",
+      "recent": "pppp",
+      "regress": false,
+      "result": "passed",
+      "stage": "domain",
+      "type": "doq"
+    },
+    {
+      "expect": "ads",
+      "expectMet": true,
+      "id": "94.140.14.14",
+      "preflight": null,
+      "reason": "封殺 adashx.m.taobao.com (導向 0.0.0.0)",
+      "recent": "dddd",
+      "regress": false,
+      "result": "detected",
+      "stage": "domain",
+      "type": "udp"
+    },
+    {
+      "expect": "ads",
+      "expectMet": null,
+      "id": "2a10:50c0::ad1:ff",
+      "preflight": null,
+      "reason": "連線失敗 (IPv6 目前不能用（[2a10:50c0::ad1:ff]:53）)",
+      "recent": "uuuu",
+      "regress": false,
+      "result": "untested",
+      "stage": "domain",
+      "type": "udp"
+    },
+    {
+      "expect": "malware",
+      "expectMet": true,
+      "id": "1.1.1.2",
+      "preflight": null,
+      "reason": "封殺 惡意網站探測",
+      "recent": "dddd",
+      "regress": false,
+      "result": "detected",
+      "stage": "probe",
+      "type": "udp"
+    },
+    {
+      "expect": "malware",
+      "expectMet": null,
+      "id": "2606:4700:4700::1112",
+      "preflight": null,
+      "reason": "連線失敗 (IPv6 目前不能用（[2606:4700:4700::1112]:53）)",
+      "recent": "uuuu",
+      "regress": false,
+      "result": "untested",
+      "stage": "domain",
+      "type": "udp"
+    },
+    {
+      "expect": "ads",
+      "expectMet": true,
+      "id": "76.76.2.2",
+      "preflight": null,
+      "reason": "封殺 adashx.m.taobao.com (導向 0.0.0.0)",
+      "recent": "dddd",
+      "regress": false,
+      "result": "detected",
+      "stage": "domain",
+      "type": "udp"
+    },
+    {
+      "expect": "malware",
+      "expectMet": true,
+      "id": "9.9.9.9",
+      "preflight": null,
+      "reason": "封殺 惡意網站探測",
+      "recent": "dddd",
+      "regress": false,
+      "result": "detected",
+      "stage": "probe",
+      "type": "udp"
+    },
+    {
+      "expect": "malware",
+      "expectMet": true,
+      "id": "149.112.112.9",
+      "preflight": null,
+      "reason": "封殺 惡意網站探測",
+      "recent": "dddd",
+      "regress": false,
+      "result": "detected",
+      "stage": "probe",
+      "type": "udp"
+    },
+    {
+      "expect": "malware",
+      "expectMet": null,
+      "id": "2620:fe::fe:9",
+      "preflight": null,
+      "reason": "連線失敗 (IPv6 目前不能用（[2620:fe::fe:9]:53）)",
+      "recent": "uuuu",
+      "regress": false,
+      "result": "untested",
+      "stage": "domain",
+      "type": "udp"
+    },
+    {
+      "expect": "malware",
+      "expectMet": true,
+      "id": "149.112.112.112",
+      "preflight": null,
+      "reason": "封殺 惡意網站探測",
+      "recent": "dddd",
+      "regress": false,
+      "result": "detected",
+      "stage": "probe",
+      "type": "udp"
+    },
+    {
+      "expect": "malware",
+      "expectMet": null,
+      "id": "2620:fe::9",
+      "preflight": null,
+      "reason": "連線失敗 (IPv6 目前不能用（[2620:fe::9]:53）)",
+      "recent": "uuuu",
+      "regress": false,
+      "result": "untested",
+      "stage": "domain",
+      "type": "udp"
+    },
+    {
+      "expect": "malware",
+      "expectMet": true,
+      "id": "76.76.2.1",
+      "preflight": null,
+      "reason": "封殺 cdn-mum.alibabachengdun.com (導向 0.0.0.0)",
+      "recent": "dddd",
+      "regress": false,
+      "result": "detected",
+      "stage": "domain",
+      "type": "udp"
+    },
+    {
+      "expect": "malware",
+      "expectMet": null,
+      "id": "2606:1a40::1",
+      "preflight": null,
+      "reason": "連線失敗 (IPv6 目前不能用（[2606:1a40::1]:53）)",
+      "recent": "uuuu",
+      "regress": false,
+      "result": "untested",
+      "stage": "domain",
+      "type": "udp"
+    },
+    {
+      "expect": "malware",
+      "expectMet": null,
+      "id": "2606:1a40:1::1",
+      "preflight": null,
+      "reason": "連線失敗 (IPv6 目前不能用（[2606:1a40:1::1]:53）)",
+      "recent": "uuuu",
+      "regress": false,
+      "result": "untested",
+      "stage": "domain",
+      "type": "udp"
+    }
+  ],
+  "reportDir": "/tmp/kuroshio/benchmark/2026-11-27",
+  "selected": [
+    {
+      "avgMs": 5.74,
+      "ecs": false,
+      "id": "172.64.37.148",
+      "near": true,
+      "newItems": 390,
+      "op": "Cloudflare",
+      "owner": "Cloudflare,_Inc.__AS13335_Cloudflare,_Inc.",
+      "reason": "最快",
+      "region": "CA",
+      "regionSource": "registered",
+      "tier": "B",
+      "twRate": 0.611,
+      "type": "udp"
+    },
+    {
+      "avgMs": 123.63,
+      "ecs": false,
+      "id": "https://sg-w-f-1.nashkan.net/dns-query",
+      "near": true,
+      "newItems": 166,
+      "op": "LEASEWEB_SINGAPORE_PTE._LTD.",
+      "owner": "Leaseweb_Singapore_Pte._Ltd.__AS59253_LEASEWEB_SINGAPORE_PTE._LTD.",
+      "reason": "覆蓋",
+      "region": "SG",
+      "regionSource": "registered",
+      "tier": "B",
+      "twRate": 0.556,
+      "type": "doh"
+    },
+    {
+      "avgMs": 186.3,
+      "ecs": false,
+      "id": "tls://tyo03.dnscry.pt",
+      "near": true,
+      "newItems": 154,
+      "op": "Host_Universal_Pty_Ltd",
+      "owner": "Host_Universal_Pty_Ltd__AS136557_Host_Universal_Pty_Ltd",
+      "reason": "覆蓋",
+      "region": "JP",
+      "regionSource": "registered",
+      "tier": "A",
+      "twRate": 0.5,
+      "type": "dot"
+    },
+    {
+      "avgMs": 241.91,
+      "ecs": false,
+      "id": "tls://hkg02.dnscry.pt",
+      "near": true,
+      "newItems": 125,
+      "op": "Prinode_AB",
+      "owner": "HostHatch__AS43969_Prinode_AB",
+      "reason": "覆蓋",
+      "region": "HK",
+      "regionSource": "registered",
+      "tier": "A",
+      "twRate": 0.5,
+      "type": "dot"
+    },
+    {
+      "avgMs": 150.38,
+      "ecs": false,
+      "id": "134.195.4.2",
+      "near": true,
+      "newItems": 140,
+      "op": "Nextgi",
+      "owner": "Nextgi,_LLC.__AS36232_Nextgi,_LLC.",
+      "reason": "覆蓋",
+      "region": "US",
+      "regionSource": "registered",
+      "tier": "B",
+      "twRate": 0.5,
+      "type": "udp"
+    }
+  ],
+  "skippedTypes": {
+    "dnscrypt": 43
+  },
+  "spares": [
+    {
+      "avgMs": 5.1,
+      "ecs": false,
+      "id": "tls://anycast.dns.nextdns.io",
+      "near": true,
+      "newItems": 0,
+      "op": "NextDNS",
+      "owner": "NextDNS,_Inc.__AS34939_NextDNS,_Inc.",
+      "reason": "候補",
+      "region": "US",
+      "regionSource": "registered",
+      "tier": "A",
+      "twRate": 0.556,
+      "type": "dot"
+    },
+    {
+      "avgMs": 7.5,
+      "ecs": false,
+      "id": "https://firefox.dns.nextdns.io/dns-query",
+      "near": true,
+      "newItems": 0,
+      "op": "Misaka_Network",
+      "owner": "Misaka_Network,_Inc.__AS23961_Misaka_Network,_Inc.",
+      "reason": "候補",
+      "region": "TW",
+      "regionSource": "registered",
+      "tier": "A",
+      "twRate": 0.5,
+      "type": "doh"
+    },
+    {
+      "avgMs": 17.56,
+      "ecs": false,
+      "id": "168.95.1.1",
+      "near": true,
+      "newItems": 0,
+      "op": "Data_Communication_Business_Group",
+      "owner": "Chunghwa_Telecom_Co.,_Ltd.__AS3462_Data_Communication_Business_Group",
+      "reason": "候補",
+      "region": "TW",
+      "regionSource": "tw-net",
+      "tier": "A",
+      "twRate": 0.722,
+      "type": "udp"
+    }
+  ],
+  "tiers": {
+    "a": 371,
+    "auto": true,
+    "demoteFuse": false,
+    "demoted": 0,
+    "demotedToday": 0,
+    "explore": 0,
+    "fill": 0,
+    "incumbent": 0,
+    "mode": "ab",
+    "onlyA": false,
+    "promoted": 0,
+    "promotedSkipped": 0,
+    "promotedToday": 0,
+    "skippedB": 0,
+    "trial": 24
+  },
+  "universe": 22071
+}}

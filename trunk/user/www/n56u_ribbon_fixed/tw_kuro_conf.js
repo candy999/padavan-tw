@@ -1,6 +1,6 @@
 /*
  * padavan-tw：黑潮 DNS 的設定類分頁（基本設定、連線來源、廣告過濾、CDN 台灣節點、進階）
- * 欄位名稱、合法值、預設值照黑潮 DNS v3.2.0 的 LuCI（settings.js、access.js、filter.js、cdn.js、advanced.js）
+ * 欄位名稱、合法值、預設值照黑潮 DNS 的 LuCI（settings.js、access.js、filter.js、cdn.js、advanced.js；3.2.0 起移植，跟到 3.5.1）
  * Padavan 不同的地方（docs/HANDOFF-UI.md 13.2、13.4）：
  * - 網域、Token、DDNS、DoT/DoQ/DoH、開放外網、來源模式、日誌等級用 nvram（KuroshioConf），不是 UCI
  * - DNS 接管方式、DNS 埠、管理 API 埠、資料目錄、憑證來源、IP 來源由 kuroshio.sh 決定，不顯示
@@ -111,7 +111,8 @@
 				{ k: 'main.dnr', t: 'flag', l: '用 DHCP 通知加密 DNS（DNR）', def: '1', d: 'RFC 9463：在 DHCP 裡告訴區網裝置這台路由器有加密 DNS，裝置不用先查詢就能改用加密連線。要有綁定網域、涵蓋網域的有效憑證才會發布；條件不符就不發。' },
 				{ k: '_dnr', t: 'html', l: 'DNR 目前狀態', html: function () { return '<div id="kr-dnr">' + dnrPanel() + '</div>'; } },
 				{ k: 'nv:kuroshio_log', t: 'select', l: '日誌等級', def: 'warn', opts: [['warn', '只記警告與錯誤（建議）'], ['info', '一般'], ['debug', '除錯（很多）']] },
-				{ k: 'main.query_log', t: 'flag', l: '記錄每筆查詢', def: '0', pro: 1, d: '寫進系統日誌，除錯用。會很快洗掉日誌緩衝區。' },
+				/* 3.5.0 起查詢紀錄只在記憶體（不寫系統日誌、不進備份），在「日誌」頁看 */
+				{ k: 'main.query_log', t: 'flag', l: '查詢紀錄常開', def: '0', pro: 1, d: '除錯用。查詢紀錄只在記憶體（不寫進 Flash、不進備份），在「日誌」頁看；平常不用打開，需要時在「日誌」頁暫時開啟（最長 60 分鐘）。' },
 				{ k: 'main.allow_from', t: 'list', l: '允許查詢的來源', v: 'cidr', ph: '192.168.0.0/16', pro: 1, d: '區網 DNS 只回答這些網段（空白用預設的私有網段）。' }
 			]) + '<p class="tw-small tw-muted">DNS 接管方式固定為「作為 dnsmasq 的上游」（dnsmasq 照常處理 DHCP 與區網主機名稱）；埠號與資料目錄由韌體決定。</p>');
 
@@ -166,7 +167,8 @@
 
 			if (K.isPro()) h += K.card('公開網頁', '<p class="tw-lead">Windows 版的官網與統計頁。路由器上建議關閉，改用這裡的儀表板；關閉不影響 DoH。</p>' + K.fields([
 				{ k: 'site.enabled', t: 'flag', l: '啟用', def: '0' },
-				{ k: 'site.min_clients', t: 'text', l: '排行最少人數', v: K.range(1, 1e9), dp: 'site.minClients', dep: { 'site.enabled': '1' }, d: '公開頁的網站排行只列出至少這麼多位不同使用者造訪過的網站。後台的儀表板不受限制。' }
+				/* 3.5.1：預設 auto（對外開放時 2，其他 1） */
+				{ k: 'site.min_clients', t: 'text', l: '排行最少人數', v: K.range(1, 1e9), dp: 'site.minClients', ph: '自動', dep: { 'site.enabled': '1' }, d: '公開頁的網站排行只列出至少這麼多位不同使用者造訪過的網站。留空 = 自動：對外開放（公開頁、DoH 都開著、有設定網域）時 2，其他 1。後台的儀表板不受限制。' }
 			]));
 
 			h += K.card('存放位置', '<p class="tw-lead">各種檔案實際放在哪裡（已套用的設定）。這裡只顯示路徑，不會顯示密鑰內容。</p><div id="kr-paths">' + U.stateBox('loading') + '</div>', { id: 'kuroshio-paths' });
@@ -448,6 +450,10 @@
 				K.uci.set(id, 'category', d.category);
 				if (d.protect !== undefined) K.uci.set(id, 'protect', d.protect ? '1' : '0');
 				else K.uci.unset(id, 'protect');
+				/* 繞過防護（3.4.0）與惡意網站探測抽樣（3.5.0 F10）的標記照預設值：整理過的 def 沒有這兩欄，看原始的預設 r.raw
+				 * （ui-core.js 的 restorePlan 才有 raw；3.2.x 韌體用這頁自己的 restorePlan 時沒有，兩個標記都拿掉＝自動） */
+				if (r.raw && r.raw.bypass === true) K.uci.set(id, 'bypass', '1'); else K.uci.unset(id, 'bypass');
+				if (r.raw && (r.raw.probe === true || r.raw.probe === false)) K.uci.set(id, 'probe', r.raw.probe ? '1' : '0'); else K.uci.unset(id, 'probe');
 			}
 			if (r.from >= 0) keep[r.from] = true;
 			order.push(id);
@@ -465,6 +471,10 @@
 			h += K.card('過濾', K.fields([
 				{ k: 'filter.enabled', t: 'flag', l: '啟用過濾', def: '1' },
 				{ k: 'filter.update_interval_hours', t: 'text', l: '清單更新間隔（小時）', v: 'uint', dp: 'filter.updateIntervalHours', pro: 1 },
+				/* 3.5.1 */
+				{ k: 'filter.blocked_ttl', t: 'text', l: '被擋網域的 TTL（秒）', v: K.range(0, 3600), dp: 'filter.blockedTtl', pro: 1, d: '裝置收到「被擋」的答案後記多久（0～3600，預設 60）。越長裝置重複查被擋網域的次數越少；解除封鎖後，裝置最多要等這麼久才會重新查詢（黑潮這邊立刻生效）。' },
+				/* 3.5.0 F11：內建一定通過的服務 */
+				{ k: 'filter.protect_comm', t: 'flag', l: '內建服務與通訊類網域不被清單誤擋', def: K.def('filter.protectComm') === false ? '0' : '1', pro: 1, d: '內建的六類服務就算被訂閱清單擋到也放行（自訂規則照樣優先）：推播（照常換台灣節點）；時間同步、連線偵測、憑證撤銷、地震速報（這四類也不改寫 CDN 答案）；系統與安全更新（照常換台灣節點，只保證不被誤擋）。關掉＝新的五類照清單擋、照常改寫。' },
 				{ k: 'filter.relaxed_modifiers', t: 'flag', l: '寬鬆套用瀏覽器規則', def: K.def('filter.relaxedModifiers') ? '1' : '0', pro: 1, d: 'EasyList 這類瀏覽器清單有很多帶 $third-party、$script 修飾詞的規則。關閉（預設，同 AdGuard Home）= 略過這些規則；打開 = 整個網域封鎖，擋得更多但可能誤殺。' }
 			]));
 			h += K.card('訂閱清單', '<p class="tw-lead">分類一層一層往上疊：廣告為底，遙測疊在上面，惡意在最上層。同一個網域出現在多份清單時只算一次，歸到最上層的分類。hosts 格式裡寫的 IP 一律不採用，只當成封鎖該網域。</p>' + K.grid({
@@ -476,7 +486,11 @@
 					{ k: 'name', t: 'text', l: '名稱', rmempty: false },
 					{ k: 'url', t: 'text', l: '網址', v: 'url', rmempty: false },
 					{ k: 'category', t: 'select', l: '分類', def: 'ads', opts: [['ads', '廣告 / 追蹤'], ['telemetry', '遙測 / 驗證'], ['malware', '惡意 / 詐騙']] },
-					{ k: 'protect', t: 'select', l: '保護', def: '', pro: 1, opts: [['', '自動'], ['1', '保護'], ['0', '不保護']], d: '記憶體不足時也不暫時停用。自動 = 惡意 / 詐騙類保護（例如 165 反詐騙），其他不保護。' }
+					{ k: 'protect', t: 'select', l: '保護', def: '', pro: 1, opts: [['', '自動'], ['1', '保護'], ['0', '不保護']], d: '記憶體不足時也不暫時停用。自動 = 惡意 / 詐騙類保護（例如 165 反詐騙），其他不保護。' },
+					/* 3.4.0：繞過防護類的清單（擋加密 DNS／VPN／代理） */
+					{ k: 'bypass', t: 'flag', l: '繞過防護', def: '0', pro: 1, d: '這份是繞過防護類的清單。上游的「提供資料給下游的黑潮」開著時，不擋已登記的下游黑潮解析它自己的上游主機名稱。' },
+					/* 3.5.0 F10：每日評測的惡意網站探測能不能從這份抽網域。自動 = 不寫這個選項 */
+					{ k: 'probe', t: 'select', l: '探測抽樣', def: '', pro: 1, opts: [['', '自動'], ['1', '抽'], ['0', '不抽']], d: '每日評測的惡意網站探測能不能從這份的本機副本抽網域。自動 = 啟用中的惡意 / 詐騙類才抽；TW165、TWNIC-RPZ（台灣業者的 DNS 依法停止解析）、新註冊網域、繞過防護預設不抽。' }
 				],
 				extraActions: K.btn('恢復預設清單', 'restoreLists', { id: 'kuroshio-restore-lists' })
 			}));
@@ -585,7 +599,10 @@
 				n('verify_fail_max_days', '重試間隔上限（天）', 'cdn.verifyFailMaxDays'),
 				n('verify_timeout_ms', '驗證逾時（毫秒）', 'cdn.verifyTimeoutMs'),
 				n('verify_concurrency', '同時驗證數', 'cdn.verifyConcurrency'),
-				n('nearest_min_gain_ms', '沒有台灣 POP 時最少快幾毫秒才換', 'cdn.nearestMinGainMs', 'Fastly 等：換到鄰近國家節點的門檻。')
+				n('nearest_min_gain_ms', '沒有台灣 POP 時最少快幾毫秒才換', 'cdn.nearestMinGainMs', 'Fastly 等：換到鄰近國家節點的門檻。'),
+				/* 3.5.0 F12：新網域很多時的驗證節流 */
+				{ k: 'cdn.verify_pacing', t: 'flag', l: '新網域很多時 CDN 驗證自動減量', def: K.def('cdn.verifyPacing') === false ? '0' : '1', d: '每分鐘的驗證有上限，並依黑潮自己用掉的 CPU 自動調整（55% 以上減半、30% 以下慢慢加回）。名額用完或 CPU 很忙時只問過 1 次的網域先不驗證（照常回原本的答案），問過 2 次以上的照常驗證；壓力解除後幾分鐘自己恢復。關掉＝只有小機器有每分鐘 30 個的上限。' },
+				{ k: 'cdn.verify_per_min', t: 'text', l: 'CDN 驗證每分鐘上限', ph: '自動', v: function (v) { return v === '' || v === 'auto' || (/^\d+$/.test(v) && +v >= 6 && +v <= 1200) || '請填 6～1200 的整數，或留空（自動）'; }, d: '留空 = 自動：小機器 30；沒有 AES 指令的（MT7621 類）核心數 × 30；有 AES 的核心數 × 60、最多 480。範圍 6～1200。' }
 			]) + '<h3 class="kr-h3">節點池</h3>' + K.fields([
 				n('serve_count', '每次回幾個台灣 IP', 'cdn.serveCount'),
 				n('min_pool', '可用節點少於幾個就重建', 'cdn.minPool'),
@@ -597,8 +614,17 @@
 				n('cross_recheck_hours', '複驗間隔（小時）', 'cdn.cross.recheckHours'),
 				n('cross_fail_days', '失敗後幾天再試', 'cdn.cross.failDays'),
 				n('cross_akamai_max_ms', 'Akamai 台灣節點延遲上限（毫秒）', 'cdn.cross.akamaiMaxMs'),
-				n('cross_concurrency', '同時測試數', 'cdn.cross.concurrency')
-			]) + '<h3 class="kr-h3">其他</h3>' + K.fields([n('max_entries', 'CDN 網域資料庫上限（筆）', 'cdn.maxEntries', '記憶體較小的機器可以調低。')]) : ''));
+				n('cross_concurrency', '同時測試數', 'cdn.cross.concurrency'),
+				/* 3.5.0 */
+				{ k: 'cdn.cross_request_score', t: 'flag', l: '握手也要比較快才換', def: K.def('cdn.cross.requestScore') === false ? '0' : '1', d: '原本的條件都通過之後，再比連線＋TLS 握手的時間（不含網站自己產生內容的時間）：比原站快 5% 以上才採用；已經在用的，差 10% 以內都留著。關掉＝3.4.x：只看 TCP 連線的延遲。' }
+			]) + '<h3 class="kr-h3">其他</h3>' + K.fields([
+				/* 3.5.0 */
+				{ k: 'cdn.multi_cdn', t: 'flag', l: '尊重多來源 CDN', def: K.def('cdn.multiCdn') === false ? '0' : '1', d: '網站自己在多家 CDN 之間分流時，每一家各自驗證、各自換成那一家的台灣節點，不硬綁其中一家，也不替它換到別家；網站換了 CDN 或第一層 CNAME 時，舊的跨 CDN 與 ECS 結果失效、重新驗證。關掉＝3.4.x 的行為。' },
+				{ k: 'cdn.app_layer', t: 'flag', l: 'App 自己選節點的服務不改寫', def: K.def('cdn.appLayer') === false ? '0' : '1', d: '影音、系統更新這類由 App 或服務自己決定連哪個節點的 CDN（目前：Google、Apple）只辨識與統計，不換節點。' },
+				n('max_entries', 'CDN 網域資料庫上限（筆）', 'cdn.maxEntries', '記憶體較小的機器可以調低。'),
+				/* 3.5.0 F8 */
+				{ k: 'cdn.db_disk_budget_kb', t: 'text', l: 'CDN 網域資料的磁碟預算（KB）', ph: '自動', v: function (v) { return v === '' || v === 'auto' || /^\d+$/.test(v) || '請填整數（KB）、0（不限），或留空（自動）'; }, d: '留空 = 自動：狀態目錄所在的儲存空間小於 64 MB（路由器的 Flash）時用總容量的 30%，超過時淘汰最久沒用的網域，把空間留給過濾清單的本機副本；64 MB 以上不限。0 = 不限。下限 512 KB。' }
+			]) : ''));
 			h += K.card('各家 CDN', '<p class="tw-lead">任播型（Cloudflare、CloudFront、Fastly、Gcore、Azure）用 IP 置換；DNS 分流型（Akamai 等）用 ECS 找台灣節點。</p>' + K.grid({
 				type: 'cdn_provider', quick: 'enabled', empty: '設定檔裡沒有 CDN 業者',
 				title: function (s) { return LABELS[s.id] || s.id; },
@@ -621,7 +647,7 @@
 			h += K.card('台灣節點池', '<p class="tw-small tw-muted">每天 05:30 重建，每 30 分鐘健檢。</p><div id="kr-pools">' + U.stateBox('loading') + '</div><div class="tw-actions" style="margin-top:12px">' +
 				K.btn('重新整理', 'pools') + K.btn('立即重建節點池', 'rebuild', { primary: true }) + '</div>');
 			h += K.card('網域工具', '<p class="tw-lead">追蹤一個網域的完整解析過程，或手動指定要不要換台灣節點。</p><div class="tw-actions"><input type="text" id="kr-cdn-name" placeholder="www.example.com" style="max-width:22em" aria-label="網域">' +
-				K.btn('追蹤', 'trace', { primary: true }) + K.btn('重新驗證', 'verify') + K.btn('ECS 突破', 'ecs') +
+				K.btn('追蹤', 'trace', { primary: true }) + K.btn('為什麼沒換到台灣', 'explain') + K.btn('重新驗證', 'verify') + K.btn('ECS 突破', 'ecs') +
 				'<select id="kr-cdn-policy" style="width:auto" aria-label="策略"><option value="auto">自動驗證</option><option value="always">一律置換</option><option value="never">永不置換</option></select>' + K.btn('套用策略', 'policy') + '</div><div id="kr-cdn-out" class="kr-out"></div>');
 			return h;
 		},
@@ -632,6 +658,8 @@
 			trace: function () { var n = cdnName(); if (n) return K.api('api', '/api/trace', { name: n, type: 'A' }).then(showCdn); },
 			verify: function () { var n = cdnName(); if (n) return K.action('/api/cdn/verify', { name: n, family: 4 }).then(showCdn); },
 			ecs: function () { var n = cdnName(); if (n) return K.action('/api/cdn/ecs', { name: n }).then(showCdn); },
+			/* 3.5.0：這個網域的決定與原因（rewritten、already-tw、pool-changed、nearest、dedicated-ip…），只讀、不發請求 */
+			explain: function () { var n = cdnName(); if (n) return K.api('api', '/api/cdn/explain', { name: n }).then(showCdn); },
 			policy: function () { var n = cdnName(); if (n) return K.action('/api/cdn/policy', { name: n, policy: U.$('kr-cdn-policy').value }).then(showCdn); }
 		} }
 	});
@@ -640,7 +668,9 @@
 	function showCdn(r) {
 		var out = U.$('kr-cdn-out');
 		if (!r || r.ok === false) { out.innerHTML = K.badge((r && r.error) || '操作失敗', 'err'); return; }
-		out.innerHTML = K.pre(JSON.stringify(r.result, null, 2));
+		/* explain 之類有整句說明（text）的，先把那句放在最前面，下面才是完整內容 */
+		var x = r.result || {};
+		out.innerHTML = (typeof x.text === 'string' && x.text ? '<p>' + (x.decision ? K.badge(x.decision, 'off') + ' ' : '') + esc(x.text) + '</p>' : '') + K.pre(JSON.stringify(x, null, 2));
 	}
 
 	/* =====================================================================
@@ -676,10 +706,17 @@
 				{ k: 'upstream.last_resort', t: 'list', l: '最後手段', d: '所有上游都沒回應時。' },
 				num('upstream', 'auto_max', '自動上游最多幾台', 'upstream.autoMax'),
 				{ k: 'upstream.auto_type', t: 'multi', l: '自動上游可用協定', def: K.def('upstream.autoTypes') || ['udp', 'doh', 'dot'], opts: [['udp', 'UDP'], ['doh', 'DoH'], ['dot', 'DoT']] },
+				/* 3.5.0 F4 */
+				flag('upstream', 'round_aware_failures', '上游成敗照整輪判斷', 'upstream.roundAwareFailures', '別的上游先答完、這台還沒回來就被取消的（來不及），也記下來：沒有延遲紀錄的不再永遠排第一，連續 8 次都來不及、而且沒成功過才算 1 次失敗。大家都答不出來的那一輪（網域本身壞掉、整台斷網）不算個別上游失敗；SERVFAIL 另外計。關掉＝3.4.x 的記法。'),
+				/* 3.3.6 */
+				flag('upstream', 'path_check', '路徑檢查', 'upstream.pathCheck', '啟動後、每 6 小時、網際網路變動時檢查路上有沒有人動手腳：一般 DNS 被接走（上游路由器、業者）、「不存在」被改成廣告頁、加密協定被擋、TLS 中途攔截、IPv6 能不能用。評測與上游選擇照結果調整。'),
+				{ k: 'upstream.intercept_policy', t: 'select', l: '一般 DNS 被接走時', def: 'skip-plain', opts: [['skip-plain', '評測不測一般 DNS（建議）'], ['warn', '只提醒，照常測'], ['ignore', '不理會']], d: '路上有人把 53 埠接走時，一般 DNS 的答案其實都是攔截者給的。' },
 				flag('upstream', 'chain', '自動串接上游的黑潮', 'upstream.chain', '前面的路由器也跑黑潮（3.4.0 起）時，直接問它並共用它的評測結果與 CDN 節點，這台不用再自己跑評測與 CDN 掃描（過濾清單由這台自己下載）。關閉 = 自己重做，重複使用網路。'),
 				/* 3.4.3：只跟指定的那一台串接；3.4.4 起指紋不符就不串接、也不向它登記主機名稱 */
 				{ k: 'upstream.chain_pin', t: 'text', l: '只串接這個指紋的上游', pro: 1, d: '空白 = 不限定。填上游黑潮狀態頁「這台的指紋」；大小寫、冒號、空格都可以。指紋不符時不串接、用自己的上游，也不會把這台的主機名稱登記給它。' },
-				flag('upstream', 'allow_downstream', '提供資料給下游的黑潮', 'upstream.allowDownstream', '後面接的路由器也跑黑潮時，提供評測結果與 CDN 節點給它。關閉 = 下游自己重做評測與掃描。有啟用「繞過防護」清單時建議關閉。')
+				flag('upstream', 'allow_downstream', '提供資料給下游的黑潮', 'upstream.allowDownstream', '後面接的路由器也跑黑潮時，提供評測結果與 CDN 節點給它。關閉 = 下游自己重做評測與掃描。有啟用「繞過防護」清單時建議關閉。'),
+				/* 3.3.6：kuroshio.sh 在路由器的 IPv6 關閉時一律帶 0（只改執行用的副本） */
+				{ k: 'upstream.ipv6', t: 'select', l: '用 IPv6 連上游', def: 'auto', opts: [['auto', '自動'], ['1', '使用'], ['0', '不用']], d: '自動：依這台的 IPv6 路由判斷，連線遇到「沒有路由」會暫停 IPv6 10 分鐘。路由器的 IPv6 關閉時一律不用。' }
 			]));
 			h += K.card('解析行為', K.fields([
 				num('resolver', 'timeout_ms', '上游逾時（毫秒）', 'resolver.timeoutMs'),
@@ -694,9 +731,14 @@
 				num('resolver', 'serve_stale_sec', '過期後仍可先回舊資料（秒）', 'resolver.serveStaleSec'),
 				num('resolver', 'prefetch_threshold_sec', '剩餘 TTL 低於幾秒就預取', 'resolver.prefetchThresholdSec'),
 				num('resolver', 'prefetch_recent_sec', '最近幾秒內有人查才預取', 'resolver.prefetchRecentSec'),
-				num('resolver', 'cache_max', '快取筆數上限', 'resolver.cacheMax'),
+				num('resolver', 'cache_max', '快取筆數上限', 'resolver.cacheMax', '留空 = 自動：依實體記憶體換算（實體記憶體的 8%，每筆約 600 bytes；4,000～100 萬筆）。實際大小再由記憶體控制依可用記憶體決定。'),
 				flag('resolver', 'send_ecs', '對上游附帶 ECS（本機對外 IP 的 /24）', 'resolver.sendEcs'),
-				flag('resolver', 'android_probe_fast', 'Android 私人 DNS 驗證查詢立即回覆', 'resolver.androidProbeFast')
+				flag('resolver', 'android_probe_fast', 'Android 私人 DNS 驗證查詢立即回覆', 'resolver.androidProbeFast'),
+				/* 3.5.1 */
+				flag('resolver', 'special_use', '特殊用途網域在本機回答', 'resolver.specialUse', 'RFC 6761：.invalid、.test、.onion、.example 直接回「不存在」，localhost 回本機位址，不問上游、不算進排行。區域網路網域轉給 dnsmasq 的照樣優先。'),
+				/* 3.4.0 背景補問 */
+				{ k: 'resolver.backfill', t: 'select', l: '背景補問', def: 'cdn', opts: [['cdn', 'CDN 相關與抽樣（建議）'], ['off', '不補問（3.3.7 的行為）']], d: '只同時問最快幾台上游時（同時問幾個上游有限制），CDN 相關的查詢與抽樣的查詢在回答之後，於背景再問這次沒問到的上游，合併節點與比對汙染。不增加回答的等待。' },
+				num('resolver', 'backfill_sample', '非 CDN 查詢每幾次抽一次補問', 'resolver.backfillSample', '0 = 不抽樣（CDN 相關的照樣補問）。')
 			]));
 			h += K.card('IP 測速', '<p class="tw-lead">以 TCP 連線測量每個 IP 的延遲。</p>' + K.fields([
 				num('iprank', 'port', '測速埠號', 'iprank.port', null, 'port'), num('iprank', 'timeout_ms', '逾時（毫秒）', 'iprank.timeoutMs'),
@@ -721,13 +763,26 @@
 			}));
 			h += K.card('每日 DNS 評測', K.fields([
 				num('benchmark', 'concurrency', '同時測試數', 'benchmark.concurrency'), num('benchmark', 'timeout_ms', '逾時（毫秒）', 'benchmark.timeoutMs'),
-				num('benchmark', 'max_timeouts', '容許逾時次數', 'benchmark.maxTimeouts'), num('benchmark', 'coverage_target', '涵蓋率目標', 'benchmark.coverageTarget', '0.97 = 97%', 'ufloat'),
+				num('benchmark', 'max_timeouts', '容許逾時次數', 'benchmark.maxTimeouts'),
+				num('benchmark', 'coverage_target', '涵蓋率目標', 'benchmark.coverageTarget', '0.97 = 97%。選出的上游合起來回過的（網域, 位址）占倖存候選合起來的比例到這個值就不再加；候選遍布各地、CDN 依地區給不同位址，通常先到台數上限。', 'ufloat'),
+				/* 3.4.0 上游多樣性 */
+				{ k: 'benchmark.coverage_region', t: 'select', l: '覆蓋上游的範圍', def: 'near', opts: [['near', '鄰近優先（建議）'], ['any', '不分遠近（3.3.7 的行為）']], d: '鄰近優先：選「覆蓋」上游時先選鄰近的（台灣、日本、香港、新加坡，或延遲低的任播上游），CDN 才比較會回亞洲的節點；還有名額才選其他的。' },
+				/* 3.5.0 分級評測與惡意網站探測 */
+				{ k: 'benchmark.tiers', t: 'select', l: '評測範圍', def: 'auto', opts: [['auto', '自動（依記憶體）'], ['a', '只用 A 級（B 級不測、不選）'], ['ab', '全部都測']], d: '預設名單分成 A 級（經營者明確的公共 DNS、電信商）與 B 級（品質都過、經營者看不出來）。只用 A 級：只測、只選 A 級與自己加的上游，B 級一個都不測，連前一天選上的 B 級也不用；介意 B 級的人選這個（A 級的經營者或類型不夠時只在 judge.log 寫明，不從 B 級補）。自動：記憶體小於 256 MB 時減量（A 級為主，B 級只測前一天選上的、補位最多 32 個與輪流探索 40 個，B 級仍可能選上），其他全部都測。' },
+				{ k: 'benchmark.malware_probe', t: 'flag', l: '惡意網站探測', def: '1', d: '評測時用探測網域判出「有擋惡意網站的 DNS」，這類不選來用（不記可疑、不進黑名單）。探測網域是 probe.txt（手動指定，可以留空）加上從這台已下載的惡意類清單抽樣的。評測只做 DNS 查詢、不連線；但抽到的是還在活動的惡意網域，線路上的資安設備可能把這台記成「有裝置中毒」（每天十幾個查詢）。企業或學校網路建議關掉。' },
+				{ k: 'benchmark.probe_sample', t: 'flag', l: '探測網域從已下載的清單抽樣', def: K.def('benchmark.probeSample') === false ? '0' : '1', dep: { 'benchmark.malware_probe': '1' }, d: '每次評測前從這台已經下載的惡意類過濾清單（本機副本）抽 60 個網域，先確認還解析得到（留最多 30 個），再跟 probe.txt 合併；有回答的至少 6 個、擋了一半以上才算有擋。TW165、TWNIC-RPZ、新註冊網域不抽。記憶體吃緊、清單停用中、沒有本機副本時這次不抽（不為了抽樣多下載）；小 Flash 存不下副本時，清單下載時順便抽 120 個存成幾 KB 的小檔（7 天重抽一次），評測用這份。關掉＝只用 probe.txt。' },
+				num('benchmark', 'near_max_ms', '鄰近的延遲上限（毫秒）', 'benchmark.nearMaxMs', '最低延遲在這以內就算鄰近（不管國別）；台灣、日本、香港、新加坡的上游放寬到兩倍。'),
 				num('benchmark', 'min_auto', '至少選幾台', 'benchmark.minAuto'), num('benchmark', 'max_avg_latency_ms', '平均延遲上限（毫秒）', 'benchmark.maxAvgLatencyMs'),
 				num('benchmark', 'keep_days', '報表保留天數', 'benchmark.keepDays')
 			]));
-			h += K.card('CDN 網段掃描', K.fields([num('scan', 'samples_per_subnet', '每個 /24 抽樣幾個 IP', 'scan.samplesPerSubnet'), num('scan', 'concurrency', '同時連線數', 'scan.concurrency'), num('scan', 'timeout_ms', '逾時（毫秒）', 'scan.timeoutMs')]));
+			h += K.card('CDN 網段掃描', K.fields([num('scan', 'samples_per_subnet', '每個 /24 抽樣幾個 IP', 'scan.samplesPerSubnet'), num('scan', 'concurrency', '同時連線數', 'scan.concurrency'),
+				/* 3.5.0 */
+				num('scan', 'max_per_sec', '每秒最多新連線', 'scan.maxPerSec', '每秒最多開始幾個探測；預設依 CPU 核心數（每核心 50，50～200），小記憶體減量時再減半。避免一秒上千條新連線塞滿連線追蹤表。'),
+				num('scan', 'timeout_ms', '逾時（毫秒）', 'scan.timeoutMs')]));
 			h += K.card('節點池建立', K.fields([num('pool', 'candidates_per_provider', '每家 CDN 候選 IP 數', 'pool.candidatesPerProvider'), num('pool', 'pool_size', '節點池大小', 'pool.poolSize'),
-				num('pool', 'speed_top', '取前幾名測下載速度', 'pool.speedTop'), num('pool', 'speed_seconds', '每次下載測速秒數', 'pool.speedSeconds')]));
+				num('pool', 'speed_top', '取前幾名測下載速度', 'pool.speedTop'), num('pool', 'speed_seconds', '每次下載測速秒數', 'pool.speedSeconds'),
+				/* 3.5.0 */
+				flag('pool', 'relative_speed', '測速用相對評分', 'pool.relativeSpeed', '節點慢不慢跟同一家其他節點比（低於中位數的一半才算慢），「幾乎一樣」的範圍依實際傳輸時間決定，速度分不出來的節點由延遲決定名次。關掉＝3.4.x：低於 1 MB/s 算慢、5% 以內才算一樣、直接比速度。')]));
 			h += K.card('評測名單', '<p class="tw-lead">只放自己要加的；韌體附帶的預設名單會自動一起測，更新韌體時更新。</p>' +
 				'<p class="tw-small tw-muted">存檔後不用重新啟動，下次每日評測時使用；檔案在 /etc/storage/kuroshio/benchmark/。</p>' +
 				BENCH.map(function (f) {
